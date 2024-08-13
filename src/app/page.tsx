@@ -1,10 +1,25 @@
-import Image from "next/image";
-import styles from "./page.module.css";
 
-export default function Home() {
+
+'use client'
+import { useDispatch, useSelector } from 'react-redux'
+import type { AppDispatch, RootState } from '@/redux/store'
+import { increment } from '@/redux/features/userSlice'
+
+const App = () => {
+  const dispatch: AppDispatch = useDispatch()
+  const { user, loading, error } = useSelector((state: RootState) => state.user)
+
   return (
-    <main className={styles.main}>
-      <h1>F2 Fintech Admin Dashboard</h1>
+    <main>
+      <div>
+        Loading is {loading.toString()}
+      </div>
+      <button
+        onClick={() => dispatch(increment())}
+      > Change </button>
+
     </main>
-  );
+  )
 }
+
+export default App
