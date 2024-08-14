@@ -1,13 +1,13 @@
 
+'use client';
+import { useDispatch, useSelector } from 'react-redux';
+import type { AppDispatch, RootState } from '@/redux/store';
+import { increment } from '@/redux/features/userSlice';
 
-'use client'
-import { useDispatch, useSelector } from 'react-redux'
-import type { AppDispatch, RootState } from '@/redux/store'
-import { increment } from '@/redux/features/userSlice'
 
 const App = () => {
-  const dispatch: AppDispatch = useDispatch()
-  const { user, loading, error } = useSelector((state: RootState) => state.user)
+  const dispatch: AppDispatch = useDispatch();
+  const { user, loading, error } = useSelector((state: RootState) => state.user);
 
   return (
     <main>
@@ -19,7 +19,7 @@ const App = () => {
       > Change </button>
 
     </main>
-  )
-}
+  );
+};
 
-export default App
+export default App;
