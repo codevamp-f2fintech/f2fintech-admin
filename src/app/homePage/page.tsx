@@ -16,7 +16,22 @@ import {
   FormControlLabel,
 } from "@mui/material";
 
-const contacts = [
+// Define interfaces for your data types
+interface Contact {
+  id: number;
+  name: string;
+  role: string;
+  address: string;
+  email: string;
+  avatar: string;
+  popularity: number;
+  loanAmount: string;
+  tenure: string;
+  addedDate: string;
+};
+
+// Mock data with typed contacts
+const contacts: Contact[] = [
   {
     id: 1,
     name: "Prashant Kumar",
@@ -72,22 +87,24 @@ const contacts = [
   },
 ];
 
-const calculateDaysAgo = (date) => {
+// Function to calculate the number of days ago
+const calculateDaysAgo = (date: string) => {
   const today = new Date();
   const addedDate = new Date(date);
-  const diffTime = Math.abs(today - addedDate);
+  const diffTime = Math.abs(today.getTime() - addedDate.getTime());
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   return diffDays;
 };
 
 export default function Home() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedContacts, setSelectedContacts] = useState([]);
-  const [status, setStatus] = useState("");
-  const [contactStatuses, setContactStatuses] = useState({});
-  const [selectedDate, setSelectedDate] = useState("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
+  const [status, setStatus] = useState<string>("");
+  const [contactStatuses, setContactStatuses] = useState<{ [key: number]: string }>({});
+  const [selectedDate, setSelectedDate] = useState<string>("");
 
-  const handleCheckboxChange = (contactId) => {
+  // Function to handle checkbox change
+  const handleCheckboxChange = (contactId: number) => {
     setSelectedContacts((prevSelectedContacts) => {
       const updatedSelection = prevSelectedContacts.includes(contactId)
         ? prevSelectedContacts.filter((id) => id !== contactId)
@@ -96,7 +113,9 @@ export default function Home() {
     });
   };
 
-  const handleStatusChange = (newStatus) => {
+
+  // Function to handle status change
+  const handleStatusChange = (newStatus: string) => {
     setStatus(newStatus);
     setContactStatuses((prevStatuses) => {
       const updatedStatuses = { ...prevStatuses };
@@ -107,7 +126,8 @@ export default function Home() {
     });
   };
 
-  const getStatusBorderColor = (contactId) => {
+  // Function to get status border color
+  const getStatusBorderColor = (contactId: number): string => {
     switch (contactStatuses[contactId]) {
       case "to-do":
         return "gray";
