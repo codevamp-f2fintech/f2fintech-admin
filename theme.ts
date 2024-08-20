@@ -80,3 +80,46 @@ export const useMode = () => {
 
   return [theme, colorMode];
 };
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#1976d2",
+    },
+    secondary: {
+      main: "#D32F2F",
+    },
+    background: {
+      default: "#fff",
+    },
+  },
+  components: {
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          "& .MuiOutlinedInput-root": {
+            borderRadius: "8px",
+            padding: "5px",
+            boxShadow: "0px 2px 6px rgba(0, 0, 0, 0.1)",
+          },
+          "& .MuiInputBase-input": {
+            padding: "10px",
+          },
+          "& .Mui-focused fieldset": {
+            borderColor: "#1976d2",
+          },
+        },
+      },
+    },
+  },
+  typography: {
+    h5: {
+      fontWeight: 600,
+      fontSize: "22px",
+    },
+    button: {
+      textTransform: "none",
+      fontWeight: 600,
+    },
+  },
+});
