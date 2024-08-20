@@ -1,9 +1,9 @@
-body {
+* {
   margin-top: 10px;
   padding: 0;
-  font-family: sans-serif;
+  margin: 0;
+  font-family: "Poppins, Arial, sans-serif";
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
-  background-color: #d8ccff;
 }

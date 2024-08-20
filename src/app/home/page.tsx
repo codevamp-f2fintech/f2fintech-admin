@@ -14,7 +14,13 @@ import {
   InputLabel,
   Checkbox,
   FormControlLabel,
+  Badge,
+  IconButton,
+  Menu,
+  MenuItem as DropdownItem,
 } from "@mui/material";
+import NotificationsIcon from "@mui/icons-material/Notifications";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 
 // Define interfaces for your data types
 interface Contact {
@@ -28,7 +34,21 @@ interface Contact {
   loanAmount: string;
   tenure: string;
   addedDate: string;
-};
+}
+
+// Mock data with typed contacts
+interface Contact {
+  id: number;
+  name: string;
+  role: string;
+  address: string;
+  email: string;
+  avatar: string;
+  popularity: number;
+  loanAmount: string;
+  tenure: string;
+  addedDate: string;
+}
 
 // Mock data with typed contacts
 const contacts: Contact[] = [
@@ -100,8 +120,26 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
   const [status, setStatus] = useState<string>("");
-  const [contactStatuses, setContactStatuses] = useState<{ [key: number]: string }>({});
+  const [contactStatuses, setContactStatuses] = useState<{
+    [key: number]: string;
+  }>({});
   const [selectedDate, setSelectedDate] = useState<string>("");
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [notificationsCount, setNotificationsCount] = useState<number>(12);
+
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    handleMenuClose();
+  };
 
   // Function to handle checkbox change
   const handleCheckboxChange = (contactId: number) => {
@@ -112,7 +150,6 @@ export default function Home() {
       return updatedSelection;
     });
   };
-
 
   // Function to handle status change
   const handleStatusChange = (newStatus: string) => {
@@ -136,9 +173,9 @@ export default function Home() {
       case "on-hold":
         return "orange";
       case "forwarded":
-        return "green";
+        return "Aqua";
       case "closed":
-        return "red";
+        return "green";
       default:
         return "transparent";
     }
@@ -156,25 +193,24 @@ export default function Home() {
   });
 
   return (
-    <Box padding={3} sx={{ minHeight: "100vh" }}>
+    <Box padding={2} sx={{ minHeight: "100vh", backgroundColor: "white" }}>
       <Box
         display="flex"
         justifyContent="space-between"
         alignItems="center"
         sx={{
-          marginBottom: "10px",
-          paddingLeft: "60px",
-          paddingRight: "60px",
-          marginTop: "10px",
-          backgroundColor: "white",
-          borderRadius: "20px",
-          padding: "10px",
+          marginBottom: "16px",
+          padding: "5px 10px",
+          background: "linear-gradient(to right, #6a11cb, #2575fc)",
+          backgroundSize: "cover",
+          borderRadius: "10px",
+          color: "white",
         }}
       >
         <Typography
-          variant="h5"
+          variant="h6"
           component="div"
-          sx={{ fontWeight: "bold", color: "black" }}
+          sx={{ fontWeight: "bold", fontSize: "1.25rem" }}
         >
           Total Applicants: {filteredContacts.length}
         </Typography>
@@ -186,7 +222,7 @@ export default function Home() {
             size="small"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            sx={{ width: "150px", borderRadius: "10px" }}
+            sx={{ width: "150px", borderRadius: "10px", bgcolor: "white" }}
           />
 
           <FormControl size="small" variant="outlined">
@@ -195,7 +231,7 @@ export default function Home() {
               value={status}
               onChange={(e) => handleStatusChange(e.target.value)}
               label="Status"
-              sx={{ borderRadius: "10px", width: "150px" }}
+              sx={{ borderRadius: "10px", width: "200px", bgcolor: "white" }}
             >
               <MenuItem value="to-do">To Do</MenuItem>
               <MenuItem value="progress">In Progress</MenuItem>
@@ -204,6 +240,7 @@ export default function Home() {
               <MenuItem value="closed">Closed</MenuItem>
             </Select>
           </FormControl>
+
           <FormControl size="small" variant="outlined">
             <TextField
               label="Filter by Date"
@@ -217,25 +254,49 @@ export default function Home() {
               onChange={(e) => setSelectedDate(e.target.value)}
               sx={{
                 borderRadius: "10px",
-                width: "150px",
+                width: "200px",
+                bgcolor: "white",
+                marginTop: "4px",
               }}
             />
           </FormControl>
         </Box>
+
+        <Box display="flex" alignItems="center" gap={2}>
+          <IconButton color="inherit">
+            <Badge badgeContent={notificationsCount} color="secondary">
+              <NotificationsIcon />
+            </Badge>
+          </IconButton>
+
+          <IconButton color="inherit" onClick={handleMenuClick}>
+            <AccountCircleIcon />
+          </IconButton>
+          <Menu
+            id="simple-menu"
+            anchorEl={anchorEl}
+            keepMounted
+            open={Boolean(anchorEl)}
+            onClose={handleMenuClose}
+          >
+            <DropdownItem onClick={handleLogout}>Logout</DropdownItem>
+          </Menu>
+
+          <Avatar
+            alt="User Profile"
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQAquJnmjA9udSc7HSpxJzTAHepjHI-NS7iTA&s"
+            sx={{ width: 40, height: 40 }}
+          />
+          <Typography
+            variant="body2"
+            sx={{ color: "white", fontWeight: "bold" }}
+          >
+            {isLoggedIn ? "Logged In" : "Logged Out"}
+          </Typography>
+        </Box>
       </Box>
 
-      <hr
-        style={{
-          border: "none",
-          height: "1px",
-          backgroundColor: "#ddd",
-          marginTop: "5px",
-          marginLeft: "60px",
-          marginRight: "60px",
-        }}
-      />
-
-      <Grid container spacing={2} padding={3}>
+      <Grid container spacing={2} padding={1}>
         {filteredContacts.map((contact) => (
           <Grid
             item
@@ -243,19 +304,18 @@ export default function Home() {
             sm={6}
             md={4}
             key={contact.id}
-            sx={{ marginTop: "20px" }}
+            sx={{ marginTop: "5px" }}
           >
             <Box
               sx={{
-                borderRadius: "0px",
+                borderRadius: "12px",
                 overflow: "hidden",
-                boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
+                boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.2)",
                 transition: "transform 0.3s, box-shadow 0.3s",
                 "&:hover": {
-                  transform: "scale(1.05)",
-                  boxShadow: "0px 8px 30px rgba(0, 0, 0, 0.2)",
+                  transform: "scale(1.02)",
+                  boxShadow: "0px 6px 16px rgba(0, 0, 0, 0.3)",
                 },
-                position: "relative",
                 borderColor: getStatusBorderColor(contact.id),
                 borderWidth: "2px",
                 borderStyle: "solid",
@@ -265,10 +325,12 @@ export default function Home() {
                 variant="outlined"
                 sx={{
                   width: "100%",
-                  borderRadius: "16px",
-                  backgroundColor: "#fff",
+                  borderRadius: "12px",
                   border: "none",
                   position: "relative",
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  background: "#fff",
                 }}
               >
                 <Box
@@ -278,25 +340,25 @@ export default function Home() {
                     left: 0,
                     backgroundColor: getStatusBorderColor(contact.id),
                     color: "#fff",
-                    padding: "2px 8px",
-                    borderBottomRightRadius: "16px",
-                    fontSize: "12px",
+                    padding: "2px 6px",
+                    borderBottomRightRadius: "12px",
+                    fontSize: "10px",
                     fontWeight: "bold",
                   }}
                 >
                   {contactStatuses[contact.id] || "No Status"}
                 </Box>
-                <CardContent>
-                  <Grid container spacing={2} alignItems="center">
+                <CardContent sx={{ paddingBottom: "4px" }}>
+                  <Grid container spacing={1} alignItems="center">
                     <Grid item>
                       <Avatar
                         alt={contact.name}
                         src={contact.avatar}
                         sx={{
-                          width: 70,
-                          height: 70,
-                          marginBottom: "5px",
-                          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.15)",
+                          width: 60,
+                          height: 60,
+                          marginBottom: "4px",
+                          boxShadow: "0px 3px 8px rgba(0, 0, 0, 0.15)",
                         }}
                       />
                     </Grid>
@@ -313,9 +375,9 @@ export default function Home() {
                           border: "none",
                           height: "1px",
                           backgroundColor: "#ddd",
-                          marginTop: "5px",
-                          marginLeft: "60px",
-                          marginRight: "60px",
+                          marginTop: "4px",
+                          marginLeft: "0",
+                          marginRight: "0",
                         }}
                       />
                       <Typography
@@ -323,10 +385,11 @@ export default function Home() {
                         color="text.primary"
                         sx={{
                           padding: "2px",
-                          borderRadius: "5px",
+                          borderRadius: "4px",
+                          marginTop: "2px",
                         }}
                       >
-                        <span style={{ color: "#1976d2", fontSize: "15px" }}>
+                        <span style={{ color: "#1976d2", fontSize: "14px" }}>
                           Designation:
                         </span>{" "}
                         {contact.role}
@@ -335,13 +398,13 @@ export default function Home() {
                         variant="body2"
                         color="text.primary"
                         sx={{
-                          padding: "5px",
-                          borderRadius: "5px",
-                          marginTop: "5px",
+                          padding: "2px",
+                          borderRadius: "4px",
+                          marginTop: "2px",
                         }}
                       >
-                        <span style={{ color: "#1976d2", fontSize: "15px" }}>
-                          Location:
+                        <span style={{ color: "#1976d2", fontSize: "14px" }}>
+                          Address:
                         </span>{" "}
                         {contact.address}
                       </Typography>
@@ -349,12 +412,26 @@ export default function Home() {
                         variant="body2"
                         color="text.primary"
                         sx={{
-                          padding: "5px",
-                          borderRadius: "5px",
-                          marginTop: "5px",
+                          padding: "2px",
+                          borderRadius: "4px",
+                          marginTop: "2px",
                         }}
                       >
-                        <span style={{ color: "#1976d2", fontSize: "15px" }}>
+                        <span style={{ color: "#1976d2", fontSize: "14px" }}>
+                          Email:
+                        </span>{" "}
+                        {contact.email}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="text.primary"
+                        sx={{
+                          padding: "2px",
+                          borderRadius: "4px",
+                          marginTop: "2px",
+                        }}
+                      >
+                        <span style={{ color: "#1976d2", fontSize: "14px" }}>
                           Loan Amount:
                         </span>{" "}
                         {contact.loanAmount}
@@ -363,58 +440,64 @@ export default function Home() {
                         variant="body2"
                         color="text.primary"
                         sx={{
-                          padding: "5px",
-                          borderRadius: "5px",
-                          marginTop: "5px",
+                          padding: "2px",
+                          borderRadius: "4px",
+                          marginTop: "2px",
                         }}
                       >
-                        <span style={{ color: "#1976d2", fontSize: "15px" }}>
+                        <span style={{ color: "#1976d2", fontSize: "14px" }}>
                           Tenure:
                         </span>{" "}
                         {contact.tenure}
                       </Typography>
-                      {contactStatuses[contact.id] && (
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{
-                            padding: "5px",
-                            borderRadius: "5px",
-                            marginTop: "10px",
-                            textAlign: "center",
-                          }}
-                        ></Typography>
-                      )}
-                    </Grid>
-                    <Grid item>
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={selectedContacts.includes(contact.id)}
-                            onChange={() => handleCheckboxChange(contact.id)}
-                            sx={{ position: "absolute", top: 0, right: 0 }}
-                          />
-                        }
-                        label=""
-                      />
                     </Grid>
                   </Grid>
+                  <hr
+                    style={{
+                      border: "none",
+                      height: "1px",
+                      backgroundColor: "#ddd",
+                      marginTop: "8px",
+                      marginLeft: "0",
+                      marginRight: "0",
+                    }}
+                  />
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      backgroundColor: "#f0f0f0",
+                      borderRadius: "6px",
+                      padding: "4px 6px",
+                      display: "inline-block",
+                      fontSize: "12px",
+                    }}
+                  >
+                    <span style={{ color: "#1976d2" }}>
+                      {calculateDaysAgo(contact.addedDate)}
+                    </span>{" "}
+                    days ago
+                  </Typography>
+
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      bottom: "8px",
+                      right: "8px",
+                      padding: "4px",
+                    }}
+                  >
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={selectedContacts.includes(contact.id)}
+                          onChange={() => handleCheckboxChange(contact.id)}
+                          color="primary"
+                        />
+                      }
+                      label="Pick"
+                    />
+                  </Box>
                 </CardContent>
-                <Box
-                  sx={{
-                    position: "absolute",
-                    bottom: 0,
-                    left: 0,
-                    backgroundColor: "#e0f7fa",
-                    color: "#00796b",
-                    padding: "2px 8px",
-                    borderTopRightRadius: "16px",
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {calculateDaysAgo(contact.addedDate)} days ago
-                </Box>
               </Card>
             </Box>
           </Grid>
