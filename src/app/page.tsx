@@ -1,18 +1,9 @@
-"use client";
-import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "@/redux/store";
-import { increment } from "@/redux/features/userSlice";
+'use client';
 
 const App = () => {
-  const dispatch: AppDispatch = useDispatch();
-  const { user, loading, error } = useSelector(
-    (state: RootState) => state.user
-  );
-
   return (
     <main>
-      <div>Loading is {loading.toString()}</div>
-      <button onClick={() => dispatch(increment())}> Change </button>
+      Hello Next.js
     </main>
   );
 };

@@ -5,11 +5,8 @@ import ReduxProvider from '@/redux/provider';
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-
   title: "F2-Fintech Admin Panel",
-
   description: "Resolving tickets of customers",
-
 };
 
 const RootLayout = ({ children }: Readonly<{ children: React.ReactNode; }>) => {
@@ -22,6 +19,6 @@ const RootLayout = ({ children }: Readonly<{ children: React.ReactNode; }>) => {
       </body>
     </html>
   );
-}
+};
 
 export default RootLayout;
