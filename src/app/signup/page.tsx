@@ -1,24 +1,29 @@
 "use client";
 import React, { useState, MouseEvent } from "react";
-import Avatar from "@mui/material/Avatar";
-import Button from "@mui/material/Button";
-import CssBaseline from "@mui/material/CssBaseline";
-import TextField from "@mui/material/TextField";
-import Grid from "@mui/material/Grid";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import InputAdornment from "@mui/material/InputAdornment";
-import IconButton from "@mui/material/IconButton";
-import PersonIcon from "@mui/icons-material/Person";
-import EmailIcon from "@mui/icons-material/Email";
-import LockIcon from "@mui/icons-material/Lock";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import Visibility from "@mui/icons-material/Visibility";
-import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import {
+  Avatar,
+  Button,
+  CssBaseline,
+  TextField,
+  Grid,
+  Box,
+  Typography,
+  InputAdornment,
+  IconButton,
+} from "@mui/material";
+import {
+  Person,
+  Email,
+  Lock,
+  LockOutlined,
+  Visibility,
+  VisibilityOff,
+} from "@mui/icons-material";
 import { ThemeProvider } from "@mui/material/styles";
+
 import { useMode, ColorModeContext } from "../../../theme";
 
-export default function SignUp() {
+const SignUp = () => {
   const [theme, colorMode]: [Theme, { toggleColorMode: () => void }] =
     useMode();
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -32,6 +37,7 @@ export default function SignUp() {
   ): void => {
     event.preventDefault();
   };
+
   return (
     <ThemeProvider theme={theme}>
       <ColorModeContext.Provider value={colorMode}>
@@ -65,7 +71,7 @@ export default function SignUp() {
             <Avatar
               sx={{ m: 1, bgcolor: "primary.main", width: 56, height: 56 }}
             >
-              <LockOutlinedIcon fontSize="large" />
+              <LockOutlined fontSize="large" />
             </Avatar>
             <Typography component="h1" variant="h5" sx={{ mb: 2 }}>
               Sign up
@@ -84,7 +90,7 @@ export default function SignUp() {
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <PersonIcon
+                          <Person
                             sx={{
                               color: "black",
                             }}
@@ -106,7 +112,7 @@ export default function SignUp() {
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <PersonIcon
+                          <Person
                             sx={{
                               color: "black",
                             }}
@@ -128,7 +134,7 @@ export default function SignUp() {
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <EmailIcon
+                          <Email
                             sx={{
                               color: "black",
                             }}
@@ -151,7 +157,7 @@ export default function SignUp() {
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <LockIcon
+                          <Lock
                             sx={{
                               color: "black",
                             }}
@@ -239,4 +245,6 @@ export default function SignUp() {
       </ColorModeContext.Provider>
     </ThemeProvider>
   );
-}
+};
+
+export default SignUp;
