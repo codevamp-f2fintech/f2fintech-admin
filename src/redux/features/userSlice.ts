@@ -1,34 +1,32 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-interface User {
-    id: string;
-    username: string;
-    email: string;
-    contact: string;
-    designation: string;
-};
+import { User } from '@/types/user';
 
-interface userState {
+interface userInitialState {
     user: User[];
-    loading: boolean;
-    error: string | null;
+    reduxLoading: boolean;
 };
 
-const initialState: userState = {
+const initialState: userInitialState = {
     user: [],
-    loading: false,
-    error: null,
+    reduxLoading: false
 };
 
 export const userSlice = createSlice({
     name: 'user',
     initialState,
     reducers: {
-        increment: (state) => {
-            state.loading = true
+        setDemoUsers: (state, action: PayloadAction<User[]>) => {
+            state.user = action.payload;
+            state.reduxLoading = false;
+        },
+        setLoading: (state, action: PayloadAction<boolean>) => {
+            state.reduxLoading = action.payload;
         }
-    }
+    },
 });
 
-export const { increment } = userSlice.actions;
+export const { setDemoUsers, setLoading } = userSlice.actions;
+
+// Export the reducer to be used in the store configuration
 export default userSlice.reducer;
