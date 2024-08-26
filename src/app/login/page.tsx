@@ -180,16 +180,12 @@ const Login = (): JSX.Element => {
               <Grid container>
                 <Grid item xs>
                   <Link href="#" passHref>
-                    <Typography component="a" variant="body2">
-                      Forgot password?
-                    </Typography>
+                    Forgot password?
                   </Link>
                 </Grid>
                 <Grid item>
                   <Link href="/signUp" passHref>
-                    <Typography component="a" variant="body2">
-                      {"Don't have an account? Sign Up"}
-                    </Typography>
+                    Don&apos;t have an account? Sign Up
                   </Link>
                 </Grid>
               </Grid>
