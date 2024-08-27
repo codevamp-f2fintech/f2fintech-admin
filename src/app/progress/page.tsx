@@ -84,7 +84,7 @@ export default function Home() {
                   variant="h6"
                   sx={{ flexGrow: 1, textAlign: "center" }}
                 >
-                  Progress Dashboard
+                  F2 Fintech Sales Ticketing System
                 </Typography>
                 <Avatar
                   sx={{
