@@ -223,8 +223,7 @@ const SignUp = () => {
             sm={4}
             md={7}
             sx={{
-              backgroundImage:
-                'url("https://plus.unsplash.com/premium_photo-1681487814165-018814e29155?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8bG9naW58ZW58MHx8MHx8fDA%3D")',
+              backgroundImage: 'url("./img/background.jpeg")',
               backgroundRepeat: "no-repeat",
               backgroundSize: "cover",
               backgroundPosition: "center",
