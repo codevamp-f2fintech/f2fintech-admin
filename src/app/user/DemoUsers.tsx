@@ -6,9 +6,12 @@ import { useDispatch, useSelector } from "react-redux";
 
 import type { AppDispatch, RootState } from "@/redux/store";
 import { setDemoUsers, setLoading } from "@/redux/features/userSlice";
+import { setToast } from "@/redux/features/toastSlice";
 import { User } from "@/types/user";
 import { useGetUsers } from "@/hooks/user";
 import Loader from "../components/common/Loader";
+import Toast from "../components/common/Snackbar";
+import { Utility } from "@/utils";
 
 interface DemoUsersProps {
   initialData: User[];
@@ -21,6 +24,9 @@ const DemoUsers: React.FC<DemoUsersProps> = ({ initialData }) => {
   });
   const dispatch: AppDispatch = useDispatch();
   const { user, reduxLoading } = useSelector((state: RootState) => state.user);
+  const { toast } = useSelector((state: RootState) => state.toast);
+
+  const { toastAndNavigate } = Utility();
 
   const validInitialData = useMemo(() => {
     return initialData
@@ -54,6 +60,9 @@ const DemoUsers: React.FC<DemoUsersProps> = ({ initialData }) => {
       size: prevSize.size + 5,
     }));
     dispatch(setLoading(true));
+    setTimeout(() => {
+      toastAndNavigate(dispatch, true, "info", "Successfully Updated");
+    }, 5000);
   };
 
   // Determine which dataset to display
@@ -64,6 +73,7 @@ const DemoUsers: React.FC<DemoUsersProps> = ({ initialData }) => {
       ? validInitialData
       : [];
 
+  console.log("toast", toast);
   return (
     <div>
       <ul>
@@ -73,6 +83,11 @@ const DemoUsers: React.FC<DemoUsersProps> = ({ initialData }) => {
       </ul>
       {!reduxLoading && !swrLoading ? null : <Loader />}
       <button onClick={handleFetchNext}>Fetch Next</button>
+      <Toast
+        alerting={toast.toastAlert}
+        severity={toast.toastSeverity}
+        message={toast.toastMessage}
+      />
     </div>
   );
 };
