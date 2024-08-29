@@ -1,10 +1,11 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { forwardRef } from "react";
 import PropTypes from "prop-types";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
 import Snackbar from "@mui/material/Snackbar";
 import Slide from "@mui/material/Slide";
-import MuiAlert, { AlertProps } from "@mui/material/Alert";
+import MuiAlert, { AlertProps, AlertColor } from "@mui/material/Alert";
 
 const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(
   props,
@@ -16,7 +17,7 @@ const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(
 interface ToastProps {
   alerting: boolean;
   message: string;
-  severity: "error" | "warning" | "info" | "success";
+  severity: AlertColor;
 }
 
 const Toast: React.FC<ToastProps> = ({ alerting, message, severity }) => {
@@ -24,6 +25,13 @@ const Toast: React.FC<ToastProps> = ({ alerting, message, severity }) => {
     open: alerting,
     Transition: Slide,
   });
+
+  React.useEffect(() => {
+    setState({
+      ...state,
+      open: alerting
+    });
+  }, [alerting]);
 
   const handleClose = (
     event?: React.SyntheticEvent | Event,
@@ -69,7 +77,7 @@ const Toast: React.FC<ToastProps> = ({ alerting, message, severity }) => {
 Toast.propTypes = {
   alerting: PropTypes.bool.isRequired,
   message: PropTypes.string.isRequired,
-  severity: PropTypes.oneOf(["error", "warning", "info", "success"]).isRequired,
+  severity: PropTypes.any.isRequired,
 };
 
 export default Toast;

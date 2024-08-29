@@ -5,17 +5,20 @@ import { Toast } from "@/types/toast";
 interface toastState {
   toast: Toast;
 }
+
 const initialState: toastState = {
-  toast: { toastAlert: false, toastSeverity: "", toastMessage: "" },
+  toast: { toastAlert: false, toastSeverity: "info", toastMessage: "" },
 };
+
 export const toastSlice = createSlice({
   name: "toast",
   initialState,
   reducers: {
     setToast: (state, action: PayloadAction<Toast>) => {
       state.toast = action.payload;
-    },
-  },
+    }
+  }
 });
+
 export const { setToast } = toastSlice.actions;
 export default toastSlice.reducer;

@@ -4,13 +4,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import type { AppDispatch, RootState } from "@/redux/store";
-import { setDemoUsers, setLoading } from "@/redux/features/userSlice";
-import { setToast } from "@/redux/features/toastSlice";
-import { User } from "@/types/user";
-import { useGetUsers } from "@/hooks/user";
 import Loader from "../components/common/Loader";
 import Toast from "../components/common/Snackbar";
+
+import type { AppDispatch, RootState } from "@/redux/store";
+import { setDemoUsers, setLoading } from "@/redux/features/userSlice";
+import { User } from "@/types/user";
+import { useGetUsers } from "@/hooks/user";
 import { Utility } from "@/utils";
 
 interface DemoUsersProps {
@@ -60,9 +60,6 @@ const DemoUsers: React.FC<DemoUsersProps> = ({ initialData }) => {
       size: prevSize.size + 5,
     }));
     dispatch(setLoading(true));
-    setTimeout(() => {
-      toastAndNavigate(dispatch, true, "info", "Successfully Updated");
-    }, 5000);
   };
 
   // Determine which dataset to display
@@ -70,10 +67,14 @@ const DemoUsers: React.FC<DemoUsersProps> = ({ initialData }) => {
     user.length > 0
       ? user
       : validInitialData.length > 0
-      ? validInitialData
-      : [];
+        ? validInitialData
+        : [];
 
-  console.log("toast", toast);
+  useEffect(() => {
+    toastAndNavigate(dispatch, true, "warning", "Successfully got");
+  }, [data])
+
+
   return (
     <div>
       <ul>

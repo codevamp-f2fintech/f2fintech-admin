@@ -1,5 +1,6 @@
+import { AlertColor } from "@mui/material/Alert";
+
 import { User } from "@/types/user";
-import { Toast } from "@/types/toast";
 import { setToast } from "@/redux/features/toastSlice";
 
 export const Utility = () => {
@@ -76,20 +77,20 @@ export const Utility = () => {
    * @param {boolean} display - Whether to display the toast alert.
    * @param {string} severity - The severity level of the toast alert (e.g., 'success', 'info', 'warning', 'error').
    * @param {string} msg - The message to be displayed in the toast alert.
-   * @param {function} navigateTo - The navigation function to be called after the delay.
+   * @param {function|null} navigateTo - The navigation function to be called after the delay.
    * @param {string|null} [path] - The optional path to navigate to after hiding the toast alert.
    * @returns {void} This function does not return any value.
    */
 
   const toastAndNavigate = (
-    dispatch,
-    display,
-    severity,
-    msg,
-    navigateTo,
-    path = null,
+    dispatch: Function,
+    display: boolean,
+    severity: AlertColor,
+    msg: string,
+    navigateTo: Function | null = null,
+    path: string | null = null,
     reload = false
-  ) => {
+  ): void => {
     dispatch(
       setToast({
         toastAlert: display,
@@ -99,15 +100,15 @@ export const Utility = () => {
     );
     setTimeout(() => {
       dispatch(
-        setToast({ toastAlert: !display, toastSeverity: "", toastMessage: "" })
+        setToast({ toastAlert: !display, toastSeverity: "info", toastMessage: "" })
       );
-      if (path) {
+      if (path && navigateTo) {
         navigateTo(path);
         if (reload) {
           location.reload();
         }
       }
-    }, 2000);
+    }, 2500);
   };
 
   return {
