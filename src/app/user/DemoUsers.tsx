@@ -4,11 +4,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
+import Loader from "../components/common/Loader";
+import Toast from "../components/common/Snackbar";
+
 import type { AppDispatch, RootState } from "@/redux/store";
 import { setDemoUsers, setLoading } from "@/redux/features/userSlice";
 import { User } from "@/types/user";
 import { useGetUsers } from "@/hooks/user";
-import Loader from "../components/common/Loader";
+import { Utility } from "@/utils";
 
 interface DemoUsersProps {
   initialData: User[];
@@ -21,6 +24,9 @@ const DemoUsers: React.FC<DemoUsersProps> = ({ initialData }) => {
   });
   const dispatch: AppDispatch = useDispatch();
   const { user, reduxLoading } = useSelector((state: RootState) => state.user);
+  const { toast } = useSelector((state: RootState) => state.toast);
+
+  const { toastAndNavigate } = Utility();
 
   const validInitialData = useMemo(() => {
     return initialData
@@ -61,8 +67,13 @@ const DemoUsers: React.FC<DemoUsersProps> = ({ initialData }) => {
     user.length > 0
       ? user
       : validInitialData.length > 0
-      ? validInitialData
-      : [];
+        ? validInitialData
+        : [];
+
+  useEffect(() => {
+    toastAndNavigate(dispatch, true, "warning", "Successfully got");
+  }, [data])
+
 
   return (
     <div>
@@ -73,6 +84,11 @@ const DemoUsers: React.FC<DemoUsersProps> = ({ initialData }) => {
       </ul>
       {!reduxLoading && !swrLoading ? null : <Loader />}
       <button onClick={handleFetchNext}>Fetch Next</button>
+      <Toast
+        alerting={toast.toastAlert}
+        severity={toast.toastSeverity}
+        message={toast.toastMessage}
+      />
     </div>
   );
 };
