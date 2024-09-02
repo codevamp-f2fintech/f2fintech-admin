@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+
 import { Box, keyframes } from "@mui/material";
 import { styled } from "@mui/system";
 
@@ -34,7 +34,7 @@ const LoaderContainer = styled(Box)({
 
 // Styled component for the background container
 const BackgroundContainer = styled(Box)({
-  background: "#FFFFFF",
+  background: "transparent",
   height: "100vh",
   display: "flex",
   justifyContent: "center",
@@ -44,8 +44,9 @@ const BackgroundContainer = styled(Box)({
   left: "50%",
   transform: "translateX(-50%)",
   width: "100%",
-  bgcolor: "rgba(255, 255, 255, 0.8)",
+  zIndex: 9999
 });
+
 const Loader: React.FC = () => {
   return (
     <BackgroundContainer>

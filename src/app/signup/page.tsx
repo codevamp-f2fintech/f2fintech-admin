@@ -1,5 +1,7 @@
 "use client";
+
 import React, { useState, MouseEvent } from "react";
+import Link from "next/link";
 import {
   Avatar,
   Button,
@@ -19,7 +21,7 @@ import {
   Visibility,
   VisibilityOff,
 } from "@mui/icons-material";
-import { ThemeProvider } from "@mui/material/styles";
+import { ThemeProvider, Theme } from "@mui/material/styles";
 
 import { useMode, ColorModeContext } from "../../../theme";
 
@@ -207,12 +209,9 @@ const SignUp = () => {
               </Button>
               <Grid container justifyContent="flex-end">
                 <Grid item>
-                  <a
-                    href="http://localhost:3000/login"
-                    style={{ textDecoration: "none", color: "#1976d2" }}
-                  >
+                  <Link href="/login" passHref>
                     Already have an account? Sign in
-                  </a>
+                  </Link>
                 </Grid>
               </Grid>
             </Box>

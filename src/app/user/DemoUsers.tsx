@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import Loader from "../components/common/Loader";
-import Toast from "../components/common/Snackbar";
+import Toast from "../components/common/Toast";
 
 import type { AppDispatch, RootState } from "@/redux/store";
 import { setDemoUsers, setLoading } from "@/redux/features/userSlice";
