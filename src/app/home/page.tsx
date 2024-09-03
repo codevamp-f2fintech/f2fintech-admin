@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState } from "react";
 import {
   Card,
@@ -105,7 +106,7 @@ const calculateDaysAgo = (date: string) => {
   return diffDays;
 };
 
-export default function Home() {
+const Home: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
   const [status, setStatus] = useState<string>("");
@@ -196,10 +197,10 @@ export default function Home() {
       }}
     >
       <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
         sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
           marginBottom: "10px",
           padding: "10px 20px",
           background: "linear-gradient(to right, #5e0ecc, #1a69fc)",
@@ -599,4 +600,6 @@ export default function Home() {
       </Grid>
     </Box>
   );
-}
+};
+
+export default Home;

@@ -184,7 +184,7 @@ const Login = (): JSX.Element => {
                   </Link>
                 </Grid>
                 <Grid item>
-                  <Link href="/signUp" passHref>
+                  <Link href="/signup" passHref>
                     Don&apos;t have an account? Sign Up
                   </Link>
                 </Grid>
