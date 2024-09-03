@@ -16,14 +16,9 @@ import {
   Toolbar,
   IconButton,
   Select,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
 } from "@mui/material";
 import {
   AttachFile as AttachFileIcon,
-  MoreVert as MoreVertIcon,
   Bolt as BoltIcon,
   ArrowDropDown as ArrowDropDownIcon,
   ArrowBack as ArrowBackIcon,
@@ -35,20 +30,22 @@ import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { ThemeProvider } from "@mui/material/styles";
 import { useMode, ColorModeContext } from "../../../theme";
 
-export default function Home() {
+type Team = "Sales Team" | "Credit Team" | "Banker"; 
+
+const Progress: React.FC = () => {
   const [theme, colorMode] = useMode();
   const [status, setStatus] = useState("WorkFlow");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedDateTime, setSelectedDateTime] = useState<null | Date>(null);
-  const [selectedTeam, setSelectedTeam] = useState("Sales Team");
-  const [activeSection, setActiveSection] = useState("Comments");
+  const [selectedTeam, setSelectedTeam] = useState<Team>("Sales Team");
+  const [activeSection, setActiveSection] = useState<string>("Comments");
 
-  const handleFileUpload = () => {
-    if (selectedFile) {
-      console.log("Uploading file:", selectedFile);
-    }
-  };
+  // const handleFileUpload = () => {
+  //   if (selectedFile) {
+  //     console.log("Uploading file:", selectedFile);
+  //   }  for later use
+  // };
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -629,4 +626,6 @@ export default function Home() {
       </ColorModeContext.Provider>
     </ThemeProvider>
   );
-}
+};
+
+export default Progress;
