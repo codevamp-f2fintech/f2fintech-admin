@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, MouseEvent } from "react";
+
 import {
   Avatar,
   Button,
@@ -22,6 +23,8 @@ import {
 import { ThemeProvider } from "@mui/material/styles";
 
 import { useMode, ColorModeContext } from "../../../theme";
+
+import { Theme } from "@emotion/react";
 
 const SignUp = () => {
   const [theme, colorMode]: [Theme, { toggleColorMode: () => void }] =
