@@ -39,7 +39,7 @@ export const UserAPI = {
 
   getUserProfile: async (userId, cancel = false) => {
     return await axiosInstance.request({
-      url: `api/user/get/${userId}`,
+      url: `user/get/${userId}`,
       method: "GET",
       signal: cancel
         ? cancelApiObject[this.getuserProfile.name].handleRequestCancellation()
@@ -50,7 +50,7 @@ export const UserAPI = {
   updateUserProfile: async (newData) => {
     try {
       const response = await axiosInstance.request({
-        url: `api/user/update/:id`,
+        url: `user/update/:id`,
         method: "POST",
         data: newData,
       });

@@ -1,9 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { FormEvent, useEffect } from "react";
 
-import axios from "axios";
 import Link from "next/link";
 
 import { useState, MouseEvent, ChangeEvent } from "react";
@@ -27,7 +25,7 @@ import {
   Lock,
 } from "@mui/icons-material";
 import { ThemeProvider, useTheme, Theme } from "@mui/material/styles";
-import { useRouter } from "next/navigation";
+
 import { UserAPI } from "@/apis/UserAPI";
 
 const Login = (): JSX.Element => {
@@ -69,10 +67,8 @@ const Login = (): JSX.Element => {
     try {
       const loginInfo = { email, password };
       const response = await UserAPI.login(loginInfo); // Call the UserAPI login method
-      console.log("Login successful:", response.data);
       // Handle success (e.g., store token, redirect, etc.)
     } catch (error) {
-      console.error("Login error:", error);
       setError("Invalid email or password");
     } finally {
       setLoading(false);
