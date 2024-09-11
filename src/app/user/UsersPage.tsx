@@ -172,9 +172,9 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
                   flexDirection: "column",
                   alignItems: "center",
                   ":hover": {
-                    background: "darkgray",
+                    backgroundImage: `linear-gradient(rgba(200, 200, 220, 0.3), rgba(210, 230, 255, 0.7)), url("img/front.jpg")`,
                     transition: "all 300ms ease-in-out",
-                    color: "primary.main",
+                    color: "black",
                   },
                 }}
               >
