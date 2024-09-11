@@ -1,20 +1,23 @@
-import axios, { AxiosInstance, AxiosError, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosError, AxiosResponse } from "axios";
 
+const ENV = import.meta.env;
 /**
  * Creates a custom Axios instance with predefined configurations.
  * This instance is configured with a base URL for the API, a request timeout,
  * and default headers that will be applied to every request made using this instance.
- * 
+ *
  * @constant
  * @type {AxiosInstance}
  */
 export const axiosInstance: AxiosInstance = axios.create({
-    baseURL: `https://jsonplaceholder.typicode.com/`,
-    timeout: 40000,
-    headers: {
-        Accept: 'application/json, text/plain, */*',
-        'Content-Type': 'application/json; charset=utf-8'
-    }
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  withCredentials: true,
+  validateStatus: (status) => (status >= 200 && status < 300) || status == 404,
+  timeout: 40000,
+  headers: {
+    Accept: "application/json, text/plain, */*",
+    "Content-Type": "application/json; charset=utf-8",
+  },
 });
 
 /**
@@ -28,18 +31,18 @@ export const axiosInstance: AxiosInstance = axios.create({
  * @throws {AxiosError} - Throws the error if it's not a 401 error.
  */
 const errorHandler = (error: AxiosError): Promise<never> => {
-    const statusCode = error.response?.status;
+  const statusCode = error.response?.status;
 
-    // logging only errors that are not 401
-    if (statusCode && statusCode !== 401) {
-        throw error;
-    };
+  // logging only errors that are not 401
+  if (statusCode && statusCode !== 401) {
+    throw error;
+  }
 
-    return Promise.reject(error);
+  return Promise.reject(error);
 };
 
 // Registering the custom error handler to the 'axiosInstance' so that errorHandler function is called automatically.
 axiosInstance.interceptors.response.use(
-    (response: AxiosResponse) => response,
-    (error: AxiosError) => errorHandler(error)
+  (response: AxiosResponse) => response,
+  (error: AxiosError) => errorHandler(error)
 );

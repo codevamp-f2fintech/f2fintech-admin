@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
+
 import Link from "next/link";
+
 import { useState, MouseEvent, ChangeEvent } from "react";
 import {
   Avatar,
@@ -25,11 +27,15 @@ import {
 import { ThemeProvider, useTheme, Theme } from "@mui/material/styles";
 import { url } from "inspector";
 
+import { UserAPI } from "@/apis/UserAPI";
+
 const Login = (): JSX.Element => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const theme: Theme = useTheme();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   // Handler for email input change
   const handleEmailChange = (event: ChangeEvent<HTMLInputElement>): void => {
@@ -51,6 +57,23 @@ const Login = (): JSX.Element => {
     event: MouseEvent<HTMLButtonElement>
   ): void => {
     event.preventDefault();
+  };
+
+  // Handler for form submission
+  const handleLogin = async (e: { preventDefault: () => void }) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const loginInfo = { email, password };
+      const response = await UserAPI.login(loginInfo); // Call the UserAPI login method
+      // Handle success (e.g., store token, redirect, etc.)
+    } catch (error) {
+      setError("Invalid email or password");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -132,7 +155,12 @@ const Login = (): JSX.Element => {
             >
               Sign In
             </Typography>
-            <Box component="form" noValidate sx={{ mt: 1 }}>
+            <Box
+              component="form"
+              noValidate
+              sx={{ mt: 1 }}
+              onSubmit={(e) => handleLogin(e)}
+            >
               <TextField
                 margin="normal"
                 required
