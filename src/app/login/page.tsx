@@ -23,6 +23,7 @@ import {
   Lock,
 } from "@mui/icons-material";
 import { ThemeProvider, useTheme, Theme } from "@mui/material/styles";
+import { url } from "inspector";
 
 const Login = (): JSX.Element => {
   const [email, setEmail] = useState<string>("");
@@ -59,29 +60,46 @@ const Login = (): JSX.Element => {
         component="main"
         sx={{
           height: "100vh",
-          padding: "40px",
-          borderRadius: "50px",
+          // padding: "40px",
           marginRight: "40px",
+          backgroundImage: 'url("img/front1.jpg")',
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
         }}
       >
         <CssBaseline />
+
         <Grid
           item
-          xs={false}
-          sm={4}
-          md={7}
+          component={Paper}
+          elevation={6}
+          square
           sx={{
-            backgroundImage:
-              'url("https://static.vecteezy.com/system/resources/previews/006/405/794/non_2x/account-login-flat-illustration-vector.jpg")',
-            backgroundColor: (t) =>
-              t.palette.mode === "light"
-                ? t.palette.grey[50]
-                : t.palette.grey[900],
+            // border: "2px solid black",
+            height: "80vh",
+            width: "70vw",
+            borderRadius: "80px",
+            backgroundImage: 'url("img/front.jpg")',
+            backgroundRepeat: "no-repeat",
             backgroundSize: "cover",
-            backgroundPosition: "left",
+            backgroundPosition: "center",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            "&:hover": {
+              backgroundImage: 'url("img/front.jpg")',
+              transform: "scale(1.05)",
+              // backgroundImage: 'url("img/front1.jpg")',
+              backgroundRepeat: "no-repeat",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            },
           }}
-        />
-        <Grid item xs={12} sm={8} md={5} component={Paper} elevation={6} square>
+        >
           <Box
             sx={{
               my: 8,
@@ -90,12 +108,28 @@ const Login = (): JSX.Element => {
               flexDirection: "column",
               alignItems: "center",
               height: "50vh",
+              // border: "2px solid blue",
             }}
           >
-            <Avatar sx={{ m: 1, bgcolor: "secondary.main" }}>
-              <LockOutlined />
+            <Avatar
+              sx={{
+                height: "15vh",
+                width: "15vh",
+                bgcolor: "secondary.main",
+                top: "-5vh",
+              }}
+            >
+              <LockOutlined sx={{ height: "8vh", width: "8vh" }} />
             </Avatar>
-            <Typography component="h1" variant="h5">
+            <Typography
+              sx={{
+                fontFamily: "monospace",
+                fontSize: "2.3rem",
+                fontWeight: "400",
+              }}
+              component="h1"
+              variant="h5"
+            >
               Sign In
             </Typography>
             <Box component="form" noValidate sx={{ mt: 1 }}>
@@ -106,16 +140,21 @@ const Login = (): JSX.Element => {
                 id="email"
                 label="Email Address"
                 name="email"
-                autoComplete="email"
+                autoComplete="off"
                 autoFocus
                 value={email}
                 onChange={handleEmailChange}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <Email sx={{ color: "#1976d2" }} />
+                      <Email sx={{ color: "black" }} />
                     </InputAdornment>
                   ),
+                }}
+                InputLabelProps={{
+                  style: {
+                    color: "black", // Label color
+                  },
                 }}
               />
               <TextField
@@ -132,7 +171,7 @@ const Login = (): JSX.Element => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <Lock sx={{ color: "#1976d2" }} />
+                      <Lock sx={{ color: "black" }} />
                     </InputAdornment>
                   ),
                   endAdornment: (
@@ -148,6 +187,11 @@ const Login = (): JSX.Element => {
                       </IconButton>
                     </InputAdornment>
                   ),
+                }}
+                InputLabelProps={{
+                  style: {
+                    color: "black", // Label color
+                  },
                 }}
               />
 
@@ -180,18 +224,23 @@ const Login = (): JSX.Element => {
               <Grid container>
                 <Grid item xs>
                   <Link href="#" passHref>
-                    Forgot password?
+                    <Typography sx={{ color: "#0000cc" }}>
+                      Forgot password?
+                    </Typography>
                   </Link>
                 </Grid>
                 <Grid item>
                   <Link href="/signup" passHref>
-                    Don&apos;t have an account? Sign Up
+                    <Typography sx={{ color: "#0000cc" }}>
+                      Don&apos;t have an account? Sign Up
+                    </Typography>
                   </Link>
                 </Grid>
               </Grid>
             </Box>
           </Box>
         </Grid>
+        <Grid item />
       </Grid>
     </ThemeProvider>
   );
