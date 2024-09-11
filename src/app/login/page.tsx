@@ -83,7 +83,6 @@ const Login = (): JSX.Element => {
         component="main"
         sx={{
           height: "100vh",
-          // padding: "40px",
           marginRight: "40px",
           backgroundImage: 'url("img/front1.jpg")',
           backgroundRepeat: "no-repeat",
@@ -114,9 +113,8 @@ const Login = (): JSX.Element => {
             alignItems: "center",
             justifyContent: "center",
             "&:hover": {
-              backgroundImage: 'url("img/front.jpg")',
+              backgroundImage: `linear-gradient(rgba(200, 200, 220, 0.0), rgba(210, 230, 255, 0.7)), url("img/front.jpg")`,
               transform: "scale(1.05)",
-              // backgroundImage: 'url("img/front1.jpg")',
               backgroundRepeat: "no-repeat",
               backgroundSize: "cover",
               backgroundPosition: "center",
@@ -178,6 +176,7 @@ const Login = (): JSX.Element => {
                       <Email sx={{ color: "black" }} />
                     </InputAdornment>
                   ),
+                  style: { fontSize: "15px", color: "#" },
                 }}
                 InputLabelProps={{
                   style: {

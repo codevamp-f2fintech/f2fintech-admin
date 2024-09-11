@@ -94,7 +94,6 @@ const SignUp = () => {
               alignItems: "center",
               p: 4,
               boxShadow: 3,
-              borderRadius: "40px",
               // backdropFilter: "blur(10px)",
               // border: "2px solid red",
             }}
@@ -137,7 +136,7 @@ const SignUp = () => {
                           />
                         </InputAdornment>
                       ),
-                      style: { color: "#2c3ce3", fontSize: "15px" },
+                      style: { fontSize: "15px" },
                     }}
                     InputLabelProps={{
                       style: {
