@@ -1,5 +1,4 @@
 import { axiosInstance } from "./config/axiosConfig";
-
 /**
  * Fetches data from the provided URL using a GET request.
  *
@@ -9,13 +8,12 @@ import { axiosInstance } from "./config/axiosConfig";
  * @throws {Error} - If the response does not contain data.
  */
 export const fetcher = async <T>(url: string): Promise<T> => {
-    const res = await axiosInstance.get<T>(url);
-    if (!res.data) {
-        throw new Error('No data found');
-    }
-    return res.data;
+  const res = await axiosInstance.get<T>(url);
+  if (!res.data) {
+    throw new Error("No data found");
+  }
+  return res.data;
 };
-
 /**
  * Creates data at the provided URL using a POST request.
  *
@@ -27,13 +25,12 @@ export const fetcher = async <T>(url: string): Promise<T> => {
  * @throws {Error} - If the response does not contain data.
  */
 export const creator = async <T, D>(url: string, data: D): Promise<T> => {
-    const res = await axiosInstance.post<T>(url, data);
-    if (!res.data) {
-        throw new Error('Failed to create data');
-    }
-    return res.data;
+  const res = await axiosInstance.post<T>(url, data);
+  if (!res.data) {
+    throw new Error("Failed to create data");
+  }
+  return res.data;
 };
-
 /**
  * Modifies data at the provided URL using a PUT request.
  *
@@ -45,9 +42,9 @@ export const creator = async <T, D>(url: string, data: D): Promise<T> => {
  * @throws {Error} - If the response does not contain data.
  */
 export const modifier = async <T, D>(url: string, data: D): Promise<T> => {
-    const res = await axiosInstance.put<T>(url, data);
-    if (!res.data) {
-        throw new Error('Failed to modify data');
-    }
-    return res.data;
+  const res = await axiosInstance.put<T>(url, data);
+  if (!res.data) {
+    throw new Error("Failed to modify data");
+  }
+  return res.data;
 };

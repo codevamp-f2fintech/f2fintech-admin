@@ -1,6 +1,5 @@
 "use client";
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -8,6 +7,7 @@ import {
   Grid,
   Avatar,
   Box,
+  Button,
   TextField,
   MenuItem,
   Select,
@@ -18,105 +18,42 @@ import {
   Badge,
   IconButton,
   Menu,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  List,
+  ListItem,
+  ListItemText,
 } from "@mui/material";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import { CalendarToday as CalendarIcon } from "@mui/icons-material";
-
 import { LocalizationProvider, DateRangePicker } from "@mui/x-date-pickers-pro";
 import { AdapterDayjs } from "@mui/x-date-pickers-pro/AdapterDayjs";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
-
-// Define interfaces for your data types
-interface Contact {
-  id: number;
-  name: string;
-  role: string;
-  address: string;
-  email: string;
-  avatar: string;
-  popularity: number;
-  loanAmount: string;
-  tenure: string;
-  addedDate: string;
-}
-
-// Mock data with typed contacts
-const contacts: Contact[] = [
-  {
-    id: 1,
-    name: "Prashant Kumar",
-    role: "Senior Tech Lead",
-    address: "Noida, Delhi",
-    email: "it@f2fintech.com",
-    avatar:
-      "https://media.licdn.com/dms/image/C5603AQH_92_Dw7Ff_w/profile-displayphoto-shrink_800_800/0/1633158754592?e=1728518400&v=beta&t=2grvOiwrmqnGuwT_GCWaf307ZWd12UvH9wc302dUVlY",
-    popularity: 2,
-    loanAmount: "₹100,000",
-    tenure: "5 years",
-    addedDate: "2024-08-10",
-  },
-
-  {
-    id: 2,
-    name: "Ritu Anuragi",
-    role: "Senior Tech Lead",
-    address: "Noida, Delhi",
-    email: "it@f2fintech.com",
-    avatar:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQAquJnmjA9udSc7HSpxJzTAHepjHI-NS7iTA&s",
-    popularity: 2,
-    loanAmount: "₹100,000",
-    tenure: "5 years",
-    addedDate: "2024-08-07",
-  },
-  {
-    id: 3,
-    name: "Ritu Anuragi",
-    role: "Senior Tech Lead",
-    address: "Noida, Delhi",
-    email: "it@f2fintech.com",
-    avatar:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQAquJnmjA9udSc7HSpxJzTAHepjHI-NS7iTA&s",
-    popularity: 2,
-    loanAmount: "₹100,000",
-    tenure: "5 years",
-    addedDate: "2024-08-07",
-  },
-  {
-    id: 4,
-    name: "Tuba Khan",
-    role: "AI Developer",
-    address: "Noida, Delhi",
-    email: "it@f2fintech.com",
-    avatar:
-      "https://media.licdn.com/dms/image/D5603AQEMixrGIC0orw/profile-displayphoto-shrink_800_800/0/1715094788444?e=1729123200&v=beta&t=B0cJ13t2qCWGZugiQ2XdeOq9yI8nRxwUfYAg8kE1wwg",
-    popularity: 2,
-    loanAmount: "₹100,000",
-    tenure: "5 years",
-    addedDate: "2024-08-11",
-  },
-];
-
-// Function to calculate the number of days ago
-const calculateDaysAgo = (date: string) => {
-  const today = new Date();
-  const addedDate = new Date(date);
-  const diffTime = Math.abs(today.getTime() - addedDate.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  return diffDays;
-};
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "@/redux/store";
+import { setCustomers, appendCustomers } from "@/redux/features/customerSlice";
+import { Customer } from "@/types/customer";
+import { useGetCustomers } from "@/hooks/customer";
+import Loader from "../components/common/Loader";
 
 const Home: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
-  const [status, setStatus] = useState<string>("");
-  const [contactStatuses, setContactStatuses] = useState<{
-    [key: number]: string;
-  }>({});
-  const [selectedDate, setSelectedDate] = useState<string>("");
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [notificationsCount, setNotificationsCount] = useState<number>(4);
+
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize] = useState<number>(6);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [paginationLoading, setPaginationLoading] = useState<boolean>(false);
+  const [openDialog, setOpenDialog] = useState(false);
+
+  const dispatch: AppDispatch = useDispatch();
+  const { customer } = useSelector((state: RootState) => state.customer);
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -136,66 +73,118 @@ const Home: React.FC = () => {
     handleMenuClose();
   };
 
+  const handleShowMyTickets = () => setOpenDialog(true);
+  const handleCloseDialog = () => setOpenDialog(false);
+
+  const selectedTickets = customer.filter((contact) =>
+    selectedContacts.includes(contact.Id)
+  );
+
+  const filteredCustomers = customer.filter((val) =>
+    val.Name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const { data } = useGetCustomers(
+    [],
+    `/customer-applications/get-loan-applications`,
+    currentPage,
+    pageSize
+  );
+
+  useEffect(() => {
+    if (data.success === true) {
+      if (currentPage === 1) {
+        dispatch(setCustomers(data.data as Customer[]));
+      } else {
+        dispatch(appendCustomers(data.data as Customer[]));
+      }
+      const pages = Math.ceil(data.totalCount / pageSize);
+      setTotalPages(pages > 0 ? pages : 1);
+      setLoading(false);
+      setPaginationLoading(false);
+    }
+  }, [data, dispatch, currentPage, pageSize]);
+
+  const handleScroll = () => {
+    const scrollTop = document.documentElement.scrollTop;
+    const windowHeight = window.innerHeight;
+    const offsetHeight = document.documentElement.offsetHeight;
+
+    if (
+      windowHeight + scrollTop >= offsetHeight - 50 &&
+      currentPage < totalPages &&
+      !paginationLoading
+    ) {
+      setPaginationLoading(true);
+      setCurrentPage((prevPage) => prevPage + 1);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [currentPage, totalPages, paginationLoading]);
+
+  // Function to calculate the number of days ago
+  const calculateDaysAgo = (date: string) => {
+    const today = new Date();
+    const addedDate = new Date(date);
+    const diffTime = Math.abs(today.getTime() - addedDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
   // Function to handle checkbox change
   const handleCheckboxChange = (contactId: number) => {
     setSelectedContacts((prevSelectedContacts) => {
       const updatedSelection = prevSelectedContacts.includes(contactId)
-        ? prevSelectedContacts.filter((id) => id !== contactId)
+        ? prevSelectedContacts.filter((Id) => Id !== contactId)
         : [...prevSelectedContacts, contactId];
       return updatedSelection;
     });
   };
 
-  // Function to handle status change
-  const handleStatusChange = (newStatus: string) => {
-    setStatus(newStatus);
-    setContactStatuses((prevStatuses) => {
-      const updatedStatuses = { ...prevStatuses };
-      selectedContacts.forEach((contactId) => {
-        updatedStatuses[contactId] = newStatus;
-      });
-      return updatedStatuses;
-    });
-  };
-
   // Function to get status border color
-  const getStatusBorderColor = (contactId: number): string => {
-    switch (contactStatuses[contactId]) {
-      case "to-do":
-        return "black";
+  const getStatusBorderColor = (status: string | undefined): string => {
+    switch (status) {
       case "progress":
-        return " LightSalmon ";
+        return "LightSalmon";
       case "on-hold":
         return "orange";
       case "forwarded":
         return "Aqua";
       case "closed":
         return "green";
+      case "under_review":
+        return "blue";
+      case "approved":
+        return "purple";
+      case "submitted":
+        return "grey";
+      case "hold":
+        return "yellow";
+      case "rejected":
+        return "red";
+      case "No status available":
+        return "transparent";
       default:
         return "transparent";
     }
   };
-
-  // Filter contacts based on search term and selected date
-  const filteredContacts = contacts.filter((contact) => {
-    const matchesName = contact.name
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesDate = selectedDate
-      ? contact.addedDate === selectedDate
-      : true;
-    return matchesName && matchesDate;
-  });
+  console.log(filteredCustomers);
 
   return (
     <Box
       sx={{
         backgroundColor: "#eeeeee",
         padding: 2,
-        minHeight: "100vh",
-        width: "100wv",
+        overflow: "auto",
+        width: "100%",
       }}
     >
+      {/* Header Section */}
       <Box
         sx={{
           display: "flex",
@@ -205,12 +194,10 @@ const Home: React.FC = () => {
           padding: "10px 20px",
           background: "linear-gradient(to right, #5e0ecc, #1a69fc)",
           boxShadow: "0px 6px 15px rgba(0, 0, 0, 0.4)",
-          marginTop: "-5px",
           position: "fixed",
           top: 0,
           left: 0,
           right: 0,
-          backgroundSize: "cover",
           color: "white",
           zIndex: 1000,
           transition: "background 0.3s, box-shadow 0.3s",
@@ -231,7 +218,7 @@ const Home: React.FC = () => {
               color: "#fff",
             }}
           >
-            Total Applicants: {filteredContacts.length}
+            Total Applications: {customer.length}
           </Typography>
         </Box>
 
@@ -252,7 +239,8 @@ const Home: React.FC = () => {
               marginTop: "6px",
               borderRadius: "12px",
               backgroundColor: "#fff",
-              marginLeft: "370px",
+              marginLeft: "510px",
+
               "& .MuiInputLabel-root": {
                 color: "black",
               },
@@ -269,38 +257,57 @@ const Home: React.FC = () => {
         </Box>
 
         <Box display="flex" alignItems="center" gap={2}>
-          <FormControl size="small" variant="outlined">
-            <InputLabel
-              sx={{
-                marginTop: "7px",
-              }}
-            >
-              Status
-            </InputLabel>
-            <Select
-              value={status}
-              onChange={(e) => handleStatusChange(e.target.value)}
-              label="Status"
-              sx={{
-                width: "160px",
-                marginTop: "6px",
-                borderRadius: "12px",
-                backgroundColor: "#fff",
-              }}
-            >
-              <MenuItem value="to-do">To Do</MenuItem>
-              <MenuItem value="progress">In Progress</MenuItem>
-              <MenuItem value="on-hold">On Hold</MenuItem>
-              <MenuItem value="forwarded">Forwarded</MenuItem>
-              <MenuItem value="closed">Closed</MenuItem>
-            </Select>
-          </FormControl>
+          <Button
+            variant="contained"
+            sx={{
+              width: "190px",
+              marginTop: "6px",
+              borderRadius: "12px",
+              backgroundColor: "#fff",
+              color: "black",
+              "&:hover": {
+                backgroundColor: "#1565c0",
+              },
+            }}
+            onClick={handleShowMyTickets}
+          >
+            Show My Tickets
+          </Button>
+
+          <Dialog open={openDialog} onClose={handleCloseDialog}>
+            <DialogTitle>Selected Tickets</DialogTitle>
+            <DialogContent>
+              <List>
+                {selectedTickets.map((ticket) => (
+                  <ListItem key={ticket.Id}>
+                    <Avatar
+                      alt={ticket.Name}
+                      src={ticket.Image} // Assuming ticket.Image holds the image URL
+                      sx={{ marginRight: 2, width: 56, height: 56 }}
+                    />{" "}
+                    <ListItem key={ticket.Location}></ListItem>
+                    <ListItemText primary={ticket.Name} />
+                  </ListItem>
+                ))}
+                {selectedTickets.length === 0 && (
+                  <ListItem>
+                    <ListItemText primary="No tickets selected" />
+                  </ListItem>
+                )}
+              </List>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleCloseDialog} color="primary">
+                Close
+              </Button>
+            </DialogActions>
+          </Dialog>
         </Box>
+
         <Box
           sx={{
             display: "flex",
             paddingLeft: "5px",
-            overflow: "hidden",
           }}
         >
           <FormControl
@@ -309,6 +316,7 @@ const Home: React.FC = () => {
             sx={{
               width: "220px",
               borderRadius: "8px",
+              overflow: "auto",
               boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
               "& .MuiOutlinedInput-root": {
                 height: "36px",
@@ -346,7 +354,6 @@ const Home: React.FC = () => {
                     },
                     maxHeight: "36px",
                     marginLeft: "5px",
-                    overflow: "hidden",
                   }}
                 />
               </DemoContainer>
@@ -389,191 +396,231 @@ const Home: React.FC = () => {
         </Box>
       </Box>
 
-      <Grid container spacing={4} padding={1}>
-        {filteredContacts.map((contact, index) => (
-          <Grid
-            item
-            xs={12}
-            sm={1}
-            md={4}
-            key={contact.id}
-            // Apply marginTop only to the first row
-            sx={{
-              marginTop: index < 3 ? "55px" : "-25px",
-            }}
-          >
-            <Box
+      {loading && <Loader />}
+
+      <Box
+        className="test-class"
+        sx={{
+          height: "100vh",
+          paddingRight: "8px",
+          position: "relative",
+          marginTop: "60px", // Adjusted for header height
+        }}
+      >
+        <Grid container spacing={4} padding={2}>
+          {filteredCustomers.map((contact) => (
+            <Grid
+              item
+              xs={12}
+              sm={6}
+              md={4}
+              key={contact.Id}
               sx={{
-                borderRadius: "2px",
-                overflow: "hidden",
-                borderColor: getStatusBorderColor(contact.id),
-                borderWidth: "2px",
-                borderStyle: "double",
-                marginBottom: "3px",
+                marginTop: "20px",
               }}
             >
-              <Card
-                variant="outlined"
+              <Box
                 sx={{
-                  width: "100%",
+                  height: "100%",
                   borderRadius: "12px",
-                  border: "none",
-                  position: "relative",
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                  background: "#FFFFFF",
+
+                  borderColor: getStatusBorderColor(contact.status),
+                  borderWidth: "2px",
+                  borderStyle: "solid",
+                  boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.2)",
+                  transition: "transform 0.3s ease",
+                  "&:hover": {
+                    transform: "scale(1.05)",
+                  },
+                  background: "linear-gradient(145deg, #f0f0f0, #dcdcdc)",
                 }}
               >
-                <Box
+                <Card
+                  variant="outlined"
                   sx={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    backgroundColor: getStatusBorderColor(contact.id),
-                    color: "#fff",
-                    padding: "2px 4px",
-                    borderBottomRightRadius: "8px",
-                    fontSize: "10px",
-                    fontWeight: "bold",
+                    borderRadius: "12px",
+                    border: "none",
+                    position: "relative",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    backgroundColor: "#ffffff",
+                    height: "100%",
                   }}
                 >
-                  {contactStatuses[contact.id] || "No Status"}
-                </Box>
-                <CardContent sx={{ paddingBottom: "4px" }}>
-                  <Grid container spacing={2} alignItems="center">
-                    <Grid item>
-                      <Avatar
-                        alt={contact.name}
-                        src={contact.avatar}
-                        sx={{
-                          width: 60,
-                          height: 60,
-                          marginBottom: "4px",
-                          boxShadow: "0px 3px 8px rgba(0, 0, 0, 0.15)",
-                        }}
-                      />
-                    </Grid>
-                    <Grid item xs>
-                      <Typography
-                        variant="h6"
-                        component="div"
-                        sx={{
-                          fontWeight: "bold",
-                          color: "#1976d2",
-                        }}
-                      >
-                        {contact.name}
-                      </Typography>
-                      <hr
-                        style={{
-                          border: "none",
-                          height: "1px",
-                          backgroundColor: "#ddd",
-                          marginTop: "4px",
-                          marginLeft: "0",
-                          marginRight: "0",
-                        }}
-                      />
-                      <Typography
-                        variant="body2"
-                        color="text.primary"
-                        sx={{
-                          padding: "2px",
-                          borderRadius: "4px",
-                          marginTop: "2px",
-                        }}
-                      >
-                        <span style={{ color: "#1976d2", fontSize: "14px" }}>
-                          Designation:
-                        </span>{" "}
-                        {contact.role}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="text.primary"
-                        sx={{
-                          padding: "2px",
-                          borderRadius: "4px",
-                          marginTop: "2px",
-                        }}
-                      >
-                        <span style={{ color: "#1976d2", fontSize: "14px" }}>
-                          Address:
-                        </span>{" "}
-                        {contact.address}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="text.primary"
-                        sx={{
-                          padding: "2px",
-                          borderRadius: "4px",
-                          marginTop: "2px",
-                        }}
-                      >
-                        <span style={{ color: "#1976d2", fontSize: "14px" }}>
-                          Email:
-                        </span>{" "}
-                        {contact.email}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="text.primary"
-                        sx={{
-                          padding: "2px",
-                          borderRadius: "4px",
-                          marginTop: "2px",
-                        }}
-                      >
-                        <span style={{ color: "#1976d2", fontSize: "14px" }}>
-                          Loan Amount:
-                        </span>{" "}
-                        {contact.loanAmount}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="text.primary"
-                        sx={{
-                          padding: "2px",
-                          borderRadius: "4px",
-                          marginTop: "2px",
-                        }}
-                      >
-                        <span style={{ color: "#1976d2", fontSize: "14px" }}>
-                          Tenure:
-                        </span>{" "}
-                        {contact.tenure}
-                      </Typography>
-                    </Grid>
-                  </Grid>
-                  <hr
-                    style={{
-                      border: "none",
-                      height: "1px",
-                      backgroundColor: "#ddd",
-                      marginTop: "4px",
-                      marginLeft: "70px",
-                      marginRight: "0",
-                    }}
-                  />
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      backgroundColor: "#1976d2",
-                      borderRadius: "6px",
-                      padding: "4px 6px",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      fontSize: "12px",
-                      color: "#fff",
-                    }}
-                  >
-                    <CalendarIcon
-                      sx={{ marginRight: "4px", fontSize: "16px" }}
-                    />
-                    {calculateDaysAgo(contact.addedDate)} days ago
-                  </Typography>
+                  <CardContent sx={{ paddingBottom: "8px", paddingTop: "8px" }}>
+                    <Grid container spacing={2} alignItems="center">
+                      <Grid item>
+                        <Avatar
+                          alt={contact.Name}
+                          src={contact.Image}
+                          sx={{
+                            width: 70,
+                            height: 70,
+                            boxShadow: "0px 5px 10px rgba(0, 0, 0, 0.2)",
+                            border: "2px solid #fff",
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs>
+                        <Typography
+                          variant="h6"
+                          component="div"
+                          sx={{
+                            fontWeight: "bold",
+                            color: "#1976d2",
+                            fontSize: "18px",
+                          }}
+                        >
+                          {contact.Name}
+                        </Typography>
+                        <hr
+                          style={{
+                            border: "none",
+                            height: "1px",
+                            backgroundColor: "#ddd",
+                            margin: "4px 0",
+                          }}
+                        />
 
+                        <Typography
+                          variant="body2"
+                          color="text.primary"
+                          sx={{
+                            padding: "2px",
+                            borderRadius: "4px",
+                            marginTop: "2px",
+                            fontSize: "15px",
+                            textDecoration: "bold",
+                          }}
+                        >
+                          <span
+                            style={{
+                              color: "#1976d2",
+                              fontSize: "16px",
+                              textDecoration: "bold",
+                            }}
+                          >
+                            Email:
+                          </span>{" "}
+                          {contact.Email}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          color="text.primary"
+                          sx={{
+                            padding: "2px",
+                            borderRadius: "4px",
+                            marginTop: "2px",
+                            fontSize: "15px",
+                            textDecoration: "bold",
+                          }}
+                        >
+                          <span
+                            style={{
+                              color: "#1976d2",
+                              fontSize: "16px",
+                              textDecoration: "bold",
+                            }}
+                          >
+                            Contact:
+                          </span>{" "}
+                          {contact.Contact}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          color="text.primary"
+                          sx={{
+                            padding: "2px",
+                            borderRadius: "4px",
+                            marginTop: "2px",
+                            fontSize: "15px",
+                            textDecoration: "bold",
+                          }}
+                        >
+                          <span
+                            style={{
+                              color: "#1976d2",
+                              fontSize: "16px",
+                              textDecoration: "bold",
+                            }}
+                          >
+                            Amount:
+                          </span>{" "}
+                          {contact.Amount}
+                        </Typography>
+
+                        <Typography
+                          variant="body2"
+                          color="text.primary"
+                          sx={{
+                            padding: "2px",
+                            borderRadius: "4px",
+                            marginTop: "2px",
+                            fontSize: "15px",
+                            textDecoration: "bold",
+                          }}
+                        >
+                          <span
+                            style={{
+                              color: "#1976d2",
+                              fontSize: "16px",
+                              textDecoration: "bold",
+                            }}
+                          >
+                            Tenure:
+                          </span>{" "}
+                          {contact.Tenure} months
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          color="text.primary"
+                          sx={{
+                            padding: "2px",
+                            borderRadius: "4px",
+                            marginTop: "2px",
+                            fontSize: "15px",
+                            textDecoration: "bold",
+                          }}
+                        >
+                          <span
+                            style={{
+                              color: "#1976d2",
+                              fontSize: "16px",
+                              textDecoration: "bold",
+                            }}
+                          >
+                            Location:
+                          </span>{" "}
+                          {contact.Location}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                    {/* <hr
+                      style={{
+                        border: "none",
+                        height: "1px",
+                        backgroundColor: "#ddd",
+                        margin: "8px 0",
+                      }}
+                    /> */}
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        backgroundColor: "#1976d2",
+                        borderRadius: "6px",
+                        padding: "4px 6px",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        fontSize: "12px",
+                        color: "#fff",
+                      }}
+                    >
+                      <CalendarIcon
+                        sx={{ marginRight: "4px", fontSize: "16px" }}
+                      />
+                      {calculateDaysAgo(contact.applicationDate)} days ago
+                    </Typography>
+                  </CardContent>
                   <Box
                     sx={{
                       position: "absolute",
@@ -584,20 +631,40 @@ const Home: React.FC = () => {
                     <FormControlLabel
                       control={
                         <Checkbox
-                          checked={selectedContacts.includes(contact.id)}
-                          onChange={() => handleCheckboxChange(contact.id)}
+                          checked={selectedContacts.includes(contact.Id)}
+                          onChange={() => handleCheckboxChange(contact.Id)}
                           color="primary"
+                          sx={{
+                            "&.Mui-checked": {
+                              color: "#1976d2",
+                            },
+                          }}
                         />
                       }
                       label="Pick"
+                      sx={{
+                        color: "#2c3ce3",
+                        paddingTop: "-40px",
+                      }}
                     />
                   </Box>
-                </CardContent>
-              </Card>
-            </Box>
-          </Grid>
-        ))}
-      </Grid>
+                </Card>
+              </Box>
+            </Grid>
+          ))}
+        </Grid>
+        {(paginationLoading || loading) && (
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              padding: "16px 0",
+            }}
+          >
+            <Loader />
+          </Box>
+        )}
+      </Box>
     </Box>
   );
 };
