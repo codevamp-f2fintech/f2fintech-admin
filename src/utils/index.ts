@@ -18,8 +18,10 @@ export const Utility = () => {
     size: number
   ): Promise<User[]> => {
     const response = await fetch(`${url}?_page=${page}&_limit=${size}`, {
-      next: { revalidate: 3600 },
+      cache: "no-store",
     });
+
+    // console.log("response123", response);
     if (!response.ok) {
       throw new Error(`Failed to fetch data: ${response.statusText}`);
     }
@@ -100,7 +102,11 @@ export const Utility = () => {
     );
     setTimeout(() => {
       dispatch(
-        setToast({ toastAlert: !display, toastSeverity: "info", toastMessage: "" })
+        setToast({
+          toastAlert: !display,
+          toastSeverity: "info",
+          toastMessage: "",
+        })
       );
       if (path && navigateTo) {
         navigateTo(path);

@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useMemo, useState } from "react";
 
 import {
@@ -20,6 +22,11 @@ import { useGetUsers } from "@/hooks/user";
 interface UsersPageProps {
   initialData: User[];
 }
+
+// Moved capitalizeFirstLetter outside the component function
+const capitalizeFirstLetter = (str: string) => {
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
 
 const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
   const [pageSize, setPageSize] = useState({
@@ -118,15 +125,12 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
             backgroundColor: "#f2f2f2",
             borderRadius: "20px",
             "& .MuiInputLabel-root": {
-              // Change the color of the label
               color: "black", // Replace 'yourColor' with your desired color value
             },
             "& .MuiInputBase-root": {
-              // Customize input field styles
               borderRadius: "20px",
             },
             "& .MuiFilledInput-root": {
-              // Customize the filled input field styles
               backgroundColor: "#f2f2f2", // Replace with your desired background color
             },
           }}
@@ -159,16 +163,16 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
             <Grid item xs={12} sm={6} key={index}>
               <Box
                 sx={{
-                  height: "35vh",
+                  height: "30vh",
                   display: "flex",
                   backgroundImage: "url('/front1.jpg')",
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                   backgroundRepeat: "no-repeat",
                   padding: 2,
-                  borderRadius: "40px",
+                  borderRadius: "40px 0px 40px 0px",
                   boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
-                  justifyContent: "space-around",
+                  justifyContent: "center",
                   flexDirection: "column",
                   alignItems: "center",
                   ":hover": {
@@ -179,16 +183,13 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
                 }}
               >
                 <Typography sx={{ fontSize: "1.5rem" }} variant="h6">
-                  {val.username}
+                  {capitalizeFirstLetter(val.username)}
                 </Typography>
                 <Typography sx={{ fontSize: "1.1rem" }} variant="body1">
                   {val.email}
                 </Typography>
                 <Typography sx={{ fontSize: "1.1rem" }} variant="body1">
-                  {val.designation}
-                </Typography>
-                <Typography sx={{ fontSize: "1.1rem" }} variant="body1">
-                  {val.number}
+                  {val.gender}
                 </Typography>
               </Box>
             </Grid>

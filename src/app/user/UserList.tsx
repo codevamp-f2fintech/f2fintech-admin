@@ -21,6 +21,7 @@ const UserList = async () => {
   try {
     const response: any = await fetchData(url, PAGE, SIZE);
     const data: User[] = response.data;
+    console.log("responsedata", response);
     return <UsersPage initialData={data} />;
   } catch (error) {
     console.log("Error fetching data:", error);
