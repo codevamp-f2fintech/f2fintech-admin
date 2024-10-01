@@ -117,11 +117,30 @@ export const Utility = () => {
     }, 2500);
   };
 
+  /**
+   * Get cookies from document.cookie and return them as an object.
+   * @returns {Object} An object representing the cookies.
+   */
+  const getCookies = () => {
+    const cookieString = document.cookie; // Get cookies as a string
+    const cookiesArray = cookieString.split("; "); // Split into an array
+    const cookies: Record<string, string> = {};
+
+    // Convert array into a key-value pair object
+    cookiesArray.forEach((cookie) => {
+      const [key, value] = cookie.split("=");
+      cookies[key] = decodeURIComponent(value);
+    });
+
+    return cookies;
+  };
+
   return {
     fetchData,
     getLocalStorage,
     remLocalStorage,
     setLocalStorage,
     toastAndNavigate,
+    getCookies,
   };
 };

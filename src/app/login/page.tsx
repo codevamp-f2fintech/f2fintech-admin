@@ -61,6 +61,11 @@ const Login = (): JSX.Element => {
       console.log("response", response);
 
       if (response?.data?.data.token) {
+        // Save the token in a cookie manually
+        document.cookie = `token=${
+          response.data.data.token.access_token
+        }; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
+
         toast.success("Login successful!");
         router.push("/home");
         // Handle successful login (e.g., redirect)

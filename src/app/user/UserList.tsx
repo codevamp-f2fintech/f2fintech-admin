@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 
 import UsersPage from "./UsersPage";
 
 import { User } from "@/types/user";
 import { Utility } from "@/utils";
 
-const url = process.env.NEXT_PUBLIC_API_URL + "/user/get";
+const url = "http://localhost:3001/api/user/get";
 const PAGE = 1;
 const SIZE = 5;
 
@@ -16,11 +17,18 @@ export const metadata: Metadata = {
 };
 
 const UserList = async () => {
-  const { fetchData } = Utility();
-
+  const cookieStore = cookies();
+  const token = cookieStore.get("token")?.value;
   try {
-    const response: any = await fetchData(url, PAGE, SIZE);
-    const data: User[] = response.data;
+    const response = await fetch(`${url}?_page=${PAGE}&_limit=${SIZE}`, {
+      headers: {
+        "x-access-token": token, // Get token from cookies
+        "Content-Type": "application/json", // Set the content type if needed
+      },
+      cache: "no-store",
+    });
+    const resjson = await response.json();
+    const data: User[] = resjson.data;
     console.log("responsedata", response);
     return <UsersPage initialData={data} />;
   } catch (error) {
