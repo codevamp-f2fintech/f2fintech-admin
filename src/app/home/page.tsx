@@ -107,7 +107,11 @@ const Home: React.FC = () => {
     currentPage,
     pageSize
   );
-  const { createTicket } = useCreateTicket("/api/v1/create-ticket");
+
+  const { createdTicket, createTicket, error } = useCreateTicket(
+    "/api/v1/create-ticket", // The API endpoint
+    {} // Initialize with empty object or default user data
+  );
 
   useEffect(() => {
     if (data?.success === true) {
@@ -146,12 +150,12 @@ const Home: React.FC = () => {
             );
             const response = await createTicket({
               customer_application_id: applicationId,
-              user_id: contactId,
+              user_id: 1,
               forwarded_to: 1,
-              status: "pending",
+              status: "to do",
               due_date: new Date(),
             });
-            console.log("Ticket created successfully:", response);
+            console.log("Ticket created page:", response);
             dispatch(pickCustomer(contactId));
           } catch (error) {
             console.error("Error creating ticket:", error);

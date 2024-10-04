@@ -38,24 +38,19 @@ export const useGetTickets = (
  * @param pathKey - The API path key used to create a new ticket.
  * @returns An object containing the created ticket, loading state, error state, and the createTicket function.
  */
-export const useCreateTicket = (pathKey: string) => {
+export const useCreateTicket = (pathKey: string, p0?: {}) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [createdTicket, setCreatedTicket] = useState<Ticket | null>(null);
 
-  const createTicket = async (ticketData: {
-    customer_application_id: number;
-    user_id: number;
-    forwarded_to: number;
-    status: string;
-    due_date: Date;
-  }) => {
+  const createTicket = async (data: object) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post(pathKey, ticketData);
-      setCreatedTicket(response.data);
-      console.log("Ticket created:", response.data);
+      const response = await creator(pathKey, data);
+      setCreatedTicket(response);
+      console.log("Ticket created hook:", response);
+      return response;
     } catch (err) {
       setError(err as Error);
     } finally {
