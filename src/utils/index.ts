@@ -100,7 +100,11 @@ export const Utility = () => {
     );
     setTimeout(() => {
       dispatch(
-        setToast({ toastAlert: !display, toastSeverity: "info", toastMessage: "" })
+        setToast({
+          toastAlert: !display,
+          toastSeverity: "info",
+          toastMessage: "",
+        })
       );
       if (path && navigateTo) {
         navigateTo(path);

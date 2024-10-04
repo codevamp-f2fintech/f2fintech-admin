@@ -1,42 +1,62 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Customer } from "@/types/customer";
 
-// Define your customer state interface
 interface CustomerState {
   customer: Customer[];
+  pickedCustomers: Customer[];
   reduxLoading: boolean;
 }
 
-// Initial state
 const initialState: CustomerState = {
   customer: [],
-  reduxLoading: true, // Default state for loading
+  pickedCustomers: [],
+  reduxLoading: true,
 };
 
-// Create the slice
 export const customerSlice = createSlice({
   name: "customer",
   initialState,
   reducers: {
-    // Append customers to the existing state
     appendCustomers: (state, action: PayloadAction<Customer[]>) => {
       state.customer = [...state.customer, ...action.payload];
       state.reduxLoading = false;
     },
-
-    // Set customers (replace the state)
     setCustomers: (state, action: PayloadAction<Customer[]>) => {
       state.customer = action.payload;
       state.reduxLoading = false;
     },
-    // Set loading state
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.reduxLoading = action.payload;
+    },
+    pickCustomer: (state, action: PayloadAction<string>) => {
+      const customerId = action.payload;
+      const customerToPick = state.customer.find(
+        (customer) => customer.Id === customerId
+      );
+      if (customerToPick) {
+        state.pickedCustomers = [...state.pickedCustomers, customerToPick];
+        state.customer = state.customer.filter(
+          (customer) => customer.Id !== customerId
+        );
+      }
+    },
+
+    setPickedCustomers: (state, action: PayloadAction<Customer[]>) => {
+      state.pickedCustomers = action.payload;
+    },
+    clearPickedCustomers: (state) => {
+      state.pickedCustomers = [];
     },
   },
 });
 
-// Export the actions and reducer
-export const { appendCustomers, setCustomers, setLoading } =
-  customerSlice.actions;
+export const {
+  appendCustomers,
+  setCustomers,
+  setLoading,
+  pickCustomer,
+  setPickedCustomers, // Make sure this is exported
+  clearPickedCustomers,
+} = customerSlice.actions;
+
 export default customerSlice.reducer;
