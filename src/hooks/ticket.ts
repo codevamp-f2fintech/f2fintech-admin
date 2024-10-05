@@ -1,8 +1,8 @@
 import { useState } from "react";
 import useSWR from "swr";
-import axios from "axios";
-import { Ticket } from "@/types/ticket";
+
 import { fetcher, creator, modifier } from "@/apis/apiClient";
+import { Ticket } from "@/types/ticket";
 
 /**
  * Hook for fetching tickets with SWR (stale-while-revalidate) strategy.
@@ -15,21 +15,17 @@ import { fetcher, creator, modifier } from "@/apis/apiClient";
  */
 export const useGetTickets = (
   initialData: Ticket[],
-  pathKey: string,
-  page: number,
-  pageSize: number
+  pathKey: string
 ) => {
   const { data: swrData, error } = useSWR<Ticket[]>(
-    `${pathKey}?page=${page}&size=${pageSize}`,
-    fetcher,
-    {
-      fallbackData: initialData,
-      refreshInterval: initialData ? 3600000 : 0, // 1-hour refresh if initialData exists
-      revalidateOnFocus: false, // Disable revalidation on window focus
-    }
+    pathKey, fetcher, {
+    fallbackData: initialData,
+    refreshInterval: initialData ? 3600000 : 0, // 1-hour refresh if initialData exists
+    revalidateOnFocus: false, // Disable revalidation on window focus
+  }
   );
 
-  return { data: swrData || [], swrLoading: !error && !swrData, error };
+  return { value: swrData || [], swrLoading: !error && !swrData, error };
 };
 
 /**

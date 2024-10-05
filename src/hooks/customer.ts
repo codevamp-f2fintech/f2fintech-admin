@@ -15,8 +15,8 @@ import { Customer } from "@/types/customer"; // Assuming CustomerData is defined
 export const useGetCustomers = (
   initialData: Customer[],
   pathKey: string,
-  page: number,
-  pageSize: number
+  page: number = 1,
+  pageSize: number = 6
 ) => {
   const { data: swrData, error } = useSWR<Customer[]>(
     `${pathKey}?page=${page}&size=${pageSize}`,

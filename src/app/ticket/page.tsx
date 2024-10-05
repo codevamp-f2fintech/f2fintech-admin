@@ -1,5 +1,6 @@
 "use client";
-import React, { useState } from "react";
+
+import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import Link from "next/link";
 import {
@@ -16,26 +17,69 @@ import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import PhoneIcon from "@mui/icons-material/Phone";
 import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import EventIcon from "@mui/icons-material/Event";
+
 import Header from "../components/common/Header";
 import { RootState } from "@/redux/store";
+import { useGetTickets } from "@/hooks/ticket";
+import { useGetCustomers } from "@/hooks/customer";
+import { fetcher } from "@/apis/apiClient";
 
 const Ticket: React.FC = () => {
-  const { pickedCustomers } = useSelector((state: RootState) => state.customer);
+  const [customerApplications, setCustomerApplications] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [notificationsCount, setNotificationsCount] = useState(4);
+  // const { pickedCustomers } = useSelector((state: RootState) => state.customer);
 
   // Filtering customers based on search term input
-  const filteredCustomers = pickedCustomers.filter((val) =>
-    val.Name.toLowerCase().startsWith(searchTerm.toLowerCase())
-  );
+  // const filteredCustomers = pickedCustomers.filter((val) =>
+  //   val.Name.toLowerCase().startsWith(searchTerm.toLowerCase())
+  // );
+
+  const { value: ticketData, error: ticketError } = useGetTickets([], `api/v1/get-all-tickets/${1}`);
+
+  useEffect(() => {
+    const fetchApplications = async () => {
+      if (ticketData?.data) {
+        const applicationIds = ticketData.data.map(ticket => ticket.customer_application_id);
+        console.log(applicationIds, 'application id')
+        try {
+          setLoading(true);
+          const fetchedApplications = await Promise.all(
+            applicationIds.map(id => {
+              console.log(id, 'id')
+              return fetcher(`/customer-applications/get-ticket-applications/${id}`) // Using fetcher for individual calls
+            })
+          );
+          // Using flatMap to flatten the data arrays because response was coming as status and data
+          const combinedData = fetchedApplications.flatMap(item => item.data);
+          console.log(combinedData, 'fetchapps')
+          setCustomerApplications(combinedData);
+        } catch (err) {
+          console.log(err);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchApplications();
+  }, [ticketData]);
+
+  // const { data } = useGetCustomers(
+  //   [],
+  //   `/customer-applications/get-ticket-applications/:applicationId`
+  // );
+
+  console.log('setCustomerApplications=>', customerApplications)
 
   return (
     <>
       <Header
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
-        customerLength={pickedCustomers.length}
+        customerLength={customerApplications.length}
         notificationsCount={notificationsCount}
         isLoggedIn={isLoggedIn}
         handleLogout={() => setIsLoggedIn(false)}
@@ -59,9 +103,9 @@ const Ticket: React.FC = () => {
           Your Picked Tickets
         </Typography>
         <Grid container spacing={4} mt={3}>
-          {filteredCustomers.length > 0 ? (
-            filteredCustomers.map((customer) => (
-              <Grid item xs={12} sm={6} md={4} key={customer.Id}>
+          {customerApplications.length > 0 ? (
+            customerApplications.map((customer, id) => (
+              <Grid item xs={12} sm={6} md={4} key={id}>
                 <Card
                   sx={{
                     boxShadow: 3,
