@@ -20,6 +20,8 @@ import {
 } from "@mui/material";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import { CalendarToday as CalendarIcon } from "@mui/icons-material";
+import PersonIcon from "@mui/icons-material/Person";
+import EmailIcon from "@mui/icons-material/Email";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
 import {
@@ -152,7 +154,7 @@ const Home: React.FC = () => {
               customer_application_id: applicationId,
               user_id: 1,
               forwarded_to: 1,
-              status: "to do",
+              status: "forwarded",
               due_date: new Date(),
             });
             console.log("Ticket created page:", response);
@@ -276,9 +278,7 @@ const Home: React.FC = () => {
             display: "flex",
             paddingLeft: "5px",
           }}
-        >
-          {/* Other controls */}
-        </Box>
+        ></Box>
         <Box display="flex" alignItems="center" gap={2}>
           <IconButton color="inherit">
             <Badge badgeContent={notificationsCount} color="secondary">
@@ -378,17 +378,22 @@ const Home: React.FC = () => {
                         />
                       </Grid>
                       <Grid item xs>
-                        <Typography
-                          variant="h6"
-                          component="div"
-                          sx={{
-                            fontWeight: "bold",
-                            color: "#1976d2",
-                            fontSize: "18px",
-                          }}
-                        >
-                          {contact.Name}
-                        </Typography>
+                        <Box display="flex" alignItems="center">
+                          <PersonIcon
+                            sx={{ color: "#1976d2", marginRight: "8px" }}
+                          />
+                          <Typography
+                            variant="h6"
+                            component="div"
+                            sx={{
+                              fontWeight: "bold",
+                              color: "#1976d2",
+                              fontSize: "18px",
+                            }}
+                          >
+                            {contact.Name.toUpperCase()}
+                          </Typography>
+                        </Box>
                         <hr
                           style={{
                             border: "none",
@@ -398,26 +403,33 @@ const Home: React.FC = () => {
                           }}
                         />
 
-                        <Typography
-                          variant="body2"
-                          color="text.primary"
-                          sx={{
-                            padding: "2px",
-                            borderRadius: "4px",
-                            marginTop: "2px",
-                            fontSize: "15px",
-                          }}
-                        >
-                          <span
-                            style={{
-                              color: "#1976d2",
-                              fontSize: "16px",
+                        <Box display="flex" alignItems="center">
+                          <EmailIcon
+                            sx={{ color: "#1976d2", marginRight: "8px" }}
+                          />{" "}
+                          {/* Add your EmailIcon here */}
+                          <Typography
+                            variant="body2"
+                            color="text.primary"
+                            sx={{
+                              padding: "2px",
+                              borderRadius: "4px",
+                              marginTop: "2px",
+                              fontSize: "15px",
                             }}
                           >
-                            Email:
-                          </span>{" "}
-                          {contact.Email}
-                        </Typography>
+                            <span
+                              style={{
+                                color: "#1976d2",
+                                fontSize: "16px",
+                              }}
+                            >
+                              Email:
+                            </span>{" "}
+                            {contact.Email}
+                          </Typography>
+                        </Box>
+
                         <Typography
                           variant="body2"
                           color="text.primary"

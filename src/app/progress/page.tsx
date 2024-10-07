@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, MouseEvent, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
 import {
   Container,
   Box,
@@ -29,6 +28,7 @@ import {
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
+
 import { ThemeProvider } from "@mui/material/styles";
 import { useMode, ColorModeContext } from "../../../theme";
 import { useDispatch, useSelector } from "react-redux";
@@ -52,11 +52,11 @@ const Progress: React.FC = () => {
   const [selectedDateTime, setSelectedDateTime] = useState<null | Date>(null);
   const [activeSection, setActiveSection] = useState<string>("Comments");
 
-  const searchParams = useSearchParams();
-  const customerId = searchParams.get("customerId");
-  const applicationId = searchParams.get("applicationId");
-  console.log(customerId, "id is:");
-  // Access pickedCustomers from Redux store
+  const [customerId, setCustomerId] = useState(null);
+  const [applicationId, setApplicationId] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+
   const { pickedCustomers } = useSelector((state: RootState) => state.customer);
   console.log(pickedCustomers);
 
@@ -73,12 +73,31 @@ const Progress: React.FC = () => {
     }
   };
 
-  // Fetch employee status and loan status and documents
   useEffect(() => {
-    dispatch(fetchStatusAndDocuments({ customerId, applicationId }));
-    console.log(applicationId, "applicationId is:");
-    dispatch(fetchEmployeeStatus(applicationId));
-  }, [dispatch, applicationId, customerId]);
+    // Get IDs from localStorage
+
+    const storedCustomerId = localStorage.getItem("customerId");
+    const storedApplicationId = localStorage.getItem("applicationId");
+
+    if (storedCustomerId && storedApplicationId) {
+      setCustomerId(storedCustomerId);
+      setApplicationId(storedApplicationId);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (customerId && applicationId) {
+      dispatch(fetchStatusAndDocuments({ customerId, applicationId }));
+
+      dispatch(fetchEmployeeStatus(applicationId));
+    }
+  }, [dispatch, customerId, applicationId]);
+
+  useEffect(() => {
+    if (employeeStatus && documents) {
+      setLoading(false);
+    }
+  }, [employeeStatus, documents]);
 
   useEffect(() => {
     if (customerId) {
@@ -162,7 +181,7 @@ const Progress: React.FC = () => {
             <Grid
               container
               spacing={2}
-              sx={{ width: "100%", maxWidth: 1900, mt: 5, position: "fixed" }}
+              sx={{ width: "100%", maxWidth: 1600, mt: 5, position: "fixed" }}
             >
               <Grid item xs={12} md={8}>
                 <Paper
@@ -227,6 +246,7 @@ const Progress: React.FC = () => {
                     gap={2}
                     sx={{ borderRadius: "14px" }}
                   >
+                    {/* Larger Avatar */}
                     <Avatar
                       src={selectedCustomer.Image}
                       sx={{ width: 80, height: 80 }}
@@ -355,7 +375,7 @@ const Progress: React.FC = () => {
                         background: "#fff",
                         display: "flex",
                         width: "auto",
-                        flexDirection: "row",
+                        flexDirection: "row", // Changed to column to align elements vertically
                       }}
                     >
                       {/* Loan Status Section */}
@@ -369,9 +389,9 @@ const Progress: React.FC = () => {
                         <Box
                           sx={{
                             display: "flex",
-                            flexDirection: "column",
+                            flexDirection: "column", // Stack documents vertically
                             width: "100%",
-                            gap: 1,
+                            gap: 1, // Add gap between documents
                           }}
                         >
                           {documents.map((doc, index) => (
@@ -628,15 +648,6 @@ const Progress: React.FC = () => {
                     justifyContent="space-between"
                     alignItems="center"
                   >
-                    {/* Display current loan status */}
-                    <Typography
-                      variant="h6"
-                      sx={{ color: theme.palette.secondary.main }}
-                    >
-                      Loan Status:
-                    </Typography>
-
-                    {/* Button to change status */}
                     <Button
                       variant="contained"
                       size="small"
@@ -649,10 +660,8 @@ const Progress: React.FC = () => {
                         overflow: "hidden",
                       }}
                     >
-                      {loanStatus}
+                      {selectedCustomer.status}
                     </Button>
-
-                    {/* Dropdown menu for status options */}
                     <Menu
                       anchorEl={anchorEl}
                       open={Boolean(anchorEl)}
@@ -684,12 +693,6 @@ const Progress: React.FC = () => {
                     justifyContent="space-between"
                     alignItems="center"
                   >
-                    <Typography
-                      variant="h6"
-                      sx={{ color: theme.palette.secondary.main }}
-                    >
-                      Employee Status:
-                    </Typography>
                     <Button
                       variant="contained"
                       size="small"
@@ -699,8 +702,7 @@ const Progress: React.FC = () => {
                         textTransform: "none",
                         paddingX: 1,
                         backgroundColor: theme.palette.primary.main,
-                        marginRight: "2px",
-                        marginTop: "5px",
+                        marginRight: "90px",
                       }}
                     >
                       {employeeStatus}
@@ -725,6 +727,9 @@ const Progress: React.FC = () => {
                         Done
                       </MenuItem>
                     </Menu>
+                    <IconButton>
+                      <BoltIcon color="action" />
+                    </IconButton>
                   </Box>
 
                   <Divider sx={{ my: 2 }} />
@@ -752,14 +757,13 @@ const Progress: React.FC = () => {
                           >
                             <Typography variant="body2">{file.name}</Typography>
                             <IconButton
+                              sx={{
+                                color: "red",
+                              }}
                               onClick={() => removeFile(index)}
                               size="small"
                             >
-                              <DeleteIcon
-                                sx={{
-                                  color: "red",
-                                }}
-                              />
+                              <DeleteIcon />
                             </IconButton>
                           </Box>
                         ))}

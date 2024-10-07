@@ -13,17 +13,12 @@ import { Ticket } from "@/types/ticket";
  * @param pageSize - Size of each page for pagination.
  * @returns An object containing the fetched tickets, loading state, and error state.
  */
-export const useGetTickets = (
-  initialData: Ticket[],
-  pathKey: string
-) => {
-  const { data: swrData, error } = useSWR<Ticket[]>(
-    pathKey, fetcher, {
+export const useGetTickets = (initialData: Ticket[], pathKey: string) => {
+  const { data: swrData, error } = useSWR<Ticket[]>(pathKey, fetcher, {
     fallbackData: initialData,
     refreshInterval: initialData ? 3600000 : 0, // 1-hour refresh if initialData exists
     revalidateOnFocus: false, // Disable revalidation on window focus
-  }
-  );
+  });
 
   return { value: swrData || [], swrLoading: !error && !swrData, error };
 };

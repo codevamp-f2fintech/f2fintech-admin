@@ -21,6 +21,7 @@ export const fetchEmployeeStatus = createAsyncThunk<string, number>(
     const response = await axios.get(
       `http://localhost:3001/api/v1/get-by-application-id/${applicationId}`
     );
+
     return response.data.data.status;
   }
 );
@@ -40,13 +41,26 @@ interface FetchStatusAndDocumentsResponse {
 // Async thunk to fetch status and documents from the API dynamically
 export const fetchStatusAndDocuments = createAsyncThunk<
   FetchStatusAndDocumentsResponse,
-  { applicationId: number; customerId: number }
->("employee/fetchStatusAndDocuments", async ({ applicationId, customerId }) => {
-  const response = await axios.get(
-    `http://localhost:3001/customer-applications/get-status-and-documents/${customerId}/${applicationId}`
-  );
-  return response.data;
-});
+  { applicationId: number; customerId: number },
+  { rejectValue: string }
+>(
+  "employee/fetchStatusAndDocuments",
+  async ({ applicationId, customerId }, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:3001/customer-applications/get-status-and-documents/${customerId}/${applicationId}`
+      );
+      if (response.data && response.data.data) {
+        console.log(response, "response");
+        return response.data;
+      } else {
+        return rejectWithValue("No data received from the API");
+      }
+    } catch (error) {
+      return rejectWithValue("API call failed");
+    }
+  }
+);
 
 // Initial state with types
 const initialState: EmployeeState = {
@@ -90,7 +104,7 @@ const employeeSlice = createSlice({
       .addCase(
         fetchStatusAndDocuments.fulfilled,
         (state, action: PayloadAction<FetchStatusAndDocumentsResponse>) => {
-          state.loanStatus = action.payload.data.loanStatus;
+          state.loanStatus = action.payload.data?.loanStatus ?? "unknown";
           state.documents = action.payload.data.documents;
           state.loading = false;
         }

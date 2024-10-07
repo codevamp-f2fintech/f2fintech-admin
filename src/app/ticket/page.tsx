@@ -1,8 +1,6 @@
 "use client";
-
+import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import Link from "next/link";
 import {
   Box,
   Card,
@@ -19,9 +17,7 @@ import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import EventIcon from "@mui/icons-material/Event";
 
 import Header from "../components/common/Header";
-import { RootState } from "@/redux/store";
 import { useGetTickets } from "@/hooks/ticket";
-import { useGetCustomers } from "@/hooks/customer";
 import { fetcher } from "@/apis/apiClient";
 
 const Ticket: React.FC = () => {
@@ -30,31 +26,37 @@ const Ticket: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [notificationsCount, setNotificationsCount] = useState(4);
-  // const { pickedCustomers } = useSelector((state: RootState) => state.customer);
+  const router = useRouter();
 
-  // Filtering customers based on search term input
   // const filteredCustomers = pickedCustomers.filter((val) =>
   //   val.Name.toLowerCase().startsWith(searchTerm.toLowerCase())
   // );
 
-  const { value: ticketData, error: ticketError } = useGetTickets([], `api/v1/get-all-tickets/${1}`);
+  const { value: ticketData, error: ticketError } = useGetTickets(
+    [],
+    `api/v1/get-all-tickets/${1}`
+  );
 
   useEffect(() => {
     const fetchApplications = async () => {
       if (ticketData?.data) {
-        const applicationIds = ticketData.data.map(ticket => ticket.customer_application_id);
-        console.log(applicationIds, 'application id')
+        const applicationIds = ticketData.data.map(
+          (ticket) => ticket.customer_application_id
+        );
+        console.log(applicationIds, "application id");
         try {
           setLoading(true);
           const fetchedApplications = await Promise.all(
-            applicationIds.map(id => {
-              console.log(id, 'id')
-              return fetcher(`/customer-applications/get-ticket-applications/${id}`) // Using fetcher for individual calls
+            applicationIds.map((id) => {
+              console.log(id, "id");
+              return fetcher(
+                `/customer-applications/get-ticket-applications/${id}`
+              );
             })
           );
-          // Using flatMap to flatten the data arrays because response was coming as status and data
-          const combinedData = fetchedApplications.flatMap(item => item.data);
-          console.log(combinedData, 'fetchapps')
+
+          const combinedData = fetchedApplications.flatMap((item) => item.data);
+          console.log(combinedData, "fetchapps");
           setCustomerApplications(combinedData);
         } catch (err) {
           console.log(err);
@@ -67,12 +69,7 @@ const Ticket: React.FC = () => {
     fetchApplications();
   }, [ticketData]);
 
-  // const { data } = useGetCustomers(
-  //   [],
-  //   `/customer-applications/get-ticket-applications/:applicationId`
-  // );
-
-  console.log('setCustomerApplications=>', customerApplications)
+  console.log("setCustomerApplications=>", customerApplications);
 
   return (
     <>
@@ -92,7 +89,7 @@ const Ticket: React.FC = () => {
         sx={{
           padding: 3,
           backgroundColor: "grey.100",
-          marginTop: "64px", // Ensure enough top margin to not overlap with the fixed header
+          marginTop: "64px",
         }}
       >
         <Typography
@@ -116,7 +113,7 @@ const Ticket: React.FC = () => {
                   <CardHeader
                     avatar={
                       <Avatar
-                        src={customer.Image}
+                        src={customer.f2fintech}
                         sx={{ width: 56, height: 56 }}
                       />
                     }
@@ -161,18 +158,22 @@ const Ticket: React.FC = () => {
                       <EventIcon /> Tenure: {customer.Tenure} months
                     </Typography>
                   </CardContent>
-                  <Link
-                    href={`/progress?customerId=${customer.Id}&applicationId=${customer.applicationId}`}
-                    passHref
+
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    sx={{ width: "100%", borderRadius: 0 }}
+                    onClick={() => {
+                      localStorage.setItem("customerId", customer.Id);
+                      localStorage.setItem(
+                        "applicationId",
+                        customer.applicationId
+                      );
+                      router.push(`/progress`);
+                    }}
                   >
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      sx={{ width: "100%", borderRadius: 0 }}
-                    >
-                      Start Work
-                    </Button>
-                  </Link>
+                    Start Work
+                  </Button>
                 </Card>
               </Grid>
             ))
