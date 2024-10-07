@@ -174,6 +174,8 @@ const Home: React.FC = () => {
     });
   };
 
+  console.log(pickedCustomers, 'pickedcus', customer, 'cus')
+
   return (
     <Box
       sx={{

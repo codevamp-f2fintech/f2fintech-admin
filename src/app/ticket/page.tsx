@@ -19,6 +19,7 @@ import EventIcon from "@mui/icons-material/Event";
 import Header from "../components/common/Header";
 import { useGetTickets } from "@/hooks/ticket";
 import { fetcher } from "@/apis/apiClient";
+import { Utility } from "@/utils";
 
 const Ticket: React.FC = () => {
   const [customerApplications, setCustomerApplications] = useState([]);
@@ -26,7 +27,9 @@ const Ticket: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [notificationsCount, setNotificationsCount] = useState(4);
+
   const router = useRouter();
+  const { setLocalStorage } = Utility();
 
   // const filteredCustomers = pickedCustomers.filter((val) =>
   //   val.Name.toLowerCase().startsWith(searchTerm.toLowerCase())
@@ -43,12 +46,10 @@ const Ticket: React.FC = () => {
         const applicationIds = ticketData.data.map(
           (ticket) => ticket.customer_application_id
         );
-        console.log(applicationIds, "application id");
         try {
           setLoading(true);
           const fetchedApplications = await Promise.all(
             applicationIds.map((id) => {
-              console.log(id, "id");
               return fetcher(
                 `/customer-applications/get-ticket-applications/${id}`
               );
@@ -56,7 +57,6 @@ const Ticket: React.FC = () => {
           );
 
           const combinedData = fetchedApplications.flatMap((item) => item.data);
-          console.log(combinedData, "fetchapps");
           setCustomerApplications(combinedData);
         } catch (err) {
           console.log(err);
@@ -68,6 +68,12 @@ const Ticket: React.FC = () => {
 
     fetchApplications();
   }, [ticketData]);
+
+  const handleStartClick = (customerId, applicationId) => {
+    setLocalStorage("ids", { customerId, applicationId });
+    router.push('/progress');
+  };
+
 
   console.log("setCustomerApplications=>", customerApplications);
 
@@ -163,14 +169,7 @@ const Ticket: React.FC = () => {
                     variant="contained"
                     color="primary"
                     sx={{ width: "100%", borderRadius: 0 }}
-                    onClick={() => {
-                      localStorage.setItem("customerId", customer.Id);
-                      localStorage.setItem(
-                        "applicationId",
-                        customer.applicationId
-                      );
-                      router.push(`/progress`);
-                    }}
+                    onClick={() => handleStartClick(customer.Id, customer.applicationId)}
                   >
                     Start Work
                   </Button>

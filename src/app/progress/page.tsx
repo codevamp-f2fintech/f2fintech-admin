@@ -32,12 +32,17 @@ import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { ThemeProvider } from "@mui/material/styles";
 import { useMode, ColorModeContext } from "../../../theme";
 import { useDispatch, useSelector } from "react-redux";
+import { useGetCustomers } from "@/hooks/customer";
 
 import {
   fetchStatusAndDocuments,
   fetchEmployeeStatus,
 } from "../../redux/features/employeeSlice";
 import { RootState } from "../../redux/store";
+import { Utility } from "@/utils";
+import {
+  setCustomers,
+} from "@/redux/features/customerSlice";
 
 const Progress: React.FC = () => {
   const [theme, colorMode] = useMode();
@@ -51,14 +56,26 @@ const Progress: React.FC = () => {
   );
   const [selectedDateTime, setSelectedDateTime] = useState<null | Date>(null);
   const [activeSection, setActiveSection] = useState<string>("Comments");
-
-  const [customerId, setCustomerId] = useState(null);
-  const [applicationId, setApplicationId] = useState(null);
-
   const [loading, setLoading] = useState(true);
+  const { getLocalStorage } = Utility();
+  const ids = getLocalStorage('ids');
 
-  const { pickedCustomers } = useSelector((state: RootState) => state.customer);
-  console.log(pickedCustomers);
+  // const [customerId, setCustomerId] = useState(null);
+  // const [applicationId, setApplicationId] = useState(null);
+
+  const { customer } = useSelector((state: RootState) => state.customer);
+  console.log(ids, 'ids');
+
+  const { data } = useGetCustomers(
+    [],
+    `/customer-applications/get-loan-applications`,
+  );
+
+  useEffect(() => {
+    if (data?.success === true) {
+      dispatch(setCustomers(data.data));
+    }
+  }, [data]);
 
   const {
     status: employeeStatus,
@@ -73,42 +90,41 @@ const Progress: React.FC = () => {
     }
   };
 
+  // useEffect(() => {
+  //   const storedCustomerId = localStorage.getItem("customerId");
+  //   const storedApplicationId = localStorage.getItem("applicationId");
+
+  //   if (storedCustomerId && storedApplicationId) {
+  //     setCustomerId(storedCustomerId);
+  //     setApplicationId(storedApplicationId);
+  //   }
+  // }, []);
+
   useEffect(() => {
-    // Get IDs from localStorage
-
-    const storedCustomerId = localStorage.getItem("customerId");
-    const storedApplicationId = localStorage.getItem("applicationId");
-
-    if (storedCustomerId && storedApplicationId) {
-      setCustomerId(storedCustomerId);
-      setApplicationId(storedApplicationId);
+    if (ids) {
+      dispatch(fetchStatusAndDocuments({ applicationId: ids.applicationId, customerId: ids.customerId }));
+      // dispatch(fetchEmployeeStatus(ids.applicationId));
     }
-  }, []);
+  }, [ids.applicationId, ids.customerId]);
+
+  // useEffect(() => {
+  //   if (employeeStatus && documents) {
+  //     setLoading(false);
+  //   }
+  // }, [employeeStatus, documents]);
 
   useEffect(() => {
-    if (customerId && applicationId) {
-      dispatch(fetchStatusAndDocuments({ customerId, applicationId }));
-
-      dispatch(fetchEmployeeStatus(applicationId));
-    }
-  }, [dispatch, customerId, applicationId]);
-
-  useEffect(() => {
-    if (employeeStatus && documents) {
-      setLoading(false);
-    }
-  }, [employeeStatus, documents]);
-
-  useEffect(() => {
-    if (customerId) {
-      const customer = pickedCustomers.find(
-        (cust) => String(cust.Id) === customerId
+    if (ids.customerId) {
+      const selectdCustomer = customer.find(
+        (cust) => cust.Id === ids.customerId
       );
-      if (customer) {
-        setSelectedCustomer(customer);
+      console.log('selectedcustomer in progress page', selectdCustomer);
+      console.log('customer in progress page', customer);
+      if (selectdCustomer) {
+        setSelectedCustomer(selectdCustomer);
       }
     }
-  }, [customerId, pickedCustomers]);
+  }, [ids.customerId, customer]);
 
   const handleBack = () => {
     window.history.back();
