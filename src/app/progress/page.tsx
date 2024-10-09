@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, MouseEvent } from "react";
+
+import React, { useState, MouseEvent, useEffect } from "react";
 import {
   Container,
   Box,
@@ -15,13 +16,13 @@ import {
   AppBar,
   Toolbar,
   IconButton,
-  Select,
 } from "@mui/material";
 import {
   AttachFile as AttachFileIcon,
   Bolt as BoltIcon,
   ArrowDropDown as ArrowDropDownIcon,
   ArrowBack as ArrowBackIcon,
+  Delete as DeleteIcon,
 } from "@mui/icons-material";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
@@ -29,53 +30,111 @@ import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 
 import { ThemeProvider } from "@mui/material/styles";
 import { useMode, ColorModeContext } from "../../../theme";
+import { useDispatch, useSelector } from "react-redux";
+import { useGetCustomers } from "@/hooks/customer";
 
-type Team = "Sales Team" | "Credit Team" | "Banker"; 
+import {
+  fetchStatusAndDocuments,
+  fetchEmployeeStatus,
+} from "../../redux/features/employeeSlice";
+
+import { RootState } from "../../redux/store";
+import { Utility } from "@/utils";
+import { setCustomers } from "@/redux/features/customerSlice";
 
 const Progress: React.FC = () => {
   const [theme, colorMode] = useMode();
-  const [status, setStatus] = useState("WorkFlow");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedDateTime, setSelectedDateTime] = useState<null | Date>(null);
-  const [selectedTeam, setSelectedTeam] = useState<Team>("Sales Team");
-  const [activeSection, setActiveSection] = useState<string>("Comments");
+  const dispatch = useDispatch();
 
-  // const handleFileUpload = () => {
-  //   if (selectedFile) {
-  //     console.log("Uploading file:", selectedFile);
-  //   }  for later use
-  // };
+  const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [employeeAnchorEl, setEmployeeAnchorEl] = useState<null | HTMLElement>(
+    null
+  );
+  const [selectedDateTime, setSelectedDateTime] = useState<null | Date>(null);
+  const [activeSection, setActiveSection] = useState<string>("Comments");
+  const [loading, setLoading] = useState(true);
+  const { getLocalStorage } = Utility();
+  const ids = getLocalStorage("ids");
+
+  const { customer } = useSelector((state: RootState) => state.customer);
+
+  const { data } = useGetCustomers(
+    [],
+    `/customer-applications/get-loan-applications`
+  );
+
+  useEffect(() => {
+    if (data?.success === true) {
+      dispatch(setCustomers(data.data));
+    }
+  }, [data]);
+
+  const {
+    status: employeeStatus,
+    loanStatus,
+    documents,
+  } = useSelector((state: RootState) => state.employee);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      setSelectedFiles([...selectedFiles, ...Array.from(files)]);
+    }
+  };
+
+  useEffect(() => {
+    if (ids) {
+      dispatch(
+        fetchStatusAndDocuments({
+          applicationId: ids.applicationId,
+          customerId: ids.customerId,
+        })
+      );
+      dispatch(fetchEmployeeStatus(ids.applicationId));
+    }
+  }, [ids.applicationId, ids.customerId]);
+
+  useEffect(() => {
+    if (ids.customerId) {
+      const selectdCustomer = customer.find(
+        (cust) => cust.Id === ids.customerId
+      );
+
+      if (selectdCustomer) {
+        setSelectedCustomer(selectdCustomer);
+      }
+    }
+  }, [ids.customerId, customer]);
+
+  const handleBack = () => {
+    window.history.back();
+  };
+
+  if (!selectedCustomer) {
+    return <div>Loading customer data...</div>;
+  }
+
+  const removeFile = (index: number) => {
+    const newFiles = selectedFiles.filter((_, idx) => idx !== index);
+    setSelectedFiles(newFiles);
+  };
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
+  const handleEmployeeClick = (event: MouseEvent<HTMLButtonElement>) => {
+    setEmployeeAnchorEl(event.currentTarget);
+  };
+
   const handleClose = (selectedStatus: string) => {
-    setStatus(selectedStatus);
     setAnchorEl(null);
   };
 
-  const handleBack = () => {
-    console.log("Back button clicked");
-  };
-
-  const handleChange = (event: React.ChangeEvent<{ value: String }>) => {
-    setSelectedTeam(event.target.value as string);
-  };
-
-  // Function to determine the message based on selected team
-  const getProcessMessage = (team: string): string => {
-    switch (team) {
-      case "Sales Team":
-        return "Currently processed by the Sales Team.";
-      case "Credit Team":
-        return "Currently under review by the Credit Team.";
-      case "Banker":
-        return "Being managed by the Banker.";
-      default:
-        return "";
-    }
+  const handleEmployeeClose = (selectedStatus: string) => {
+    setEmployeeAnchorEl(null);
   };
 
   const showComments = () => setActiveSection("Comments");
@@ -95,7 +154,7 @@ const Progress: React.FC = () => {
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              paddingTop: 2,
+              paddingTop: 7,
             }}
           >
             <AppBar position="fixed" sx={{ boxShadow: "none" }}>
@@ -120,16 +179,17 @@ const Progress: React.FC = () => {
             <Grid
               container
               spacing={2}
-              sx={{ width: "100%", maxWidth: 1600, mt: 10 }}
+              sx={{ width: "100%", maxWidth: 1600, mt: 5, position: "fixed" }}
             >
               <Grid item xs={12} md={8}>
                 <Paper
                   elevation={5}
                   sx={{
                     padding: 4,
-                    height: "75vh",
+                    height: "auto",
                     marginTop: "-50px",
                     background: "#fff",
+                    marginLeft: "-60px",
                   }}
                 >
                   <Box
@@ -148,17 +208,14 @@ const Progress: React.FC = () => {
                     >
                       Customer Description:
                     </Typography>
-                    <Box display="flex" alignItems="center">
+                    <Box display="flex" alignItems="center" ml={2}>
                       <input
                         accept="image/*"
                         style={{ display: "none" }}
                         id="file-upload"
                         type="file"
-                        onChange={(e) =>
-                          setSelectedFile(
-                            e.target.files ? e.target.files[0] : null
-                          )
-                        }
+                        multiple
+                        onChange={handleFileChange}
                       />
                       <label htmlFor="file-upload">
                         <Button
@@ -167,12 +224,11 @@ const Progress: React.FC = () => {
                           variant="contained"
                           sx={{
                             textTransform: "none",
-                            mr: -2,
                             bgcolor: theme.palette.primary.main,
                             color: "#fff",
                           }}
                         >
-                          Attach
+                          Attach Files
                         </Button>
                       </label>
                     </Box>
@@ -191,8 +247,8 @@ const Progress: React.FC = () => {
                   >
                     {/* Larger Avatar */}
                     <Avatar
-                      src="https://media.licdn.com/dms/image/v2/D5603AQFSY_iXVJkvJw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1718904998334?e=1730332800&v=beta&t=TmsbITCyqiQJfyvAbAtkY_dstleLe0YnZoRiA5B4OHE"
-                      sx={{ width: 80, height: 80 }} // Increase size of Avatar
+                      src={selectedCustomer.Image}
+                      sx={{ width: 80, height: 80 }}
                     />
 
                     {/* Information Content */}
@@ -210,75 +266,189 @@ const Progress: React.FC = () => {
                           <Typography variant="h6" fontWeight="bold">
                             <Typography
                               component="span"
-                              sx={{ color: "blue", mr: 1 }}
+                              sx={{ color: "black", mr: 1 }}
                             >
                               Name:
                             </Typography>
-                            <Typography
-                              component="span"
-                              sx={{ color: "black" }}
-                            >
-                              Ritu Anuragi
+                            <Typography component="span" sx={{ color: "blue" }}>
+                              {selectedCustomer.Name}
                             </Typography>
                           </Typography>
-                          <Typography
-                            variant="body2"
-                            fontWeight="bold"
-                            sx={{ mt: 1 }}
-                          >
+
+                          <Typography variant="h6" fontWeight="bold">
                             <Typography
                               component="span"
-                              sx={{ color: "blue", mr: 1 }}
+                              sx={{ color: "black", mr: 1 }}
                             >
                               Email:
                             </Typography>
-                            <Typography component="span" sx={{ color: "Onyx" }}>
-                              ritu@gmail.com
+                            <Typography component="span" sx={{ color: "blue" }}>
+                              {selectedCustomer.Email}
                             </Typography>
                           </Typography>
                         </Grid>
 
                         {/* Contact and Amount */}
                         <Grid item xs={12} sm={6}>
-                          <Typography variant="body2" sx={{ mb: 1 }}>
+                          <Typography variant="h6" fontWeight="bold">
                             <Typography
                               component="span"
-                              sx={{ color: "blue", mr: 1 }}
+                              sx={{ color: "black", mr: 1 }}
                             >
                               Contact:
                             </Typography>
-                            <Typography component="span" sx={{ color: "Onyx" }}>
-                              123-456-7890
+                            <Typography component="span" sx={{ color: "blue" }}>
+                              {selectedCustomer.Contact}
                             </Typography>
                           </Typography>
-                          <Typography variant="body2" fontWeight="bold">
+
+                          <Typography variant="h6" fontWeight="bold">
                             <Typography
                               component="span"
-                              sx={{ color: "blue", mr: 1 }}
+                              sx={{ color: "black", mr: 1 }}
                             >
-                              Amount:
+                              Designation:
                             </Typography>
-                            <Typography component="span" sx={{ color: "Onyx" }}>
-                              ₹50,00,000
+                            <Typography component="span" sx={{ color: "blue" }}>
+                              {selectedCustomer.Designation}
+                            </Typography>
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="h6" fontWeight="bold">
+                            <Typography
+                              component="span"
+                              sx={{ color: "black", mr: 1 }}
+                            >
+                              Location:
+                            </Typography>
+                            <Typography component="span" sx={{ color: "blue" }}>
+                              {selectedCustomer.Location}
+                            </Typography>
+                          </Typography>
+
+                          <Typography variant="h6" fontWeight="bold">
+                            <Typography
+                              component="span"
+                              sx={{ color: "black", mr: 1 }}
+                            >
+                              tenure:
+                            </Typography>
+                            <Typography component="span" sx={{ color: "blue" }}>
+                              {selectedCustomer.Tenure}
+                            </Typography>
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Typography
+                            component="span"
+                            sx={{ color: "black", mr: 1 }}
+                          >
+                            Amount:
+                          </Typography>
+                          <Typography component="span" sx={{ color: "blue" }}>
+                            {selectedCustomer.Amount}
+                          </Typography>
+
+                          <Typography variant="h6" fontWeight="bold">
+                            <Typography
+                              component="span"
+                              sx={{ color: "black", mr: 1 }}
+                            >
+                              Application Date:
+                            </Typography>
+                            <Typography component="span" sx={{ color: "blue" }}>
+                              {selectedCustomer.applicationDate}
                             </Typography>
                           </Typography>
                         </Grid>
                       </Grid>
-
-                      {/* Bank */}
-                      <Typography variant="body2" sx={{ mt: 1 }}>
-                        <Typography
-                          component="span"
-                          sx={{ color: "blue", mr: 1 }}
-                        >
-                          Bank:
-                        </Typography>
-                        <Typography component="span" sx={{ color: "Onyx" }}>
-                          Bank of India
-                        </Typography>
-                      </Typography>
                     </Box>
                   </Box>
+                  <Grid item xs={12} md={8}>
+                    <Paper
+                      elevation={5}
+                      sx={{
+                        padding: 2,
+                        marginTop: "30px",
+                        background: "#fff",
+                        display: "flex",
+                        width: "145%",
+                        flexDirection: "row",
+                        borderRadius: "10px",
+                      }}
+                    >
+                      <Typography variant="h6" sx={{ mb: 2, mt: 1 }}>
+                        Documents:
+                      </Typography>
+
+                      {documents.length > 0 ? (
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            width: "100%",
+                            gap: 1,
+                          }}
+                        >
+                          {documents.map((doc, index) => (
+                            <Box
+                              key={index}
+                              sx={{
+                                mt: 0.5,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                padding: "10px",
+                                backgroundColor: "#f5f5f5",
+                                borderRadius: "8px",
+                                boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+                                transition: "transform 0.2s ease",
+                                "&:hover": {
+                                  transform: "scale(1.02)",
+                                },
+                              }}
+                            >
+                              <Typography
+                                variant="body1"
+                                sx={{ color: "#2c3ce3", flexGrow: 1 }}
+                              >
+                                {doc.type}
+                              </Typography>
+                              <a
+                                href={doc.document_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  textDecoration: "none",
+                                  color: "#2c3ce3",
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                Open
+                              </a>
+                            </Box>
+                          ))}
+                        </Box>
+                      ) : (
+                        <Typography>No documents available.</Typography>
+                      )}
+                    </Paper>
+                  </Grid>
+
+                  {/* Section to display documents based on customer ID */}
+                  <Grid
+                    container
+                    spacing={2}
+                    sx={{
+                      width: "50%",
+                      maxWidth: 1600,
+                      mt: 5,
+                      position: "fixed",
+                      flexDirection: "row", // Make the container row-wise
+                      alignItems: "flex-start", // Align items to the top
+                    }}
+                  ></Grid>
 
                   <Box mt={2} mb={3}>
                     <Typography variant="h6" fontWeight="bold">
@@ -367,6 +537,8 @@ const Progress: React.FC = () => {
                       </Box>
                     </Box>
                   )}
+
+                  {/* History Section */}
                   {activeSection === "History" && (
                     <>
                       <Box mt={2}>
@@ -465,14 +637,33 @@ const Progress: React.FC = () => {
                   sx={{
                     padding: 3,
                     height: "65vh",
-                    marginTop: "-50px",
+                    marginTop: "-45px",
+                    position: "fixed",
+                    width: "500px",
                   }}
                 >
                   <Box
                     display="flex"
                     justifyContent="space-between"
                     alignItems="center"
+                    sx={{
+                      width: "100%",
+                      padding: 1,
+                    }}
                   >
+                    <Typography
+                      variant="subtitle1"
+                      color="text.primary"
+                      sx={{
+                        flexGrow: 1,
+                        marginLeft: "-18px",
+                        color: "#2c3ce3",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Loan Status:
+                    </Typography>
+
                     <Button
                       variant="contained"
                       size="small"
@@ -480,57 +671,147 @@ const Progress: React.FC = () => {
                       onClick={handleClick}
                       sx={{
                         textTransform: "none",
-                        paddingX: 1,
+                        paddingX: 2,
+                        minWidth: "100px",
                         backgroundColor: theme.palette.primary.main,
+                        color: "#fff",
+                        fontWeight: "bold",
+                        ":hover": {
+                          backgroundColor: theme.palette.primary.dark,
+                        },
                       }}
                     >
-                      {status}
+                      {selectedCustomer.status}
                     </Button>
+
                     <Menu
                       anchorEl={anchorEl}
                       open={Boolean(anchorEl)}
-                      onClose={() => handleClose(status)}
+                      onClose={() => handleClose(selectedCustomer.status)}
                     >
-                      <MenuItem onClick={() => handleClose("In Progress")}>
-                        In Progress
+                      <MenuItem onClick={() => handleClose("submitted")}>
+                        Submitted
                       </MenuItem>
-                      <MenuItem onClick={() => handleClose("LOGIN")}>
-                        Login
+                      <MenuItem onClick={() => handleClose("under_review")}>
+                        Under Review
                       </MenuItem>
-                      <MenuItem onClick={() => handleClose("HOLD")}>
-                        Hold
-                      </MenuItem>
-                      <MenuItem onClick={() => handleClose("APPROVED")}>
+                      <MenuItem onClick={() => handleClose("approved")}>
                         Approved
                       </MenuItem>
-                      <MenuItem onClick={() => handleClose("REJECTED")}>
-                        Rejected
+                      <MenuItem onClick={() => handleClose("hold")}>
+                        Hold
                       </MenuItem>
-                      <MenuItem onClick={() => handleClose("DISBURSED")}>
+                      <MenuItem onClick={() => handleClose("disbursed")}>
                         Disbursed
                       </MenuItem>
-                      <MenuItem onClick={() => handleClose("FORWARDED")}>
-                        Forwarded
+                      <MenuItem onClick={() => handleClose("rejected")}>
+                        Rejected
                       </MenuItem>
                     </Menu>
-                    <IconButton>
-                      <BoltIcon color="action" />
-                    </IconButton>
+                  </Box>
+
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    sx={{
+                      width: "100%",
+                      padding: 1,
+                    }}
+                  >
+                    <Typography
+                      variant="subtitle1"
+                      color="text.primary"
+                      sx={{
+                        flexGrow: 1,
+                        marginLeft: "-18px",
+                        color: "#2c3ce3",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Employee Status:
+                    </Typography>
+
+                    <Button
+                      variant="contained"
+                      size="small"
+                      endIcon={<ArrowDropDownIcon />}
+                      onClick={handleEmployeeClick}
+                      sx={{
+                        textTransform: "none",
+                        paddingX: 2, // Consistent padding for better spacing
+                        minWidth: "100px", // Fixed minWidth for consistent button size
+                        backgroundColor: theme.palette.primary.main,
+                        color: "#fff", // White text for better contrast
+                        fontWeight: "bold",
+                        ":hover": {
+                          backgroundColor: theme.palette.primary.dark,
+                        },
+                      }}
+                    >
+                      {employeeStatus}
+                    </Button>
+
+                    <Menu
+                      anchorEl={employeeAnchorEl}
+                      open={Boolean(employeeAnchorEl)}
+                      onClose={() => handleEmployeeClose(employeeStatus)}
+                    >
+                      <MenuItem onClick={() => handleEmployeeClose("hold")}>
+                        Hold
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() => handleEmployeeClose("forwarded")}
+                      >
+                        Forwarded
+                      </MenuItem>
+                      <MenuItem onClick={() => handleEmployeeClose("close")}>
+                        Closed
+                      </MenuItem>
+                      <MenuItem onClick={() => handleEmployeeClose("done")}>
+                        Done
+                      </MenuItem>
+                    </Menu>
                   </Box>
 
                   <Divider sx={{ my: 2 }} />
+                  <Box display="flex" flexDirection="column">
+                    <label htmlFor="file-upload"></label>
+                    <input
+                      accept="image/*, .pdf"
+                      style={{ display: "none" }}
+                      id="file-upload"
+                      type="file"
+                      multiple
+                      onChange={handleFileChange}
+                    />
 
-                  <Typography variant="h6" fontWeight="bold">
-                    {/* Display the process message based on selected team */}
-                    <Box mt={1}>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "#2c3ce3", fontSize: "14px" }}
-                      >
-                        {getProcessMessage(selectedTeam)}
-                      </Typography>
-                    </Box>
-                  </Typography>
+                    {/* Files Display */}
+                    {selectedFiles.length > 0 && (
+                      <Box mt={2}>
+                        {selectedFiles.map((file, index) => (
+                          <Box
+                            key={index}
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="space-between"
+                            sx={{ mt: 1, bgcolor: "#f0f0f0", p: 1 }}
+                          >
+                            <Typography variant="body2">{file.name}</Typography>
+                            <IconButton
+                              sx={{
+                                color: "red",
+                              }}
+                              onClick={() => removeFile(index)}
+                              size="small"
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Box>
+                        ))}
+                      </Box>
+                    )}
+                  </Box>
 
                   <Box display="flex" justifyContent="space-between" mt={2}>
                     <Typography
@@ -572,33 +853,6 @@ const Progress: React.FC = () => {
                         />
                       )}
                     />
-                  </Box>
-                  <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    mt={2}
-                  >
-                    <Typography variant="body2" fontWeight="bold">
-                      Process Under:
-                    </Typography>
-                    <Select
-                      value={selectedTeam}
-                      onChange={handleChange}
-                      sx={{
-                        backgroundColor: "#e8eaf6",
-                        fontSize: "12px",
-                        borderRadius: "4px",
-                        padding: "-10px 1px",
-
-                        minWidth: "70px",
-                      }}
-                      variant="outlined"
-                    >
-                      <MenuItem value="Sales Team">Sales Team</MenuItem>
-                      <MenuItem value="Credit Team">Credit Team</MenuItem>
-                      <MenuItem value="Banker">Banker</MenuItem>
-                    </Select>
                   </Box>
 
                   <Box display="flex" justifyContent="space-between" mt={2}>
