@@ -16,7 +16,6 @@ import {
   AppBar,
   Toolbar,
   IconButton,
-  Select,
 } from "@mui/material";
 import {
   AttachFile as AttachFileIcon,
@@ -38,11 +37,10 @@ import {
   fetchStatusAndDocuments,
   fetchEmployeeStatus,
 } from "../../redux/features/employeeSlice";
+
 import { RootState } from "../../redux/store";
 import { Utility } from "@/utils";
-import {
-  setCustomers,
-} from "@/redux/features/customerSlice";
+import { setCustomers } from "@/redux/features/customerSlice";
 
 const Progress: React.FC = () => {
   const [theme, colorMode] = useMode();
@@ -58,17 +56,13 @@ const Progress: React.FC = () => {
   const [activeSection, setActiveSection] = useState<string>("Comments");
   const [loading, setLoading] = useState(true);
   const { getLocalStorage } = Utility();
-  const ids = getLocalStorage('ids');
-
-  // const [customerId, setCustomerId] = useState(null);
-  // const [applicationId, setApplicationId] = useState(null);
+  const ids = getLocalStorage("ids");
 
   const { customer } = useSelector((state: RootState) => state.customer);
-  console.log(ids, 'ids');
 
   const { data } = useGetCustomers(
     [],
-    `/customer-applications/get-loan-applications`,
+    `/customer-applications/get-loan-applications`
   );
 
   useEffect(() => {
@@ -90,36 +84,24 @@ const Progress: React.FC = () => {
     }
   };
 
-  // useEffect(() => {
-  //   const storedCustomerId = localStorage.getItem("customerId");
-  //   const storedApplicationId = localStorage.getItem("applicationId");
-
-  //   if (storedCustomerId && storedApplicationId) {
-  //     setCustomerId(storedCustomerId);
-  //     setApplicationId(storedApplicationId);
-  //   }
-  // }, []);
-
   useEffect(() => {
     if (ids) {
-      dispatch(fetchStatusAndDocuments({ applicationId: ids.applicationId, customerId: ids.customerId }));
-      // dispatch(fetchEmployeeStatus(ids.applicationId));
+      dispatch(
+        fetchStatusAndDocuments({
+          applicationId: ids.applicationId,
+          customerId: ids.customerId,
+        })
+      );
+      dispatch(fetchEmployeeStatus(ids.applicationId));
     }
   }, [ids.applicationId, ids.customerId]);
-
-  // useEffect(() => {
-  //   if (employeeStatus && documents) {
-  //     setLoading(false);
-  //   }
-  // }, [employeeStatus, documents]);
 
   useEffect(() => {
     if (ids.customerId) {
       const selectdCustomer = customer.find(
         (cust) => cust.Id === ids.customerId
       );
-      console.log('selectedcustomer in progress page', selectdCustomer);
-      console.log('customer in progress page', customer);
+
       if (selectdCustomer) {
         setSelectedCustomer(selectdCustomer);
       }
@@ -207,6 +189,7 @@ const Progress: React.FC = () => {
                     height: "auto",
                     marginTop: "-50px",
                     background: "#fff",
+                    marginLeft: "-60px",
                   }}
                 >
                   <Box
@@ -390,13 +373,11 @@ const Progress: React.FC = () => {
                         marginTop: "30px",
                         background: "#fff",
                         display: "flex",
-                        width: "auto",
-                        flexDirection: "row", // Changed to column to align elements vertically
+                        width: "145%",
+                        flexDirection: "row",
+                        borderRadius: "10px",
                       }}
                     >
-                      {/* Loan Status Section */}
-
-                      {/* Documents Section */}
                       <Typography variant="h6" sx={{ mb: 2, mt: 1 }}>
                         Documents:
                       </Typography>
@@ -405,9 +386,9 @@ const Progress: React.FC = () => {
                         <Box
                           sx={{
                             display: "flex",
-                            flexDirection: "column", // Stack documents vertically
+                            flexDirection: "column",
                             width: "100%",
-                            gap: 1, // Add gap between documents
+                            gap: 1,
                           }}
                         >
                           {documents.map((doc, index) => (
@@ -418,13 +399,13 @@ const Progress: React.FC = () => {
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "space-between",
-                                padding: "10px", // Increased padding for better spacing
-                                backgroundColor: "#f5f5f5", // Light grey background
-                                borderRadius: "8px", // Rounded corners
-                                boxShadow: "0 2px 5px rgba(0,0,0,0.1)", // Subtle shadow for a nice effect
-                                transition: "transform 0.2s ease", // Add smooth transition
+                                padding: "10px",
+                                backgroundColor: "#f5f5f5",
+                                borderRadius: "8px",
+                                boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+                                transition: "transform 0.2s ease",
                                 "&:hover": {
-                                  transform: "scale(1.02)", // Slight zoom on hover
+                                  transform: "scale(1.02)",
                                 },
                               }}
                             >
@@ -657,13 +638,32 @@ const Progress: React.FC = () => {
                     padding: 3,
                     height: "65vh",
                     marginTop: "-45px",
+                    position: "fixed",
+                    width: "500px",
                   }}
                 >
                   <Box
                     display="flex"
                     justifyContent="space-between"
                     alignItems="center"
+                    sx={{
+                      width: "100%",
+                      padding: 1,
+                    }}
                   >
+                    <Typography
+                      variant="subtitle1"
+                      color="text.primary"
+                      sx={{
+                        flexGrow: 1,
+                        marginLeft: "-18px",
+                        color: "#2c3ce3",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Loan Status:
+                    </Typography>
+
                     <Button
                       variant="contained"
                       size="small"
@@ -671,17 +671,23 @@ const Progress: React.FC = () => {
                       onClick={handleClick}
                       sx={{
                         textTransform: "none",
-                        paddingX: 1,
+                        paddingX: 2,
+                        minWidth: "100px",
                         backgroundColor: theme.palette.primary.main,
-                        overflow: "hidden",
+                        color: "#fff",
+                        fontWeight: "bold",
+                        ":hover": {
+                          backgroundColor: theme.palette.primary.dark,
+                        },
                       }}
                     >
                       {selectedCustomer.status}
                     </Button>
+
                     <Menu
                       anchorEl={anchorEl}
                       open={Boolean(anchorEl)}
-                      onClose={() => handleClose(loanStatus)}
+                      onClose={() => handleClose(selectedCustomer.status)}
                     >
                       <MenuItem onClick={() => handleClose("submitted")}>
                         Submitted
@@ -708,7 +714,24 @@ const Progress: React.FC = () => {
                     display="flex"
                     justifyContent="space-between"
                     alignItems="center"
+                    sx={{
+                      width: "100%",
+                      padding: 1,
+                    }}
                   >
+                    <Typography
+                      variant="subtitle1"
+                      color="text.primary"
+                      sx={{
+                        flexGrow: 1,
+                        marginLeft: "-18px",
+                        color: "#2c3ce3",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Employee Status:
+                    </Typography>
+
                     <Button
                       variant="contained"
                       size="small"
@@ -716,13 +739,19 @@ const Progress: React.FC = () => {
                       onClick={handleEmployeeClick}
                       sx={{
                         textTransform: "none",
-                        paddingX: 1,
+                        paddingX: 2, // Consistent padding for better spacing
+                        minWidth: "100px", // Fixed minWidth for consistent button size
                         backgroundColor: theme.palette.primary.main,
-                        marginRight: "90px",
+                        color: "#fff", // White text for better contrast
+                        fontWeight: "bold",
+                        ":hover": {
+                          backgroundColor: theme.palette.primary.dark,
+                        },
                       }}
                     >
                       {employeeStatus}
                     </Button>
+
                     <Menu
                       anchorEl={employeeAnchorEl}
                       open={Boolean(employeeAnchorEl)}
@@ -743,9 +772,6 @@ const Progress: React.FC = () => {
                         Done
                       </MenuItem>
                     </Menu>
-                    <IconButton>
-                      <BoltIcon color="action" />
-                    </IconButton>
                   </Box>
 
                   <Divider sx={{ my: 2 }} />

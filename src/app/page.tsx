@@ -1,11 +1,8 @@
-'use client';
+"use client";
+
 
 const App = () => {
-  return (
-    <main>
-      Hello Next.js
-    </main>
-  );
+  return <main>Hello Next.js</main>;
 };
 
 export default App;

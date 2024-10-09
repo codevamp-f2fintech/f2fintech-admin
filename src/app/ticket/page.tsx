@@ -10,11 +10,21 @@ import {
   Grid,
   Typography,
   Button,
+  MenuItem,
+  Select,
 } from "@mui/material";
+
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import PhoneIcon from "@mui/icons-material/Phone";
 import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import EventIcon from "@mui/icons-material/Event";
+import PersonIcon from "@mui/icons-material/Person";
+import EmailIcon from "@mui/icons-material/Email";
+
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import { CalendarToday as CalendarIcon } from "@mui/icons-material";
 
 import Header from "../components/common/Header";
 import { useGetTickets } from "@/hooks/ticket";
@@ -29,16 +39,26 @@ const Ticket: React.FC = () => {
   const [notificationsCount, setNotificationsCount] = useState(4);
 
   const router = useRouter();
-  const { setLocalStorage } = Utility();
+  const { setLocalStorage, remLocalStorage } = Utility();
 
   // const filteredCustomers = pickedCustomers.filter((val) =>
-  //   val.Name.toLowerCase().startsWith(searchTerm.toLowerCase())
+  //   val.Name.toLowerCase().startsWith(searchTerm.toLowerCase());
   // );
 
   const { value: ticketData, error: ticketError } = useGetTickets(
     [],
     `api/v1/get-all-tickets/${1}`
   );
+
+  useEffect(() => {
+    const handleRouteChange = () => {
+      if (typeof window !== "undefined") {
+        remLocalStorage("ids");
+      }
+    };
+
+    handleRouteChange();
+  }, [router]);
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -71,9 +91,8 @@ const Ticket: React.FC = () => {
 
   const handleStartClick = (customerId, applicationId) => {
     setLocalStorage("ids", { customerId, applicationId });
-    router.push('/progress');
+    router.push("/progress");
   };
-
 
   console.log("setCustomerApplications=>", customerApplications);
 
@@ -101,7 +120,10 @@ const Ticket: React.FC = () => {
         <Typography
           variant="h5"
           gutterBottom
-          sx={{ color: "primary.main", textAlign: "center" }}
+          sx={{
+            color: "primary.main",
+            textAlign: "center",
+          }}
         >
           Your Picked Tickets
         </Typography>
@@ -110,66 +132,195 @@ const Ticket: React.FC = () => {
             customerApplications.map((customer, id) => (
               <Grid item xs={12} sm={6} md={4} key={id}>
                 <Card
+                  variant="outlined"
                   sx={{
-                    boxShadow: 3,
-                    "&:hover": { boxShadow: 6 },
-                    borderRadius: 2,
+                    borderRadius: "12px",
+                    border: "none",
+                    position: "relative",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    backgroundColor: "#ffffff",
+                    height: "100%",
                   }}
                 >
-                  <CardHeader
-                    avatar={
-                      <Avatar
-                        src={customer.f2fintech}
-                        sx={{ width: 56, height: 56 }}
-                      />
-                    }
-                    title={customer.Name}
-                    subheader={customer.Location}
-                    titleTypographyProps={{
-                      variant: "h6",
-                      color: "primary.main",
-                    }}
-                    subheaderTypographyProps={{
-                      variant: "body1",
-                      color: "text.secondary",
-                    }}
-                  />
-                  <CardContent>
-                    <Typography
-                      variant="body2"
-                      color="text.primary"
-                      sx={{ display: "flex", alignItems: "center" }}
-                    >
-                      <MailOutlineIcon /> Email: {customer.Email}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.primary"
-                      sx={{ display: "flex", alignItems: "center" }}
-                    >
-                      <PhoneIcon /> Contact: {customer.Contact}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.primary"
-                      sx={{ display: "flex", alignItems: "center" }}
-                    >
-                      <MonetizationOnIcon /> Amount: {customer.Amount}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.primary"
-                      sx={{ display: "flex", alignItems: "center" }}
-                    >
-                      <EventIcon /> Tenure: {customer.Tenure} months
-                    </Typography>
-                  </CardContent>
+                  <CardContent sx={{ paddingBottom: "8px", paddingTop: "8px" }}>
+                    <Grid container spacing={2} alignItems="center">
+                      <Grid item>
+                        <Avatar
+                          alt={customer.Name}
+                          src={customer.Image}
+                          sx={{
+                            width: 70,
+                            height: 70,
+                            boxShadow: "0px 5px 10px rgba(0, 0, 0, 0.2)",
+                            border: "2px solid #fff",
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs>
+                        <Box display="flex" alignItems="center">
+                          <PersonIcon
+                            sx={{ color: "#1976d2", marginRight: "8px" }}
+                          />
+                          <Typography
+                            variant="h6"
+                            component="div"
+                            sx={{
+                              fontWeight: "bold",
+                              color: "#1976d2",
+                              fontSize: "18px",
+                            }}
+                          >
+                            {customer.Name.toUpperCase()}
+                          </Typography>
+                        </Box>
+                        <hr
+                          style={{
+                            border: "none",
+                            height: "1px",
+                            backgroundColor: "#ddd",
+                            margin: "4px 0",
+                          }}
+                        />
 
+                        <Box display="flex" alignItems="center">
+                          <EmailIcon
+                            sx={{ color: "#1976d2", marginRight: "8px" }}
+                          />{" "}
+                          <Typography
+                            variant="body2"
+                            color="text.primary"
+                            sx={{
+                              padding: "2px",
+                              borderRadius: "4px",
+                              marginTop: "2px",
+                              fontSize: "15px",
+                            }}
+                          >
+                            <span
+                              style={{
+                                color: "#1976d2",
+                                fontSize: "16px",
+                              }}
+                            >
+                              Email:
+                            </span>{" "}
+                            {customer.Email}
+                          </Typography>
+                        </Box>
+
+                        <Box display="flex" alignItems="center">
+                          <PhoneIcon
+                            sx={{ color: "#1976d2", marginRight: "8px" }}
+                          />{" "}
+                          <Typography
+                            variant="body2"
+                            color="text.primary"
+                            sx={{
+                              padding: "2px",
+                              borderRadius: "4px",
+                              marginTop: "2px",
+                              fontSize: "15px",
+                            }}
+                          >
+                            <span
+                              style={{
+                                color: "#1976d2",
+                                fontSize: "16px",
+                              }}
+                            >
+                              Phone:
+                            </span>{" "}
+                            {customer.Contact}
+                          </Typography>
+                        </Box>
+
+                        <Box display="flex" alignItems="center">
+                          <AttachMoneyIcon
+                            sx={{ color: "#1976d2", marginRight: "8px" }}
+                          />{" "}
+                          <Typography
+                            variant="body2"
+                            color="text.primary"
+                            sx={{
+                              padding: "2px",
+                              borderRadius: "4px",
+                              marginTop: "2px",
+                              fontSize: "15px",
+                            }}
+                          >
+                            <span
+                              style={{
+                                color: "#1976d2",
+                                fontSize: "16px",
+                              }}
+                            >
+                              Amount:
+                            </span>{" "}
+                            {customer.Amount}
+                          </Typography>
+                        </Box>
+
+                        <Box display="flex" alignItems="center">
+                          <AccessTimeIcon
+                            sx={{ color: "#1976d2", marginRight: "8px" }}
+                          />{" "}
+                          <Typography
+                            variant="body2"
+                            color="text.primary"
+                            sx={{
+                              padding: "2px",
+                              borderRadius: "4px",
+                              marginTop: "2px",
+                              fontSize: "15px",
+                            }}
+                          >
+                            <span
+                              style={{
+                                color: "#1976d2",
+                                fontSize: "16px",
+                              }}
+                            >
+                              Tenure:
+                            </span>{" "}
+                            {customer.Tenure} months
+                          </Typography>
+                        </Box>
+                        <Box display="flex" alignItems="center">
+                          <LocationOnIcon
+                            sx={{ color: "#1976d2", marginRight: "8px" }}
+                          />{" "}
+                          <Typography
+                            variant="body2"
+                            color="text.primary"
+                            sx={{
+                              padding: "2px",
+                              borderRadius: "4px",
+                              marginTop: "2px",
+                              fontSize: "15px",
+                            }}
+                          >
+                            <span
+                              style={{
+                                color: "#1976d2",
+                                fontSize: "16px",
+                              }}
+                            >
+                              Location:
+                            </span>{" "}
+                            {customer.Location}
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </CardContent>
                   <Button
                     variant="contained"
                     color="primary"
                     sx={{ width: "100%", borderRadius: 0 }}
-                    onClick={() => handleStartClick(customer.Id, customer.applicationId)}
+                    onClick={() =>
+                      handleStartClick(customer.Id, customer.applicationId)
+                    }
                   >
                     Start Work
                   </Button>

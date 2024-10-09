@@ -22,13 +22,14 @@ import NotificationsIcon from "@mui/icons-material/Notifications";
 import { CalendarToday as CalendarIcon } from "@mui/icons-material";
 import PersonIcon from "@mui/icons-material/Person";
 import EmailIcon from "@mui/icons-material/Email";
+import PhoneIcon from "@mui/icons-material/Phone";
+
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
-import {
-  setCustomers,
-  appendCustomers,
-  pickCustomer,
-} from "@/redux/features/customerSlice";
+import { setCustomers, appendCustomers } from "@/redux/features/customerSlice";
 import { useGetCustomers } from "@/hooks/customer";
 import Loader from "../components/common/Loader";
 import { useCreateTicket } from "@/hooks/ticket";
@@ -47,9 +48,7 @@ const Home: React.FC = () => {
   const [paginationLoading, setPaginationLoading] = useState<boolean>(false);
 
   const dispatch: AppDispatch = useDispatch();
-  const { customer, pickedCustomers } = useSelector(
-    (state: RootState) => state.customer
-  );
+  const { customer } = useSelector((state: RootState) => state.customer);
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -111,13 +110,12 @@ const Home: React.FC = () => {
   );
 
   const { createdTicket, createTicket, error } = useCreateTicket(
-    "/api/v1/create-ticket", // The API endpoint
-    {} // Initialize with empty object or default user data
+    "/api/v1/create-ticket",
+    {}
   );
-
   useEffect(() => {
     if (data?.success === true) {
-      const pickedCustomerIds = pickedCustomers.map((customer) => customer.Id);
+      const pickedCustomerIds = customer.map((customer) => customer.Id);
 
       const filteredData = data.data.filter(
         (customer) => !pickedCustomerIds.includes(customer.Id)
@@ -134,7 +132,7 @@ const Home: React.FC = () => {
       setLoading(false);
       setPaginationLoading(false);
     }
-  }, [data, dispatch, currentPage, pageSize, pickedCustomers]);
+  }, [data, dispatch, currentPage, pageSize]);
 
   const handleCheckboxChange = async (contactId, applicationId) => {
     // Toggling the checkbox state and preparing for an API call if not already selected
@@ -158,7 +156,6 @@ const Home: React.FC = () => {
               due_date: new Date(),
             });
             console.log("Ticket created page:", response);
-            dispatch(pickCustomer(contactId));
           } catch (error) {
             console.error("Error creating ticket:", error);
 
@@ -167,14 +164,12 @@ const Home: React.FC = () => {
         };
         createNewTicket(contactId, applicationId);
       }
-      // Toggle selection state
+
       return isAlreadySelected
         ? prevSelectedContacts.filter((id) => id !== contactId)
         : [...prevSelectedContacts, contactId];
     });
   };
-
-  console.log(pickedCustomers, 'pickedcus', customer, 'cus')
 
   return (
     <Box
@@ -239,7 +234,8 @@ const Home: React.FC = () => {
               marginTop: "6px",
               borderRadius: "12px",
               backgroundColor: "#fff",
-              marginLeft: "510px",
+              marginLeft: "auto",
+              marginRight: "10px",
 
               "& .MuiInputLabel-root": {
                 color: "black",
@@ -344,7 +340,7 @@ const Home: React.FC = () => {
                   borderRadius: "12px",
                   overflow: "hidden",
                   borderWidth: "2px",
-                  borderStyle: "solid",
+
                   boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.2)",
                   transition: "transform 0.3s ease",
                   "&:hover": {
@@ -401,7 +397,8 @@ const Home: React.FC = () => {
                             border: "none",
                             height: "1px",
                             backgroundColor: "#ddd",
-                            margin: "4px 0",
+                            margin: "2px 0",
+                            width: "100%",
                           }}
                         />
 
@@ -409,7 +406,6 @@ const Home: React.FC = () => {
                           <EmailIcon
                             sx={{ color: "#1976d2", marginRight: "8px" }}
                           />{" "}
-                          {/* Add your EmailIcon here */}
                           <Typography
                             variant="body2"
                             color="text.primary"
@@ -432,87 +428,109 @@ const Home: React.FC = () => {
                           </Typography>
                         </Box>
 
-                        <Typography
-                          variant="body2"
-                          color="text.primary"
-                          sx={{
-                            padding: "2px",
-                            borderRadius: "4px",
-                            marginTop: "2px",
-                            fontSize: "15px",
-                          }}
-                        >
-                          <span
-                            style={{
-                              color: "#1976d2",
-                              fontSize: "16px",
+                        <Box display="flex" alignItems="center">
+                          <PhoneIcon
+                            sx={{ color: "#1976d2", marginRight: "8px" }}
+                          />{" "}
+                          <Typography
+                            variant="body2"
+                            color="text.primary"
+                            sx={{
+                              padding: "2px",
+                              borderRadius: "4px",
+                              marginTop: "2px",
+                              fontSize: "15px",
                             }}
                           >
-                            Contact:
-                          </span>{" "}
-                          {contact.Contact}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          color="text.primary"
-                          sx={{
-                            padding: "2px",
-                            borderRadius: "4px",
-                            marginTop: "2px",
-                            fontSize: "15px",
-                          }}
-                        >
-                          <span
-                            style={{
-                              color: "#1976d2",
-                              fontSize: "16px",
-                            }}
-                          >
-                            Amount:
-                          </span>{" "}
-                          {contact.Amount}
-                        </Typography>
+                            <span
+                              style={{
+                                color: "#1976d2",
+                                fontSize: "16px",
+                              }}
+                            >
+                              Contact:
+                            </span>{" "}
+                            {contact.Contact}
+                          </Typography>
+                        </Box>
 
-                        <Typography
-                          variant="body2"
-                          color="text.primary"
-                          sx={{
-                            padding: "2px",
-                            borderRadius: "4px",
-                            marginTop: "2px",
-                            fontSize: "15px",
-                          }}
-                        >
-                          <span
-                            style={{
-                              color: "#1976d2",
-                              fontSize: "16px",
+                        <Box display="flex" alignItems="center">
+                          <AttachMoneyIcon
+                            sx={{ color: "#1976d2", marginRight: "8px" }}
+                          />{" "}
+                          <Typography
+                            variant="body2"
+                            color="text.primary"
+                            sx={{
+                              padding: "2px",
+                              borderRadius: "4px",
+                              marginTop: "2px",
+                              fontSize: "15px",
                             }}
                           >
-                            Tenure:
-                          </span>{" "}
-                          {contact.Tenure} months
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          color="text.primary"
-                          sx={{
-                            padding: "2px",
-                            borderRadius: "4px",
-                            marginTop: "2px",
-                            fontSize: "15px",
-                          }}
-                        >
-                          <span
-                            style={{
-                              color: "#1976d2",
-                              fontSize: "16px",
+                            <span
+                              style={{
+                                color: "#1976d2",
+                                fontSize: "16px",
+                              }}
+                            >
+                              Amount:
+                            </span>{" "}
+                            {contact.Amount}
+                          </Typography>
+                        </Box>
+
+                        <Box display="flex" alignItems="center">
+                          <AccessTimeIcon
+                            sx={{ color: "#1976d2", marginRight: "8px" }}
+                          />{" "}
+                          <Typography
+                            variant="body2"
+                            color="text.primary"
+                            sx={{
+                              padding: "2px",
+                              borderRadius: "4px",
+                              marginTop: "2px",
+                              fontSize: "15px",
                             }}
                           >
-                            Location:
-                          </span>{" "}
-                          {contact.Location}
-                        </Typography>
+                            <span
+                              style={{
+                                color: "#1976d2",
+                                fontSize: "16px",
+                              }}
+                            >
+                              Tenure:
+                            </span>{" "}
+                            {contact.Tenure} months
+                          </Typography>
+                        </Box>
+
+                        <Box display="flex" alignItems="center">
+                          <LocationOnIcon
+                            sx={{ color: "#1976d2", marginRight: "8px" }}
+                          />{" "}
+                          <Typography
+                            variant="body2"
+                            color="text.primary"
+                            sx={{
+                              padding: "2px",
+                              borderRadius: "4px",
+                              marginTop: "2px",
+                              fontSize: "15px",
+                            }}
+                          >
+                            <span
+                              style={{
+                                color: "#1976d2",
+                                fontSize: "16px",
+                              }}
+                            >
+                              Location:
+                            </span>{" "}
+                            {contact.Location}
+                          </Typography>
+                        </Box>
                       </Grid>
                     </Grid>
                     <Typography
@@ -525,6 +543,7 @@ const Home: React.FC = () => {
                         alignItems: "center",
                         fontSize: "12px",
                         color: "#fff",
+                        marginTop: "9px",
                       }}
                     >
                       <CalendarIcon
@@ -536,7 +555,7 @@ const Home: React.FC = () => {
                   <Box
                     sx={{
                       position: "absolute",
-                      bottom: "18px",
+                      bottom: "1px",
                       right: "1px",
                     }}
                   >
