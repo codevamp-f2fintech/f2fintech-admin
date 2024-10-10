@@ -27,7 +27,7 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import { CalendarToday as CalendarIcon } from "@mui/icons-material";
 
 import Header from "../components/common/Header";
-import { useGetTickets } from "@/hooks/ticket";
+import { useGetTickets, useModifyTicket } from "@/hooks/ticket";
 import { fetcher } from "@/apis/apiClient";
 import { Utility } from "@/utils";
 
@@ -47,7 +47,11 @@ const Ticket: React.FC = () => {
 
   const { value: ticketData, error: ticketError } = useGetTickets(
     [],
-    `api/v1/get-all-tickets/${1}`
+    `api/v1/get-all-tickets/${1}`   // this is userId
+  );
+
+  const { modifyTicket, error: updateError } = useModifyTicket(
+    "/api/v1/update-ticket"
   );
 
   useEffect(() => {
@@ -56,7 +60,6 @@ const Ticket: React.FC = () => {
         remLocalStorage("ids");
       }
     };
-
     handleRouteChange();
   }, [router]);
 
@@ -75,7 +78,6 @@ const Ticket: React.FC = () => {
               );
             })
           );
-
           const combinedData = fetchedApplications.flatMap((item) => item.data);
           setCustomerApplications(combinedData);
         } catch (err) {
@@ -90,6 +92,19 @@ const Ticket: React.FC = () => {
   }, [ticketData]);
 
   const handleStartClick = (customerId, applicationId) => {
+    // Find the correct ticket for the customerId and applicationId
+    const selectedTicket = ticketData?.data.find(
+      (ticket) =>
+        ticket.user_id === 1 &&
+        ticket.customer_application_id === applicationId
+    );
+    console.log('selected ticket=>', selectedTicket);
+
+    if (selectedTicket) {
+      const { id: ticketId } = selectedTicket;
+      // Update ticket status to 'in progress' using useModifyTicket hook
+      modifyTicket(ticketId, { status: 'in progress' });
+    }
     setLocalStorage("ids", { customerId, applicationId });
     router.push("/progress");
   };

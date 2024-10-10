@@ -61,14 +61,16 @@ export const useCreateTicket = (pathKey: string, p0?: {}) => {
 export const useModifyTicket = (pathKey: string) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [updatedTicket, setUpdatedTicket] = useState<Ticket | null>(null);
+  const [modifiedTicket, setModifiedTicket] = useState<Ticket | null>(null);
 
-  const modifyTicket = async (updatedTicketData: Ticket) => {
+  const modifyTicket = async (ticketId: number, updatedTicketData: Partial<Ticket>) => {
     setLoading(true);
     setError(null);
     try {
-      const ticket = await modifier<Ticket, Ticket>(pathKey, updatedTicketData);
-      setUpdatedTicket(ticket);
+      // Construct the full API path using pathkey and ticketId
+      const apiPath = `${pathKey}/${ticketId}`;
+      const ticket = await modifier<Ticket, Partial<Ticket>>(apiPath, updatedTicketData);
+      setModifiedTicket(ticket);
     } catch (err) {
       setError(err as Error);
     } finally {
@@ -76,5 +78,5 @@ export const useModifyTicket = (pathKey: string) => {
     }
   };
 
-  return { updatedTicket, loading, error, modifyTicket };
+  return { modifiedTicket, loading, error, modifyTicket };
 };
