@@ -19,6 +19,7 @@ export const metadata: Metadata = {
 const UserList = async () => {
   const cookieStore = cookies();
   const token = cookieStore.get("token")?.value;
+  console.log("token", token);
   try {
     const response = await fetch(`${url}?_page=${PAGE}&_limit=${SIZE}`, {
       headers: {

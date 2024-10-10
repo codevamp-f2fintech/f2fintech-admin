@@ -24,11 +24,13 @@ import {
 } from "@mui/icons-material";
 import { ThemeProvider, useTheme, Theme } from "@mui/material/styles";
 import { UserAPI } from "@/apis/UserAPI";
-import { toast, ToastContainer } from "react-toastify";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
-import "react-toastify/dist/ReactToastify.css";
 import { useRouter } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "@/redux/store";
+import { Utility } from "@/utils";
+import Toast from "../components/common/Toast";
 
 // Validation schema using Yup
 const LoginSchema = Yup.object().shape({
@@ -40,6 +42,10 @@ const Login = (): JSX.Element => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const theme: Theme = useTheme();
   const router = useRouter();
+  const dispatch: AppDispatch = useDispatch();
+  const { toast } = useSelector((state: RootState) => state.toast);
+  const { toastAndNavigate } = Utility();
+  console.log("LOGIN PAGE");
 
   // Handler for toggling password visibility
   const handleClickShowPassword = (): void => {
@@ -66,26 +72,17 @@ const Login = (): JSX.Element => {
           response.data.data.token.access_token
         }; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
 
-        toast.success("Login successful!");
+        toastAndNavigate(dispatch, true, "success", "Signin Success");
         router.push("/home");
         // Handle successful login (e.g., redirect)
-      } else {
-        toast.error("Login failed. Please check your email or password.");
       }
     } catch (error) {
-      toast.error("Login failed. Please check your email or password.");
+      toastAndNavigate(dispatch, true, "error", "Error Signin");
     }
   };
 
   return (
     <ThemeProvider theme={theme}>
-      <ToastContainer
-        position="top-right"
-        autoClose={2000}
-        hideProgressBar={true}
-        closeOnClick
-        pauseOnHover
-      />
       <Grid
         container
         component="main"
@@ -168,7 +165,7 @@ const Login = (): JSX.Element => {
                 resetForm();
               }}
             >
-              {({ errors, touched, isSubmitting }) => (
+              {({ errors, touched, isSubmitting, dirty }) => (
                 <Form>
                   <Field
                     as={TextField}
@@ -246,7 +243,7 @@ const Login = (): JSX.Element => {
                         background: "linear-gradient(45deg, #1976d2, #6A1B9A)",
                       },
                     }}
-                    disabled={isSubmitting}
+                    disabled={!dirty || isSubmitting}
                   >
                     {isSubmitting ? "Signing in..." : "Sign In"}
                   </Button>
@@ -272,6 +269,11 @@ const Login = (): JSX.Element => {
           </Box>
         </Grid>
       </Grid>
+      <Toast
+        alerting={toast.toastAlert}
+        severity={toast.toastSeverity}
+        message={toast.toastMessage}
+      />
     </ThemeProvider>
   );
 };

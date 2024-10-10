@@ -20,26 +20,37 @@ import {
   VisibilityOff,
 } from "@mui/icons-material";
 import { setLoading } from "@/redux/features/userSlice";
-import "react-toastify/dist/ReactToastify.css";
 import { UserAPI } from "@/apis/UserAPI";
 import { Formik, Form, Field } from "formik";
-import { toast, ToastContainer } from "react-toastify";
 import * as Yup from "yup";
+import type { AppDispatch, RootState } from "@/redux/store";
+import { Utility } from "@/utils";
+import Toast from "../components/common/Toast";
+import { useDispatch, useSelector } from "react-redux";
 
-// Validation schema using Yup
+// Regular expression for validating Gmail addresses
+const emailRegExp = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+
 const UserSchema = Yup.object().shape({
   firstname: Yup.string().required("First name is required"),
   lastname: Yup.string().required("Last name is required"),
-  email: Yup.string().email("Invalid email").required("Email is required"),
-  // number: Yup.string().required("Phone number is required"),
   password: Yup.string()
-    .min(6, "Password too short")
-    .required("Password is required"),
+    .min(6, "Password must be at least 6 characters")
+    .max(20, "Password cannot be more than 20 characters")
+    .required("Password is required")
+    .matches(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .matches(/\d/, "Password must contain at least one number"),
+  gender: Yup.string().required("Gender is required"),
+  email: Yup.string()
+    .matches(emailRegExp, "Email Address must be a Gmail address")
+    .required("This field is required"),
 });
 
 const UserForm = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  // const [ blankForm , setBlankForm] = useState(null);
+  const dispatch: AppDispatch = useDispatch();
+  const { toast } = useSelector((state: RootState) => state.toast);
+  const { toastAndNavigate } = Utility();
 
   const handleClickShowPassword = (): void => {
     setShowPassword((prev) => !prev);
@@ -50,16 +61,21 @@ const UserForm = () => {
 
     try {
       const registerInfo = {
+        username: `${values.firstname} ${values.lastname}`,
         email: values.email,
         password: values.password,
         gender: values.gender,
-        username: `${values.firstname} ${values.lastname}`,
       };
 
       const response = await UserAPI.create(registerInfo);
-      toast.success("User created successfully!");
+      toastAndNavigate(dispatch, true, "success", "User created successfully!");
     } catch (error) {
-      toast.error("Error signing up, please try again.");
+      toastAndNavigate(
+        dispatch,
+        true,
+        "error",
+        "Error signing up, please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -67,13 +83,6 @@ const UserForm = () => {
 
   return (
     <>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={true}
-        closeOnClick
-        pauseOnHover
-      />
       <Grid
         item
         xs={12}
@@ -122,6 +131,7 @@ const UserForm = () => {
             handleChange,
             handleBlur,
             isSubmitting,
+            dirty,
           }) => (
             <Form>
               <Grid container spacing={2}>
@@ -269,7 +279,7 @@ const UserForm = () => {
                     transform: "scale(1.05)",
                   },
                 }}
-                disabled={isSubmitting}
+                disabled={!dirty || isSubmitting}
               >
                 {isSubmitting ? "Submitting..." : "Submit"}
               </Button>
@@ -277,6 +287,11 @@ const UserForm = () => {
           )}
         </Formik>
       </Grid>
+      <Toast
+        alerting={toast.toastAlert}
+        severity={toast.toastSeverity}
+        message={toast.toastMessage}
+      />
     </>
   );
 };
