@@ -42,7 +42,7 @@ export const creator = async <T, D>(url: string, data: D): Promise<T> => {
  * @throws {Error} - If the response does not contain data.
  */
 export const modifier = async <T, D>(url: string, data: D): Promise<T> => {
-  const res = await axiosInstance.put<T>(url, data);
+  const res = await axiosInstance.patch<T>(url, data);
   if (!res.data) {
     throw new Error("Failed to modify data");
   }

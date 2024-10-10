@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -9,48 +10,42 @@ import {
   Box,
   Button,
   TextField,
-  MenuItem,
-  Select,
   FormControl,
-  InputLabel,
   Checkbox,
   FormControlLabel,
   Badge,
   IconButton,
   Menu,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  List,
-  ListItem,
-  ListItemText,
+  MenuItem,
 } from "@mui/material";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import { CalendarToday as CalendarIcon } from "@mui/icons-material";
-import { LocalizationProvider, DateRangePicker } from "@mui/x-date-pickers-pro";
-import { AdapterDayjs } from "@mui/x-date-pickers-pro/AdapterDayjs";
-import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
+import PersonIcon from "@mui/icons-material/Person";
+import EmailIcon from "@mui/icons-material/Email";
+import PhoneIcon from "@mui/icons-material/Phone";
+
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { setCustomers, appendCustomers } from "@/redux/features/customerSlice";
-import { Customer } from "@/types/customer";
 import { useGetCustomers } from "@/hooks/customer";
 import Loader from "../components/common/Loader";
+import { useCreateTicket } from "@/hooks/ticket";
 
 const Home: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [notificationsCount, setNotificationsCount] = useState<number>(4);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
 
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize] = useState<number>(6);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);
   const [paginationLoading, setPaginationLoading] = useState<boolean>(false);
-  const [openDialog, setOpenDialog] = useState(false);
 
   const dispatch: AppDispatch = useDispatch();
   const { customer } = useSelector((state: RootState) => state.customer);
@@ -73,61 +68,32 @@ const Home: React.FC = () => {
     handleMenuClose();
   };
 
-  const handleShowMyTickets = () => setOpenDialog(true);
-  const handleCloseDialog = () => setOpenDialog(false);
-
-  const selectedTickets = customer.filter((contact) =>
-    selectedContacts.includes(contact.Id)
-  );
-
   const filteredCustomers = customer.filter((val) =>
-    val.Name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const { data } = useGetCustomers(
-    [],
-    `/customer-applications/get-loan-applications`,
-    currentPage,
-    pageSize
+    val.Name.toLowerCase().startsWith(searchTerm.toLowerCase())
   );
 
   useEffect(() => {
-    if (data.success === true) {
-      if (currentPage === 1) {
-        dispatch(setCustomers(data.data as Customer[]));
-      } else {
-        dispatch(appendCustomers(data.data as Customer[]));
+    const handleScroll = () => {
+      const scrollTop = document.documentElement.scrollTop;
+      const windowHeight = window.innerHeight;
+      const offsetHeight = document.documentElement.offsetHeight;
+
+      if (
+        windowHeight + scrollTop >= offsetHeight - 50 &&
+        currentPage < totalPages &&
+        !paginationLoading
+      ) {
+        setCurrentPage((prevPage) => prevPage + 1);
       }
-      const pages = Math.ceil(data.totalCount / pageSize);
-      setTotalPages(pages > 0 ? pages : 1);
-      setLoading(false);
-      setPaginationLoading(false);
-    }
-  }, [data, dispatch, currentPage, pageSize]);
+    };
 
-  const handleScroll = () => {
-    const scrollTop = document.documentElement.scrollTop;
-    const windowHeight = window.innerHeight;
-    const offsetHeight = document.documentElement.offsetHeight;
-
-    if (
-      windowHeight + scrollTop >= offsetHeight - 50 &&
-      currentPage < totalPages &&
-      !paginationLoading
-    ) {
-      setPaginationLoading(true);
-      setCurrentPage((prevPage) => prevPage + 1);
-    }
-  };
-
-  useEffect(() => {
     window.addEventListener("scroll", handleScroll);
+
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, [currentPage, totalPages, paginationLoading]);
 
-  // Function to calculate the number of days ago
   const calculateDaysAgo = (date: string) => {
     const today = new Date();
     const addedDate = new Date(date);
@@ -136,44 +102,74 @@ const Home: React.FC = () => {
     return diffDays;
   };
 
-  // Function to handle checkbox change
-  const handleCheckboxChange = (contactId: number) => {
+  const { data } = useGetCustomers(
+    [],
+    `/customer-applications/get-loan-applications`,
+    currentPage,
+    pageSize
+  );
+
+  const { createdTicket, createTicket, error } = useCreateTicket(
+    "/api/v1/create-ticket",
+    {}
+  );
+  useEffect(() => {
+    if (data?.success === true) {
+      const pickedCustomerIds = customer.map((customer) => customer.Id);
+
+      const filteredData = data.data.filter(
+        (customer) => !pickedCustomerIds.includes(customer.Id)
+      );
+
+      if (currentPage === 1) {
+        dispatch(setCustomers(filteredData));
+      } else {
+        dispatch(appendCustomers(filteredData));
+      }
+
+      const pages = Math.ceil(data.totalCount / pageSize);
+      setTotalPages(pages > 0 ? pages : 1);
+      setLoading(false);
+      setPaginationLoading(false);
+    }
+  }, [data, dispatch, currentPage, pageSize]);
+
+  const handleCheckboxChange = async (contactId, applicationId) => {
+    // Toggling the checkbox state and preparing for an API call if not already selected
     setSelectedContacts((prevSelectedContacts) => {
-      const updatedSelection = prevSelectedContacts.includes(contactId)
-        ? prevSelectedContacts.filter((Id) => Id !== contactId)
+      const isAlreadySelected = prevSelectedContacts.includes(contactId);
+      if (!isAlreadySelected) {
+        // Call the create ticket API only if the checkbox is checked for the first time
+        const createNewTicket = async (contactId, applicationId) => {
+          try {
+            console.log(
+              "Creating ticket for:",
+              contactId,
+              "Application ID:",
+              applicationId
+            );
+            const response = await createTicket({
+              customer_application_id: applicationId,
+              user_id: 1,
+              forwarded_to: 1,
+              status: "forwarded",
+              due_date: new Date(),
+            });
+            console.log("Ticket created page:", response);
+          } catch (error) {
+            console.error("Error creating ticket:", error);
+
+            alert("Error creating ticket. Please try again.");
+          }
+        };
+        createNewTicket(contactId, applicationId);
+      }
+
+      return isAlreadySelected
+        ? prevSelectedContacts.filter((id) => id !== contactId)
         : [...prevSelectedContacts, contactId];
-      return updatedSelection;
     });
   };
-
-  // Function to get status border color
-  const getStatusBorderColor = (status: string | undefined): string => {
-    switch (status) {
-      case "progress":
-        return "LightSalmon";
-      case "on-hold":
-        return "orange";
-      case "forwarded":
-        return "Aqua";
-      case "closed":
-        return "green";
-      case "under_review":
-        return "blue";
-      case "approved":
-        return "purple";
-      case "submitted":
-        return "grey";
-      case "hold":
-        return "yellow";
-      case "rejected":
-        return "red";
-      case "No status available":
-        return "transparent";
-      default:
-        return "transparent";
-    }
-  };
-  console.log(filteredCustomers);
 
   return (
     <Box
@@ -214,14 +210,13 @@ const Home: React.FC = () => {
             component="div"
             sx={{
               fontWeight: "bold",
-              fontSize: "1.25rem",
               color: "#fff",
+              whiteSpace: "nowrap",
             }}
           >
             Total Applications: {customer.length}
           </Typography>
         </Box>
-
         <Box
           display="flex"
           flexDirection="column"
@@ -239,7 +234,8 @@ const Home: React.FC = () => {
               marginTop: "6px",
               borderRadius: "12px",
               backgroundColor: "#fff",
-              marginLeft: "510px",
+              marginLeft: "auto",
+              marginRight: "10px",
 
               "& .MuiInputLabel-root": {
                 color: "black",
@@ -255,53 +251,24 @@ const Home: React.FC = () => {
             }}
           />
         </Box>
-
         <Box display="flex" alignItems="center" gap={2}>
-          <Button
-            variant="contained"
-            sx={{
-              width: "190px",
-              marginTop: "6px",
-              borderRadius: "12px",
-              backgroundColor: "#fff",
-              color: "black",
-              "&:hover": {
-                backgroundColor: "#1565c0",
-              },
-            }}
-            onClick={handleShowMyTickets}
-          >
-            Show My Tickets
-          </Button>
-
-          <Dialog open={openDialog} onClose={handleCloseDialog}>
-            <DialogTitle>Selected Tickets</DialogTitle>
-            <DialogContent>
-              <List>
-                {selectedTickets.map((ticket) => (
-                  <ListItem key={ticket.Id}>
-                    <Avatar
-                      alt={ticket.Name}
-                      src={ticket.Image} // Assuming ticket.Image holds the image URL
-                      sx={{ marginRight: 2, width: 56, height: 56 }}
-                    />{" "}
-                    <ListItem key={ticket.Location}></ListItem>
-                    <ListItemText primary={ticket.Name} />
-                  </ListItem>
-                ))}
-                {selectedTickets.length === 0 && (
-                  <ListItem>
-                    <ListItemText primary="No tickets selected" />
-                  </ListItem>
-                )}
-              </List>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleCloseDialog} color="primary">
-                Close
-              </Button>
-            </DialogActions>
-          </Dialog>
+          <Link href="/ticket" passHref>
+            <Button
+              variant="contained"
+              sx={{
+                width: "180px",
+                marginTop: "6px",
+                borderRadius: "12px",
+                backgroundColor: "#fff",
+                color: "black",
+                "&:hover": {
+                  backgroundColor: "#1565c0",
+                },
+              }}
+            >
+              Show My Tickets
+            </Button>
+          </Link>
         </Box>
 
         <Box
@@ -309,58 +276,7 @@ const Home: React.FC = () => {
             display: "flex",
             paddingLeft: "5px",
           }}
-        >
-          <FormControl
-            size="small"
-            variant="outlined"
-            sx={{
-              width: "220px",
-              borderRadius: "8px",
-              overflow: "auto",
-              boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
-              "& .MuiOutlinedInput-root": {
-                height: "36px",
-                padding: "0px",
-                backgroundColor: "white",
-                "& fieldset": {
-                  borderColor: "#cfd8dc",
-                },
-                "&:hover fieldset": {
-                  borderColor: "#64b5f6",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "#1e88e5",
-                },
-              },
-            }}
-          >
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DemoContainer components={["DateRangePicker"]}>
-                <DateRangePicker
-                  localeText={{ start: "", end: "" }}
-                  sx={{
-                    "& .MuiInputBase-root": {
-                      borderRadius: "8px",
-                      padding: "1px",
-                      "&:hover": {
-                        borderColor: "#fff",
-                      },
-                    },
-                    "& .MuiOutlinedInput-notchedOutline": {
-                      borderColor: "#cfd8dc",
-                    },
-                    "& .Mui-focused .MuiOutlinedInput-notchedOutline": {
-                      borderColor: "#fff",
-                    },
-                    maxHeight: "36px",
-                    marginLeft: "5px",
-                  }}
-                />
-              </DemoContainer>
-            </LocalizationProvider>
-          </FormControl>
-        </Box>
-
+        ></Box>
         <Box display="flex" alignItems="center" gap={2}>
           <IconButton color="inherit">
             <Badge badgeContent={notificationsCount} color="secondary">
@@ -399,12 +315,11 @@ const Home: React.FC = () => {
       {loading && <Loader />}
 
       <Box
-        className="test-class"
         sx={{
           height: "100vh",
           paddingRight: "8px",
           position: "relative",
-          marginTop: "60px", // Adjusted for header height
+          marginTop: "60px",
         }}
       >
         <Grid container spacing={4} padding={2}>
@@ -423,10 +338,9 @@ const Home: React.FC = () => {
                 sx={{
                   height: "100%",
                   borderRadius: "12px",
-
-                  borderColor: getStatusBorderColor(contact.status),
+                  overflow: "hidden",
                   borderWidth: "2px",
-                  borderStyle: "solid",
+
                   boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.2)",
                   transition: "transform 0.3s ease",
                   "&:hover": {
@@ -462,147 +376,163 @@ const Home: React.FC = () => {
                         />
                       </Grid>
                       <Grid item xs>
-                        <Typography
-                          variant="h6"
-                          component="div"
-                          sx={{
-                            fontWeight: "bold",
-                            color: "#1976d2",
-                            fontSize: "18px",
-                          }}
-                        >
-                          {contact.Name}
-                        </Typography>
+                        <Box display="flex" alignItems="center">
+                          <PersonIcon
+                            sx={{ color: "#1976d2", marginRight: "8px" }}
+                          />
+                          <Typography
+                            variant="h6"
+                            component="div"
+                            sx={{
+                              fontWeight: "bold",
+                              color: "#1976d2",
+                              fontSize: "18px",
+                            }}
+                          >
+                            {contact.Name.toUpperCase()}
+                          </Typography>
+                        </Box>
                         <hr
                           style={{
                             border: "none",
                             height: "1px",
                             backgroundColor: "#ddd",
-                            margin: "4px 0",
+                            margin: "2px 0",
+                            width: "100%",
                           }}
                         />
 
-                        <Typography
-                          variant="body2"
-                          color="text.primary"
-                          sx={{
-                            padding: "2px",
-                            borderRadius: "4px",
-                            marginTop: "2px",
-                            fontSize: "15px",
-                            textDecoration: "bold",
-                          }}
-                        >
-                          <span
-                            style={{
-                              color: "#1976d2",
-                              fontSize: "16px",
-                              textDecoration: "bold",
+                        <Box display="flex" alignItems="center">
+                          <EmailIcon
+                            sx={{ color: "#1976d2", marginRight: "8px" }}
+                          />{" "}
+                          <Typography
+                            variant="body2"
+                            color="text.primary"
+                            sx={{
+                              padding: "2px",
+                              borderRadius: "4px",
+                              marginTop: "2px",
+                              fontSize: "15px",
                             }}
                           >
-                            Email:
-                          </span>{" "}
-                          {contact.Email}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          color="text.primary"
-                          sx={{
-                            padding: "2px",
-                            borderRadius: "4px",
-                            marginTop: "2px",
-                            fontSize: "15px",
-                            textDecoration: "bold",
-                          }}
-                        >
-                          <span
-                            style={{
-                              color: "#1976d2",
-                              fontSize: "16px",
-                              textDecoration: "bold",
-                            }}
-                          >
-                            Contact:
-                          </span>{" "}
-                          {contact.Contact}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          color="text.primary"
-                          sx={{
-                            padding: "2px",
-                            borderRadius: "4px",
-                            marginTop: "2px",
-                            fontSize: "15px",
-                            textDecoration: "bold",
-                          }}
-                        >
-                          <span
-                            style={{
-                              color: "#1976d2",
-                              fontSize: "16px",
-                              textDecoration: "bold",
-                            }}
-                          >
-                            Amount:
-                          </span>{" "}
-                          {contact.Amount}
-                        </Typography>
+                            <span
+                              style={{
+                                color: "#1976d2",
+                                fontSize: "16px",
+                              }}
+                            >
+                              Email:
+                            </span>{" "}
+                            {contact.Email}
+                          </Typography>
+                        </Box>
 
-                        <Typography
-                          variant="body2"
-                          color="text.primary"
-                          sx={{
-                            padding: "2px",
-                            borderRadius: "4px",
-                            marginTop: "2px",
-                            fontSize: "15px",
-                            textDecoration: "bold",
-                          }}
-                        >
-                          <span
-                            style={{
-                              color: "#1976d2",
-                              fontSize: "16px",
-                              textDecoration: "bold",
+                        <Box display="flex" alignItems="center">
+                          <PhoneIcon
+                            sx={{ color: "#1976d2", marginRight: "8px" }}
+                          />{" "}
+                          <Typography
+                            variant="body2"
+                            color="text.primary"
+                            sx={{
+                              padding: "2px",
+                              borderRadius: "4px",
+                              marginTop: "2px",
+                              fontSize: "15px",
                             }}
                           >
-                            Tenure:
-                          </span>{" "}
-                          {contact.Tenure} months
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          color="text.primary"
-                          sx={{
-                            padding: "2px",
-                            borderRadius: "4px",
-                            marginTop: "2px",
-                            fontSize: "15px",
-                            textDecoration: "bold",
-                          }}
-                        >
-                          <span
-                            style={{
-                              color: "#1976d2",
-                              fontSize: "16px",
-                              textDecoration: "bold",
+                            <span
+                              style={{
+                                color: "#1976d2",
+                                fontSize: "16px",
+                              }}
+                            >
+                              Contact:
+                            </span>{" "}
+                            {contact.Contact}
+                          </Typography>
+                        </Box>
+
+                        <Box display="flex" alignItems="center">
+                          <AttachMoneyIcon
+                            sx={{ color: "#1976d2", marginRight: "8px" }}
+                          />{" "}
+                          <Typography
+                            variant="body2"
+                            color="text.primary"
+                            sx={{
+                              padding: "2px",
+                              borderRadius: "4px",
+                              marginTop: "2px",
+                              fontSize: "15px",
                             }}
                           >
-                            Location:
-                          </span>{" "}
-                          {contact.Location}
-                        </Typography>
+                            <span
+                              style={{
+                                color: "#1976d2",
+                                fontSize: "16px",
+                              }}
+                            >
+                              Amount:
+                            </span>{" "}
+                            {contact.Amount}
+                          </Typography>
+                        </Box>
+
+                        <Box display="flex" alignItems="center">
+                          <AccessTimeIcon
+                            sx={{ color: "#1976d2", marginRight: "8px" }}
+                          />{" "}
+                          <Typography
+                            variant="body2"
+                            color="text.primary"
+                            sx={{
+                              padding: "2px",
+                              borderRadius: "4px",
+                              marginTop: "2px",
+                              fontSize: "15px",
+                            }}
+                          >
+                            <span
+                              style={{
+                                color: "#1976d2",
+                                fontSize: "16px",
+                              }}
+                            >
+                              Tenure:
+                            </span>{" "}
+                            {contact.Tenure} months
+                          </Typography>
+                        </Box>
+
+                        <Box display="flex" alignItems="center">
+                          <LocationOnIcon
+                            sx={{ color: "#1976d2", marginRight: "8px" }}
+                          />{" "}
+                          <Typography
+                            variant="body2"
+                            color="text.primary"
+                            sx={{
+                              padding: "2px",
+                              borderRadius: "4px",
+                              marginTop: "2px",
+                              fontSize: "15px",
+                            }}
+                          >
+                            <span
+                              style={{
+                                color: "#1976d2",
+                                fontSize: "16px",
+                              }}
+                            >
+                              Location:
+                            </span>{" "}
+                            {contact.Location}
+                          </Typography>
+                        </Box>
                       </Grid>
                     </Grid>
-                    {/* <hr
-                      style={{
-                        border: "none",
-                        height: "1px",
-                        backgroundColor: "#ddd",
-                        margin: "8px 0",
-                      }}
-                    /> */}
                     <Typography
                       variant="body2"
                       sx={{
@@ -613,6 +543,7 @@ const Home: React.FC = () => {
                         alignItems: "center",
                         fontSize: "12px",
                         color: "#fff",
+                        marginTop: "9px",
                       }}
                     >
                       <CalendarIcon
@@ -624,7 +555,7 @@ const Home: React.FC = () => {
                   <Box
                     sx={{
                       position: "absolute",
-                      bottom: "18px",
+                      bottom: "1px",
                       right: "1px",
                     }}
                   >
@@ -632,11 +563,19 @@ const Home: React.FC = () => {
                       control={
                         <Checkbox
                           checked={selectedContacts.includes(contact.Id)}
-                          onChange={() => handleCheckboxChange(contact.Id)}
+                          onChange={() =>
+                            handleCheckboxChange(
+                              contact.Id,
+                              contact.applicationId
+                            )
+                          }
                           color="primary"
                           sx={{
                             "&.Mui-checked": {
-                              color: "#1976d2",
+                              color: "#2c3ce3",
+                            },
+                            "& .MuiSvgIcon-root": {
+                              fontSize: 28,
                             },
                           }}
                         />
@@ -644,7 +583,6 @@ const Home: React.FC = () => {
                       label="Pick"
                       sx={{
                         color: "#2c3ce3",
-                        paddingTop: "-40px",
                       }}
                     />
                   </Box>

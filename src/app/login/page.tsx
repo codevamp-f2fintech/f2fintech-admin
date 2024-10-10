@@ -68,9 +68,8 @@ const Login = (): JSX.Element => {
 
       if (response?.data?.data.token) {
         // Save the token in a cookie manually
-        document.cookie = `token=${
-          response.data.data.token.access_token
-        }; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
+        document.cookie = `token=${response.data.data.token.access_token
+          }; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
 
         toastAndNavigate(dispatch, true, "success", "Signin Success");
         router.push("/home");
@@ -250,22 +249,15 @@ const Login = (): JSX.Element => {
                 </Form>
               )}
             </Formik>
-            <Grid container>
-              <Grid item xs>
+            {/* <Grid container>
+              <Grid item xs>                    needs to be done
                 <Link href="#" passHref>
                   <Typography sx={{ color: "#0000cc" }}>
                     Forgot password?
                   </Typography>
                 </Link>
               </Grid>
-              <Grid item>
-                <Link href="/signup" passHref>
-                  <Typography sx={{ color: "#0000cc" }}>
-                    Don&apos;t have an account? Sign Up
-                  </Typography>
-                </Link>
-              </Grid>
-            </Grid>
+            </Grid> */}
           </Box>
         </Grid>
       </Grid>
