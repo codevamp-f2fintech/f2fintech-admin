@@ -2,6 +2,6 @@ export interface User {
   status: string;
   username: string;
   email: string;
-  number: string;
+  gender: string;
   designation: string;
 }

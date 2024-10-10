@@ -1,6 +1,8 @@
+import { Utility } from "@/utils";
 import axios, { AxiosInstance, AxiosError, AxiosResponse } from "axios";
+import { cookies } from "next/headers";
 
-const ENV = import.meta.env;
+// const ENV = import.meta.env;
 /**
  * Creates a custom Axios instance with predefined configurations.
  * This instance is configured with a base URL for the API, a request timeout,
@@ -10,7 +12,7 @@ const ENV = import.meta.env;
  * @type {AxiosInstance}
  */
 export const axiosInstance: AxiosInstance = axios.create({
-  baseURL: "http://localhost:3001/",
+  baseURL: "http://localhost:3001/api/",
   withCredentials: true,
   validateStatus: (status) => (status >= 200 && status < 300) || status == 404,
   timeout: 40000,
@@ -45,4 +47,25 @@ const errorHandler = (error: AxiosError): Promise<never> => {
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error: AxiosError) => errorHandler(error)
+);
+
+// Adding a request interceptor to include the token
+axiosInstance.interceptors.request.use(
+  (config) => {
+    // Get the cookies
+    const { getCookies } = Utility();
+    const cookies = getCookies();
+    const token = cookies.token; // Retrieve the token from cookies
+
+    if (token) {
+      // If token is present, add it to the headers
+      config.headers["x-access-token"] = token;
+    }
+
+    return config; // Return the modified config
+  },
+  (error) => {
+    // Handle the request error
+    return Promise.reject(error);
+  }
 );
