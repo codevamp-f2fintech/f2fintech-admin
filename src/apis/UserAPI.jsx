@@ -14,7 +14,7 @@ export const UserAPI = {
    */
   login: async (loginInfo, cancel = false) => {
     return await axiosInstance.request({
-      url: `user/login`,
+      url: `/login`,
       method: "POST",
       data: loginInfo,
       signal: cancel
@@ -22,13 +22,11 @@ export const UserAPI = {
         : undefined,
     });
   },
-  /** Login user
-   */
 
   /** Register user */
   create: async (registerInfo, cancel = false) => {
     return await axiosInstance.request({
-      url: `user/create`,
+      url: `create-user`,
       method: "POST",
       data: registerInfo,
       signal: cancel
@@ -39,18 +37,19 @@ export const UserAPI = {
 
   getUserProfile: async (userId, cancel = false) => {
     return await axiosInstance.request({
-      url: `user/get/${userId}`,
+      url: `get-by-id/${userId}`,
       method: "GET",
       signal: cancel
         ? cancelApiObject[this.getuserProfile.name].handleRequestCancellation()
-            .signal
+          .signal
         : undefined,
     });
   },
+
   updateUserProfile: async (newData) => {
     try {
       const response = await axiosInstance.request({
-        url: `user/update/:id`,
+        url: `update-user/:id`,
         method: "POST",
         data: newData,
       });

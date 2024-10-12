@@ -2,11 +2,9 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 
 import UsersPage from "./UsersPage";
-
 import { User } from "@/types/user";
-import { Utility } from "@/utils";
 
-const url = "http://localhost:3001/api/user/get";
+const url = "http://localhost:3001/api/v1/get-users";
 const PAGE = 1;
 const SIZE = 5;
 

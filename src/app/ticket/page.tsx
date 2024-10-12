@@ -47,11 +47,11 @@ const Ticket: React.FC = () => {
 
   const { value: ticketData, error: ticketError } = useGetTickets(
     [],
-    `api/v1/get-all-tickets/${1}`   // this is userId
+    `get-all-tickets/${1}`   // this is userId
   );
 
   const { modifyTicket, error: updateError } = useModifyTicket(
-    "/api/v1/update-ticket"
+    "update-ticket"
   );
 
   useEffect(() => {
@@ -74,7 +74,7 @@ const Ticket: React.FC = () => {
           const fetchedApplications = await Promise.all(
             applicationIds.map((id) => {
               return fetcher(
-                `/customer-applications/get-ticket-applications/${id}`
+                `get-application-as-ticket/${id}`
               );
             })
           );

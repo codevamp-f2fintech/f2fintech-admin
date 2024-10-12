@@ -104,13 +104,13 @@ const Home: React.FC = () => {
 
   const { data } = useGetCustomers(
     [],
-    `/customer-applications/get-loan-applications`,
+    `/get-loan-applications`,
     currentPage,
     pageSize
   );
 
-  const { createdTicket, createTicket, error } = useCreateTicket(
-    "/api/v1/create-ticket",
+  const { createTicket, error } = useCreateTicket(
+    "/create-ticket",
     {}
   );
   useEffect(() => {
@@ -151,8 +151,8 @@ const Home: React.FC = () => {
             const response = await createTicket({
               customer_application_id: applicationId,
               user_id: 1,
-              forwarded_to: 1,
-              status: "forwarded",
+              forwarded_to: 0,
+              status: "pending",
               due_date: new Date(),
             });
             console.log("Ticket created page:", response);

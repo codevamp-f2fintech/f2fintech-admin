@@ -62,7 +62,7 @@ const Progress: React.FC = () => {
 
   const { data } = useGetCustomers(
     [],
-    `/customer-applications/get-loan-applications`
+    `get-loan-applications`
   );
 
   useEffect(() => {
