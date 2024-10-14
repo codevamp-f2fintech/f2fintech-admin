@@ -41,8 +41,11 @@ import {
 import { RootState } from "../../redux/store";
 import { Utility } from "@/utils";
 import { setCustomers } from "@/redux/features/customerSlice";
+import TrackingForm from "./trackingForm";
 
 const Progress: React.FC = () => {
+  const [openDialog, setOpenDialog] = useState(false);    // for tracking form to open
+
   const [theme, colorMode] = useMode();
   const dispatch = useDispatch();
 
@@ -555,7 +558,7 @@ const Progress: React.FC = () => {
                                 marginRight: "5px",
                               }}
                             />
-                            <strong>16 Aug 2023:</strong> Action performed by
+                            <strong>16 Aug 2003:</strong> Action performed by
                             Rajiv.
                           </Typography>
                           <Typography
@@ -574,7 +577,7 @@ const Progress: React.FC = () => {
                                 marginRight: "5px",
                               }}
                             />
-                            <strong>15 Aug 2023:</strong> Action performed by
+                            <strong>15 Aug 2003:</strong> Action performed by
                             Anjali.
                           </Typography>
                           <Typography
@@ -825,34 +828,8 @@ const Progress: React.FC = () => {
                     </Typography>
                     <Box display="flex" alignItems="center">
                       <Avatar sx={{ width: 24, height: 24, mr: 1 }}>RA</Avatar>
-                      <Typography variant="body2">Ritu Anuragi</Typography>
+                      <Typography variant="body2">Ritu Anuragiiiiii</Typography>
                     </Box>
-                  </Box>
-
-                  <Box display="flex" justifyContent="space-between" mt={2}>
-                    <Typography
-                      variant="body2"
-                      fontWeight="bold"
-                      sx={{
-                        marginTop: "20px",
-                        padding: "0px 1px",
-                      }}
-                    >
-                      TimeLog
-                    </Typography>
-                    <DateTimePicker
-                      label="Choose Date & Time"
-                      value={selectedDateTime}
-                      onChange={(newValue) => setSelectedDateTime(newValue)}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          variant="outlined"
-                          size="small"
-                          sx={{ ml: 2 }}
-                        />
-                      )}
-                    />
                   </Box>
 
                   <Box display="flex" justifyContent="space-between" mt={2}>
@@ -872,10 +849,27 @@ const Progress: React.FC = () => {
                       2d
                     </Typography>
                   </Box>
+
+                  <Box display="flex" justifyContent="space-between" mt={2}>
+                    <Typography
+                      variant="body2"
+                      fontWeight="bold"
+                      sx={{
+                        marginTop: "20px",
+                        padding: "0px 1px",
+                      }}
+                    >
+                      Time tracking
+                    </Typography>
+                    <TextField
+                      onClick={() => setOpenDialog(true)}
+                    />
+                  </Box>
                 </Paper>
               </Grid>
             </Grid>
           </Container>
+          <TrackingForm openDialog={openDialog} setOpenDialog={setOpenDialog} />
         </LocalizationProvider>
       </ColorModeContext.Provider>
     </ThemeProvider>
