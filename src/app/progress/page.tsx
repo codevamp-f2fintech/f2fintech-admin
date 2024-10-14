@@ -41,6 +41,7 @@ import {
 import { RootState } from "../../redux/store";
 import { Utility } from "@/utils";
 import { setCustomers } from "@/redux/features/customerSlice";
+import Loader from "../components/common/Loader";
 import TrackingForm from "./trackingForm";
 
 const Progress: React.FC = () => {
@@ -116,7 +117,7 @@ const Progress: React.FC = () => {
   };
 
   if (!selectedCustomer) {
-    return <div>Loading customer data...</div>;
+    return <Loader />;
   }
 
   const removeFile = (index: number) => {
