@@ -109,10 +109,7 @@ const Home: React.FC = () => {
     pageSize
   );
 
-  const { createTicket, error } = useCreateTicket(
-    "/create-ticket",
-    {}
-  );
+  const { createTicket, error } = useCreateTicket("/create-ticket", {});
   useEffect(() => {
     if (data?.success === true) {
       const pickedCustomerIds = customer.map((customer) => customer.Id);
@@ -155,11 +152,8 @@ const Home: React.FC = () => {
               status: "pending",
               due_date: new Date(),
             });
-            console.log("Ticket created page:", response);
           } catch (error) {
-            console.error("Error creating ticket:", error);
-
-            alert("Error creating ticket. Please try again.");
+            console.log("Error creating ticket:", error);
           }
         };
         createNewTicket(contactId, applicationId);
