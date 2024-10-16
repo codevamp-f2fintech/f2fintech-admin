@@ -110,13 +110,14 @@ const Ticket = () => {
     if (filter || startDate || endDate) {
       let filtered = customerApplications;
 
-      // Filter by Amount or Tenure
+      // Filter by Name, Amount, or Tenure
       if (filter) {
         const regex = new RegExp(filter, "i");
         filtered = filtered.filter(
           (app) =>
-            app.Tenure.toString() === filter ||
-            regex.test(app.Amount.toString())
+            regex.test(app.Name) || // Search by Name
+            regex.test(app.Amount.toString()) || // Search by Amount
+            app.Tenure.toString() === filter // Search by Tenure
         );
       }
 
@@ -142,6 +143,7 @@ const Ticket = () => {
           return true;
         });
       }
+
       setFilteredApplications(filtered);
     } else {
       setFilteredApplications(customerApplications);
@@ -149,18 +151,40 @@ const Ticket = () => {
   }, [filter, customerApplications, startDate, endDate, ticketStatus]);
 
   const handleStartClick = (customerId, applicationId) => {
+    // Log the ticketData for debugging
+    console.log("Ticket Data:", ticketData);
+
+    // Find the ticket based on userId and applicationId
     const selectedTicket = ticketData?.data.find(
       (ticket) =>
         ticket.user_id === 1 && ticket.customer_application_id === applicationId
     );
 
+    // Log the selected ticket for debugging
+    console.log("Selected Ticket:", selectedTicket);
+
     if (selectedTicket) {
       const { id: ticketId } = selectedTicket;
-      // Update ticket status to 'in progress'
+
+      // Generate the unique ticket ID with the F2FIN prefix
+      const generatedTicketId = `F2FIN-${ticketId}`;
+
+      console.log("Generated Ticket ID:", generatedTicketId);
+
+      // Remove any previously stored ticketId
+      remLocalStorage("ticketId");
+
+      // Store the new ticketId in localStorage
+      setLocalStorage("ticketId", generatedTicketId);
+
+      // Log the new ticketId
+      console.log("Ticket ID:", ticketId);
       modifyTicket(ticketId, { status: "in progress" });
+      setLocalStorage("ids", { customerId, applicationId });
+      router.push(`/progress`);
+    } else {
+      console.log("No ticket found for the given customerId and applicationId");
     }
-    setLocalStorage("ids", { customerId, applicationId });
-    router.push("/progress");
   };
 
   const handleSortChange = (event) => {

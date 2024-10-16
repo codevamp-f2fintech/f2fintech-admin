@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, MouseEvent, useEffect } from "react";
+
 import {
   Container,
   Box,
@@ -16,6 +17,7 @@ import {
   AppBar,
   Toolbar,
   IconButton,
+  Autocomplete,
 } from "@mui/material";
 import {
   AttachFile as AttachFileIcon,
@@ -32,11 +34,13 @@ import { ThemeProvider } from "@mui/material/styles";
 import { useMode, ColorModeContext } from "../../../theme";
 import { useDispatch, useSelector } from "react-redux";
 import { useGetCustomers } from "@/hooks/customer";
-
+import { useGetUsers } from "@/hooks/user";
 import {
   fetchStatusAndDocuments,
   fetchEmployeeStatus,
 } from "../../redux/features/employeeSlice";
+
+import { setUsers } from "@/redux/features/userSlice";
 
 import { RootState } from "../../redux/store";
 import { Utility } from "@/utils";
@@ -45,7 +49,7 @@ import Loader from "../components/common/Loader";
 import TrackingForm from "./trackingForm";
 
 const Progress: React.FC = () => {
-  const [openDialog, setOpenDialog] = useState(false);    // for tracking form to open
+  const [openDialog, setOpenDialog] = useState(false); // for tracking form to open
 
   const [theme, colorMode] = useMode();
   const dispatch = useDispatch();
@@ -59,21 +63,41 @@ const Progress: React.FC = () => {
   const [selectedDateTime, setSelectedDateTime] = useState<null | Date>(null);
   const [activeSection, setActiveSection] = useState<string>("Comments");
   const [loading, setLoading] = useState(true);
+  const [ticketId, setTicketId] = useState("");
   const { getLocalStorage } = Utility();
   const ids = getLocalStorage("ids");
 
+  const [currentAssignee, setCurrentAssignee] = useState(null);
+
   const { customer } = useSelector((state: RootState) => state.customer);
 
-  const { data } = useGetCustomers(
-    [],
-    `get-loan-applications`
-  );
+  const { data } = useGetCustomers([], `get-loan-applications`);
+  const { user } = useGetUsers([], `get-users`);
+
+  // Log the fetched user data to the console
+  useEffect(() => {
+    if (user) {
+      console.log("Fetched Users from API:", user);
+    } else {
+      console.log("No users fetched or still loading...");
+    }
+  }, [user]);
+
+  const [assignees, setAssignees] = useState([]);
+  const [selectedAssignee, setSelectedAssignee] = useState(null);
 
   useEffect(() => {
     if (data?.success === true) {
       dispatch(setCustomers(data.data));
     }
   }, [data]);
+
+  useEffect(() => {
+    const storedTicketId = getLocalStorage("ticketId");
+    if (storedTicketId) {
+      setTicketId(storedTicketId);
+    }
+  }, []);
 
   const {
     status: employeeStatus,
@@ -173,10 +197,13 @@ const Progress: React.FC = () => {
                   F2 Fintech Sales Ticketing System
                 </Typography>
                 <Avatar
-                  sx={{ bgcolor: "#ffffff", color: theme.palette.primary.main }}
-                >
-                  RA
-                </Avatar>
+                  sx={{
+                    bgcolor: "#ffffff",
+                    color: theme.palette.primary.main,
+                  }}
+                  alt={selectedCustomer.Name}
+                  src={selectedCustomer.Image}
+                />
               </Toolbar>
             </AppBar>
 
@@ -210,7 +237,9 @@ const Progress: React.FC = () => {
                         fontSize: "24px",
                       }}
                     >
-                      Customer Description:
+                      <Typography variant="h6">
+                        Ticket ID: {ticketId}
+                      </Typography>
                     </Typography>
                     <Box display="flex" alignItems="center" ml={2}>
                       <input
@@ -816,7 +845,6 @@ const Progress: React.FC = () => {
                       </Box>
                     )}
                   </Box>
-
                   <Box display="flex" justifyContent="space-between" mt={2}>
                     <Typography
                       variant="body2"
@@ -827,10 +855,19 @@ const Progress: React.FC = () => {
                     >
                       Assignee
                     </Typography>
-                    <Box display="flex" alignItems="center">
-                      <Avatar sx={{ width: 24, height: 24, mr: 1 }}>RA</Avatar>
-                      <Typography variant="body2">Ritu Anuragiiiiii</Typography>
-                    </Box>
+                    <Autocomplete
+                      options={assignees}
+                      getOptionLabel={(option) => option.name}
+                      style={{ width: 300 }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Select Assignee"
+                          variant="outlined"
+                        />
+                      )}
+                      value={selectedCustomer}
+                    />
                   </Box>
 
                   <Box display="flex" justifyContent="space-between" mt={2}>
@@ -850,7 +887,6 @@ const Progress: React.FC = () => {
                       2d
                     </Typography>
                   </Box>
-
                   <Box display="flex" justifyContent="space-between" mt={2}>
                     <Typography
                       variant="body2"
@@ -862,7 +898,10 @@ const Progress: React.FC = () => {
                     >
                       Time tracking
                     </Typography>
+
+                    {/* TextField with a placeholder */}
                     <TextField
+                      placeholder="Lock Your TimeLog"
                       onClick={() => setOpenDialog(true)}
                     />
                   </Box>
