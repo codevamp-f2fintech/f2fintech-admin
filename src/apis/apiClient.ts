@@ -1,4 +1,5 @@
 import { axiosInstance } from "./config/axiosConfig";
+
 /**
  * Fetches data from the provided URL using a GET request.
  *
@@ -14,6 +15,7 @@ export const fetcher = async <T>(url: string): Promise<T> => {
   }
   return res.data;
 };
+
 /**
  * Creates data at the provided URL using a POST request.
  *
@@ -31,6 +33,7 @@ export const creator = async <T, D>(url: string, data: D): Promise<T> => {
   }
   return res.data;
 };
+
 /**
  * Modifies data at the provided URL using a PUT request.
  *
@@ -45,6 +48,22 @@ export const modifier = async <T, D>(url: string, data: D): Promise<T> => {
   const res = await axiosInstance.patch<T>(url, data);
   if (!res.data) {
     throw new Error("Failed to modify data");
+  }
+  return res.data;
+};
+
+/**
+ * Deletes data from the provided URL using a DELETE request.
+ *
+ * @template T - The type of the response data.
+ * @param {string} url - The API endpoint to delete data from.
+ * @returns {Promise<T>} - A promise that resolves to the deleted data.
+ * @throws {Error} - If the response does not contain data.
+ */
+export const deleter = async <T>(url: string): Promise<T> => {
+  const res = await axiosInstance.delete<T>(url);
+  if (!res.data) {
+    throw new Error("Failed to delete data");
   }
   return res.data;
 };

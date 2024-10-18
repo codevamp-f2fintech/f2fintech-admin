@@ -1,7 +1,7 @@
 import { Box, LinearProgress, Typography } from '@mui/material';
 
 interface TimeLoggingEstimate {
-    timeSpent: number;
+    timeSpent: string;
     originalEstimate: string;
 }
 
@@ -69,7 +69,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
                 </Box>
             )}
             <Box display='flex' justifyContent='space-between'>
-                {timeLoggingEstimate.timeSpent === 0 ? (
+                {timeLoggingEstimate.timeSpent == 0 ? (
                     <>
                         <Typography variant="body2" color="textSecondary" mt={1}>
                             No time logged

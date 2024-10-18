@@ -28,18 +28,14 @@ import {
 } from "@mui/icons-material";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers";
-
 import { ThemeProvider } from "@mui/material/styles";
+
 import { useMode, ColorModeContext } from "../../../theme";
 import { useDispatch, useSelector } from "react-redux";
 import { useGetCustomers } from "@/hooks/customer";
 import { useGetUsers } from "@/hooks/user";
-import {
-  fetchStatusAndDocuments,
-  fetchEmployeeStatus,
-} from "../../redux/features/employeeSlice";
-
-import { setUsers } from "@/redux/features/userSlice";
+import { useGetTicketActivities, useDeleteTicketActivity, useCreateTicketActivity, useModifyTicketActivity } from "@/hooks/ticketActivities";
+import { fetchStatusAndDocuments, fetchEmployeeStatus } from "../../redux/features/employeeSlice";
 
 import { RootState } from "../../redux/store";
 import { Utility } from "@/utils";
@@ -60,8 +56,14 @@ const Progress: React.FC = () => {
   const ids = getLocalStorage("ids");
 
   const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
+  const [commentsState, setCommentsState] = useState<any[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [activeSection, setActiveSection] = useState<string>("Comments");
+  const [newComment, setNewComment] = useState<string>("");
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editedComment, setEditedComment] = useState<string>("");
+
   const [employeeAnchorEl, setEmployeeAnchorEl] = useState<null | HTMLElement>(
     null
   );
@@ -74,12 +76,46 @@ const Progress: React.FC = () => {
   const [progress, setProgress] = useState(0); // State to store progress percentage
   const [overage, setOverage] = useState(0); // Orange part (exceeding estimated time)
 
-  const [activeSection, setActiveSection] = useState<string>("Comments");
   const [ticketId, setTicketId] = useState("");
   const { customer } = useSelector((state: RootState) => state.customer);
   const storedTicketId = ticketId?.split('-')[1];
 
+  // Fetch customers
   const { data } = useGetCustomers([], `get-loan-applications`);
+  const { value: comments } = useGetTicketActivities([], `get-all-ticket-activities/${storedTicketId}`);
+
+  // Hook for deleting ticket activity
+  const { deleteTicketActivity, error } = useDeleteTicketActivity('delete-ticket-activity');
+
+  // Hook for creating new ticket activity (comment)
+  const { createTicketActivity, error: createError } = useCreateTicketActivity('create-ticket-activity');
+
+  // Hook for modifying ticket activity (editing comments)
+  const { modifyTicketActivity, error: modifyError } = useModifyTicketActivity('update-ticket-activity');
+
+
+  useEffect(() => {
+    if (comments && Array.isArray(comments) && comments.length > 0) {
+      setCommentsState(comments);
+      console.log("Updated commentsState:", comments);
+    } else {
+      console.log("No comments Here");
+    }
+  }, [comments]);
+
+  useEffect(() => {
+    if (data?.success === true) {
+      dispatch(setCustomers(data.data));
+    }
+  }, [data]);
+
+  useEffect(() => {
+    const storedTicketId = getLocalStorage("ticketId");
+    if (storedTicketId) {
+      setTicketId(storedTicketId);
+    }
+  }, []);
+
   const { user } = useGetUsers([], `get-users`);
 
   const { value: ticketData } = useGetTickets([], `get-ticket-logs/${storedTicketId}`);
@@ -151,35 +187,7 @@ const Progress: React.FC = () => {
   };
 
 
-
-  const [assignees, setAssignees] = useState([]);
-  const [selectedAssignee, setSelectedAssignee] = useState(null);
-
-  useEffect(() => {
-    if (data?.success === true) {
-      dispatch(setCustomers(data.data));
-    }
-  }, [data]);
-
-  useEffect(() => {
-    const storedTicketId = getLocalStorage("ticketId");
-    if (storedTicketId) {
-      setTicketId(storedTicketId);
-    }
-  }, []);
-
-  const {
-    status: employeeStatus,
-    loanStatus,
-    documents,
-  } = useSelector((state: RootState) => state.employee);
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files) {
-      setSelectedFiles([...selectedFiles, ...Array.from(files)]);
-    }
-  };
+  const { status: employeeStatus, loanStatus, documents } = useSelector((state: RootState) => state.employee);
 
   const handleInputChange = (event) => {
     const value = event.target.value;
@@ -187,6 +195,13 @@ const Progress: React.FC = () => {
       ...prevState,
       originalEstimate: value
     }));
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      setSelectedFiles([...selectedFiles, ...Array.from(files)]);
+    }
   };
 
   useEffect(() => {
@@ -199,27 +214,97 @@ const Progress: React.FC = () => {
       );
       dispatch(fetchEmployeeStatus(ids.applicationId));
     }
-  }, [ids.applicationId, ids.customerId]);
+  }, [ids.applicationId, ids.customerId, dispatch]);
+
 
   useEffect(() => {
     if (ids.customerId) {
-      const selectdCustomer = customer.find(
-        (cust) => cust.Id === ids.customerId
-      );
-
-      if (selectdCustomer) {
-        setSelectedCustomer(selectdCustomer);
+      const selectedCustomer = customer.find((cust) => cust.Id === ids.customerId);
+      if (selectedCustomer) {
+        setSelectedCustomer(selectedCustomer);
       }
     }
   }, [ids.customerId, customer]);
 
+
   const handleBack = () => {
     window.history.back();
   };
+  const handleEmployeeClick = (event: MouseEvent<HTMLButtonElement>) => {
+    setEmployeeAnchorEl(event.currentTarget);
+  };
 
-  if (!selectedCustomer) {
-    return <Loader />;
-  }
+  const handleDeleteComment = async (commentId: number) => {
+    try {
+      await deleteTicketActivity(commentId);
+      setCommentsState((prevComments) =>
+        prevComments.filter((comment) => comment.ticket_id !== commentId)
+      );
+      console.log("Comment deleted successfully");
+    } catch (error) {
+      console.error('Error while deleting the comment:', error);
+    }
+  };
+
+  const handleCreateComment = async () => {
+    if (!newComment.trim()) return;
+    try {
+      const newCommentData = {
+        ticket_id: ticketId,
+        comment: newComment,
+        created_at: new Date().toISOString(),
+      };
+      const createdComment = await createTicketActivity(newCommentData);
+
+      if (createdComment) {
+        setCommentsState((prevComments) => [...prevComments, createdComment]);
+        setNewComment("");
+      }
+      console.log("Comment created successfully");
+    } catch (error) {
+      console.error('Error while creating the comment:', error);
+    }
+
+  };
+
+  const handleEditComment = (commentId: number, ticketId: number, commentText: string) => {
+    setEditingCommentId(commentId); // Set the commentId for editing
+    setEditedComment(commentText); // Set the current comment text to be edited
+  };
+
+  const handleSaveEditComment = async (commentId: number, ticketId: number) => {
+    if (!editedComment.trim()) return;
+
+    try {
+      const updatedCommentData = {
+        comment: editedComment,
+        updated_at: new Date().toISOString(),
+      };
+
+
+      const updatedComment = await modifyTicketActivity(ticketId, commentId, updatedCommentData);
+
+      if (updatedComment) {
+        // Update the comments state with the modified comment
+        setCommentsState((prevComments) =>
+          prevComments.map((comment) =>
+            comment.id === commentId && comment.ticket_id === ticketId
+              ? { ...comment, ...updatedComment }
+              : comment
+          )
+        );
+        setEditingCommentId(null); // Reset after save
+        setEditedComment(""); // Clear the edited comment state
+      }
+    } catch (error) {
+      console.error("Error while modifying the comment:", error);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCommentId(null);
+    setEditedComment("");
+  };
 
   const removeFile = (index: number) => {
     const newFiles = selectedFiles.filter((_, idx) => idx !== index);
@@ -230,21 +315,17 @@ const Progress: React.FC = () => {
     setAnchorEl(event.currentTarget);
   };
 
-  const handleEmployeeClick = (event: MouseEvent<HTMLButtonElement>) => {
-    setEmployeeAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = (selectedStatus: string) => {
+  const handleClose = (yes) => {
     setAnchorEl(null);
-  };
-
-  const handleEmployeeClose = (selectedStatus: string) => {
-    setEmployeeAnchorEl(null);
   };
 
   const showComments = () => setActiveSection("Comments");
   const showHistory = () => setActiveSection("History");
   const showWorkLog = () => setActiveSection("WorkLog");
+
+  if (!selectedCustomer) {
+    return <Loader />;
+  }
 
   return (
     <ThemeProvider theme={theme}>
@@ -267,10 +348,7 @@ const Progress: React.FC = () => {
                 <IconButton edge="start" color="inherit" onClick={handleBack}>
                   <ArrowBackIcon />
                 </IconButton>
-                <Typography
-                  variant="h6"
-                  sx={{ flexGrow: 1, textAlign: "center" }}
-                >
+                <Typography variant="h6" sx={{ flexGrow: 1, textAlign: "center" }}>
                   F2 Fintech Sales Ticketing System
                 </Typography>
                 <Avatar
@@ -300,12 +378,7 @@ const Progress: React.FC = () => {
                     marginLeft: "-60px",
                   }}
                 >
-                  <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    mb={1}
-                  >
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                     <Typography
                       variant="h3"
                       sx={{
@@ -344,7 +417,6 @@ const Progress: React.FC = () => {
                     </Box>
                   </Box>
 
-                  {/* Customer Information */}
                   <Box
                     mt={2}
                     p={2}
@@ -355,21 +427,9 @@ const Progress: React.FC = () => {
                     gap={2}
                     sx={{ borderRadius: "14px" }}
                   >
-                    {/* Larger Avatar */}
-                    <Avatar
-                      src={selectedCustomer.Image}
-                      sx={{ width: 80, height: 80 }}
-                    />
+                    <Avatar src={selectedCustomer.Image} sx={{ width: 80, height: 80 }} />
 
-                    {/* Information Content */}
-                    <Box
-                      sx={{
-                        flex: 1,
-                        p: 2,
-                        borderRadius: 2,
-                        bgcolor: "background.paper",
-                      }}
-                    >
+                    <Box sx={{ flex: 1, p: 2, borderRadius: 2, bgcolor: "background.paper" }}>
                       <Grid container spacing={2}>
                         {/* Name and Email */}
                         <Grid item xs={12} sm={6}>
@@ -384,7 +444,6 @@ const Progress: React.FC = () => {
                               {selectedCustomer.Name}
                             </Typography>
                           </Typography>
-
                           <Typography variant="h6" fontWeight="bold">
                             <Typography
                               component="span"
@@ -397,7 +456,6 @@ const Progress: React.FC = () => {
                             </Typography>
                           </Typography>
                         </Grid>
-
                         {/* Contact and Amount */}
                         <Grid item xs={12} sm={6}>
                           <Typography variant="h6" fontWeight="bold">
@@ -411,7 +469,6 @@ const Progress: React.FC = () => {
                               {selectedCustomer.Contact}
                             </Typography>
                           </Typography>
-
                           <Typography variant="h6" fontWeight="bold">
                             <Typography
                               component="span"
@@ -436,7 +493,6 @@ const Progress: React.FC = () => {
                               {selectedCustomer.Location}
                             </Typography>
                           </Typography>
-
                           <Typography variant="h6" fontWeight="bold">
                             <Typography
                               component="span"
@@ -459,7 +515,6 @@ const Progress: React.FC = () => {
                           <Typography component="span" sx={{ color: "blue" }}>
                             {selectedCustomer.Amount}
                           </Typography>
-
                           <Typography variant="h6" fontWeight="bold">
                             <Typography
                               component="span"
@@ -475,6 +530,7 @@ const Progress: React.FC = () => {
                       </Grid>
                     </Box>
                   </Box>
+
                   <Grid item xs={12} md={8}>
                     <Paper
                       elevation={5}
@@ -491,7 +547,6 @@ const Progress: React.FC = () => {
                       <Typography variant="h6" sx={{ mb: 2, mt: 1 }}>
                         Documents:
                       </Typography>
-
                       {documents.length > 0 ? (
                         <Box
                           sx={{
@@ -510,7 +565,7 @@ const Progress: React.FC = () => {
                                 alignItems: "center",
                                 justifyContent: "space-between",
                                 padding: "10px",
-                                backgroundColor: "#f5f5f5",
+                                backgroundColor: "#F5F5F5",
                                 borderRadius: "8px",
                                 boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
                                 transition: "transform 0.2s ease",
@@ -521,7 +576,7 @@ const Progress: React.FC = () => {
                             >
                               <Typography
                                 variant="body1"
-                                sx={{ color: "#2c3ce3", flexGrow: 1 }}
+                                sx={{ color: "#2C3CE3", flexGrow: 1 }}
                               >
                                 {doc.type}
                               </Typography>
@@ -531,7 +586,7 @@ const Progress: React.FC = () => {
                                 rel="noopener noreferrer"
                                 style={{
                                   textDecoration: "none",
-                                  color: "#2c3ce3",
+                                  color: "#2C3CE3",
                                   fontWeight: "bold",
                                 }}
                               >
@@ -546,30 +601,13 @@ const Progress: React.FC = () => {
                     </Paper>
                   </Grid>
 
-                  {/* Section to display documents based on customer ID */}
-                  <Grid
-                    container
-                    spacing={2}
-                    sx={{
-                      width: "50%",
-                      maxWidth: 1600,
-                      mt: 5,
-                      position: "fixed",
-                      flexDirection: "row", // Make the container row-wise
-                      alignItems: "flex-start", // Align items to the top
-                    }}
-                  ></Grid>
-
                   <Box mt={2} mb={3}>
                     <Typography variant="h6" fontWeight="bold">
                       Activity:
                       <Typography
                         component="span"
                         sx={{
-                          backgroundColor:
-                            activeSection === "Comments"
-                              ? "lightblue"
-                              : "#e8eaf6",
+                          backgroundColor: activeSection === "Comments" ? "lightblue" : "#e8eaf6",
                           fontSize: "12px",
                           borderRadius: "4px",
                           marginLeft: "10px",
@@ -583,10 +621,7 @@ const Progress: React.FC = () => {
                       <Typography
                         component="span"
                         sx={{
-                          backgroundColor:
-                            activeSection === "History"
-                              ? "lightblue"
-                              : "#e8eaf6",
+                          backgroundColor: activeSection === "History" ? "lightblue" : "#e8eaf6",
                           fontSize: "12px",
                           borderRadius: "4px",
                           marginLeft: "10px",
@@ -600,10 +635,7 @@ const Progress: React.FC = () => {
                       <Typography
                         component="span"
                         sx={{
-                          backgroundColor:
-                            activeSection === "WorkLog"
-                              ? "lightblue"
-                              : "#e8eaf6",
+                          backgroundColor: activeSection === "WorkLog" ? "lightblue" : "#e8eaf6",
                           fontSize: "12px",
                           borderRadius: "4px",
                           marginLeft: "10px",
@@ -615,40 +647,129 @@ const Progress: React.FC = () => {
                         Work Log
                       </Typography>
                     </Typography>
+
                   </Box>
 
+
                   {activeSection === "Comments" && (
-                    <Box mt={2} mb={3}>
+                    <Box mt={2} mb={3} sx={{ position: "relative" }}>
                       <TextField
                         fullWidth
                         variant="outlined"
                         placeholder="Add a comment..."
                         multiline
                         rows={3}
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
                         sx={{
                           mt: 1,
                           bgcolor: "#ffffff",
                           borderRadius: 1,
                           border: "1px solid rgba(0, 0, 0, 0.1)",
+                          pr: 5,
                         }}
                       />
-                      <Box mt={2} display="flex" justifyContent="flex-start">
+
+                      <IconButton
+                        sx={{
+                          position: "absolute",
+                          bottom: 45,
+                          right: 12,
+                          borderRadius: "50%",
+                        }}
+                        onClick={() => document.getElementById("file-upload")?.click()}
+                      >
+                        <AttachFileIcon />
+                      </IconButton>
+
+                      <Box mt={1} display="flex" justifyContent="flex-start" alignItems="center">
                         <Button
                           variant="contained"
                           sx={{
                             textTransform: "none",
                             bgcolor: theme.palette.primary.main,
                             color: "#fff",
+                            mr: 2,
                           }}
-                          onClick={() => console.log("Comment button clicked")}
+                          onClick={handleCreateComment}
                         >
                           Comment
                         </Button>
                       </Box>
+
+                      {/* Comments list displayed below the Add Comment button */}
+                      <Box mt={3}>
+                        <Typography variant="h6">New Comments :</Typography>
+                        {comments && comments.data ? (
+                          comments.data.map((comment, index) => (
+                            <Box
+                              key={index}
+                              mt={1}
+                              p={2}
+                              border={1}
+                              borderColor="grey.300"
+                              borderRadius={4}
+                            >
+                              {editingCommentId === comment.id ? (
+                                <Box>
+                                  <TextField
+                                    fullWidth
+                                    multiline
+                                    value={editedComment}
+                                    onChange={(e) => setEditedComment(e.target.value)}
+                                    rows={3}
+                                    variant="outlined"
+                                  />
+                                  <Box mt={1}>
+                                    <Button
+                                      variant="contained"
+                                      color="primary"
+                                      onClick={() => handleSaveEditComment(comment.id, comment.ticket_id)}
+                                    >
+                                      Save
+                                    </Button>
+                                    <Button
+                                      variant="text"
+                                      color="secondary"
+                                      sx={{ ml: 2 }}
+                                      onClick={handleCancelEdit}
+                                    >
+                                      Cancel
+                                    </Button>
+                                  </Box>
+                                </Box>
+                              ) : (
+                                <Box>
+                                  <Typography variant="body1">{comment.comment}</Typography>
+                                  <Box mt={1}>
+                                    <Button
+                                      variant="outlined"
+                                      size="small"
+                                      onClick={() => handleEditComment(comment.id, comment.ticket_id, comment.comment)}
+                                    >
+                                      Edit
+                                    </Button>
+                                    <Button
+                                      variant="outlined"
+                                      size="small"
+                                      sx={{ ml: 2 }}
+                                      onClick={() => handleDeleteComment(comment.ticket_id)}
+                                    >
+                                      Delete
+                                    </Button>
+                                  </Box>
+                                </Box>
+                              )}
+                            </Box>
+                          ))
+                        ) : (
+                          <Typography>No comments available</Typography>
+                        )}
+
+                      </Box>
                     </Box>
                   )}
 
-                  {/* History Section */}
                   {activeSection === "History" && (
                     <>
                       <Box mt={2}>
@@ -661,7 +782,7 @@ const Progress: React.FC = () => {
                             <BoltIcon
                               fontSize="small"
                               sx={{
-                                color: "#2c3ce3",
+                                color: "#2C3CE3",
                                 marginRight: "5px",
                               }}
                             />
@@ -680,7 +801,7 @@ const Progress: React.FC = () => {
                             <BoltIcon
                               fontSize="small"
                               sx={{
-                                color: "#2c3ce3",
+                                color: "#2C3CE3",
                                 marginRight: "5px",
                               }}
                             />
@@ -703,7 +824,6 @@ const Progress: React.FC = () => {
                   )}
                 </Paper>
               </Grid>
-
               <Grid item xs={12} md={4}>
                 <Paper
                   elevation={4}
@@ -811,10 +931,10 @@ const Progress: React.FC = () => {
                       onClick={handleEmployeeClick}
                       sx={{
                         textTransform: "none",
-                        paddingX: 2, // Consistent padding for better spacing
-                        minWidth: "100px", // Fixed minWidth for consistent button size
+                        paddingX: 2,
+                        minWidth: "100px",
                         backgroundColor: theme.palette.primary.main,
-                        color: "#fff", // White text for better contrast
+                        color: "#fff",
                         fontWeight: "bold",
                         ":hover": {
                           backgroundColor: theme.palette.primary.dark,
@@ -824,7 +944,7 @@ const Progress: React.FC = () => {
                       {employeeStatus}
                     </Button>
 
-                    <Menu
+                    {/* <Menu
                       anchorEl={employeeAnchorEl}
                       open={Boolean(employeeAnchorEl)}
                       onClose={() => handleEmployeeClose(employeeStatus)}
@@ -843,7 +963,7 @@ const Progress: React.FC = () => {
                       <MenuItem onClick={() => handleEmployeeClose("done")}>
                         Done
                       </MenuItem>
-                    </Menu>
+                    </Menu> */}
                   </Box>
 
                   <Divider sx={{ my: 2 }} />
@@ -857,8 +977,7 @@ const Progress: React.FC = () => {
                       multiple
                       onChange={handleFileChange}
                     />
-
-                    {/* Files Display */}
+                    { }
                     {selectedFiles.length > 0 && (
                       <Box mt={2}>
                         {selectedFiles.map((file, index) => (
@@ -895,8 +1014,8 @@ const Progress: React.FC = () => {
                       Assignee
                     </Typography>
                     <Autocomplete
-                      options={assignees}
-                      getOptionLabel={(option) => option.name}
+                      options={[]}
+                      // getOptionLabel={(option) => option.name}
                       style={{ width: 300 }}
                       renderInput={(params) => (
                         <TextField
@@ -959,6 +1078,7 @@ const Progress: React.FC = () => {
                   </Box>
                 </Paper>
               </Grid>
+
             </Grid>
           </Container>
           <TrackingForm openDialog={openDialog} setOpenDialog={setOpenDialog} timeLoggingEstimate={timeLoggingEstimate} setTimeLoggingEstimate={setTimeLoggingEstimate}
