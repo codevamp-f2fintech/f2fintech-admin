@@ -2,22 +2,22 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { Ticket } from "@/types/ticket";
 
-interface ticketInitialState {
-    ticket: Ticket[];
+interface ticketLogInitialState {
+    ticketLog: Ticket[];
     reduxLoading: boolean;
 }
 
-const initialState: ticketInitialState = {
-    ticket: [],
+const initialState: ticketLogInitialState = {
+    ticketLog: [],
     reduxLoading: false,
 };
 
-export const ticketSlice = createSlice({
-    name: "ticket",
+export const ticketLogSlice = createSlice({
+    name: "ticketLog",
     initialState,
     reducers: {
         setTickets: (state, action: PayloadAction<Ticket[]>) => {
-            state.ticket = action.payload;
+            state.ticketLog = action.payload;
             state.reduxLoading = false;
         },
         setLoading: (state, action: PayloadAction<boolean>) => {
@@ -26,7 +26,7 @@ export const ticketSlice = createSlice({
     },
 });
 
-export const { setTickets, setLoading } = ticketSlice.actions;
+export const { setTickets, setLoading } = ticketLogSlice.actions;
 
 // Export the reducer to be used in the store configuration
-export default ticketSlice.reducer;
+export default ticketLogSlice.reducer;
