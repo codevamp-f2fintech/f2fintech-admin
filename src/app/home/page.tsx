@@ -75,12 +75,12 @@ const Home: React.FC = () => {
 
   const { data } = useGetCustomers(
     [],
-    `/get-loan-applications`,
+    `get-loan-applications`,
     currentPage,
     pageSize
   );
 
-  const { createTicket, error } = useCreateTicket("/create-ticket", {});
+  const { createTicket, error } = useCreateTicket("create-ticket", {});
 
   useEffect(() => {
     if (data?.success === true) {

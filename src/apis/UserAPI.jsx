@@ -14,7 +14,7 @@ export const UserAPI = {
    */
   login: async (loginInfo, cancel = false) => {
     return await axiosInstance.request({
-      url: `/login`,
+      url: `login`,
       method: "POST",
       data: loginInfo,
       signal: cancel

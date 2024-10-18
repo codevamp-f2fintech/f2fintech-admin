@@ -53,7 +53,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
 
   const { data, swrLoading } = useGetUsers(
     initialData,
-    `/user/get?&_page=${pageSize.page}&_limit=${pageSize.size}`
+    `get-users?&_page=${pageSize.page}&_limit=${pageSize.size}`
   );
 
   useEffect(() => {

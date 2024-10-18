@@ -106,7 +106,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
     const { toastAndNavigate, getLocalStorage } = Utility();
     const storedTicketId = getLocalStorage("ticketId");
 
-    const { createTicket } = useCreateTicket("/create-ticket-log", {});
+    const { createTicket } = useCreateTicket("create-ticket-log", {});
 
     const handleDialogClose = () => {
         setOpenDialog(false);
