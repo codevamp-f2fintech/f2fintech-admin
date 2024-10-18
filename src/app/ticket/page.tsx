@@ -89,24 +89,28 @@ const Ticket = () => {
     }
   }, [ticketData]);
 
-  const getStatusColor = (status) => {
-    switch (status.toLowerCase()) {
+  // Function to get status border color
+  const getStatusColor = (status: string | undefined): string => {
+    switch (status) {
+      case "in progress":
+        return "LightSalmon";
+      case "forwarded":
+        return "Aqua";
+      case "close":
+        return "red";
       case "to do":
         return "blue";
-      case "in progress":
-        return "gold";
-      case "on hold":
-        return "red";
-      case "forwarded":
-        return "yellow";
-      case "close":
-        return "voilet";
       case "done":
-        return "blue";
+        return "green";
+      case "on hold":
+        return "yellow";
+      case "No status available":
+        return "transparent";
       default:
-        return "grey";
+        return "transparent";
     }
   };
+
   useEffect(() => {
     if (filter || startDate || endDate) {
       let filtered = customerApplications;

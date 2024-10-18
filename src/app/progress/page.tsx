@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, MouseEvent, useEffect } from "react";
-
 import {
   Container,
   Box,
@@ -63,7 +62,6 @@ const Progress: React.FC = () => {
   const [newComment, setNewComment] = useState<string>("");
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editedComment, setEditedComment] = useState<string>("");
-
   const [employeeAnchorEl, setEmployeeAnchorEl] = useState<null | HTMLElement>(
     null
   );
@@ -76,16 +74,18 @@ const Progress: React.FC = () => {
   const [progress, setProgress] = useState(0); // State to store progress percentage
   const [overage, setOverage] = useState(0); // Orange part (exceeding estimated time)
 
-  const [ticketId, setTicketId] = useState("");
+  const [ticketId, setTicketId] = useState('');
   const { customer } = useSelector((state: RootState) => state.customer);
   const storedTicketId = ticketId?.split('-')[1];
 
   // Fetch customers
   const { data } = useGetCustomers([], `get-loan-applications`);
+  const { data: userData } = useGetUsers([], `get-users`);
+  const { value: ticketData } = useGetTickets([], `get-ticket-logs/${storedTicketId}`);
   const { value: comments } = useGetTicketActivities([], `get-all-ticket-activities/${storedTicketId}`);
 
   // Hook for deleting ticket activity
-  const { deleteTicketActivity, error } = useDeleteTicketActivity('delete-ticket-activity');
+  const { deleteTicketActivity } = useDeleteTicketActivity('delete-ticket-activity');
 
   // Hook for creating new ticket activity (comment)
   const { createTicketActivity, error: createError } = useCreateTicketActivity('create-ticket-activity');
@@ -115,11 +115,6 @@ const Progress: React.FC = () => {
       setTicketId(storedTicketId);
     }
   }, []);
-
-  const { user } = useGetUsers([], `get-users`);
-
-  const { value: ticketData } = useGetTickets([], `get-ticket-logs/${storedTicketId}`);
-
 
   useEffect(() => {
     if (ticketData?.data) {
@@ -186,7 +181,6 @@ const Progress: React.FC = () => {
     return formattedTime || '0h';
   };
 
-
   const { status: employeeStatus, loanStatus, documents } = useSelector((state: RootState) => state.employee);
 
   const handleInputChange = (event) => {
@@ -216,7 +210,6 @@ const Progress: React.FC = () => {
     }
   }, [ids.applicationId, ids.customerId, dispatch]);
 
-
   useEffect(() => {
     if (ids.customerId) {
       const selectedCustomer = customer.find((cust) => cust.Id === ids.customerId);
@@ -226,10 +219,10 @@ const Progress: React.FC = () => {
     }
   }, [ids.customerId, customer]);
 
-
   const handleBack = () => {
     window.history.back();
   };
+
   const handleEmployeeClick = (event: MouseEvent<HTMLButtonElement>) => {
     setEmployeeAnchorEl(event.currentTarget);
   };
@@ -250,21 +243,20 @@ const Progress: React.FC = () => {
     if (!newComment.trim()) return;
     try {
       const newCommentData = {
-        ticket_id: ticketId,
+        ticket_id: storedTicketId,
         comment: newComment,
-        created_at: new Date().toISOString(),
+        // created_at: new Date().toISOString(),
       };
+      console.log(newCommentData, 'newcommentData')
       const createdComment = await createTicketActivity(newCommentData);
 
       if (createdComment) {
         setCommentsState((prevComments) => [...prevComments, createdComment]);
         setNewComment("");
       }
-      console.log("Comment created successfully");
     } catch (error) {
       console.error('Error while creating the comment:', error);
     }
-
   };
 
   const handleEditComment = (commentId: number, ticketId: number, commentText: string) => {
@@ -274,16 +266,13 @@ const Progress: React.FC = () => {
 
   const handleSaveEditComment = async (commentId: number, ticketId: number) => {
     if (!editedComment.trim()) return;
-
     try {
       const updatedCommentData = {
         comment: editedComment,
         updated_at: new Date().toISOString(),
       };
 
-
       const updatedComment = await modifyTicketActivity(ticketId, commentId, updatedCommentData);
-
       if (updatedComment) {
         // Update the comments state with the modified comment
         setCommentsState((prevComments) =>
@@ -315,8 +304,12 @@ const Progress: React.FC = () => {
     setAnchorEl(event.currentTarget);
   };
 
-  const handleClose = (yes) => {
+  const handleClose = (selectedStatus: string) => {
     setAnchorEl(null);
+  };
+
+  const handleEmployeeClose = (selectedStatus: string) => {
+    setEmployeeAnchorEl(null);
   };
 
   const showComments = () => setActiveSection("Comments");
@@ -380,16 +373,14 @@ const Progress: React.FC = () => {
                 >
                   <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                     <Typography
-                      variant="h3"
+                      variant="h5"
                       sx={{
                         color: "#2c3ce3",
                         textDecoration: "underline",
                         fontSize: "24px",
                       }}
                     >
-                      <Typography variant="h6">
-                        Ticket ID: {ticketId}
-                      </Typography>
+                      Ticket ID: {ticketId}
                     </Typography>
                     <Box display="flex" alignItems="center" ml={2}>
                       <input
@@ -647,7 +638,6 @@ const Progress: React.FC = () => {
                         Work Log
                       </Typography>
                     </Typography>
-
                   </Box>
 
 
@@ -765,7 +755,6 @@ const Progress: React.FC = () => {
                         ) : (
                           <Typography>No comments available</Typography>
                         )}
-
                       </Box>
                     </Box>
                   )}
@@ -944,7 +933,7 @@ const Progress: React.FC = () => {
                       {employeeStatus}
                     </Button>
 
-                    {/* <Menu
+                    <Menu
                       anchorEl={employeeAnchorEl}
                       open={Boolean(employeeAnchorEl)}
                       onClose={() => handleEmployeeClose(employeeStatus)}
@@ -963,7 +952,7 @@ const Progress: React.FC = () => {
                       <MenuItem onClick={() => handleEmployeeClose("done")}>
                         Done
                       </MenuItem>
-                    </Menu> */}
+                    </Menu>
                   </Box>
 
                   <Divider sx={{ my: 2 }} />

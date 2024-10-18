@@ -13,7 +13,7 @@ import { TicketActivities } from "@/types/ticketActivities";
 export const useGetTicketActivities = (initialData: TicketActivities[], pathKey: string) => {
   const { data: swrData, error } = useSWR<TicketActivities[]>(pathKey, fetcher, {
     fallbackData: initialData,
-    refreshInterval: initialData ? 1000 : 0, // 1-sec refresh if initialData exists
+    refreshInterval: initialData ? 3600000 : 0, // 1-hour refresh if initialData exists
     revalidateOnFocus: false, // Disable revalidation on window focus
   });
 
@@ -37,6 +37,7 @@ export const useCreateTicketActivity = (pathKey: string) => {
     try {
       const response = await creator(pathKey, data);
       setCreatedActivity(response);
+      console.log(response, 'api res')
       return response;
     } catch (err) {
       setError(err as Error);
@@ -63,7 +64,7 @@ export const useModifyTicketActivity = (pathKey: string, refreshInterval: number
   // Modify the function to accept both `ticket_id` and `activity_id`
   const modifyTicketActivity = async (
     ticketId: number, // Add ticketId parameter
-    activityId: number, 
+    activityId: number,
     updatedActivityData: Partial<TicketActivities>
   ) => {
     setLoading(true);
@@ -71,15 +72,15 @@ export const useModifyTicketActivity = (pathKey: string, refreshInterval: number
     try {
       // Construct the API path using both ticket_id and activity_id
       const apiPath = `${pathKey}/${ticketId}/${activityId}`;
-      
+
       // Send the request to update the activity
       const activity = await modifier<TicketActivities, Partial<TicketActivities>>(apiPath, updatedActivityData);
 
       // Update the state with the modified activity
       setModifiedActivity(activity);
-      
+
       // Return the modified activity so the calling function can use it
-      return activity; 
+      return activity;
     } catch (err) {
       // Set the error state if the request fails
       setError(err as Error);

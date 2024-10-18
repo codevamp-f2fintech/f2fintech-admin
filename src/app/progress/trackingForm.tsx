@@ -79,7 +79,6 @@ function parseTimeSpent(timeSpent: string): number {
     return totalHours;
 }
 
-
 const TrackingForm: React.FC<FormComponentProps> = ({
     openDialog,
     setOpenDialog,
