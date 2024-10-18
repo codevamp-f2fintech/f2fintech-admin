@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import {
   Card,
@@ -31,12 +32,14 @@ import { CalendarToday as CalendarIcon } from "@mui/icons-material";
 import { LocalizationProvider, DateRangePicker } from "@mui/x-date-pickers-pro";
 import { AdapterDayjs } from "@mui/x-date-pickers-pro/AdapterDayjs";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
+
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { setCustomers, appendCustomers } from "@/redux/features/customerSlice";
 import { Customer } from "@/types/customer";
 import { useGetCustomers } from "@/hooks/customer";
 import Loader from "../components/common/Loader";
+import { useCreateTicket } from "@/hooks/ticket";
 
 const Home: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -86,10 +89,12 @@ const Home: React.FC = () => {
 
   const { data } = useGetCustomers(
     [],
-    `/customer-applications/get-loan-applications`,
+    `/get-loan-applications`,
     currentPage,
     pageSize
   );
+
+  const { createTicket, error } = useCreateTicket("/create-ticket", {});
 
   useEffect(() => {
     if (data.success === true) {
@@ -136,13 +141,34 @@ const Home: React.FC = () => {
     return diffDays;
   };
 
-  // Function to handle checkbox change
-  const handleCheckboxChange = (contactId: number) => {
+  const handleCheckboxChange = async (contactId, applicationId) => {
+    // Toggling the checkbox state and preparing for an API call if not already selected
     setSelectedContacts((prevSelectedContacts) => {
-      const updatedSelection = prevSelectedContacts.includes(contactId)
-        ? prevSelectedContacts.filter((Id) => Id !== contactId)
+      const isAlreadySelected = prevSelectedContacts.includes(contactId);
+      if (!isAlreadySelected) {
+        // Call the create ticket API only if the checkbox is checked for the first time
+        const createNewTicket = async (contactId, applicationId) => {
+          try {
+            console.log(
+              "Creating ticket for:",
+              contactId,
+              "Application ID:",
+              applicationId
+            );
+            const response = await createTicket({
+              customer_application_id: applicationId,
+              user_id: 1,
+              status: "to do"
+            });
+          } catch (error) {
+            console.log("Error creating ticket:", error);
+          }
+        };
+        createNewTicket(contactId, applicationId);
+      }
+      return isAlreadySelected
+        ? prevSelectedContacts.filter((id) => id !== contactId)
         : [...prevSelectedContacts, contactId];
-      return updatedSelection;
     });
   };
 
@@ -173,7 +199,6 @@ const Home: React.FC = () => {
         return "transparent";
     }
   };
-  console.log(filteredCustomers);
 
   return (
     <Box

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, MouseEvent, useEffect } from "react";
+
 import {
   Container,
   Box,
@@ -16,6 +17,7 @@ import {
   AppBar,
   Toolbar,
   IconButton,
+  Autocomplete,
 } from "@mui/material";
 import {
   AttachFile as AttachFileIcon,
@@ -25,60 +27,71 @@ import {
   Delete as DeleteIcon,
 } from "@mui/icons-material";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
-
-
+import { LocalizationProvider } from "@mui/x-date-pickers";
 import { ThemeProvider } from "@mui/material/styles";
+
 import { useMode, ColorModeContext } from "../../../theme";
 import { useDispatch, useSelector } from "react-redux";
 import { useGetCustomers } from "@/hooks/customer";
-import { useGetTicketActivities, useDeleteTicketActivity ,useCreateTicketActivity, useModifyTicketActivity} from "@/hooks/ticketActivities";
+import { useGetUsers } from "@/hooks/user";
+import { useGetTicketActivities, useDeleteTicketActivity, useCreateTicketActivity, useModifyTicketActivity } from "@/hooks/ticketActivities";
 import { fetchStatusAndDocuments, fetchEmployeeStatus } from "../../redux/features/employeeSlice";
+
 import { RootState } from "../../redux/store";
 import { Utility } from "@/utils";
 import { setCustomers } from "@/redux/features/customerSlice";
+import Loader from "../components/common/Loader";
+import TrackingForm from "./trackingForm";
+import ProgressBar from "../components/common/ProgressBar";
+import { useGetTickets } from "@/hooks/ticket";
+import WorkLogList from "./Worklog";
 
 const Progress: React.FC = () => {
+  const [openDialog, setOpenDialog] = useState(false); // for tracking form to open
+
   const [theme, colorMode] = useMode();
   const dispatch = useDispatch();
+  const { getLocalStorage } = Utility();
+  const original_estimate = getLocalStorage("ids")?.estimate;
+  const ids = getLocalStorage("ids");
 
   const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
-  const [commentsState, setCommentsState] = useState<any[]>([]); 
+  const [commentsState, setCommentsState] = useState<any[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [activeSection, setActiveSection] = useState<string>("Comments");
   const [newComment, setNewComment] = useState<string>("");
-  const [editingCommentId, setEditingCommentId] = useState<number | null>(null); 
-  const [editedComment, setEditedComment] = useState<string>(""); 
- 
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editedComment, setEditedComment] = useState<string>("");
+
   const [employeeAnchorEl, setEmployeeAnchorEl] = useState<null | HTMLElement>(
     null
   );
-  const [selectedDateTime, setSelectedDateTime] = useState<null | Date>(null);
 
+  const [timeLoggingEstimate, setTimeLoggingEstimate] = useState({
+    isHovered: false,
+    originalEstimate: original_estimate,
+    timeSpent: 0
+  });
+  const [progress, setProgress] = useState(0); // State to store progress percentage
+  const [overage, setOverage] = useState(0); // Orange part (exceeding estimated time)
 
-  const { getLocalStorage } = Utility();
-  const ids = getLocalStorage("ids");
-  console.log(ids);
-
+  const [ticketId, setTicketId] = useState("");
   const { customer } = useSelector((state: RootState) => state.customer);
+  const storedTicketId = ticketId?.split('-')[1];
 
   // Fetch customers
   const { data } = useGetCustomers([], `get-loan-applications`);
-  console.log(data, "data is ");
-  const ticketId = 150;
-  const { value: comments } = useGetTicketActivities([], `get-all-ticket-activities/${ticketId}`);
-
+  const { value: comments } = useGetTicketActivities([], `get-all-ticket-activities/${storedTicketId}`);
 
   // Hook for deleting ticket activity
   const { deleteTicketActivity, error } = useDeleteTicketActivity('delete-ticket-activity');
-  
+
   // Hook for creating new ticket activity (comment)
   const { createTicketActivity, error: createError } = useCreateTicketActivity('create-ticket-activity');
 
   // Hook for modifying ticket activity (editing comments)
   const { modifyTicketActivity, error: modifyError } = useModifyTicketActivity('update-ticket-activity');
-
 
 
   useEffect(() => {
@@ -96,10 +109,100 @@ const Progress: React.FC = () => {
     }
   }, [data]);
 
-  
-  
-  
+  useEffect(() => {
+    const storedTicketId = getLocalStorage("ticketId");
+    if (storedTicketId) {
+      setTicketId(storedTicketId);
+    }
+  }, []);
+
+  const { user } = useGetUsers([], `get-users`);
+
+  const { value: ticketData } = useGetTickets([], `get-ticket-logs/${storedTicketId}`);
+
+
+  useEffect(() => {
+    if (ticketData?.data) {
+      const totalHours = ticketData.data.reduce((acc: number, ticket: any) => {
+        return acc + parseTimeSpent(ticket.time_spent);
+      }, 0);
+
+      const finalTime = convertHoursToDaysAndHours(totalHours);
+      console.log(finalTime, 'final total time');
+      setTimeLoggingEstimate({
+        ...timeLoggingEstimate,
+        timeSpent: finalTime
+      });
+      const calculatedProgress = Math.min((totalHours / parseTimeSpent(timeLoggingEstimate.originalEstimate)) * 100, 100); // max 100%
+      const calculatedOverage = totalHours > parseTimeSpent(timeLoggingEstimate.originalEstimate) ? ((totalHours - parseTimeSpent(timeLoggingEstimate.originalEstimate)) / parseTimeSpent(timeLoggingEstimate.originalEstimate)) * 100 : 0;
+
+      console.log((totalHours - parseTimeSpent(timeLoggingEstimate.originalEstimate)) / parseTimeSpent(timeLoggingEstimate.originalEstimate), 'total')
+      setProgress(calculatedProgress); // Blue bar
+      setOverage(calculatedOverage); // Orange bar
+    }
+  }, [ticketData, ticketId]);
+
+  const parseTimeSpent = (timeSpent: string): number => {
+    const timeRegex = /^(\d+)([hdm])$/;
+    const match = timeSpent.match(timeRegex);
+
+    if (!match) return 0; // Return 0 if the format is invalid
+
+    const [, value, unit] = match;
+    const numericValue = parseInt(value, 10);
+
+    switch (unit) {
+      case 'h': // hours
+        return numericValue;
+      case 'd': // days (assuming 1 day = 8 working hours)
+        return numericValue * 8;
+      case 'm': // minutes (convert to hours)
+        return numericValue / 60;
+      default:
+        return 0;
+    }
+  };
+
+  // Function to convert hours back into 'Xd Yh' format
+  const convertHoursToDaysAndHours = (totalHours: number): string => {
+    const totalMinutes = Math.round(totalHours * 60); // Convert total hours to total minutes
+    const days = Math.floor(totalMinutes / (8 * 60)); // 1 day = 8 hours = 480 minutes
+    const remainingMinutesAfterDays = totalMinutes % (8 * 60); // Remaining minutes after accounting for days
+    const hours = Math.floor(remainingMinutesAfterDays / 60); // Convert remaining minutes to hours
+    const minutes = remainingMinutesAfterDays % 60; // Get remaining minutes
+
+    let formattedTime = '';
+
+    if (days > 0) {
+      formattedTime += `${days}d`;
+    }
+    if (hours > 0 || days === 0) { // Show hours if there are any, or if there are no days
+      formattedTime += `${days > 0 ? ' ' : ''}${hours}h`;
+    }
+    if (minutes > 0) {
+      formattedTime += `${(days > 0 || hours > 0) ? ' ' : ''}${minutes}m`; // Add space if days or hours exist
+    }
+
+    return formattedTime || '0h';
+  };
+
+
   const { status: employeeStatus, loanStatus, documents } = useSelector((state: RootState) => state.employee);
+
+  const handleInputChange = (event) => {
+    const value = event.target.value;
+    setTimeLoggingEstimate((prevState) => ({
+      ...prevState,
+      originalEstimate: value
+    }));
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      setSelectedFiles([...selectedFiles, ...Array.from(files)]);
+    }
+  };
 
   useEffect(() => {
     if (ids) {
@@ -113,7 +216,6 @@ const Progress: React.FC = () => {
     }
   }, [ids.applicationId, ids.customerId, dispatch]);
 
-  
 
   useEffect(() => {
     if (ids.customerId) {
@@ -122,16 +224,8 @@ const Progress: React.FC = () => {
         setSelectedCustomer(selectedCustomer);
       }
     }
-
-    
   }, [ids.customerId, customer]);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files) {
-      setSelectedFiles([...selectedFiles, ...Array.from(files)]);
-    }
-  };
 
   const handleBack = () => {
     window.history.back();
@@ -140,12 +234,9 @@ const Progress: React.FC = () => {
     setEmployeeAnchorEl(event.currentTarget);
   };
 
-
-
   const handleDeleteComment = async (commentId: number) => {
     try {
       await deleteTicketActivity(commentId);
-      
       setCommentsState((prevComments) =>
         prevComments.filter((comment) => comment.ticket_id !== commentId)
       );
@@ -156,8 +247,7 @@ const Progress: React.FC = () => {
   };
 
   const handleCreateComment = async () => {
-    if (!newComment.trim()) return; 
-
+    if (!newComment.trim()) return;
     try {
       const newCommentData = {
         ticket_id: ticketId,
@@ -181,19 +271,19 @@ const Progress: React.FC = () => {
     setEditingCommentId(commentId); // Set the commentId for editing
     setEditedComment(commentText); // Set the current comment text to be edited
   };
-  
+
   const handleSaveEditComment = async (commentId: number, ticketId: number) => {
-    if (!editedComment.trim()) return; 
-  
+    if (!editedComment.trim()) return;
+
     try {
       const updatedCommentData = {
         comment: editedComment,
         updated_at: new Date().toISOString(),
       };
-  
-      
+
+
       const updatedComment = await modifyTicketActivity(ticketId, commentId, updatedCommentData);
-  
+
       if (updatedComment) {
         // Update the comments state with the modified comment
         setCommentsState((prevComments) =>
@@ -210,7 +300,7 @@ const Progress: React.FC = () => {
       console.error("Error while modifying the comment:", error);
     }
   };
-  
+
   const handleCancelEdit = () => {
     setEditingCommentId(null);
     setEditedComment("");
@@ -225,7 +315,7 @@ const Progress: React.FC = () => {
     setAnchorEl(event.currentTarget);
   };
 
-  const handleClose = () => {
+  const handleClose = (yes) => {
     setAnchorEl(null);
   };
 
@@ -234,7 +324,7 @@ const Progress: React.FC = () => {
   const showWorkLog = () => setActiveSection("WorkLog");
 
   if (!selectedCustomer) {
-    return <div>Loading customer data...</div>;
+    return <Loader />;
   }
 
   return (
@@ -261,11 +351,22 @@ const Progress: React.FC = () => {
                 <Typography variant="h6" sx={{ flexGrow: 1, textAlign: "center" }}>
                   F2 Fintech Sales Ticketing System
                 </Typography>
-                <Avatar sx={{ bgcolor: "#ffffff", color: theme.palette.primary.main }}>RA</Avatar>
+                <Avatar
+                  sx={{
+                    bgcolor: "#ffffff",
+                    color: theme.palette.primary.main,
+                  }}
+                  alt={selectedCustomer.Name}
+                  src={selectedCustomer.Image}
+                />
               </Toolbar>
             </AppBar>
 
-            <Grid container spacing={2} sx={{ width: "100%", maxWidth: 1600, mt: 5, position: "fixed" }}>
+            <Grid
+              container
+              spacing={2}
+              sx={{ width: "100%", mt: 5 }}
+            >
               <Grid item xs={12} md={8}>
                 <Paper
                   elevation={5}
@@ -286,7 +387,9 @@ const Progress: React.FC = () => {
                         fontSize: "24px",
                       }}
                     >
-                      Customer Description:
+                      <Typography variant="h6">
+                        Ticket ID: {ticketId}
+                      </Typography>
                     </Typography>
                     <Box display="flex" alignItems="center" ml={2}>
                       <input
@@ -327,7 +430,7 @@ const Progress: React.FC = () => {
                     <Avatar src={selectedCustomer.Image} sx={{ width: 80, height: 80 }} />
 
                     <Box sx={{ flex: 1, p: 2, borderRadius: 2, bgcolor: "background.paper" }}>
-                    <Grid container spacing={2}>
+                      <Grid container spacing={2}>
                         {/* Name and Email */}
                         <Grid item xs={12} sm={6}>
                           <Typography variant="h6" fontWeight="bold">
@@ -425,7 +528,7 @@ const Progress: React.FC = () => {
                           </Typography>
                         </Grid>
                       </Grid>
-                  </Box>
+                    </Box>
                   </Box>
 
                   <Grid item xs={12} md={8}>
@@ -544,130 +647,130 @@ const Progress: React.FC = () => {
                         Work Log
                       </Typography>
                     </Typography>
-                    
+
                   </Box>
-                  
+
 
                   {activeSection === "Comments" && (
-  <Box mt={2} mb={3} sx={{ position: "relative" }}>
-    <TextField
-      fullWidth
-      variant="outlined"
-      placeholder="Add a comment..."
-      multiline
-      rows={3}
-      value={newComment}
-      onChange={(e) => setNewComment(e.target.value)}
-      sx={{
-        mt: 1,
-        bgcolor: "#ffffff",
-        borderRadius: 1,
-        border: "1px solid rgba(0, 0, 0, 0.1)",
-        pr: 5,
-      }}
-    />
+                    <Box mt={2} mb={3} sx={{ position: "relative" }}>
+                      <TextField
+                        fullWidth
+                        variant="outlined"
+                        placeholder="Add a comment..."
+                        multiline
+                        rows={3}
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        sx={{
+                          mt: 1,
+                          bgcolor: "#ffffff",
+                          borderRadius: 1,
+                          border: "1px solid rgba(0, 0, 0, 0.1)",
+                          pr: 5,
+                        }}
+                      />
 
-    <IconButton
-      sx={{
-        position: "absolute",
-        bottom: 45,
-        right: 12,
-        borderRadius: "50%",
-      }}
-      onClick={() => document.getElementById("file-upload")?.click()}
-    >
-      <AttachFileIcon />
-    </IconButton>
+                      <IconButton
+                        sx={{
+                          position: "absolute",
+                          bottom: 45,
+                          right: 12,
+                          borderRadius: "50%",
+                        }}
+                        onClick={() => document.getElementById("file-upload")?.click()}
+                      >
+                        <AttachFileIcon />
+                      </IconButton>
 
-    <Box mt={1} display="flex" justifyContent="flex-start" alignItems="center">
-      <Button
-        variant="contained"
-        sx={{
-          textTransform: "none",
-          bgcolor: theme.palette.primary.main,
-          color: "#fff",
-          mr: 2,
-        }}
-        onClick={handleCreateComment}
-      >
-        Comment
-      </Button>
-    </Box>
+                      <Box mt={1} display="flex" justifyContent="flex-start" alignItems="center">
+                        <Button
+                          variant="contained"
+                          sx={{
+                            textTransform: "none",
+                            bgcolor: theme.palette.primary.main,
+                            color: "#fff",
+                            mr: 2,
+                          }}
+                          onClick={handleCreateComment}
+                        >
+                          Comment
+                        </Button>
+                      </Box>
 
-    {/* Comments list displayed below the Add Comment button */}
-    <Box mt={3}>
-      <Typography variant="h6">New Comments :</Typography>
-      {comments && comments.data ? (
-  comments.data.map((comment, index) => (
-    <Box
-      key={index}
-      mt={1}
-      p={2}
-      border={1}
-      borderColor="grey.300"
-      borderRadius={4}
-    >
-      {editingCommentId === comment.id ? (
-        <Box>
-          <TextField
-            fullWidth
-            multiline
-            value={editedComment}
-            onChange={(e) => setEditedComment(e.target.value)}
-            rows={3}
-            variant="outlined"
-          />
-          <Box mt={1}>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => handleSaveEditComment(comment.id, comment.ticket_id)}
-            >
-              Save
-            </Button>
-            <Button
-              variant="text"
-              color="secondary"
-              sx={{ ml: 2 }}
-              onClick={handleCancelEdit}
-            >
-              Cancel
-            </Button>
-          </Box>
-        </Box>
-      ) : (
-        <Box>
-          <Typography variant="body1">{comment.comment}</Typography>
-          <Box mt={1}>
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={() => handleEditComment(comment.id, comment.ticket_id, comment.comment)}
-            >
-              Edit
-            </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              sx={{ ml: 2 }}
-              onClick={() => handleDeleteComment(comment.ticket_id)}
-            >
-              Delete
-            </Button>
-          </Box>
-        </Box>
-      )}
-    </Box>
-  ))
-) : (
-  <Typography>No comments available</Typography>
-)}
+                      {/* Comments list displayed below the Add Comment button */}
+                      <Box mt={3}>
+                        <Typography variant="h6">New Comments :</Typography>
+                        {comments && comments.data ? (
+                          comments.data.map((comment, index) => (
+                            <Box
+                              key={index}
+                              mt={1}
+                              p={2}
+                              border={1}
+                              borderColor="grey.300"
+                              borderRadius={4}
+                            >
+                              {editingCommentId === comment.id ? (
+                                <Box>
+                                  <TextField
+                                    fullWidth
+                                    multiline
+                                    value={editedComment}
+                                    onChange={(e) => setEditedComment(e.target.value)}
+                                    rows={3}
+                                    variant="outlined"
+                                  />
+                                  <Box mt={1}>
+                                    <Button
+                                      variant="contained"
+                                      color="primary"
+                                      onClick={() => handleSaveEditComment(comment.id, comment.ticket_id)}
+                                    >
+                                      Save
+                                    </Button>
+                                    <Button
+                                      variant="text"
+                                      color="secondary"
+                                      sx={{ ml: 2 }}
+                                      onClick={handleCancelEdit}
+                                    >
+                                      Cancel
+                                    </Button>
+                                  </Box>
+                                </Box>
+                              ) : (
+                                <Box>
+                                  <Typography variant="body1">{comment.comment}</Typography>
+                                  <Box mt={1}>
+                                    <Button
+                                      variant="outlined"
+                                      size="small"
+                                      onClick={() => handleEditComment(comment.id, comment.ticket_id, comment.comment)}
+                                    >
+                                      Edit
+                                    </Button>
+                                    <Button
+                                      variant="outlined"
+                                      size="small"
+                                      sx={{ ml: 2 }}
+                                      onClick={() => handleDeleteComment(comment.ticket_id)}
+                                    >
+                                      Delete
+                                    </Button>
+                                  </Box>
+                                </Box>
+                              )}
+                            </Box>
+                          ))
+                        ) : (
+                          <Typography>No comments available</Typography>
+                        )}
 
-    </Box>
-  </Box>
-)}
+                      </Box>
+                    </Box>
+                  )}
 
-              {activeSection === "History" && (
+                  {activeSection === "History" && (
                     <>
                       <Box mt={2}>
                         <Typography variant="h6" fontWeight="bold">
@@ -717,33 +820,7 @@ const Progress: React.FC = () => {
                   )}
 
                   {activeSection === "WorkLog" && (
-                    <Box
-                      mt={2}
-                      mb={3}
-                      p={3}
-                      borderRadius={2}
-                      bgcolor="background.paper"
-                      boxShadow={3}
-                      textAlign="center"
-                      display="flex"
-                      flexDirection="column"
-                      alignItems="center"
-                      justifyContent="center"
-                      sx={{
-                        background: "linear-gradient(to right, #f5f5f5, #e0e0e0)",
-                        width: "300px",
-                        height: "140px",
-                        maxWidth: "100%",
-                        marginLeft: "200px",
-                      }}
-                    >
-                      <Typography variant="body2" mt={2} sx={{ padding: "0 20px" }}>
-                        No work has been logged for this issue yet. Logging work lets you track and report on the time spent on issues.
-                      </Typography>
-                      <Button variant="contained" color="primary" sx={{ mt: 2 }}>
-                        Log Work
-                      </Button>
-                    </Box>
+                    <WorkLogList ticketData={ticketData?.data} />
                   )}
                 </Paper>
               </Grid>
@@ -752,10 +829,9 @@ const Progress: React.FC = () => {
                   elevation={4}
                   sx={{
                     padding: 3,
-                    height: "65vh",
-                    marginTop: "-45px",
-                    position: "fixed",
-                    width: "500px",
+                    height: "60vh",
+                    marginTop: "-50px",
+                    width: "400px",
                   }}
                 >
                   <Box
@@ -858,7 +934,7 @@ const Progress: React.FC = () => {
                         paddingX: 2,
                         minWidth: "100px",
                         backgroundColor: theme.palette.primary.main,
-                        color: "#fff", 
+                        color: "#fff",
                         fontWeight: "bold",
                         ":hover": {
                           backgroundColor: theme.palette.primary.dark,
@@ -868,7 +944,7 @@ const Progress: React.FC = () => {
                       {employeeStatus}
                     </Button>
 
-                    <Menu
+                    {/* <Menu
                       anchorEl={employeeAnchorEl}
                       open={Boolean(employeeAnchorEl)}
                       onClose={() => handleEmployeeClose(employeeStatus)}
@@ -887,7 +963,7 @@ const Progress: React.FC = () => {
                       <MenuItem onClick={() => handleEmployeeClose("done")}>
                         Done
                       </MenuItem>
-                    </Menu>
+                    </Menu> */}
                   </Box>
 
                   <Divider sx={{ my: 2 }} />
@@ -901,7 +977,7 @@ const Progress: React.FC = () => {
                       multiple
                       onChange={handleFileChange}
                     />
-                    {}
+                    { }
                     {selectedFiles.length > 0 && (
                       <Box mt={2}>
                         {selectedFiles.map((file, index) => (
@@ -927,7 +1003,6 @@ const Progress: React.FC = () => {
                       </Box>
                     )}
                   </Box>
-
                   <Box display="flex" justifyContent="space-between" mt={2}>
                     <Typography
                       variant="body2"
@@ -938,12 +1013,51 @@ const Progress: React.FC = () => {
                     >
                       Assignee
                     </Typography>
-                    <Box display="flex" alignItems="center">
-                      <Avatar sx={{ width: 24, height: 24, mr: 1 }}>RA</Avatar>
-                      <Typography variant="body2">Ritu Anuragi</Typography>
-                    </Box>
+                    <Autocomplete
+                      options={[]}
+                      // getOptionLabel={(option) => option.name}
+                      style={{ width: 300 }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Select Assignee"
+                          variant="outlined"
+                        />
+                      )}
+                      value={selectedCustomer}
+                    />
                   </Box>
 
+                  <Box display="flex" alignItems="center" justifyContent="space-between" mt={2}
+                    onMouseEnter={() => setTimeLoggingEstimate((prevState) => ({ ...prevState, isHovered: true }))}
+                    onMouseLeave={() => setTimeLoggingEstimate((prevState) => ({ ...prevState, isHovered: false }))}
+                  >
+                    <Typography variant="body2" fontWeight="bold">
+                      Original estimate:
+                    </Typography>
+
+                    {!timeLoggingEstimate.isHovered ? (
+                      <Typography variant="body2" sx={{ borderRadius: '50%', backgroundColor: '#DFE1E6', padding: '6px' }}>
+                        {timeLoggingEstimate.originalEstimate}
+                      </Typography>
+                    ) : (
+                      <TextField
+                        // variant="outlined"
+                        value={timeLoggingEstimate.originalEstimate}
+                        onChange={handleInputChange}
+                        onFocus={() => setTimeLoggingEstimate((prevState) => ({ ...prevState, isHovered: true }))}
+                        onBlur={() => setTimeLoggingEstimate((prevState) => ({ ...prevState, isHovered: false }))}
+                        sx={{
+                          width: "60%",
+                          border: 'none !important',
+                          height: '20% !important',
+                          backgroundColor: timeLoggingEstimate.isHovered ? "#e0e0e0" : "transparent",
+                          // borderRadius: "4px",
+                          visibility: timeLoggingEstimate.isHovered ? "show" : "hidden"
+                        }}
+                      />
+                    )}
+                  </Box>
                   <Box display="flex" justifyContent="space-between" mt={2}>
                     <Typography
                       variant="body2"
@@ -953,45 +1067,23 @@ const Progress: React.FC = () => {
                         padding: "0px 1px",
                       }}
                     >
-                      TimeLog
+                      Time tracking
                     </Typography>
-                    <DateTimePicker
-                      label="Choose Date & Time"
-                      value={selectedDateTime}
-                      onChange={(newValue) => setSelectedDateTime(newValue)}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          variant="outlined"
-                          size="small"
-                          sx={{ ml: 2 }}
-                        />
-                      )}
-                    />
-                  </Box>
 
-                  <Box display="flex" justifyContent="space-between" mt={2}>
-                    <Typography variant="body2" fontWeight="bold">
-                      Original estimate:
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        backgroundColor: "#e8eaf6",
-                        fontSize: "12px",
-                        borderRadius: "4px",
-                        padding: "6px",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      2d
-                    </Typography>
+                    <Box display="flex" width='60%' mt={2}>
+                      <ProgressBar setOpenDialog={setOpenDialog} timeLoggingEstimate={timeLoggingEstimate}
+                        progress={progress} overage={overage}
+                      />
+                    </Box>
                   </Box>
                 </Paper>
               </Grid>
 
             </Grid>
           </Container>
+          <TrackingForm openDialog={openDialog} setOpenDialog={setOpenDialog} timeLoggingEstimate={timeLoggingEstimate} setTimeLoggingEstimate={setTimeLoggingEstimate}
+            progress={progress} setProgress={setProgress} overage={overage} setOverage={setOverage}
+          />
         </LocalizationProvider>
       </ColorModeContext.Provider>
     </ThemeProvider>
