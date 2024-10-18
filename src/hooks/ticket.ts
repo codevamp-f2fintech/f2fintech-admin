@@ -44,6 +44,7 @@ export const useCreateTicket = (pathKey: string, p0?: {}) => {
       return response;
     } catch (err) {
       setError(err as Error);
+      return null;
     } finally {
       setLoading(false);
     }

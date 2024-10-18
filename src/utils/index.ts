@@ -110,9 +110,9 @@ export const Utility = () => {
       );
       if (path && navigateTo) {
         navigateTo(path);
-        if (reload) {
-          location.reload();
-        }
+      }
+      if (reload) {
+        location.reload();
       }
     }, 2500);
   };

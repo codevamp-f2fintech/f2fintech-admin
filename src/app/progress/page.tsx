@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, MouseEvent, useEffect } from "react";
+
 import {
   Container,
   Box,
@@ -16,6 +17,7 @@ import {
   AppBar,
   Toolbar,
   IconButton,
+  Autocomplete,
 } from "@mui/material";
 import {
   AttachFile as AttachFileIcon,
@@ -25,30 +27,37 @@ import {
   Delete as DeleteIcon,
 } from "@mui/icons-material";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { LocalizationProvider } from "@mui/x-date-pickers";
 
 import { ThemeProvider } from "@mui/material/styles";
 import { useMode, ColorModeContext } from "../../../theme";
 import { useDispatch, useSelector } from "react-redux";
 import { useGetCustomers } from "@/hooks/customer";
-
+import { useGetUsers } from "@/hooks/user";
 import {
   fetchStatusAndDocuments,
   fetchEmployeeStatus,
 } from "../../redux/features/employeeSlice";
+
+import { setUsers } from "@/redux/features/userSlice";
 
 import { RootState } from "../../redux/store";
 import { Utility } from "@/utils";
 import { setCustomers } from "@/redux/features/customerSlice";
 import Loader from "../components/common/Loader";
 import TrackingForm from "./trackingForm";
+import ProgressBar from "../components/common/ProgressBar";
+import { useGetTickets } from "@/hooks/ticket";
+import WorkLogList from "./Worklog";
 
 const Progress: React.FC = () => {
-  const [openDialog, setOpenDialog] = useState(false);    // for tracking form to open
+  const [openDialog, setOpenDialog] = useState(false); // for tracking form to open
 
   const [theme, colorMode] = useMode();
   const dispatch = useDispatch();
+  const { getLocalStorage } = Utility();
+  const original_estimate = getLocalStorage("ids")?.estimate;
+  const ids = getLocalStorage("ids");
 
   const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -56,24 +65,108 @@ const Progress: React.FC = () => {
   const [employeeAnchorEl, setEmployeeAnchorEl] = useState<null | HTMLElement>(
     null
   );
-  const [selectedDateTime, setSelectedDateTime] = useState<null | Date>(null);
+
+  const [timeLoggingEstimate, setTimeLoggingEstimate] = useState({
+    isHovered: false,
+    originalEstimate: original_estimate,
+    timeSpent: 0
+  });
+  const [progress, setProgress] = useState(0); // State to store progress percentage
+  const [overage, setOverage] = useState(0); // Orange part (exceeding estimated time)
+
   const [activeSection, setActiveSection] = useState<string>("Comments");
-  const [loading, setLoading] = useState(true);
-  const { getLocalStorage } = Utility();
-  const ids = getLocalStorage("ids");
-
+  const [ticketId, setTicketId] = useState("");
   const { customer } = useSelector((state: RootState) => state.customer);
+  const storedTicketId = ticketId?.split('-')[1];
 
-  const { data } = useGetCustomers(
-    [],
-    `get-loan-applications`
-  );
+  const { data } = useGetCustomers([], `get-loan-applications`);
+  const { user } = useGetUsers([], `get-users`);
+
+  const { value: ticketData } = useGetTickets([], `get-ticket-logs/${storedTicketId}`);
+
+
+  useEffect(() => {
+    if (ticketData?.data) {
+      const totalHours = ticketData.data.reduce((acc: number, ticket: any) => {
+        return acc + parseTimeSpent(ticket.time_spent);
+      }, 0);
+
+      const finalTime = convertHoursToDaysAndHours(totalHours);
+      console.log(finalTime, 'final total time');
+      setTimeLoggingEstimate({
+        ...timeLoggingEstimate,
+        timeSpent: finalTime
+      });
+      const calculatedProgress = Math.min((totalHours / parseTimeSpent(timeLoggingEstimate.originalEstimate)) * 100, 100); // max 100%
+      const calculatedOverage = totalHours > parseTimeSpent(timeLoggingEstimate.originalEstimate) ? ((totalHours - parseTimeSpent(timeLoggingEstimate.originalEstimate)) / parseTimeSpent(timeLoggingEstimate.originalEstimate)) * 100 : 0;
+
+      console.log((totalHours - parseTimeSpent(timeLoggingEstimate.originalEstimate)) / parseTimeSpent(timeLoggingEstimate.originalEstimate), 'total')
+      setProgress(calculatedProgress); // Blue bar
+      setOverage(calculatedOverage); // Orange bar
+    }
+  }, [ticketData, ticketId]);
+
+  const parseTimeSpent = (timeSpent: string): number => {
+    const timeRegex = /^(\d+)([hdm])$/;
+    const match = timeSpent.match(timeRegex);
+
+    if (!match) return 0; // Return 0 if the format is invalid
+
+    const [, value, unit] = match;
+    const numericValue = parseInt(value, 10);
+
+    switch (unit) {
+      case 'h': // hours
+        return numericValue;
+      case 'd': // days (assuming 1 day = 8 working hours)
+        return numericValue * 8;
+      case 'm': // minutes (convert to hours)
+        return numericValue / 60;
+      default:
+        return 0;
+    }
+  };
+
+  // Function to convert hours back into 'Xd Yh' format
+  const convertHoursToDaysAndHours = (totalHours: number): string => {
+    const totalMinutes = Math.round(totalHours * 60); // Convert total hours to total minutes
+    const days = Math.floor(totalMinutes / (8 * 60)); // 1 day = 8 hours = 480 minutes
+    const remainingMinutesAfterDays = totalMinutes % (8 * 60); // Remaining minutes after accounting for days
+    const hours = Math.floor(remainingMinutesAfterDays / 60); // Convert remaining minutes to hours
+    const minutes = remainingMinutesAfterDays % 60; // Get remaining minutes
+
+    let formattedTime = '';
+
+    if (days > 0) {
+      formattedTime += `${days}d`;
+    }
+    if (hours > 0 || days === 0) { // Show hours if there are any, or if there are no days
+      formattedTime += `${days > 0 ? ' ' : ''}${hours}h`;
+    }
+    if (minutes > 0) {
+      formattedTime += `${(days > 0 || hours > 0) ? ' ' : ''}${minutes}m`; // Add space if days or hours exist
+    }
+
+    return formattedTime || '0h';
+  };
+
+
+
+  const [assignees, setAssignees] = useState([]);
+  const [selectedAssignee, setSelectedAssignee] = useState(null);
 
   useEffect(() => {
     if (data?.success === true) {
       dispatch(setCustomers(data.data));
     }
   }, [data]);
+
+  useEffect(() => {
+    const storedTicketId = getLocalStorage("ticketId");
+    if (storedTicketId) {
+      setTicketId(storedTicketId);
+    }
+  }, []);
 
   const {
     status: employeeStatus,
@@ -86,6 +179,14 @@ const Progress: React.FC = () => {
     if (files) {
       setSelectedFiles([...selectedFiles, ...Array.from(files)]);
     }
+  };
+
+  const handleInputChange = (event) => {
+    const value = event.target.value;
+    setTimeLoggingEstimate((prevState) => ({
+      ...prevState,
+      originalEstimate: value
+    }));
   };
 
   useEffect(() => {
@@ -173,17 +274,20 @@ const Progress: React.FC = () => {
                   F2 Fintech Sales Ticketing System
                 </Typography>
                 <Avatar
-                  sx={{ bgcolor: "#ffffff", color: theme.palette.primary.main }}
-                >
-                  RA
-                </Avatar>
+                  sx={{
+                    bgcolor: "#ffffff",
+                    color: theme.palette.primary.main,
+                  }}
+                  alt={selectedCustomer.Name}
+                  src={selectedCustomer.Image}
+                />
               </Toolbar>
             </AppBar>
 
             <Grid
               container
               spacing={2}
-              sx={{ width: "100%", maxWidth: 1600, mt: 5, position: "fixed" }}
+              sx={{ width: "100%", mt: 5 }}
             >
               <Grid item xs={12} md={8}>
                 <Paper
@@ -210,7 +314,9 @@ const Progress: React.FC = () => {
                         fontSize: "24px",
                       }}
                     >
-                      Customer Description:
+                      <Typography variant="h6">
+                        Ticket ID: {ticketId}
+                      </Typography>
                     </Typography>
                     <Box display="flex" alignItems="center" ml={2}>
                       <input
@@ -593,44 +699,7 @@ const Progress: React.FC = () => {
                   )}
 
                   {activeSection === "WorkLog" && (
-                    <Box
-                      mt={2}
-                      mb={3}
-                      p={3}
-                      borderRadius={2}
-                      bgcolor="background.paper"
-                      boxShadow={3}
-                      textAlign="center"
-                      display="flex"
-                      flexDirection="column"
-                      alignItems="center"
-                      justifyContent="center"
-                      sx={{
-                        background:
-                          "linear-gradient(to right, #f5f5f5, #e0e0e0)",
-                        width: "300px",
-                        height: "140px",
-                        maxWidth: "100%",
-                        marginLeft: "200px",
-                      }}
-                    >
-                      <AccessTimeIcon sx={{ fontSize: 40, mb: 0 }} />
-                      <Typography
-                        variant="body2"
-                        mt={2}
-                        sx={{ padding: "0 20px" }}
-                      >
-                        No work has been logged for this issue yet. Logging work
-                        lets you track and report on the time spent on issues.
-                      </Typography>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        sx={{ mt: 2 }}
-                      >
-                        Log Work
-                      </Button>
-                    </Box>
+                    <WorkLogList ticketData={ticketData?.data} />
                   )}
                 </Paper>
               </Grid>
@@ -640,10 +709,9 @@ const Progress: React.FC = () => {
                   elevation={4}
                   sx={{
                     padding: 3,
-                    height: "65vh",
-                    marginTop: "-45px",
-                    position: "fixed",
-                    width: "500px",
+                    height: "60vh",
+                    marginTop: "-50px",
+                    width: "400px",
                   }}
                 >
                   <Box
@@ -816,7 +884,6 @@ const Progress: React.FC = () => {
                       </Box>
                     )}
                   </Box>
-
                   <Box display="flex" justifyContent="space-between" mt={2}>
                     <Typography
                       variant="body2"
@@ -827,30 +894,51 @@ const Progress: React.FC = () => {
                     >
                       Assignee
                     </Typography>
-                    <Box display="flex" alignItems="center">
-                      <Avatar sx={{ width: 24, height: 24, mr: 1 }}>RA</Avatar>
-                      <Typography variant="body2">Ritu Anuragiiiiii</Typography>
-                    </Box>
+                    <Autocomplete
+                      options={assignees}
+                      getOptionLabel={(option) => option.name}
+                      style={{ width: 300 }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Select Assignee"
+                          variant="outlined"
+                        />
+                      )}
+                      value={selectedCustomer}
+                    />
                   </Box>
 
-                  <Box display="flex" justifyContent="space-between" mt={2}>
+                  <Box display="flex" alignItems="center" justifyContent="space-between" mt={2}
+                    onMouseEnter={() => setTimeLoggingEstimate((prevState) => ({ ...prevState, isHovered: true }))}
+                    onMouseLeave={() => setTimeLoggingEstimate((prevState) => ({ ...prevState, isHovered: false }))}
+                  >
                     <Typography variant="body2" fontWeight="bold">
                       Original estimate:
                     </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        backgroundColor: "#e8eaf6",
-                        fontSize: "12px",
-                        borderRadius: "4px",
-                        padding: "6px",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      2d
-                    </Typography>
-                  </Box>
 
+                    {!timeLoggingEstimate.isHovered ? (
+                      <Typography variant="body2" sx={{ borderRadius: '50%', backgroundColor: '#DFE1E6', padding: '6px' }}>
+                        {timeLoggingEstimate.originalEstimate}
+                      </Typography>
+                    ) : (
+                      <TextField
+                        // variant="outlined"
+                        value={timeLoggingEstimate.originalEstimate}
+                        onChange={handleInputChange}
+                        onFocus={() => setTimeLoggingEstimate((prevState) => ({ ...prevState, isHovered: true }))}
+                        onBlur={() => setTimeLoggingEstimate((prevState) => ({ ...prevState, isHovered: false }))}
+                        sx={{
+                          width: "60%",
+                          border: 'none !important',
+                          height: '20% !important',
+                          backgroundColor: timeLoggingEstimate.isHovered ? "#e0e0e0" : "transparent",
+                          // borderRadius: "4px",
+                          visibility: timeLoggingEstimate.isHovered ? "show" : "hidden"
+                        }}
+                      />
+                    )}
+                  </Box>
                   <Box display="flex" justifyContent="space-between" mt={2}>
                     <Typography
                       variant="body2"
@@ -862,15 +950,20 @@ const Progress: React.FC = () => {
                     >
                       Time tracking
                     </Typography>
-                    <TextField
-                      onClick={() => setOpenDialog(true)}
-                    />
+
+                    <Box display="flex" width='60%' mt={2}>
+                      <ProgressBar setOpenDialog={setOpenDialog} timeLoggingEstimate={timeLoggingEstimate}
+                        progress={progress} overage={overage}
+                      />
+                    </Box>
                   </Box>
                 </Paper>
               </Grid>
             </Grid>
           </Container>
-          <TrackingForm openDialog={openDialog} setOpenDialog={setOpenDialog} />
+          <TrackingForm openDialog={openDialog} setOpenDialog={setOpenDialog} timeLoggingEstimate={timeLoggingEstimate} setTimeLoggingEstimate={setTimeLoggingEstimate}
+            progress={progress} setProgress={setProgress} overage={overage} setOverage={setOverage}
+          />
         </LocalizationProvider>
       </ColorModeContext.Provider>
     </ThemeProvider>

@@ -7,7 +7,6 @@ import {
   Box,
   Card,
   CardContent,
-  CardHeader,
   Avatar,
   Grid,
   Typography,
@@ -46,7 +45,7 @@ const Ticket = () => {
 
   const { value: ticketData } = useGetTickets(
     [],
-    `get-all-tickets/${1}` // this is userId
+    `get-all-tickets/${1}` // this is the logged in userId
   );
 
   const { modifyTicket, error: updateError } = useModifyTicket("update-ticket");
@@ -80,6 +79,8 @@ const Ticket = () => {
         const ticketStatus = ticketData.data.map((ticket) => ({
           status: ticket.status,
           customer_application_id: ticket.customer_application_id,
+          original_estimate: ticket.original_estimate,
+          due_date: ticket.due_date,
           created_at: ticket.created_at,
         }));
         setTicketStatus(ticketStatus);
@@ -110,13 +111,14 @@ const Ticket = () => {
     if (filter || startDate || endDate) {
       let filtered = customerApplications;
 
-      // Filter by Amount or Tenure
+      // Filter by Name, Amount, or Tenure
       if (filter) {
         const regex = new RegExp(filter, "i");
         filtered = filtered.filter(
           (app) =>
-            app.Tenure.toString() === filter ||
-            regex.test(app.Amount.toString())
+            regex.test(app.Name) || // Search by Name
+            regex.test(app.Amount.toString()) || // Search by Amount
+            app.Tenure.toString() === filter // Search by Tenure
         );
       }
 
@@ -142,25 +144,36 @@ const Ticket = () => {
           return true;
         });
       }
+
       setFilteredApplications(filtered);
     } else {
       setFilteredApplications(customerApplications);
     }
   }, [filter, customerApplications, startDate, endDate, ticketStatus]);
 
-  const handleStartClick = (customerId, applicationId) => {
+  const handleStartClick = (customerId, applicationId, estimate) => {
+    // Find the ticket based on userId and applicationId
     const selectedTicket = ticketData?.data.find(
       (ticket) =>
         ticket.user_id === 1 && ticket.customer_application_id === applicationId
     );
 
+    // Log the selected ticket for debugging
+    console.log("Selected Ticket:", selectedTicket);
+
     if (selectedTicket) {
       const { id: ticketId } = selectedTicket;
-      // Update ticket status to 'in progress'
+      const generatedTicketId = `F2FIN-${ticketId}`;
+
+      remLocalStorage("ticketId");
+      setLocalStorage("ticketId", generatedTicketId);
+
       modifyTicket(ticketId, { status: "in progress" });
+      setLocalStorage("ids", { customerId, applicationId, estimate });
+      router.push(`/progress`);
+    } else {
+      console.log("No ticket found for the given customerId and applicationId");
     }
-    setLocalStorage("ids", { customerId, applicationId });
-    router.push("/progress");
   };
 
   const handleSortChange = (event) => {
@@ -190,11 +203,11 @@ const Ticket = () => {
     <>
       <Header
         searchTerm=""
-        setSearchTerm={() => {}}
+        setSearchTerm={() => { }}
         customerLength={customerApplications.length}
         isLoggedIn={true}
-        handleLogout={() => {}}
-        handleLogin={() => {}}
+        handleLogout={() => { }}
+        handleLogin={() => { }}
         handleChooseMoreTickets={() =>
           console.log("Navigate to choose more tickets")
         }
@@ -210,7 +223,7 @@ const Ticket = () => {
         <Grid container spacing={4} mt={3}>
           {filteredApplications.length > 0 ? (
             filteredApplications.map((customer, id) => {
-              const status = ticketStatus.find(
+              const ticket = ticketStatus.find(
                 (ticket) =>
                   ticket.customer_application_id === customer.applicationId
               );
@@ -225,7 +238,7 @@ const Ticket = () => {
                       backgroundPosition: "center",
                       backgroundColor: "#ffffff",
                       height: "100%",
-                      borderTop: `4px solid ${getStatusColor(status.status)}`,
+                      borderTop: `4px solid ${getStatusColor(ticket.status)}`,
                     }}
                   >
                     <CardContent
@@ -408,7 +421,7 @@ const Ticket = () => {
                       color="primary"
                       sx={{ width: "100%", borderRadius: 0 }}
                       onClick={() =>
-                        handleStartClick(customer.Id, customer.applicationId)
+                        handleStartClick(customer.Id, customer.applicationId, ticket.original_estimate)
                       }
                     >
                       Start Work

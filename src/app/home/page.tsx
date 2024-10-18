@@ -148,9 +148,7 @@ const Home: React.FC = () => {
             const response = await createTicket({
               customer_application_id: applicationId,
               user_id: 1,
-              forwarded_to: 0,
-              status: "pending",
-              due_date: new Date(),
+              status: "to do"
             });
           } catch (error) {
             console.log("Error creating ticket:", error);
