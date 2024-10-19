@@ -1,5 +1,3 @@
-'use client';
-
 import { AlertColor } from "@mui/material/Alert";
 
 import { User } from "@/types/user";
@@ -30,19 +28,31 @@ export const Utility = () => {
     return await response.json();
   };
 
+  // Utility to store value in sessionStorage
+  const setSessionStorage = (key: string, value: any): void => {
+    if (typeof window !== "undefined") {  // Check if window is available (client-side)
+      sessionStorage.setItem(key, JSON.stringify(value));
+    }
+  };
+
+  // Utility to get value from sessionStorage
+  const getSessionStorage = (key: string): any | null => {
+    if (typeof window !== "undefined") {  // Ensure we're on the client-side
+      const storedValue = sessionStorage.getItem(key);
+      return storedValue ? JSON.parse(storedValue) : null;
+    }
+    return null;  // Return null if window is not available (server-side)
+  };
+
   /**
    * Get the value associated with a key from local storage.
    * @param {string} key - The key for which to retrieve the value from local storage.
    * @returns {any | null} - The value associated with the key, or null if the key is not found.
    */
   const getLocalStorage = (key: string): any | null => {
-    const storedValue = localStorage.getItem(key);
-    if (storedValue !== null && storedValue !== "undefined") {
-      try {
-        return JSON.parse(storedValue);
-      } catch (err) {
-        console.error(`Error parsing ${key} from localStorage:`, err);
-      }
+    if (typeof window !== "undefined") {
+      const storedValue = localStorage.getItem(key);
+      return storedValue ? JSON.parse(storedValue) : null;
     }
     return null;
   };
@@ -139,6 +149,8 @@ export const Utility = () => {
 
   return {
     fetchData,
+    getSessionStorage,
+    setSessionStorage,
     getLocalStorage,
     remLocalStorage,
     setLocalStorage,

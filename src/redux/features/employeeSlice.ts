@@ -21,8 +21,6 @@ export const fetchEmployeeStatus = createAsyncThunk<string, number>(
     const response = await axios.get(
       `http://localhost:3001/api/v1/get-by-application-id/${applicationId}`
     );
-    console.log(applicationId, "id is");
-
     return response.data.data.status;
   }
 );
@@ -52,7 +50,6 @@ export const fetchStatusAndDocuments = createAsyncThunk<
         `http://localhost:3001/api/v1/get-status-and-documents/${customerId}/${applicationId}`
       );
       if (response.data && response.data.data) {
-        console.log(response, "response");
         return response.data;
       } else {
         return rejectWithValue("No data received from the API");
@@ -65,8 +62,8 @@ export const fetchStatusAndDocuments = createAsyncThunk<
 
 // Initial state with types
 const initialState: EmployeeState = {
-  status: "to-do",
-  loanStatus: "to-do",
+  status: "",
+  loanStatus: "",
   documents: [],
   loading: false,
   error: null,

@@ -2,6 +2,7 @@
 
 import React, { useState, MouseEvent, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import axios from "axios";
 import {
   Container,
   Box,
@@ -12,7 +13,6 @@ import {
   TextField,
   Paper,
   Avatar,
-  Menu,
   MenuItem,
   AppBar,
   Toolbar,
@@ -37,10 +37,6 @@ import { ThemeProvider } from "@mui/material/styles";
 import { useMode, ColorModeContext } from "../../../theme";
 import { useGetCustomers } from "@/hooks/customer";
 import { useGetUsers } from "@/hooks/user";
-import {
-  setEmployeeStatus,
-  setLoanStatus,
-} from "../../redux/features/employeeSlice";
 
 import { useGetTickets, useModifyTicket } from "@/hooks/ticket";
 import {
@@ -68,27 +64,29 @@ const Progress: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
   const [commentsState, setCommentsState] = useState<any[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [isForwardedToOpen, setIsForwardedToOpen] = useState(false);
-  const [openUserSelect, setOpenUserSelect] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("Comments");
   const [ticketId, setTicketId] = useState("");
-  const [users, setUsers] = useState([]);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [allUsers, setAllUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState([]);
   const [newComment, setNewComment] = useState<string>("");
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editedComment, setEditedComment] = useState<string>("");
-  const [employeeAnchorEl, setEmployeeAnchorEl] = useState<null | HTMLElement>(
-    null
-  );
   const [progress, setProgress] = useState(0); // State to store progress percentage
   const [overage, setOverage] = useState(0); // Orange part (exceeding estimated time)
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [newLoanStatus, setNewLoanStatus] = useState('');
+  const [newEmployeeStatus, setNewEmployeeStatus] = useState('');
   const { customer } = useSelector((state: RootState) => state.customer);
+  const {
+    status: employeeStatus,
+    loanStatus,
+    documents,
+  } = useSelector((state: RootState) => state.employee);
 
   const dispatch = useDispatch();
-  const { getLocalStorage } = Utility();
+  const { getLocalStorage, setSessionStorage, getSessionStorage } = Utility();
   const original_estimate = getLocalStorage("ids")?.estimate;
   const ids = getLocalStorage("ids");
+  const forwardedUserId = getSessionStorage("forwardedUserId");
 
   const [timeLoggingEstimate, setTimeLoggingEstimate] = useState({
     isHovered: false,
@@ -105,6 +103,7 @@ const Progress: React.FC = () => {
     [],
     `get-ticket-logs/${storedTicketId}`
   );
+
   const { value: comments } = useGetTicketActivities(
     [],
     `get-all-ticket-activities/${storedTicketId}`
@@ -126,16 +125,24 @@ const Progress: React.FC = () => {
   );
 
   useEffect(() => {
-    if (userData?.data && Array.isArray(userData.data)) {
-      setUsers(userData.data);
-      if (comments && Array.isArray(comments) && comments.length > 0) {
-        setCommentsState(comments);
-        console.log("Updated commentsState:", comments);
-      } else {
-        console.log("No comments Here");
+    if (userData) {
+      console.log("Updated user:", userData.data);
+      setAllUsers(userData.data);
+
+      if (forwardedUserId) {
+        const forwardedUser = userData?.data?.find(user => user.id === parseInt(forwardedUserId, 10));
+        setSelectedUser(forwardedUser || null);
+        console.log(forwardedUser, 'Selected forwarded user');
       }
     }
-  }, [userData, comments]);
+  }, [userData, forwardedUserId]);
+
+  useEffect(() => {
+    if (comments && Array.isArray(comments) && comments.length > 0) {
+      console.log("Updated commentsState:", comments);
+      setCommentsState(comments);
+    }
+  }, [comments]);
 
   useEffect(() => {
     if (data?.success === true) {
@@ -164,15 +171,15 @@ const Progress: React.FC = () => {
       });
       const calculatedProgress = Math.min(
         (totalHours / parseTimeSpent(timeLoggingEstimate.originalEstimate)) *
-          100,
+        100,
         100
       ); // max 100%
       const calculatedOverage =
         totalHours > parseTimeSpent(timeLoggingEstimate.originalEstimate)
           ? ((totalHours -
-              parseTimeSpent(timeLoggingEstimate.originalEstimate)) /
-              parseTimeSpent(timeLoggingEstimate.originalEstimate)) *
-            100
+            parseTimeSpent(timeLoggingEstimate.originalEstimate)) /
+            parseTimeSpent(timeLoggingEstimate.originalEstimate)) *
+          100
           : 0;
 
       setProgress(calculatedProgress); // Blue bar
@@ -224,12 +231,6 @@ const Progress: React.FC = () => {
     return formattedTime || "0h";
   };
 
-  const {
-    status: employeeStatus,
-    loanStatus,
-    documents,
-  } = useSelector((state: RootState) => state.employee);
-
   const handleInputChange = (event) => {
     const value = event.target.value;
     setTimeLoggingEstimate((prevState) => ({
@@ -245,32 +246,67 @@ const Progress: React.FC = () => {
     }
   };
 
-  const handleChange = async (event) => {
-    const newStatus = event.target.value;
-    console.log("status print", newStatus);
-    setEmployeeStatus(newStatus);
-    dispatch(setEmployeeStatus(newStatus));
-    console.log("mainticket", typeof +storedTicketId);
-    // Call API to update the ticket status
-    await modifyTicket(+storedTicketId, { status: newStatus });
+  const handleChangeLoanStatus = async (event) => {
+    console.log(event.target.value, 'new loan ');
+    setNewLoanStatus(event.target.value);
+    try {
+      const { data } = await axios.patch(
+        'http://localhost:8080/api/v1/update-loan-tracking',
+        {
+          customer_application_id: ids.applicationId,
+          status: event.target.value,
+        }
+      );
+      console.log('Updated data:', data);
+    } catch (error) {
+      console.log('Error updating loan tracking:', error);
+    }
   };
 
-  const handleChangeLoanStatus = async (event) => {
-    const newLoanStatus = event.target.value;
-    dispatch(setLoanStatus(newLoanStatus));
+  const handleChangeEmployeeStatus = async (event) => {
+    console.log("employee status", event.target.value);
+    setNewEmployeeStatus(event.target.value);
+    try {
+      await modifyTicket(+storedTicketId,
+        { status: event.target.value }
+      );
+      console.log('Updated employee:');
+    } catch (error) {
+      console.log('Error updating loan tracking:', error);
+    }
+  };
+
+  const handleForwardAutocomplete = async (value) => {
+    console.log(value, 'user')
+    setSelectedUser(value);
+    setSessionStorage("forwardedUserId", value.id);
+    try {
+      await modifyTicket(+storedTicketId,
+        { forwarded_to: value.id }
+      );
+      console.log('Updated user');
+    } catch (error) {
+      console.log('Error updating loan tracking:', error);
+    }
   };
 
   useEffect(() => {
-    if (ids) {
-      dispatch(
-        fetchStatusAndDocuments({
-          applicationId: ids.applicationId,
-          customerId: ids.customerId,
-        })
-      );
-      dispatch(fetchEmployeeStatus(ids.applicationId));
-    }
-  }, [ids.applicationId, ids.customerId, dispatch]);
+    const fetchData = async () => {
+      if (ids) {
+        dispatch(
+          fetchStatusAndDocuments({
+            applicationId: ids.applicationId,
+            customerId: ids.customerId,
+          })
+        );
+        dispatch(fetchEmployeeStatus(ids.applicationId));
+      }
+    };
+
+    fetchData();
+    setNewLoanStatus(loanStatus);
+    setNewEmployeeStatus(employeeStatus);
+  }, [ids.applicationId, ids.customerId, employeeStatus, loanStatus, dispatch]);
 
   useEffect(() => {
     if (ids.customerId) {
@@ -283,18 +319,8 @@ const Progress: React.FC = () => {
     }
   }, [ids.customerId, customer]);
 
-  useEffect(() => {
-    if (employeeStatus === "forwarded") {
-      setIsForwardedToOpen(true);
-    }
-  }, [employeeStatus]);
-
   const handleBack = () => {
     window.history.back();
-  };
-
-  const handleEmployeeClick = (event: MouseEvent<HTMLButtonElement>) => {
-    setEmployeeAnchorEl(event.currentTarget);
   };
 
   const handleDeleteComment = async (commentId: number) => {
@@ -954,14 +980,17 @@ const Progress: React.FC = () => {
                     </Typography>
 
                     <Grid item xs={6} md={4} mt={1}>
-                      <FormControl fullWidth>
-                        <InputLabel id="loan-status-label">
+                      <FormControl
+                        variant="filled"
+                        sx={{ minWidth: 140 }}
+                      >
+                        <InputLabel>
                           Loan Status
                         </InputLabel>
                         <Select
-                          id="loan-status"
-                          value={loanStatus}
                           label="Loan Status"
+                          variant="filled"
+                          value={newLoanStatus}
                           onChange={handleChangeLoanStatus}
                         >
                           <MenuItem value="submitted">Submitted</MenuItem>
@@ -996,19 +1025,22 @@ const Progress: React.FC = () => {
 
                     {/* Right side: FormControl in Grid */}
                     <Grid item xs={6} md={4} mt={2}>
-                      <FormControl fullWidth>
-                        <InputLabel id="employee-status-label">
+                      <FormControl
+                        variant="filled"
+                        sx={{ minWidth: 140 }}
+                      >
+                        <InputLabel>
                           Employee Status
                         </InputLabel>
                         <Select
-                          id="employee-status"
-                          value={employeeStatus}
                           label="Employee Status"
-                          onChange={handleChange}
+                          variant="filled"
+                          value={newEmployeeStatus}
+                          onChange={handleChangeEmployeeStatus}
                         >
-                          <MenuItem value="todo">To Do</MenuItem>
-                          <MenuItem value="in_progress">In Progress</MenuItem>
-                          <MenuItem value="on_hold">On Hold</MenuItem>
+                          <MenuItem value="to do">To Do</MenuItem>
+                          <MenuItem value="in progress">In Progress</MenuItem>
+                          <MenuItem value="on hold">On Hold</MenuItem>
                           <MenuItem value="forwarded">Forwarded</MenuItem>
                           <MenuItem value="close">Close</MenuItem>
                           <MenuItem value="done">Done</MenuItem>
@@ -1018,48 +1050,23 @@ const Progress: React.FC = () => {
                   </Box>
 
                   {/* Conditionally render the dropdown if the status is forwarded */}
-                  <Box sx={{ padding: 3 }}>
-                    {employeeStatus === "forwarded" && (
-                      <Box
-                        display="flex"
-                        justifyContent="space-between"
-                        mt={0}
-                        ml={8}
-                        width="100%"
-                      >
-                        <Box
-                          sx={{
-                            flexGrow: 1,
-                            display: "flex",
-                            justifyContent: "flex-end",
-                            marginRight: "30px",
-                          }}
-                        >
-                          <Autocomplete
-                            options={users}
-                            getOptionLabel={(option) => option.username}
-                            value={selectedUser}
-                            onChange={(event, newValue) =>
-                              setSelectedUser(newValue)
-                            }
-                            open={openUserSelect}
-                            onOpen={() => setOpenUserSelect(true)}
-                            onClose={() => setOpenUserSelect(false)}
-                            renderInput={(params) => (
-                              <TextField
-                                {...params}
-                                label="Select User"
-                                variant="outlined"
-                                onClick={() => setOpenUserSelect(true)} // Open only when clicked
-                              />
-                            )}
-                            sx={{
-                              marginBottom: 1,
-                              width: 200,
-                            }}
+                  <Box>
+                    {newEmployeeStatus === "forwarded" && (
+                      <Autocomplete
+                        options={allUsers || []}
+                        getOptionLabel={(option) => option.username}
+                        value={selectedUser}
+                        onChange={(event, value) => handleForwardAutocomplete(value)}
+                        sx={{ width: '400px' }}
+                        renderInput={params => (
+                          <TextField
+                            {...params}
+                            label="Select User"
+                            variant="filled"
+                            type="text"
                           />
-                        </Box>
-                      </Box>
+                        )}
+                      />
                     )}
                   </Box>
                   <Divider sx={{ my: 1 }} />
