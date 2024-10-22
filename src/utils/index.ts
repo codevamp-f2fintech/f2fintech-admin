@@ -1,8 +1,8 @@
 import { AlertColor } from "@mui/material/Alert";
+import { jwtDecode } from 'jwt-decode';
 
 import { User } from "@/types/user";
 import { setToast } from "@/redux/features/toastSlice";
-import { cookies } from "next/headers";
 
 export const Utility = () => {
   /**
@@ -28,18 +28,24 @@ export const Utility = () => {
     return await response.json();
   };
 
-  // Utility to store value in sessionStorage
+  /**
+   * Utility to store value in sessionStorage.
+   * @param {string} key - The key to set in sessionStorage.
+   * @param {any} value - The value to store.
+   */
   const setSessionStorage = (key: string, value: any): void => {
-    if (typeof window !== "undefined") {
-      // Check if window is available (client-side)
+    if (typeof window !== "undefined") {        // Check if window is available (client-side)
       sessionStorage.setItem(key, JSON.stringify(value));
     }
   };
 
-  // Utility to get value from sessionStorage
+  /**
+    * Utility to get value from sessionStorage.
+    * @param {string} key - The key to retrieve the value for.
+    * @returns {any | null} - The retrieved value or null if not found.
+    */
   const getSessionStorage = (key: string): any | null => {
-    if (typeof window !== "undefined") {
-      // Ensure we're on the client-side
+    if (typeof window !== "undefined") {        // Ensure we're on the client-side
       const storedValue = sessionStorage.getItem(key);
       return storedValue ? JSON.parse(storedValue) : null;
     }
@@ -67,7 +73,7 @@ export const Utility = () => {
   const remLocalStorage = (key: string): void => {
     try {
       localStorage.removeItem(key);
-    } catch (err) {}
+    } catch (err) { }
   };
 
   /**
@@ -79,7 +85,7 @@ export const Utility = () => {
   const setLocalStorage = (key: string, value: any): void => {
     try {
       localStorage.setItem(key, JSON.stringify(value));
-    } catch (err) {}
+    } catch (err) { }
   };
 
   /**
@@ -131,7 +137,7 @@ export const Utility = () => {
    * Get cookies from document.cookie and return them as an object.
    * @returns {Object} An object representing the cookies.
    */
-  const getCookies = () => {
+  const getCookies = (): object => {
     const cookieString = document.cookie; // Get cookies as a string
     const cookiesArray = cookieString.split("; "); // Split into an array
     const cookies: Record<string, string> = {};
@@ -145,15 +151,42 @@ export const Utility = () => {
     return cookies;
   };
 
-  async function setCookie(name, value) {
+  /**
+   * Set a cookie with an optional expiration time (default 7 days).
+   * @param {string} name - The name of the cookie.
+   * @param {string} value - The value of the cookie.
+   */
+  const setCookie = (name: string, value: string): void => {
     const expires = new Date();
-    expires.setTime(expires.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days in milliseconds
+    expires.setTime(expires.getTime() + 7 * 24 * 60 * 60 * 1000);    // 7 days in milliseconds
 
     document.cookie = `${name}=${value}; expires=${expires.toUTCString()}; path=/;`;
   }
 
+  /**
+   * Decode the JWT token stored in cookies.
+   * @returns {any | null} - Decoded token payload, or null if token not found or invalid.
+   */
+  const decodedToken = (): any | null => {
+    const cookies = getCookies();
+    const token = cookies.token;
+
+    if (token) {
+      try {
+        const decodedToken = jwtDecode(token);
+        return decodedToken;
+      } catch (error) {
+        console.log("Error decoding token:", error);
+        return null;
+      }
+    } else {
+      console.log("No token found in cookies");
+      return null;
+    }
+  }
+
   return {
-    setCookie,
+    decodedToken,
     fetchData,
     getSessionStorage,
     setSessionStorage,
@@ -162,5 +195,6 @@ export const Utility = () => {
     setLocalStorage,
     toastAndNavigate,
     getCookies,
+    setCookie,
   };
 };

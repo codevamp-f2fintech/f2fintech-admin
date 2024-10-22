@@ -31,21 +31,23 @@ async function fetchTotalApplications() {
   }
 }
 
-async function fetchTotalTickets(status = null) {
+async function fetchTotalTickets(status: string | null = null): Promise<number> {
   let url = `http://localhost:3001/api/v1/dashboard/tickets/count`;
   if (status) {
     url += `/${status}`;
   }
+  console.log(url, 'ticket count url')
   const response = await fetch(url);
 
   if (!response.ok) {
     throw new Error("Failed to fetch total Tickets");
   }
   const resData = await response.json();
+  console.log(resData, 'ticket count')
   return resData.data; // Assuming the response has a 'count' field
 }
 
-async function fetchAgentCount() {
+async function fetchAgentCount(): Promise<number> {
   const response = await fetch(
     "http://localhost:3001/api/v1/dashboard/agents/count",
     {
@@ -63,10 +65,10 @@ async function fetchAgentCount() {
 export default async function Page(): Promise<React.JSX.Element> {
   const totalApplications = await fetchTotalApplications();
   const totalTickets = await fetchTotalTickets();
-  const totalOpenTickets = await fetchTotalTickets("open");
-  const totalCloseTickets = await fetchTotalTickets("close");
-  const totalInProgressTickets = await fetchTotalTickets("inprogress");
+  const totalOpenTickets = await fetchTotalTickets("to do");
+  const totalInProgressTickets = await fetchTotalTickets("in progress");
   const totalForwardedTickets = await fetchTotalTickets("forwarded");
+  const totalCloseTickets = await fetchTotalTickets("close");
   const totalCompletedTickets = await fetchTotalTickets("done");
   const totalAgents = await fetchAgentCount();
 

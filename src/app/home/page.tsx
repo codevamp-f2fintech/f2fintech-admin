@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { jwtDecode } from 'jwt-decode'; 
 import Link from "next/link";
 import {
   Card,
@@ -35,6 +34,7 @@ import type { AppDispatch, RootState } from "@/redux/store";
 import { setCustomers, appendCustomers } from "@/redux/features/customerSlice";
 import { useGetCustomers } from "@/hooks/customer";
 import { useCreateTicket } from "@/hooks/ticket";
+import { Utility } from "@/utils";
 
 const Home: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -51,6 +51,7 @@ const Home: React.FC = () => {
 
   const dispatch: AppDispatch = useDispatch();
   const { customer } = useSelector((state: RootState) => state.customer);
+  const { decodedToken } = Utility();
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -70,15 +71,6 @@ const Home: React.FC = () => {
     handleMenuClose();
   };
 
-  const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
- console.log(token,"token is:")
-
-
-if (token) {
-  // Decode the token to extract the payload
-  const decodedToken = jwtDecode(token);
-  console.log(decodedToken, "Decoded Token:");
-}
   const filteredCustomers = customer.filter((val) =>
     val.Name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -149,18 +141,18 @@ if (token) {
       const isAlreadySelected = prevSelectedContacts.includes(contactId);
       if (!isAlreadySelected) {
         // Call the create ticket API only if the checkbox is checked for the first time
-        const createNewTicket = async (contactId, applicationId) => {
+        const createNewTicket = async (applicationId) => {
           try {
             const response = await createTicket({
               customer_application_id: applicationId,
-              user_id: 2,
+              user_id: decodedToken()?.id,
               status: "to do",
             });
           } catch (error) {
             console.log("Error creating ticket:", error);
           }
         };
-        createNewTicket(contactId, applicationId);
+        createNewTicket(applicationId);
       }
       return isAlreadySelected
         ? prevSelectedContacts.filter((id) => id !== contactId)

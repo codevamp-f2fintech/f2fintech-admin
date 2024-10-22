@@ -41,11 +41,11 @@ const Ticket = () => {
   const [endDate, setEndDate] = useState<Dayjs | null>(null);
 
   const router = useRouter();
-  const { setLocalStorage, remLocalStorage } = Utility();
+  const { decodedToken, setLocalStorage, remLocalStorage } = Utility();
 
   const { value: ticketData } = useGetTickets(
     [],
-    `get-all-tickets/${2}` // this is the logged in userId
+    `get-all-tickets/${decodedToken()?.id}` // this is the logged in userId
   );
 
   const { modifyTicket, error: updateError } = useModifyTicket("update-ticket");
@@ -159,7 +159,7 @@ const Ticket = () => {
     // Find the ticket based on userId and applicationId
     const selectedTicket = ticketData?.data.find(
       (ticket) =>
-        ticket.user_id === 2 && ticket.customer_application_id === applicationId
+        ticket.user_id === decodedToken()?.id && ticket.customer_application_id === applicationId
     );
 
     // Log the selected ticket for debugging
@@ -210,11 +210,11 @@ const Ticket = () => {
     <>
       <Header
         searchTerm=""
-        setSearchTerm={() => {}}
+        setSearchTerm={() => { }}
         customerLength={customerApplications.length}
         isLoggedIn={true}
-        handleLogout={() => {}}
-        handleLogin={() => {}}
+        handleLogout={() => { }}
+        handleLogin={() => { }}
         handleChooseMoreTickets={() =>
           console.log("Navigate to choose more tickets")
         }
