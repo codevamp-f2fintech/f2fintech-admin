@@ -1,5 +1,4 @@
 "use client";
-
 import * as React from "react";
 import Link from "next/link";
 import { useState } from "react";
@@ -31,13 +30,11 @@ import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { Utility } from "@/utils";
 import Toast from "../components/common/Toast";
-
 // Validation schema using Yup
 const LoginSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Required"),
   password: Yup.string().min(6, "Password too short").required("Required"),
 });
-
 const Login = (): JSX.Element => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const theme: Theme = useTheme();
@@ -45,30 +42,25 @@ const Login = (): JSX.Element => {
   const dispatch: AppDispatch = useDispatch();
   const { toast } = useSelector((state: RootState) => state.toast);
   const { toastAndNavigate } = Utility();
-
   // Handler for toggling password visibility
   const handleClickShowPassword = (): void => {
-    setShowPassword((prev) => !prev);
+    setShowPassword((prev) => !prev); 
   };
-
   // Prevent default action for mouse down event on the password visibility toggle button
-  const handleMouseDownPassword = (
+  const handleMouseDownPassword = ( 
     event: React.MouseEvent<HTMLButtonElement>
   ) => {
     event.preventDefault();
   };
-
   // Handler for form submission using Formik
   const handleLogin = async (values: { email: string; password: string }) => {
     try {
       const response = await UserAPI.login(values); // Call the UserAPI login method
-
       if (response?.data?.data.token) {
         // Save the token in a cookie manually
         document.cookie = `token=${
           response.data.data.token.access_token
         }; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
-
         toastAndNavigate(dispatch, true, "success", "Signin Success");
         router.push("/dashboard");
         // Handle successful login (e.g., redirect)
@@ -77,7 +69,6 @@ const Login = (): JSX.Element => {
       toastAndNavigate(dispatch, true, "error", "Error Signin");
     }
   };
-
   return (
     <ThemeProvider theme={theme}>
       <Grid
@@ -201,7 +192,7 @@ const Login = (): JSX.Element => {
                       endAdornment: (
                         <InputAdornment position="end">
                           <IconButton
-                            sx={{ color: "#1976d2" }}
+                            sx={{ color: "#1976D2" }}
                             aria-label="toggle password visibility"
                             onClick={handleClickShowPassword}
                             onMouseDown={handleMouseDownPassword}
@@ -226,14 +217,14 @@ const Login = (): JSX.Element => {
                       mt: 2,
                       mb: 2,
                       borderRadius: "8px",
-                      background: "linear-gradient(45deg, #2c3ce3, #1976d2)",
+                      background: "linear-gradient(45deg, #2C3CE3, #1976D2)",
                       color: "#fff",
                       fontWeight: "bold",
                       padding: "10px 20px",
                       boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.2)",
                       transition: "all 0.3s ease",
                       "&:hover": {
-                        background: "linear-gradient(45deg, #1976d2, #6A1B9A)",
+                        background: "linear-gradient(45deg, #1976D2, #6A1B9A)",
                       },
                     }}
                     disabled={!dirty || isSubmitting}
@@ -246,7 +237,7 @@ const Login = (): JSX.Element => {
             {/* <Grid container>
               <Grid item xs>                    needs to be done
                 <Link href="#" passHref>
-                  <Typography sx={{ color: "#0000cc" }}>
+                  <Typography sx={{ color: "#0000CC" }}>
                     Forgot password?
                   </Typography>
                 </Link>
@@ -263,5 +254,4 @@ const Login = (): JSX.Element => {
     </ThemeProvider>
   );
 };
-
 export default Login;

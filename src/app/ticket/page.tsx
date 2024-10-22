@@ -45,7 +45,7 @@ const Ticket = () => {
 
   const { value: ticketData } = useGetTickets(
     [],
-    `get-all-tickets/${1}` // this is the logged in userId
+    `get-all-tickets/${2}` // this is the logged in userId
   );
 
   const { modifyTicket, error: updateError } = useModifyTicket("update-ticket");
@@ -159,7 +159,7 @@ const Ticket = () => {
     // Find the ticket based on userId and applicationId
     const selectedTicket = ticketData?.data.find(
       (ticket) =>
-        ticket.user_id === 1 && ticket.customer_application_id === applicationId
+        ticket.user_id === 2 && ticket.customer_application_id === applicationId
     );
 
     // Log the selected ticket for debugging
