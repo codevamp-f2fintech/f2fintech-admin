@@ -2,6 +2,7 @@ import { AlertColor } from "@mui/material/Alert";
 
 import { User } from "@/types/user";
 import { setToast } from "@/redux/features/toastSlice";
+import { cookies } from "next/headers";
 
 export const Utility = () => {
   /**
@@ -21,7 +22,6 @@ export const Utility = () => {
       cache: "no-store",
     });
 
-    // console.log("response123", response);
     if (!response.ok) {
       throw new Error(`Failed to fetch data: ${response.statusText}`);
     }
@@ -30,18 +30,20 @@ export const Utility = () => {
 
   // Utility to store value in sessionStorage
   const setSessionStorage = (key: string, value: any): void => {
-    if (typeof window !== "undefined") {  // Check if window is available (client-side)
+    if (typeof window !== "undefined") {
+      // Check if window is available (client-side)
       sessionStorage.setItem(key, JSON.stringify(value));
     }
   };
 
   // Utility to get value from sessionStorage
   const getSessionStorage = (key: string): any | null => {
-    if (typeof window !== "undefined") {  // Ensure we're on the client-side
+    if (typeof window !== "undefined") {
+      // Ensure we're on the client-side
       const storedValue = sessionStorage.getItem(key);
       return storedValue ? JSON.parse(storedValue) : null;
     }
-    return null;  // Return null if window is not available (server-side)
+    return null; // Return null if window is not available (server-side)
   };
 
   /**
@@ -65,9 +67,7 @@ export const Utility = () => {
   const remLocalStorage = (key: string): void => {
     try {
       localStorage.removeItem(key);
-    } catch (err) {
-      console.error(`Error removing ${key} from localStorage:`, err);
-    }
+    } catch (err) {}
   };
 
   /**
@@ -79,9 +79,7 @@ export const Utility = () => {
   const setLocalStorage = (key: string, value: any): void => {
     try {
       localStorage.setItem(key, JSON.stringify(value));
-    } catch (err) {
-      console.error(`Error setting ${key} in localStorage:`, err);
-    }
+    } catch (err) {}
   };
 
   /**
@@ -147,7 +145,15 @@ export const Utility = () => {
     return cookies;
   };
 
+  async function setCookie(name, value) {
+    const expires = new Date();
+    expires.setTime(expires.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days in milliseconds
+
+    document.cookie = `${name}=${value}; expires=${expires.toUTCString()}; path=/;`;
+  }
+
   return {
+    setCookie,
     fetchData,
     getSessionStorage,
     setSessionStorage,

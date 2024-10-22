@@ -27,7 +27,7 @@ import type { AppDispatch, RootState } from "@/redux/store";
 import { Utility } from "@/utils";
 import Toast from "../components/common/Toast";
 import { useDispatch, useSelector } from "react-redux";
-
+import Link from "next/link";
 // Regular expression for validating Gmail addresses
 const emailRegExp = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
 
@@ -93,10 +93,35 @@ const UserForm = () => {
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
-          p: 4,
+          // p: 4,
           boxShadow: 3,
         }}
       >
+        <Link href="/dashboard" passHref>
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{
+              m: 1,
+              background: "linear-gradient(45deg, #2c3ce3, #1976d2, #FFF)",
+              width: "13vw",
+              height: 40,
+              fontWeight: "Bold",
+              fontSize: "1rem",
+              borderRadius: "15px",
+              "&:hover": {
+                background:
+                  "linear-gradient(125deg, #ECFCFF 0%, #ECFCFF 40%, #B2FCFF calc(40% + 1px), #B2FCFF 60%, #5EDFFF calc(60% + 1px), #5EDFFF 72%, #3E64FF calc(72% + 1px), #3E64FF 100%)",
+                transform: "scale(1.05)",
+                color: "black",
+                fontWeight: "Bold",
+                fontSize: "1rem",
+              },
+            }}
+          >
+            Go to Dashboard
+          </Button>
+        </Link>
         <Avatar sx={{ m: 1, bgcolor: "primary.main", width: 70, height: 70 }}>
           <LockOutlined fontSize="large" />
         </Avatar>
@@ -134,7 +159,7 @@ const UserForm = () => {
             dirty,
           }) => (
             <Form>
-              <Grid container spacing={2}>
+              <Grid sx={{ width: "83vh" }} container spacing={2}>
                 <Grid item xs={12} sm={6}>
                   <Field
                     as={TextField}
@@ -275,8 +300,9 @@ const UserForm = () => {
                   transition: "all 0.3s ease",
                   "&:hover": {
                     background:
-                      "linear-gradient(45deg, #2c3ce3, #1976d2, #FFF)",
+                      "linear-gradient(125deg, #ECFCFF 0%, #ECFCFF 40%, #B2FCFF calc(40% + 1px), #B2FCFF 60%, #5EDFFF calc(60% + 1px), #5EDFFF 72%, #3E64FF calc(72% + 1px), #3E64FF 100%)",
                     transform: "scale(1.05)",
+                    color: "black",
                   },
                 }}
                 disabled={!dirty || isSubmitting}

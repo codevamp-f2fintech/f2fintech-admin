@@ -45,7 +45,6 @@ const Login = (): JSX.Element => {
   const dispatch: AppDispatch = useDispatch();
   const { toast } = useSelector((state: RootState) => state.toast);
   const { toastAndNavigate } = Utility();
-  console.log("LOGIN PAGE");
 
   // Handler for toggling password visibility
   const handleClickShowPassword = (): void => {
@@ -61,18 +60,17 @@ const Login = (): JSX.Element => {
 
   // Handler for form submission using Formik
   const handleLogin = async (values: { email: string; password: string }) => {
-    console.log("login");
     try {
       const response = await UserAPI.login(values); // Call the UserAPI login method
-      console.log("response", response);
 
       if (response?.data?.data.token) {
         // Save the token in a cookie manually
-        document.cookie = `token=${response.data.data.token.access_token
-          }; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
+        document.cookie = `token=${
+          response.data.data.token.access_token
+        }; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
 
         toastAndNavigate(dispatch, true, "success", "Signin Success");
-        router.push("/home");
+        router.push("/dashboard");
         // Handle successful login (e.g., redirect)
       }
     } catch (error) {
@@ -88,10 +86,8 @@ const Login = (): JSX.Element => {
         sx={{
           height: "100vh",
           marginRight: "40px",
-          backgroundImage: 'url("img/front1.jpg")',
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
+          background:
+            "linear-gradient(125deg, #ECFCFF 0%, #ECFCFF 40%, #B2FCFF calc(40% + 1px), #B2FCFF 60%, #5EDFFF calc(60% + 1px), #5EDFFF 72%, #3E64FF calc(72% + 1px), #3E64FF 100%)",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
@@ -107,19 +103,17 @@ const Login = (): JSX.Element => {
             height: "80vh",
             width: "70vw",
             borderRadius: "80px",
-            backgroundImage: 'url("img/front.jpg")',
-            backgroundRepeat: "no-repeat",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
+            background:
+              "linear-gradient(235deg, #FFFFFF 0%, #000F25 100%), linear-gradient(180deg, #6100FF 0%, #000000 100%), linear-gradient(235deg, #FFA3AC 0%, #FFA3AC 40%, #00043C calc(40% + 1px), #00043C 60%, #005D6C calc(60% + 1px), #005D6C 70%, #00C9B1 calc(70% + 1px), #00C9B1 100%), linear-gradient(125deg, #FFA3AC 0%, #FFA3AC 40%, #00043C calc(40% + 1px), #00043C 60%, #005D6C calc(60% + 1px), #005D6C 70%, #00C9B1 calc(70% + 1px), #00C9B1 100%)",
+            backgroundBlendMode: "soft-light, screen, darken, normal",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             "&:hover": {
-              backgroundImage: `linear-gradient(rgba(200, 200, 220, 0.0), rgba(210, 230, 255, 0.7)), url("img/front.jpg")`,
+              background:
+                "linear-gradient(235deg, #FFFFFF 0%, #000F25 100%), linear-gradient(180deg, #6100FF 0%, #000000 100%), linear-gradient(235deg, #FFA3AC 0%, #FFA3AC 40%, #00043C calc(40% + 1px), #00043C 60%, #005D6C calc(60% + 1px), #005D6C 70%, #00C9B1 calc(70% + 1px), #00C9B1 100%), linear-gradient(125deg, #FFA3AC 0%, #FFA3AC 40%, #00043C calc(40% + 1px), #00043C 60%, #005D6C calc(60% + 1px), #005D6C 70%, #00C9B1 calc(70% + 1px), #00C9B1 100%)",
+              backgroundBlendMode: "soft-light, screen, darken, normal",
               transform: "scale(1.05)",
-              backgroundRepeat: "no-repeat",
-              backgroundSize: "cover",
-              backgroundPosition: "center",
             },
           }}
         >

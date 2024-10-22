@@ -17,7 +17,6 @@ export const metadata: Metadata = {
 const UserList = async () => {
   const cookieStore = cookies();
   const token = cookieStore.get("token")?.value;
-  console.log("token", token);
   try {
     const response = await fetch(`${url}?_page=${PAGE}&_limit=${SIZE}`, {
       headers: {
@@ -28,10 +27,8 @@ const UserList = async () => {
     });
     const resjson = await response.json();
     const data: User[] = resjson.data;
-    console.log("responsedata", response);
     return <UsersPage initialData={data} />;
   } catch (error) {
-    console.log("Error fetching data:", error);
     return <p>Failed to load data.</p>;
   }
 };
