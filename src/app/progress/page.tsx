@@ -40,20 +40,16 @@ import { useGetUsers } from "@/hooks/user";
 
 import { useGetTickets, useModifyTicket } from "@/hooks/ticket";
 import {
-  useGetTicketActivities,
-  useDeleteTicketActivity,
-  useCreateTicketActivity,
-  useModifyTicketActivity,
-} from "@/hooks/ticketActivities";
-import {
   fetchStatusAndDocuments,
   fetchEmployeeStatus,
 } from "../../redux/features/employeeSlice";
 
 import Loader from "../components/common/Loader";
 import ProgressBar from "../components/common/ProgressBar";
+import Comments from "./Comments";
 import WorkLogList from "./Worklog";
 import TrackingForm from "./trackingForm";
+import Toast from "../components/common/Toast";
 import { RootState } from "../../redux/store";
 import { Utility } from "@/utils";
 import { setCustomers } from "@/redux/features/customerSlice";
@@ -62,15 +58,11 @@ const Progress: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [theme, colorMode] = useMode();
   const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
-  const [commentsState, setCommentsState] = useState<any[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [activeSection, setActiveSection] = useState<string>("Comments");
   const [ticketId, setTicketId] = useState("");
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState([]);
-  const [newComment, setNewComment] = useState<string>("");
-  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
-  const [editedComment, setEditedComment] = useState<string>("");
   const [progress, setProgress] = useState(0); // State to store progress percentage
   const [overage, setOverage] = useState(0); // Orange part (exceeding estimated time)
   const [newLoanStatus, setNewLoanStatus] = useState('');
@@ -81,9 +73,10 @@ const Progress: React.FC = () => {
     loanStatus,
     documents,
   } = useSelector((state: RootState) => state.employee);
+  const { toast } = useSelector((state: RootState) => state.toast);
 
   const dispatch = useDispatch();
-  const { getLocalStorage, setSessionStorage, getSessionStorage } = Utility();
+  const { getLocalStorage, setSessionStorage, getSessionStorage, toastAndNavigate } = Utility();
   const original_estimate = getLocalStorage("ids")?.estimate;
   const ids = getLocalStorage("ids");
   const forwardedUserId = getSessionStorage("forwardedUserId");
@@ -104,26 +97,6 @@ const Progress: React.FC = () => {
     `get-ticket-logs/${storedTicketId}`
   );
 
-  const { value: comments } = useGetTicketActivities(
-    [],
-    `get-all-ticket-activities/${storedTicketId}`
-  );
-
-  // Hook for deleting ticket activity
-  const { deleteTicketActivity } = useDeleteTicketActivity(
-    "delete-ticket-activity"
-  );
-
-  // Hook for creating new ticket activity (comment)
-  const { createTicketActivity, error: createError } = useCreateTicketActivity(
-    "create-ticket-activity"
-  );
-
-  // Hook for modifying ticket activity (editing comments)
-  const { modifyTicketActivity, error: modifyError } = useModifyTicketActivity(
-    "update-ticket-activity"
-  );
-
   useEffect(() => {
     if (userData) {
       console.log("Updated user:", userData.data);
@@ -136,13 +109,6 @@ const Progress: React.FC = () => {
       }
     }
   }, [userData, forwardedUserId]);
-
-  useEffect(() => {
-    if (comments && Array.isArray(comments) && comments.length > 0) {
-      console.log("Updated commentsState:", comments);
-      setCommentsState(comments);
-    }
-  }, [comments]);
 
   useEffect(() => {
     if (data?.success === true) {
@@ -247,7 +213,6 @@ const Progress: React.FC = () => {
   };
 
   const handleChangeLoanStatus = async (event) => {
-    console.log(event.target.value, 'new loan ');
     setNewLoanStatus(event.target.value);
     try {
       const { data } = await axios.patch(
@@ -257,35 +222,40 @@ const Progress: React.FC = () => {
           status: event.target.value,
         }
       );
-      console.log('Updated data:', data);
+      toastAndNavigate(dispatch, true, "info", "Status Changed Successfully");
     } catch (error) {
+      toastAndNavigate(dispatch, true, "error", "Error Changing Status");
       console.log('Error updating loan tracking:', error);
     }
   };
 
   const handleChangeEmployeeStatus = async (event) => {
-    console.log("employee status", event.target.value);
     setNewEmployeeStatus(event.target.value);
     try {
-      await modifyTicket(+storedTicketId,
-        { status: event.target.value }
-      );
-      console.log('Updated employee:');
+      const updateData = event.target.value !== 'forwarded'
+        ? { status: event.target.value }
+        : { status: event.target.value, forwarded_to: null };
+
+      await modifyTicket(+storedTicketId, updateData);
+      if (event.target.value !== 'forwarded') {
+        toastAndNavigate(dispatch, true, "info", "Status Changed Successfully");
+      }
     } catch (error) {
+      toastAndNavigate(dispatch, true, "error", "Error Changing Status");
       console.log('Error updating loan tracking:', error);
     }
   };
 
   const handleForwardAutocomplete = async (value) => {
-    console.log(value, 'user')
     setSelectedUser(value);
     setSessionStorage("forwardedUserId", value.id);
     try {
       await modifyTicket(+storedTicketId,
         { forwarded_to: value.id }
       );
-      console.log('Updated user');
+      toastAndNavigate(dispatch, true, "info", "User Assigned Successfully");
     } catch (error) {
+      toastAndNavigate(dispatch, true, "error", "Error Assigning User");
       console.log('Error updating loan tracking:', error);
     }
   };
@@ -323,81 +293,6 @@ const Progress: React.FC = () => {
     window.history.back();
   };
 
-  const handleDeleteComment = async (commentId: number) => {
-    try {
-      await deleteTicketActivity(commentId);
-      setCommentsState((prevComments) =>
-        prevComments.filter((comment) => comment.ticket_id !== commentId)
-      );
-      console.log("Comment deleted successfully");
-    } catch (error) {
-      console.log("Error while deleting the comment:", error);
-    }
-  };
-
-  const handleCreateComment = async () => {
-    if (!newComment.trim()) return;
-    try {
-      const newCommentData = {
-        ticket_id: storedTicketId,
-        comment: newComment,
-      };
-      console.log(newCommentData, "newcommentData");
-      const createdComment = await createTicketActivity(newCommentData);
-
-      if (createdComment) {
-        setCommentsState((prevComments) => [...prevComments, createdComment]);
-        setNewComment("");
-      }
-    } catch (error) {
-      console.log("Error while creating the comment:", error);
-    }
-  };
-
-  const handleEditComment = (
-    commentId: number,
-    ticketId: number,
-    commentText: string
-  ) => {
-    setEditingCommentId(commentId); // Set the commentId for editing
-    setEditedComment(commentText); // Set the current comment text to be edited
-  };
-
-  const handleSaveEditComment = async (commentId: number, ticketId: number) => {
-    if (!editedComment.trim()) return;
-    try {
-      const updatedCommentData = {
-        comment: editedComment,
-        updated_at: new Date().toISOString(),
-      };
-
-      const updatedComment = await modifyTicketActivity(
-        ticketId,
-        commentId,
-        updatedCommentData
-      );
-      if (updatedComment) {
-        // Update the comments state with the modified comment
-        setCommentsState((prevComments) =>
-          prevComments.map((comment) =>
-            comment.id === commentId && comment.ticket_id === ticketId
-              ? { ...comment, ...updatedComment }
-              : comment
-          )
-        );
-        setEditingCommentId(null); // Reset after save
-        setEditedComment(""); // Clear the edited comment state
-      }
-    } catch (error) {
-      console.log("Error while modifying the comment:", error);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingCommentId(null);
-    setEditedComment("");
-  };
-
   const removeFile = (index: number) => {
     const newFiles = selectedFiles.filter((_, idx) => idx !== index);
     setSelectedFiles(newFiles);
@@ -418,7 +313,7 @@ const Progress: React.FC = () => {
           <Container
             maxWidth={false}
             sx={{
-              height: "100vh",
+              height: "auto",
               width: "100vw",
               backgroundColor: "#f0f2f5",
               display: "flex",
@@ -755,145 +650,7 @@ const Progress: React.FC = () => {
                   </Box>
 
                   {activeSection === "Comments" && (
-                    <Box mt={2} mb={3} sx={{ position: "relative" }}>
-                      <TextField
-                        fullWidth
-                        variant="outlined"
-                        placeholder="Add a comment..."
-                        multiline
-                        rows={3}
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        sx={{
-                          mt: 1,
-                          bgcolor: "#ffffff",
-                          borderRadius: 1,
-                          border: "1px solid rgba(0, 0, 0, 0.1)",
-                          pr: 5,
-                        }}
-                      />
-
-                      <IconButton
-                        sx={{
-                          position: "absolute",
-                          bottom: 45,
-                          right: 12,
-                          borderRadius: "50%",
-                        }}
-                        onClick={() =>
-                          document.getElementById("file-upload")?.click()
-                        }
-                      >
-                        <AttachFileIcon />
-                      </IconButton>
-
-                      <Box
-                        mt={1}
-                        display="flex"
-                        justifyContent="flex-start"
-                        alignItems="center"
-                      >
-                        <Button
-                          variant="contained"
-                          sx={{
-                            textTransform: "none",
-                            bgcolor: theme.palette.primary.main,
-                            color: "#fff",
-                            mr: 2,
-                          }}
-                          onClick={handleCreateComment}
-                        >
-                          Comment
-                        </Button>
-                      </Box>
-
-                      {/* Comments list displayed below the Add Comment button */}
-                      <Box mt={3}>
-                        <Typography variant="h6">New Comments :</Typography>
-                        {comments && comments.data ? (
-                          comments.data.map((comment, index) => (
-                            <Box
-                              key={index}
-                              mt={1}
-                              p={2}
-                              border={1}
-                              borderColor="grey.300"
-                              borderRadius={4}
-                            >
-                              {editingCommentId === comment.id ? (
-                                <Box>
-                                  <TextField
-                                    fullWidth
-                                    multiline
-                                    value={editedComment}
-                                    onChange={(e) =>
-                                      setEditedComment(e.target.value)
-                                    }
-                                    rows={3}
-                                    variant="outlined"
-                                  />
-                                  <Box mt={1}>
-                                    <Button
-                                      variant="contained"
-                                      color="primary"
-                                      onClick={() =>
-                                        handleSaveEditComment(
-                                          comment.id,
-                                          comment.ticket_id
-                                        )
-                                      }
-                                    >
-                                      Save
-                                    </Button>
-                                    <Button
-                                      variant="text"
-                                      color="secondary"
-                                      sx={{ ml: 2 }}
-                                      onClick={handleCancelEdit}
-                                    >
-                                      Cancel
-                                    </Button>
-                                  </Box>
-                                </Box>
-                              ) : (
-                                <Box>
-                                  <Typography variant="body1">
-                                    {comment.comment}
-                                  </Typography>
-                                  <Box mt={1}>
-                                    <Button
-                                      variant="outlined"
-                                      size="small"
-                                      onClick={() =>
-                                        handleEditComment(
-                                          comment.id,
-                                          comment.ticket_id,
-                                          comment.comment
-                                        )
-                                      }
-                                    >
-                                      Edit
-                                    </Button>
-                                    <Button
-                                      variant="outlined"
-                                      size="small"
-                                      sx={{ ml: 2 }}
-                                      onClick={() =>
-                                        handleDeleteComment(comment.ticket_id)
-                                      }
-                                    >
-                                      Delete
-                                    </Button>
-                                  </Box>
-                                </Box>
-                              )}
-                            </Box>
-                          ))
-                        ) : (
-                          <Typography>No comments available</Typography>
-                        )}
-                      </Box>
-                    </Box>
+                    <Comments storedTicketId={storedTicketId} theme={theme} />
                   )}
 
                   {/* History Section */}
@@ -1233,6 +990,11 @@ const Progress: React.FC = () => {
             setOverage={setOverage}
           />
         </LocalizationProvider>
+        <Toast
+          alerting={toast.toastAlert}
+          severity={toast.toastSeverity}
+          message={toast.toastMessage}
+        />
       </ColorModeContext.Provider>
     </ThemeProvider>
   );

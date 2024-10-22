@@ -157,7 +157,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
                     if (createdResponse?.statusCode === 200) {
                         console.log("Created Ticket Response:", createdResponse);
                         setLoading(false);
-                        handleDialogClose();
+                        toastAndNavigate(dispatch, true, "info", "Time Logged Successfully", null, null, true);
                     }
                 } catch (error) {
                     console.log("Error creating ticket log:", error);
