@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { jwtDecode } from 'jwt-decode'; 
 import Link from "next/link";
 import {
   Card,
@@ -69,6 +70,15 @@ const Home: React.FC = () => {
     handleMenuClose();
   };
 
+  const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+ console.log(token,"token is:")
+
+
+if (token) {
+  // Decode the token to extract the payload
+  const decodedToken = jwtDecode(token);
+  console.log(decodedToken, "Decoded Token:");
+}
   const filteredCustomers = customer.filter((val) =>
     val.Name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -143,7 +153,7 @@ const Home: React.FC = () => {
           try {
             const response = await createTicket({
               customer_application_id: applicationId,
-              user_id: 1,
+              user_id: 2,
               status: "to do",
             });
           } catch (error) {
