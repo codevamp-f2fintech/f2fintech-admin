@@ -155,7 +155,7 @@ const Ticket = () => {
     }
   }, [filter, customerApplications, startDate, endDate, ticketStatus]);
 
-  const handleStartClick = (customerId, applicationId, estimate) => {
+  const handleStartClick = (customerId, applicationId, estimate, status) => {
     // Find the ticket based on userId and applicationId
     const selectedTicket = ticketData?.data.find(
       (ticket) =>
@@ -172,7 +172,10 @@ const Ticket = () => {
       remLocalStorage("ticketId");
       setLocalStorage("ticketId", generatedTicketId);
 
-      modifyTicket(ticketId, { status: "in progress" });
+      console.log(status, 'ticket status')
+      if (status !== "forwarded") {
+        modifyTicket(ticketId, { status: "in progress" });
+      }
       setLocalStorage("ids", { customerId, applicationId, estimate });
       router.push(`/progress`);
     } else {
@@ -425,11 +428,7 @@ const Ticket = () => {
                       color="primary"
                       sx={{ width: "100%", borderRadius: 0 }}
                       onClick={() =>
-                        handleStartClick(
-                          customer.Id,
-                          customer.applicationId,
-                          ticket.original_estimate
-                        )
+                        handleStartClick(customer.Id, customer.applicationId, ticket.original_estimate, ticket.status)
                       }
                     >
                       Start Work

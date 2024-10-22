@@ -59,6 +59,21 @@ export const UserAPI = {
       throw error; // Rethrow or handle as needed
     }
   },
+
+  // upload document to S3 Bucket
+  uploadDocument: async (document, cancel = false) => {
+    return await axiosInstance.request({
+      url: `/upload-to-s3`,
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      method: "POST",
+      data: document,
+      signal: cancel
+        ? cancelApiObject[this.uploadDocument.name].handleRequestCancellation().signal
+        : undefined,
+    });
+  },
 };
 
 // defining the cancel API object for UserAPI
