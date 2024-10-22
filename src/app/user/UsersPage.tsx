@@ -80,12 +80,12 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
     <Box
       maxWidth={"false"}
       sx={{
-        padding: 3,
         height: "100vh",
         width: "58vw",
         display: "flex",
         flexDirection: "column",
-        background: "gray",
+        background: "white",
+
         // border: "2px solid red",
       }}
     >
@@ -96,7 +96,8 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
           justifyContent: "space-between",
           flexDirection: "row",
           padding: "1vw",
-          // border: "2px solid red",
+          backgroundColor: "black",
+          // borderRadius: "20px 0px 0px 20px",
         }}
       >
         <Typography
@@ -108,6 +109,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
             lineHeight: "1.5rem",
             margin: "0px",
             fontFamily: "monospace",
+            color: "white",
           }}
         >
           Users
@@ -122,6 +124,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
           onChange={(e) => setSearchQuery(e.target.value)} // Update search query on input change
           sx={{
             width: "15vw",
+            height: "7vh",
             backgroundColor: "#f2f2f2",
             borderRadius: "20px",
             "& .MuiInputLabel-root": {
@@ -131,7 +134,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
               borderRadius: "20px",
             },
             "& .MuiFilledInput-root": {
-              backgroundColor: "#f2f2f2", // Replace with your desired background color
+              backgroundColor: "white", // Replace with your desired background color
             },
           }}
           InputProps={{
@@ -155,30 +158,31 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
           maxHeight: "100vh",
           overflow: "auto",
           mb: 2,
-          backgroundColor: "gray",
+          background:
+            "linear-gradient(125deg, #ECFCFF 0%, #ECFCFF 40%, #B2FCFF calc(40% + 1px), #B2FCFF 60%, #5EDFFF calc(60% + 1px), #5EDFFF 72%, #3E64FF calc(72% + 1px), #3E64FF 100%)",
         }}
       >
-        <Grid container spacing={2}>
+        <Grid sx={{ margin: "0.5vh" }} container spacing={2}>
           {filteredUsers.map((val, index) => (
             <Grid item xs={12} sm={6} key={index}>
               <Box
                 sx={{
                   height: "30vh",
                   display: "flex",
-                  backgroundImage: "url('/front1.jpg')",
+                  // backgroundImage: "url('/front1.jpg')",
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                   backgroundRepeat: "no-repeat",
                   padding: 2,
-                  borderRadius: "40px 0px 40px 0px",
+                  borderRadius: "40px",
                   boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
                   justifyContent: "center",
                   flexDirection: "column",
                   alignItems: "center",
+
                   ":hover": {
-                    backgroundImage: `linear-gradient(rgba(200, 200, 220, 0.3), rgba(210, 230, 255, 0.7)), url("img/front.jpg")`,
+                    transform: "scale(1.05)",
                     transition: "all 300ms ease-in-out",
-                    color: "black",
                   },
                 }}
               >

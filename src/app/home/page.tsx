@@ -141,16 +141,10 @@ const Home: React.FC = () => {
         // Call the create ticket API only if the checkbox is checked for the first time
         const createNewTicket = async (contactId, applicationId) => {
           try {
-            console.log(
-              "Creating ticket for:",
-              contactId,
-              "Application ID:",
-              applicationId
-            );
             const response = await createTicket({
               customer_application_id: applicationId,
               user_id: 1,
-              status: "to do"
+              status: "to do",
             });
           } catch (error) {
             console.log("Error creating ticket:", error);
@@ -182,7 +176,7 @@ const Home: React.FC = () => {
           marginBottom: "10px",
           padding: "10px 20px",
           background: "linear-gradient(to right, #5e0ecc, #1a69fc)",
-          boxShadow: "0px 6px 15px rgba(0, 0, 0, 0.4)",
+          boxShadow: "20",
           position: "fixed",
           top: 0,
           left: 0,

@@ -50,7 +50,6 @@ export const useCreateCustomer = (pathKey: string) => {
     try {
       const response = await axios.post(pathKey, ticketData);
       setCreatedCustomer(response.data);
-      console.log("Ticket created:", response.data);
     } catch (err) {
       setError(err as Error);
     } finally {

@@ -207,11 +207,11 @@ const Ticket = () => {
     <>
       <Header
         searchTerm=""
-        setSearchTerm={() => { }}
+        setSearchTerm={() => {}}
         customerLength={customerApplications.length}
         isLoggedIn={true}
-        handleLogout={() => { }}
-        handleLogin={() => { }}
+        handleLogout={() => {}}
+        handleLogin={() => {}}
         handleChooseMoreTickets={() =>
           console.log("Navigate to choose more tickets")
         }
@@ -425,7 +425,11 @@ const Ticket = () => {
                       color="primary"
                       sx={{ width: "100%", borderRadius: 0 }}
                       onClick={() =>
-                        handleStartClick(customer.Id, customer.applicationId, ticket.original_estimate)
+                        handleStartClick(
+                          customer.Id,
+                          customer.applicationId,
+                          ticket.original_estimate
+                        )
                       }
                     >
                       Start Work

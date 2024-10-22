@@ -40,7 +40,6 @@ export const useCreateTicket = (pathKey: string, p0?: {}) => {
     try {
       const response = await creator(pathKey, data);
       setCreatedTicket(response);
-      console.log("Ticket created hook:", response);
       return response;
     } catch (err) {
       setError(err as Error);
@@ -64,13 +63,19 @@ export const useModifyTicket = (pathKey: string) => {
   const [error, setError] = useState<Error | null>(null);
   const [modifiedTicket, setModifiedTicket] = useState<Ticket | null>(null);
 
-  const modifyTicket = async (ticketId: number, updatedTicketData: Partial<Ticket>) => {
+  const modifyTicket = async (
+    ticketId: number,
+    updatedTicketData: Partial<Ticket>
+  ) => {
     setLoading(true);
     setError(null);
     try {
       // Construct the full API path using pathkey and ticketId
       const apiPath = `${pathKey}/${ticketId}`;
-      const ticket = await modifier<Ticket, Partial<Ticket>>(apiPath, updatedTicketData);
+      const ticket = await modifier<Ticket, Partial<Ticket>>(
+        apiPath,
+        updatedTicketData
+      );
       setModifiedTicket(ticket);
     } catch (err) {
       setError(err as Error);
