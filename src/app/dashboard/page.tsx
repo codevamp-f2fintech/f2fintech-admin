@@ -9,6 +9,8 @@ import { LatestOrders } from "@/app/components/dashboard/overview/latest-orders"
 import { LatestProducts } from "@/app/components/dashboard/overview/latest-products";
 import { Sales } from "@/app/components/dashboard/overview/sales";
 import { Traffic } from "@/app/components/dashboard/overview/traffic";
+import { cookies } from "next/headers";
+import { Utility } from "@/utils";
 
 export const metadata = {
   title: `Overview | Dashboard | ${config.site.name}`,
@@ -31,19 +33,26 @@ async function fetchTotalApplications() {
   }
 }
 
-async function fetchTotalTickets(status: string | null = null): Promise<number> {
+async function fetchTotalTickets(
+  status: string | null = null,
+  id: number,
+  role: string
+): Promise<number> {
   let url = `http://localhost:3001/api/v1/dashboard/tickets/count`;
+  if (role === "sales") {
+    url += `/${id}`;
+  }
   if (status) {
     url += `/${status}`;
   }
-  console.log(url, 'ticket count url')
+  console.log(url, "ticket count url");
   const response = await fetch(url);
 
   if (!response.ok) {
     throw new Error("Failed to fetch total Tickets");
   }
   const resData = await response.json();
-  console.log(resData, 'ticket count')
+  console.log(resData, "ticket count");
   return resData.data; // Assuming the response has a 'count' field
 }
 
@@ -63,14 +72,32 @@ async function fetchAgentCount(): Promise<number> {
 }
 
 export default async function Page(): Promise<React.JSX.Element> {
-  const totalApplications = await fetchTotalApplications();
-  const totalTickets = await fetchTotalTickets();
-  const totalOpenTickets = await fetchTotalTickets("to do");
-  const totalInProgressTickets = await fetchTotalTickets("in progress");
-  const totalForwardedTickets = await fetchTotalTickets("forwarded");
-  const totalCloseTickets = await fetchTotalTickets("close");
-  const totalCompletedTickets = await fetchTotalTickets("done");
-  const totalAgents = await fetchAgentCount();
+  //get token from cookie
+  const cookieStore = cookies();
+  const { decodedToken } = Utility();
+  const userToken = cookieStore.get("token");
+  const { id, role } = decodedToken(userToken?.value);
+  console.log("userToken", userToken);
+  // let id, role;
+  const [
+    totalApplications,
+    totalTickets,
+    totalOpenTickets,
+    totalInProgressTickets,
+    totalForwardedTickets,
+    totalCloseTickets,
+    totalCompletedTickets,
+    totalAgents,
+  ] = await Promise.all([
+    fetchTotalApplications(),
+    fetchTotalTickets(null, id, role),
+    fetchTotalTickets("to do", id, role),
+    fetchTotalTickets("in progress", id, role),
+    fetchTotalTickets("forwarded", id, role),
+    fetchTotalTickets("close", id, role),
+    fetchTotalTickets("done", id, role),
+    fetchAgentCount(),
+  ]);
 
   const dashboardItems = [
     {

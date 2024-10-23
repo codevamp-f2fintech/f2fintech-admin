@@ -161,45 +161,22 @@ const Home: React.FC = () => {
   };
 
   return (
-    <Box
-      sx={{
-        backgroundColor: "#eeeeee",
-        padding: 2,
-        overflow: "auto",
-        width: "100%",
-      }}
-    >
+    <Box>
       {/* Header Section */}
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: "10px",
-          padding: "10px 20px",
-          background: "linear-gradient(to right, #5e0ecc, #1a69fc)",
-          boxShadow: "20",
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          color: "white",
-          zIndex: 1000,
-          transition: "background 0.3s, box-shadow 0.3s",
         }}
       >
         <Box display="flex" alignItems="center">
-          <img
-            src="https://www.f2fintech.com/img/F2-Fintech-logoblack.png"
-            alt="Logo"
-            style={{ width: "70px", height: "60px", marginRight: "10px" }}
-          />
           <Typography
             variant="h6"
             component="div"
             sx={{
               fontWeight: "bold",
-              color: "#fff",
+              color: "black",
               whiteSpace: "nowrap",
             }}
           >
@@ -211,17 +188,17 @@ const Home: React.FC = () => {
           flexDirection="column"
           alignItems="center"
           flexGrow={1}
+          sx={{ borderRadius: "20px" }}
         >
           <TextField
             label="Search by Name"
-            variant="outlined"
+            variant="filled"
             size="small"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             sx={{
-              width: "160px",
-              marginTop: "6px",
-              borderRadius: "12px",
+              width: "15vw",
+              borderRadius: "20px",
               backgroundColor: "#fff",
               marginLeft: "auto",
               marginRight: "10px",
@@ -240,16 +217,17 @@ const Home: React.FC = () => {
             }}
           />
         </Box>
-        <Box display="flex" alignItems="center" gap={2}>
+        <Box display="flex" alignItems="center">
           <Link href="/ticket" passHref>
             <Button
               variant="contained"
               sx={{
-                width: "180px",
-                marginTop: "6px",
+                width: "15vw",
                 borderRadius: "12px",
                 backgroundColor: "#fff",
                 color: "black",
+                fontSize: ".9rem",
+                fontWeight: "400",
                 "&:hover": {
                   backgroundColor: "#1565c0",
                 },
@@ -305,9 +283,11 @@ const Home: React.FC = () => {
       <Box
         sx={{
           height: "100vh",
-          paddingRight: "8px",
           position: "relative",
-          marginTop: "60px",
+          border: "2px solid red",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
         }}
       >
         <Grid container spacing={4} padding={2}>
@@ -320,6 +300,7 @@ const Home: React.FC = () => {
               key={contact.Id}
               sx={{
                 marginTop: "20px",
+                border: "2px solid black",
               }}
             >
               <Box
@@ -327,9 +308,6 @@ const Home: React.FC = () => {
                   height: "100%",
                   borderRadius: "12px",
                   overflow: "hidden",
-                  borderWidth: "2px",
-
-                  boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.2)",
                   transition: "transform 0.3s ease",
                   "&:hover": {
                     transform: "scale(1.05)",
@@ -349,7 +327,7 @@ const Home: React.FC = () => {
                     height: "100%",
                   }}
                 >
-                  <CardContent sx={{ paddingBottom: "8px", paddingTop: "8px" }}>
+                  <CardContent>
                     <Grid container spacing={2} alignItems="center">
                       <Grid item>
                         <Avatar
@@ -359,7 +337,7 @@ const Home: React.FC = () => {
                             width: 70,
                             height: 70,
                             boxShadow: "0px 5px 10px rgba(0, 0, 0, 0.2)",
-                            border: "2px solid #fff",
+                            // border: "2px solid #fff",
                           }}
                         />
                       </Grid>
