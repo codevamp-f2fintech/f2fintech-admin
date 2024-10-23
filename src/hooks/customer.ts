@@ -1,6 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 import { creator, fetcher, modifier } from "@/apis/apiClient";
 import { Customer } from "@/types/customer"; // Assuming CustomerData is defined in the types
 /**
@@ -27,7 +27,12 @@ export const useGetCustomers = (
       revalidateOnFocus: false, // Disable revalidation on window focus
     }
   );
-  return { data: swrData || [], swrLoading: !error && !swrData, error };
+  // Manually re-trigger re-fetch
+  const refetch = async () => {
+    await mutate(`${pathKey}?page=${page}&size=${pageSize}`);
+  };
+
+  return { data: swrData || [], swrLoading: !error && !swrData, error, refetch };
 };
 /**
  * Hook for creating a new customer.
@@ -70,15 +75,19 @@ export const useModifyCustomer = (pathKey: string) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [updatedCustomer, setUpdatedCustomer] = useState<Customer | null>(null);
-  const modifyCustomer = async (updatedCustomerData: Customer) => {
+
+  const modifyCustomer = async (id: number, updatedCustomerData: Partial<Customer>) => {
     setLoading(true);
     setError(null);
     try {
-      const customer = await modifier<Customer, Customer>(
-        pathKey,
+      const apiPath = `${pathKey}/${id}`;
+
+      const customer = await modifier<Customer, Partial<Customer>>(
+        apiPath,
         updatedCustomerData
       );
       setUpdatedCustomer(customer);
+      return customer;
     } catch (err) {
       setError(err as Error);
     } finally {

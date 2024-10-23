@@ -23,11 +23,9 @@ import {
   FormControl,
 } from "@mui/material";
 import {
-  AttachFile as AttachFileIcon,
   Bolt as BoltIcon,
   ArrowDropDown as ArrowDropDownIcon,
   ArrowBack as ArrowBackIcon,
-  Delete as DeleteIcon,
 } from "@mui/icons-material";
 
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -35,7 +33,6 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { ThemeProvider } from "@mui/material/styles";
 
 import { useMode, ColorModeContext } from "../../../theme";
-import { useGetCustomers } from "@/hooks/customer";
 import { useGetUsers } from "@/hooks/user";
 
 import { useGetTickets, useModifyTicket } from "@/hooks/ticket";
@@ -52,13 +49,11 @@ import TrackingForm from "./trackingForm";
 import Toast from "../components/common/Toast";
 import { RootState } from "../../redux/store";
 import { Utility } from "@/utils";
-import { setCustomers } from "@/redux/features/customerSlice";
 
 const Progress: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [theme, colorMode] = useMode();
   const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [activeSection, setActiveSection] = useState<string>("Comments");
   const [ticketId, setTicketId] = useState("");
   const [allUsers, setAllUsers] = useState([]);
@@ -67,7 +62,6 @@ const Progress: React.FC = () => {
   const [overage, setOverage] = useState(0); // Orange part (exceeding estimated time)
   const [newLoanStatus, setNewLoanStatus] = useState('');
   const [newEmployeeStatus, setNewEmployeeStatus] = useState('');
-  const { customer } = useSelector((state: RootState) => state.customer);
   const {
     status: employeeStatus,
     loanStatus,
@@ -80,48 +74,61 @@ const Progress: React.FC = () => {
   const original_estimate = getLocalStorage("ids")?.estimate;
   const ids = getLocalStorage("ids");
   const forwardedUserId = getSessionStorage("forwardedUserId");
+  const storedTicketId = ticketId?.split("-")[1];
 
   const [timeLoggingEstimate, setTimeLoggingEstimate] = useState({
     isHovered: false,
     originalEstimate: original_estimate,
     timeSpent: 0,
   });
-  const storedTicketId = ticketId?.split("-")[1];
 
-  // Fetch customer applications
-  const { data } = useGetCustomers([], `get-loan-applications`);
   const { data: userData } = useGetUsers([], `get-users`);
-  const { modifyTicket } = useModifyTicket("update-ticket");
+
   const { value: ticketData } = useGetTickets(
     [],
     `get-ticket-logs/${storedTicketId}`
   );
+  const { value: applicationData } = useGetTickets(
+    [],
+    `get-application-as-ticket/${ids.applicationId}`
+  );
+  const { modifyTicket } = useModifyTicket("update-ticket");
 
   useEffect(() => {
-    if (userData) {
-      console.log("Updated user:", userData.data);
+    if (userData?.data) {
       setAllUsers(userData.data);
 
       if (forwardedUserId) {
-        const forwardedUser = userData?.data?.find(user => user.id === parseInt(forwardedUserId, 10));
+        const forwardedUser = userData.data.find(user => user.id === parseInt(forwardedUserId, 10));
         setSelectedUser(forwardedUser || null);
-        console.log(forwardedUser, 'Selected forwarded user');
       }
     }
-  }, [userData, forwardedUserId]);
+  }, [userData?.data, forwardedUserId]);
 
   useEffect(() => {
-    if (data?.success === true) {
-      dispatch(setCustomers(data.data));
+    if (ids.applicationId && ids.customerId) {
+      dispatch(fetchStatusAndDocuments({
+        applicationId: ids.applicationId,
+        customerId: ids.customerId,
+      }));
+      dispatch(fetchEmployeeStatus(ids.applicationId));
+
+      setNewLoanStatus(loanStatus);
+      setNewEmployeeStatus(employeeStatus);
     }
-  }, [data]);
+    const selectedCustomer = applicationData?.data?.find(cust => cust.Id === ids.customerId);
+    if (selectedCustomer) {
+      setSelectedCustomer(selectedCustomer);
+    }
+  }, [ids?.applicationId, ids?.customerId, loanStatus, employeeStatus, applicationData?.data]);
+
 
   useEffect(() => {
     const storedTicketId = getLocalStorage("ticketId");
-    if (storedTicketId) {
+    if (storedTicketId && !ticketId) {
       setTicketId(storedTicketId);
     }
-  }, []);
+  }, [ticketId]);
 
   useEffect(() => {
     if (ticketData?.data) {
@@ -135,23 +142,20 @@ const Progress: React.FC = () => {
         ...timeLoggingEstimate,
         timeSpent: finalTime,
       });
-      const calculatedProgress = Math.min(
-        (totalHours / parseTimeSpent(timeLoggingEstimate.originalEstimate)) *
-        100,
-        100
-      ); // max 100%
-      const calculatedOverage =
-        totalHours > parseTimeSpent(timeLoggingEstimate.originalEstimate)
-          ? ((totalHours -
-            parseTimeSpent(timeLoggingEstimate.originalEstimate)) /
-            parseTimeSpent(timeLoggingEstimate.originalEstimate)) *
-          100
+      const originalEstimate = parseTimeSpent(timeLoggingEstimate.originalEstimate);
+
+      // Only recalculate progress if originalEstimate and totalHours are valid
+      if (originalEstimate > 0) {
+        const calculatedProgress = Math.min((totalHours / originalEstimate) * 100, 100); // max 100%
+        const calculatedOverage = totalHours > originalEstimate
+          ? ((totalHours - originalEstimate) / originalEstimate) * 100
           : 0;
 
-      setProgress(calculatedProgress); // Blue bar
-      setOverage(calculatedOverage); // Orange bar
+        setProgress(calculatedProgress); // Blue bar
+        setOverage(calculatedOverage); // Orange bar
+      }
     }
-  }, [ticketData, ticketId]);
+  }, [ticketData?.data, timeLoggingEstimate.originalEstimate]);
 
   const parseTimeSpent = (timeSpent: string): number => {
     const timeRegex = /^(\d+)([hdm])$/;
@@ -205,13 +209,6 @@ const Progress: React.FC = () => {
     }));
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files) {
-      setSelectedFiles([...selectedFiles, ...Array.from(files)]);
-    }
-  };
-
   const handleChangeLoanStatus = async (event) => {
     setNewLoanStatus(event.target.value);
     try {
@@ -260,42 +257,8 @@ const Progress: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (ids) {
-        dispatch(
-          fetchStatusAndDocuments({
-            applicationId: ids.applicationId,
-            customerId: ids.customerId,
-          })
-        );
-        dispatch(fetchEmployeeStatus(ids.applicationId));
-      }
-    };
-
-    fetchData();
-    setNewLoanStatus(loanStatus);
-    setNewEmployeeStatus(employeeStatus);
-  }, [ids.applicationId, ids.customerId, employeeStatus, loanStatus, dispatch]);
-
-  useEffect(() => {
-    if (ids.customerId) {
-      const selectedCustomer = customer.find(
-        (cust) => cust.Id === ids.customerId
-      );
-      if (selectedCustomer) {
-        setSelectedCustomer(selectedCustomer);
-      }
-    }
-  }, [ids.customerId, customer]);
-
   const handleBack = () => {
     window.history.back();
-  };
-
-  const removeFile = (index: number) => {
-    const newFiles = selectedFiles.filter((_, idx) => idx !== index);
-    setSelectedFiles(newFiles);
   };
 
   const showComments = () => setActiveSection("Comments");
@@ -372,30 +335,6 @@ const Progress: React.FC = () => {
                     >
                       Ticket ID: {ticketId}
                     </Typography>
-                    {/* <Box display="flex" alignItems="center" ml={2}>
-                      <input
-                        accept="image/*"
-                        style={{ display: "none" }}
-                        id="file-upload"
-                        type="file"
-                        multiple
-                        onChange={handleFileChange}
-                      />
-                      <label htmlFor="file-upload">
-                        <Button
-                          component="span"
-                          startIcon={<AttachFileIcon />}
-                          variant="contained"
-                          sx={{
-                            textTransform: "none",
-                            bgcolor: theme.palette.primary.main,
-                            color: "#fff",
-                          }}
-                        >
-                          Attach Files
-                        </Button>
-                      </label>
-                    </Box> have to implement after demo*/}
                   </Box>
 
                   <Box
@@ -827,42 +766,6 @@ const Progress: React.FC = () => {
                     )}
                   </Box>
                   <Divider sx={{ my: 1 }} />
-                  {/* <Box display="flex" flexDirection="column">
-                    <label htmlFor="file-upload"></label>
-                    <input
-                      accept="image/*, .pdf"
-                      style={{ display: "none" }}
-                      id="file-upload"
-                      type="file"
-                      multiple
-                      onChange={handleFileChange}
-                    />
-                    {}
-                    {selectedFiles.length > 0 && (
-                      <Box mt={2}>
-                        {selectedFiles.map((file, index) => (
-                          <Box
-                            key={index}
-                            display="flex"
-                            alignItems="center"
-                            justifyContent="space-between"
-                            sx={{ mt: 1, bgcolor: "#f0f0f0", p: 1 }}
-                          >
-                            <Typography variant="body2">{file.name}</Typography>
-                            <IconButton
-                              sx={{
-                                color: "red",
-                              }}
-                              onClick={() => removeFile(index)}
-                              size="small"
-                            >
-                              <DeleteIcon />
-                            </IconButton>
-                          </Box>
-                        ))}
-                      </Box>
-                    )}
-                  </Box> attach file show on ui */}
                   <Box display="flex" justifyContent="space-between" mt={2}>
                     <Typography
                       variant="body2"

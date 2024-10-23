@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
     Avatar,
@@ -32,12 +32,12 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
     const [newComment, setNewComment] = useState<string>("");
     const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
     const [editedComment, setEditedComment] = useState<string>("");
-    const [attachment, setAttachment] = useState(null);
-    const [attachmentPreview, setAttachmentPreview] = useState('');
+    const [attachment, setAttachment] = useState<string | null>(null);
+    const [attachmentPreview, setAttachmentPreview] = useState<string | null>(null);
     const { toast } = useSelector((state: RootState) => state.toast);
 
     const dispatch: AppDispatch = useDispatch();
-    const { toastAndNavigate } = Utility();
+    const { decodedToken, toastAndNavigate } = Utility();
 
     // Fetch comments data
     const { value: comments, refetch } = useGetTicketActivities(
@@ -162,9 +162,6 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
         setAttachmentPreview('');
     };
 
-    console.log("attachment comments", attachment);
-    console.log(comments.data, 'comments')
-
     return (
         <Box mt={2} mb={2} sx={{ position: "relative" }}>
             <Box sx={{ position: "relative", mb: 2 }}>
@@ -241,14 +238,14 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
                         >
                             {/* User Avatar */}
                             <Avatar sx={{ bgcolor: "#1976d2", mr: 2 }}>
-                                {comment.userInitials || "U"}
+                                {decodedToken()?.username?.charAt(0).toUpperCase()}
                             </Avatar>
 
                             <Box sx={{ flexGrow: 1 }}>
                                 {/* Comment Header: User Name, Date */}
                                 <Box sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
                                     <Typography fontWeight="bold" sx={{ marginRight: "8px" }}>
-                                        {comment.userName || "Anonymous"}
+                                        {decodedToken()?.username}
                                     </Typography>
                                     <Typography variant="body2" color="textSecondary">
                                         {formatDistanceToNow(new Date(comment.created_at))} ago
@@ -336,4 +333,4 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
     );
 };
 
-export default Comments;
+export default React.memo(Comments);

@@ -11,4 +11,5 @@ export interface Customer {
   Designation: string;
   Image: string;
   Location: string;
+  is_picked: number;
 }

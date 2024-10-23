@@ -2,6 +2,8 @@ import { Box, Typography, Paper } from "@mui/material";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { formatDistanceToNow } from "date-fns";
 
+import { Utility } from "@/utils";
+
 interface WorkLogListProps {
     ticketData: Array<{
         time_spent: string;
@@ -11,6 +13,8 @@ interface WorkLogListProps {
 }
 
 const WorkLogList: React.FC<WorkLogListProps> = ({ ticketData }) => {
+    const { decodedToken } = Utility();
+    console.log(decodedToken(), 'decode')
     return (
         <Box>
             {ticketData.length ? ticketData.map((log, index) => (
@@ -32,7 +36,7 @@ const WorkLogList: React.FC<WorkLogListProps> = ({ ticketData }) => {
                         justifyContent="space-evenly"
                         marginBottom="5px"
                     >
-                        <Typography fontWeight="bold">Faraz Husain</Typography>
+                        <Typography fontWeight="bold">{decodedToken()?.username}</Typography>
 
                         <Typography
                             sx={{

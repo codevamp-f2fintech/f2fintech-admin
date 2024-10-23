@@ -32,7 +32,7 @@ import Loader from "../components/common/Loader";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { setCustomers, appendCustomers } from "@/redux/features/customerSlice";
-import { useGetCustomers } from "@/hooks/customer";
+import { useGetCustomers, useModifyCustomer } from "@/hooks/customer";
 import { useCreateTicket } from "@/hooks/ticket";
 import { Utility } from "@/utils";
 
@@ -71,39 +71,38 @@ const Home: React.FC = () => {
     handleMenuClose();
   };
 
-  const filteredCustomers = customer.filter((val) =>
+  const filteredCustomers = customer?.filter((val) =>
     val.Name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const { data } = useGetCustomers(
+  const { data, refetch } = useGetCustomers(
     [],
     `get-loan-applications`,
     currentPage,
     pageSize
   );
 
+  // Hook for modifying loan application is_picked column
+  const { modifyCustomer: modifyCustomerApplication } = useModifyCustomer("update-loan-application");
+
   const { createTicket, error } = useCreateTicket("create-ticket", {});
 
   useEffect(() => {
     if (data?.success === true) {
-      const pickedCustomerIds = customer.map((customer) => customer.Id);
-
-      const filteredData = data.data.filter(
-        (customer) => !pickedCustomerIds.includes(customer.Id)
-      );
-
-      if (currentPage === 1) {
-        dispatch(setCustomers(filteredData));
-      } else {
-        dispatch(appendCustomers(filteredData));
-      }
-
-      const pages = Math.ceil(data.totalCount / pageSize);
-      setTotalPages(pages > 0 ? pages : 1);
-      setLoading(false);
-      setPaginationLoading(false);
+      updateCustomerData(data.data);
     }
-  }, [data, dispatch, currentPage, pageSize]);
+  }, [data, currentPage, pageSize, dispatch]);
+
+  // Function to update customer data after refetching
+  const updateCustomerData = (fetchedData) => {
+    dispatch(setCustomers(fetchedData));
+
+    const pages = Math.ceil(fetchedData.totalCount / pageSize);
+    setTotalPages(pages > 0 ? pages : 1);
+    setLoading(false);
+    setPaginationLoading(false);
+  };
+
 
   useEffect(() => {
     const handleScroll = () => {
@@ -135,29 +134,44 @@ const Home: React.FC = () => {
     return diffDays;
   };
 
-  const handleCheckboxChange = async (contactId, applicationId) => {
-    // Toggling the checkbox state and preparing for an API call if not already selected
-    setSelectedContacts((prevSelectedContacts) => {
-      const isAlreadySelected = prevSelectedContacts.includes(contactId);
-      if (!isAlreadySelected) {
-        // Call the create ticket API only if the checkbox is checked for the first time
-        const createNewTicket = async (applicationId) => {
-          try {
-            const response = await createTicket({
-              customer_application_id: applicationId,
-              user_id: decodedToken()?.id,
-              status: "to do",
-            });
-          } catch (error) {
-            console.log("Error creating ticket:", error);
-          }
-        };
-        createNewTicket(applicationId);
+  const handleCheckboxChange = async (contactId: number, applicationId: number) => {
+    const isAlreadySelected = selectedContacts.includes(contactId);
+
+    if (!isAlreadySelected) {
+      try {
+        await createNewTicket(applicationId);
+
+        await modifyCustomerApplication(applicationId, {
+          is_picked: 1,
+        });
+        await refetch();
+
+        setSelectedContacts((prevSelectedContacts) => [
+          ...prevSelectedContacts,
+          contactId,
+        ]);
+      } catch (error) {
+        console.log("Error in checkbox change:", error);
       }
-      return isAlreadySelected
-        ? prevSelectedContacts.filter((id) => id !== contactId)
-        : [...prevSelectedContacts, contactId];
-    });
+    } else {
+      // If already selected, remove the contactId from the selected contacts
+      setSelectedContacts((prevSelectedContacts) =>
+        prevSelectedContacts.filter((id) => id !== contactId)
+      );
+    }
+  };
+
+  // Function to create new ticket
+  const createNewTicket = async (applicationId: number) => {
+    try {
+      await createTicket({
+        customer_application_id: applicationId,
+        user_id: decodedToken()?.id,
+        status: "to do",
+      });
+    } catch (error) {
+      console.error("Error creating ticket:", error);
+    }
   };
 
   return (
