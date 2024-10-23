@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-
 import {
   Box,
   Card,
@@ -28,13 +27,10 @@ import { Utility } from "@/utils";
 
 const Ticket = () => {
   const [customerApplications, setCustomerApplications] = useState([]);
-
   const [filteredApplications, setFilteredApplications] = useState([]);
-
   const [ticketStatus, setTicketStatus] = useState([]);
-
   const [filter, setFilter] = useState("");
-  const [sortBy, setSortBy] = useState("all");
+  const [sortBy, setSortBy] = useState("to do");
 
   // date states
   const [startDate, setStartDate] = useState<Dayjs | null>(null);
@@ -67,27 +63,88 @@ const Ticket = () => {
         );
         try {
           const fetchedApplications = await Promise.all(
-            applicationIds.map((id) => {
-              return fetcher(`get-application-as-ticket/${id}`);
-            })
+            applicationIds.map((id) => fetcher(`get-application-as-ticket/${id}`))
           );
           const combinedData = fetchedApplications.flatMap((item) => item.data);
           setCustomerApplications(combinedData);
+
+          const ticketStatus = ticketData.data.map((ticket) => ({
+            status: ticket.status,
+            customer_application_id: ticket.customer_application_id,
+            original_estimate: ticket.original_estimate,
+            due_date: ticket.due_date,
+            created_at: ticket.created_at,
+          }));
+          setTicketStatus(ticketStatus);
         } catch (err) {
-          console.log(err);
+          console.log(err, 'fetch application as ticket error');
         }
-        const ticketStatus = ticketData.data.map((ticket) => ({
-          status: ticket.status,
-          customer_application_id: ticket.customer_application_id,
-          original_estimate: ticket.original_estimate,
-          due_date: ticket.due_date,
-          created_at: ticket.created_at,
-        }));
-        setTicketStatus(ticketStatus);
       };
       fetchApplications();
     }
-  }, [ticketData]);
+  }, [ticketData?.data]);
+
+  // Initial filter to show only "to do" tickets by default
+  useEffect(() => {
+    if (customerApplications.length && ticketStatus.length) {
+      const initialFilteredApplications = customerApplications.filter((customer) =>
+        ticketStatus.some((status) => {
+          console.log(status, 'status')
+          return (
+            status.customer_application_id === customer.applicationId &&
+            status.status === "to do" // Filter by "to do"
+          );
+        })
+      );
+      console.log(initialFilteredApplications, 'initialfilter')
+      setFilteredApplications(initialFilteredApplications);
+    }
+  }, [customerApplications, ticketStatus]);
+
+  // Filter by search, date
+  useEffect(() => {
+    if (!filter && !startDate && !endDate) {
+      setFilteredApplications(customerApplications);
+      return;
+    }
+
+    let filtered = customerApplications;
+    // Filter by Name, Amount, or Tenure
+    if (filter) {
+      const regex = new RegExp(filter, "i");
+      filtered = filtered.filter(
+        (app) =>
+          regex.test(app.Name) ||
+          regex.test(app.Amount.toString()) ||
+          app.Tenure.toString() === filter
+      );
+    }
+
+    // Filter by Date Range
+    if (startDate || endDate) {
+      const start = startDate ? new Date(startDate) : null;
+      const end = endDate ? new Date(endDate) : null;
+
+      filtered = filtered.filter((app) => {
+        const createdAt = new Date(
+          ticketStatus.find(
+            (ticket) => ticket.customer_application_id === app.applicationId
+          )?.created_at
+        );
+
+        if (start && end) {
+          return createdAt >= start && createdAt <= end;
+        } else if (start) {
+          return createdAt >= start;
+        } else if (end) {
+          return createdAt <= end;
+        }
+        return true;
+      });
+    }
+
+    setFilteredApplications(filtered);
+  }, [filter, startDate, endDate, customerApplications, ticketStatus]);
 
   // Function to get status border color
   const getStatusColor = (status: string | undefined): string => {
@@ -111,68 +168,18 @@ const Ticket = () => {
     }
   };
 
-  useEffect(() => {
-    if (filter || startDate || endDate) {
-      let filtered = customerApplications;
-
-      // Filter by Name, Amount, or Tenure
-      if (filter) {
-        const regex = new RegExp(filter, "i");
-        filtered = filtered.filter(
-          (app) =>
-            regex.test(app.Name) || // Search by Name
-            regex.test(app.Amount.toString()) || // Search by Amount
-            app.Tenure.toString() === filter // Search by Tenure
-        );
-      }
-
-      // Filter by Date Range
-      if (startDate || endDate) {
-        const start = startDate ? new Date(startDate) : null;
-        const end = endDate ? new Date(endDate) : null;
-
-        filtered = filtered.filter((app) => {
-          const createdAt = new Date(
-            ticketStatus.find(
-              (ticket) => ticket.customer_application_id === app.applicationId
-            )?.created_at
-          );
-
-          if (start && end) {
-            return createdAt >= start && createdAt <= end;
-          } else if (start) {
-            return createdAt >= start;
-          } else if (end) {
-            return createdAt <= end;
-          }
-          return true;
-        });
-      }
-
-      setFilteredApplications(filtered);
-    } else {
-      setFilteredApplications(customerApplications);
-    }
-  }, [filter, customerApplications, startDate, endDate, ticketStatus]);
-
   const handleStartClick = (customerId, applicationId, estimate, status) => {
-    // Find the ticket based on userId and applicationId
     const selectedTicket = ticketData?.data.find(
       (ticket) =>
         ticket.user_id === decodedToken()?.id && ticket.customer_application_id === applicationId
     );
 
-    // Log the selected ticket for debugging
-    console.log("Selected Ticket:", selectedTicket);
-
     if (selectedTicket) {
       const { id: ticketId } = selectedTicket;
       const generatedTicketId = `F2FIN-${ticketId}`;
-
       remLocalStorage("ticketId");
       setLocalStorage("ticketId", generatedTicketId);
 
-      console.log(status, 'ticket status')
       if (status !== "forwarded") {
         modifyTicket(ticketId, { status: "in progress" });
       }
@@ -234,6 +241,7 @@ const Ticket = () => {
                 (ticket) =>
                   ticket.customer_application_id === customer.applicationId
               );
+
               return (
                 <Grid item xs={12} sm={6} md={4} key={id}>
                   <Card
@@ -445,7 +453,7 @@ const Ticket = () => {
                 color: "text.secondary",
               }}
             >
-              No matching tickets found
+              No Tickets Found. Start Picking Some!
             </Typography>
           )}
         </Grid>

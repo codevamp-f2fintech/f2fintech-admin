@@ -1,5 +1,5 @@
 import { useState } from "react";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 
 import { fetcher, creator, modifier } from "@/apis/apiClient";
 import { Ticket } from "@/types/ticket";
@@ -20,7 +20,12 @@ export const useGetTickets = (initialData: Ticket[], pathKey: string) => {
     revalidateOnFocus: false, // Disable revalidation on window focus
   });
 
-  return { value: swrData || [], swrLoading: !error && !swrData, error };
+  // Manually re-trigger re-fetch
+  const refetch = async () => {
+    await mutate(pathKey);
+  };
+
+  return { value: swrData || [], swrLoading: !error && !swrData, error, refetch };
 };
 
 /**
