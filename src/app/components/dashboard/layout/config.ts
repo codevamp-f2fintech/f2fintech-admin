@@ -9,7 +9,7 @@ export const navItems = [
     icon: "chart-pie",
   },
   {
-    key: "customers",
+    key: "users",
     title: "Users",
     href: paths.dashboard.customers,
     icon: "users",

@@ -1,5 +1,5 @@
 import { AlertColor } from "@mui/material/Alert";
-import { jwtDecode } from 'jwt-decode';
+import { jwtDecode } from "jwt-decode";
 
 import { User } from "@/types/user";
 import { setToast } from "@/redux/features/toastSlice";
@@ -34,18 +34,20 @@ export const Utility = () => {
    * @param {any} value - The value to store.
    */
   const setSessionStorage = (key: string, value: any): void => {
-    if (typeof window !== "undefined") {        // Check if window is available (client-side)
+    if (typeof window !== "undefined") {
+      // Check if window is available (client-side)
       sessionStorage.setItem(key, JSON.stringify(value));
     }
   };
 
   /**
-    * Utility to get value from sessionStorage.
-    * @param {string} key - The key to retrieve the value for.
-    * @returns {any | null} - The retrieved value or null if not found.
-    */
+   * Utility to get value from sessionStorage.
+   * @param {string} key - The key to retrieve the value for.
+   * @returns {any | null} - The retrieved value or null if not found.
+   */
   const getSessionStorage = (key: string): any | null => {
-    if (typeof window !== "undefined") {        // Ensure we're on the client-side
+    if (typeof window !== "undefined") {
+      // Ensure we're on the client-side
       const storedValue = sessionStorage.getItem(key);
       return storedValue ? JSON.parse(storedValue) : null;
     }
@@ -73,7 +75,7 @@ export const Utility = () => {
   const remLocalStorage = (key: string): void => {
     try {
       localStorage.removeItem(key);
-    } catch (err) { }
+    } catch (err) {}
   };
 
   /**
@@ -85,7 +87,7 @@ export const Utility = () => {
   const setLocalStorage = (key: string, value: any): void => {
     try {
       localStorage.setItem(key, JSON.stringify(value));
-    } catch (err) { }
+    } catch (err) {}
   };
 
   /**
@@ -158,18 +160,20 @@ export const Utility = () => {
    */
   const setCookie = (name: string, value: string): void => {
     const expires = new Date();
-    expires.setTime(expires.getTime() + 7 * 24 * 60 * 60 * 1000);    // 7 days in milliseconds
+    expires.setTime(expires.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days in milliseconds
 
     document.cookie = `${name}=${value}; expires=${expires.toUTCString()}; path=/;`;
-  }
+  };
 
   /**
    * Decode the JWT token stored in cookies.
    * @returns {any | null} - Decoded token payload, or null if token not found or invalid.
    */
-  const decodedToken = (): any | null => {
-    const cookies = getCookies();
-    const token = cookies.token;
+  const decodedToken = (token = null): any | null => {
+    if (!token) {
+      const cookies = getCookies();
+      token = cookies.token;
+    }
 
     if (token) {
       try {
@@ -183,7 +187,7 @@ export const Utility = () => {
       console.log("No token found in cookies");
       return null;
     }
-  }
+  };
 
   return {
     decodedToken,

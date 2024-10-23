@@ -12,8 +12,10 @@ import { Bell as BellIcon } from "@phosphor-icons/react/dist/ssr/Bell";
 import { List as ListIcon } from "@phosphor-icons/react/dist/ssr/List";
 import { MobileNav } from "./mobile-nav";
 import router from "next/router";
+import { usePathname } from "next/navigation";
 
 export function AppBarNav(): React.JSX.Element {
+  const pathname = usePathname();
   const [openNav, setOpenNav] = React.useState<boolean>(false);
   const [searchQuery, setSearchQuery] = React.useState<string>("");
 
@@ -27,6 +29,9 @@ export function AppBarNav(): React.JSX.Element {
     // localStorage.removeItem("token"); // or sessionStorage.removeItem("token");
     router.push("/login");
   };
+
+  // Hide AppBarNav on login page
+  if (pathname === "/login") return null;
 
   return (
     <React.Fragment>

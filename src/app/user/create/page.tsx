@@ -27,7 +27,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import { Utility } from "@/utils";
 import { UserAPI } from "@/apis/UserAPI";
-import Toast from "../components/common/Toast";
+import Toast from "../../components/common/Toast";
 import { Formik, Form, Field } from "formik";
 
 import * as Yup from "yup";
@@ -89,19 +89,19 @@ const UserForm = () => {
     <>
       <Grid
         item
-        // maxWidth={"false"}
+        maxWidth={"false"}
         sx={{
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
-          boxShadow: 3,
+          //   boxShadow: 3,
           width: "80vw",
-          height: "100vh",
-          background:
-            "linear-gradient(235deg, #FFFFFF 0%, #000F25 100%), linear-gradient(180deg, #6100FF 0%, #000000 100%), linear-gradient(235deg, #FFA3AC 0%, #FFA3AC 40%, #00043C calc(40% + 1px), #00043C 60%, #005D6C calc(60% + 1px), #005D6C 70%, #00C9B1 calc(70% + 1px), #00C9B1 100%), linear-gradient(125deg, #FFA3AC 0%, #FFA3AC 40%, #00043C calc(40% + 1px), #00043C 60%, #005D6C calc(60% + 1px), #005D6C 70%, #00C9B1 calc(70% + 1px), #00C9B1 100%)",
-          backgroundBlendMode: "soft-light, screen, darken, normal",
-          position: "sticky",
+          height: "75vh",
+          //   background:
+          //     "linear-gradient(235deg, #FFFFFF 0%, #000F25 100%), linear-gradient(180deg, #6100FF 0%, #000000 100%), linear-gradient(235deg, #FFA3AC 0%, #FFA3AC 40%, #00043C calc(40% + 1px), #00043C 60%, #005D6C calc(60% + 1px), #005D6C 70%, #00C9B1 calc(70% + 1px), #00C9B1 100%), linear-gradient(125deg, #FFA3AC 0%, #FFA3AC 40%, #00043C calc(40% + 1px), #00043C 60%, #005D6C calc(60% + 1px), #005D6C 70%, #00C9B1 calc(70% + 1px), #00C9B1 100%)",
+          //   backgroundBlendMode: "soft-light, screen, darken, normal",
+          // position: "fixed",
         }}
       >
         <Avatar sx={{ m: 1, bgcolor: "primary.main", width: 70, height: 70 }}>

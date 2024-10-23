@@ -6,11 +6,10 @@ import { usePathname } from "next/navigation";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
 import Collapse from "@mui/material/Collapse";
 import IconButton from "@mui/material/IconButton";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import MenuIcon from "@mui/icons-material/Menu"; // Icon to toggle collapse mode
+import MenuIcon from "@mui/icons-material/Menu";
 import Tooltip from "@mui/material/Tooltip";
 
 import type { NavItemConfig } from "@/types/nav";
@@ -18,17 +17,20 @@ import { paths } from "@/paths";
 import { isNavItemActive } from "@/lib/auth/is-nav-item-active";
 
 import { Logo } from "@/app/components/core/logo";
-
 import { navItems } from "./config";
 import { navIcons } from "./nav-icons";
 
 export function SideNav(): React.JSX.Element {
   const pathname = usePathname();
-  // collapsed is state , setCollapsed is function to change state,
   const [collapsed, setCollapsed] = React.useState(false); // Collapse state
 
   // Toggle collapse state
   const handleToggleCollapse = () => setCollapsed((prev) => !prev);
+
+  // Hide SideNav if on login page
+  if (pathname === "/login") {
+    return null; // This will not render the SideNav
+  }
 
   return (
     <Box
@@ -100,7 +102,7 @@ function renderNavItems({
 }: {
   items?: NavItemConfig[];
   pathname: string;
-  collapsed: boolean; // Prop to handle collapse
+  collapsed: boolean;
 }): React.JSX.Element {
   const children = items.reduce(
     (acc: React.ReactNode[], curr: NavItemConfig): React.ReactNode[] => {
@@ -165,7 +167,7 @@ function NavItem({
         sx={{
           alignItems: "center",
           borderRadius: 1,
-          color: "black",
+          color: "white",
           cursor: "pointer",
           display: "flex",
           flexDirection: "row",
@@ -205,27 +207,20 @@ function NavItem({
                     : "var(--NavItem-icon-color)"
                 }
                 fontSize="1.4rem"
-                weight={active ? "fill" : undefined}
               />
             </Tooltip>
           ) : null}
         </Box>
         <Collapse in={!collapsed}>
-          <Typography
-            component="span"
+          <Box
             sx={{
-              color: "white",
-              fontSize: "1rem",
-              fontWeight: 600,
-              lineHeight: "28px",
-              "&:hover": {
-                transform: "scale(1.05)",
-                color: "#cddc39",
-              },
+              display: "inline",
+              flexGrow: 1,
+              minWidth: 0,
             }}
           >
             {title}
-          </Typography>
+          </Box>
         </Collapse>
       </Box>
     </li>

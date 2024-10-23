@@ -24,7 +24,7 @@ export function Budget({ name, sx, value }: BudgetProps): React.JSX.Element {
             spacing={3}
           >
             <Stack spacing={3}>
-              <Typography color="black" variant="overline" fontSize="0.9rem">
+              <Typography color="white" variant="overline" fontSize="0.9rem">
                 {name}
               </Typography>
               <Typography variant="h4">{value}</Typography>

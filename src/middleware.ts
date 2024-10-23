@@ -18,7 +18,7 @@ export async function middleware(request: NextRequest) {
 
   // Check if the user is authenticated
   if (!isPublicPath) {
-    if (token && !publicPaths.includes(request.nextUrl.pathname)) {
+    if (token) {
       try {
         // Decode token to get the role
         const jwtSecret = new TextEncoder().encode(
@@ -28,7 +28,7 @@ export async function middleware(request: NextRequest) {
         const role = payload.role;
 
         // Check if role is admin
-        if (role !== "admin") {
+        if (role !== "admin" && role !== "sales") {
           return NextResponse.redirect(new URL("/unauthorized", request.url));
         }
       } catch (error) {

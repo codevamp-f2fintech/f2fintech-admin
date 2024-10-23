@@ -1,6 +1,5 @@
 "use client";
 import * as React from "react";
-import Link from "next/link";
 import { useState } from "react";
 import {
   Avatar,
@@ -41,13 +40,13 @@ const Login = (): JSX.Element => {
   const router = useRouter();
   const dispatch: AppDispatch = useDispatch();
   const { toast } = useSelector((state: RootState) => state.toast);
-  const { toastAndNavigate } = Utility();
+  const { decodedToken, toastAndNavigate } = Utility();
   // Handler for toggling password visibility
   const handleClickShowPassword = (): void => {
-    setShowPassword((prev) => !prev); 
+    setShowPassword((prev) => !prev);
   };
   // Prevent default action for mouse down event on the password visibility toggle button
-  const handleMouseDownPassword = ( 
+  const handleMouseDownPassword = (
     event: React.MouseEvent<HTMLButtonElement>
   ) => {
     event.preventDefault();
@@ -62,7 +61,12 @@ const Login = (): JSX.Element => {
           response.data.data.token.access_token
         }; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
         toastAndNavigate(dispatch, true, "success", "Signin Success");
-        router.push("/dashboard");
+        const role = decodedToken(response.data.data.token.access_token)?.role;
+        if (role === "admin") {
+          router.push("/dashboard");
+        } else if (role === "sales") {
+          router.push("/dashboard");
+        }
         // Handle successful login (e.g., redirect)
       }
     } catch (error) {
