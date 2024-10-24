@@ -14,7 +14,7 @@ interface WorkLogListProps {
 
 const WorkLogList: React.FC<WorkLogListProps> = ({ ticketData }) => {
     const { decodedToken } = Utility();
-    console.log(decodedToken(), 'decode')
+
     return (
         <Box>
             {ticketData.length ? ticketData.map((log, index) => (

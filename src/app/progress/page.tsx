@@ -23,7 +23,6 @@ import {
   FormControl,
 } from "@mui/material";
 import {
-  Bolt as BoltIcon,
   ArrowDropDown as ArrowDropDownIcon,
   ArrowBack as ArrowBackIcon,
 } from "@mui/icons-material";
@@ -34,8 +33,8 @@ import { ThemeProvider } from "@mui/material/styles";
 
 import { useMode, ColorModeContext } from "../../../theme";
 import { useGetUsers } from "@/hooks/user";
-
 import { useGetTickets, useModifyTicket } from "@/hooks/ticket";
+import { useGetTicketHistory, useCreateTicketHistory } from '@/hooks/ticketHistory';
 import {
   fetchStatusAndDocuments,
   fetchEmployeeStatus,
@@ -49,6 +48,7 @@ import TrackingForm from "./trackingForm";
 import Toast from "../components/common/Toast";
 import { RootState } from "../../redux/store";
 import { Utility } from "@/utils";
+import History from "./History";
 
 const Progress: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -70,7 +70,7 @@ const Progress: React.FC = () => {
   const { toast } = useSelector((state: RootState) => state.toast);
 
   const dispatch = useDispatch();
-  const { getLocalStorage, setSessionStorage, getSessionStorage, toastAndNavigate } = Utility();
+  const { decodedToken, getLocalStorage, setSessionStorage, getSessionStorage, toastAndNavigate } = Utility();
   const original_estimate = getLocalStorage("ids")?.estimate;
   const ids = getLocalStorage("ids");
   const forwardedUserId = getSessionStorage("forwardedUserId");
@@ -94,6 +94,15 @@ const Progress: React.FC = () => {
   );
   const { modifyTicket } = useModifyTicket("update-ticket");
 
+  // Fetch ticket history data
+  const { value: ticketHistory, refetch } = useGetTicketHistory(
+    [],
+    `get-ticket-histories/${storedTicketId}`
+  );
+
+  // Hook for creating new ticket history
+  const { createTicketHistory } = useCreateTicketHistory("create-ticket-history");
+
   useEffect(() => {
     if (userData?.data) {
       setAllUsers(userData.data);
@@ -112,16 +121,25 @@ const Progress: React.FC = () => {
         customerId: ids.customerId,
       }));
       dispatch(fetchEmployeeStatus(ids.applicationId));
-
-      setNewLoanStatus(loanStatus);
-      setNewEmployeeStatus(employeeStatus);
+      console.log('it is running')
     }
     const selectedCustomer = applicationData?.data?.find(cust => cust.Id === ids.customerId);
     if (selectedCustomer) {
       setSelectedCustomer(selectedCustomer);
     }
-  }, [ids?.applicationId, ids?.customerId, loanStatus, employeeStatus, applicationData?.data]);
+  }, [ids?.applicationId, ids?.customerId, applicationData?.data]);
 
+  useEffect(() => {
+    if (loanStatus) {
+      console.log('loan status', loanStatus);
+      setNewLoanStatus(loanStatus);
+    }
+
+    if (employeeStatus) {
+      console.log('employee status', employeeStatus);
+      setNewEmployeeStatus(employeeStatus);
+    }
+  }, [loanStatus, employeeStatus]);
 
   useEffect(() => {
     const storedTicketId = getLocalStorage("ticketId");
@@ -210,33 +228,58 @@ const Progress: React.FC = () => {
   };
 
   const handleChangeLoanStatus = async (event) => {
-    setNewLoanStatus(event.target.value);
+    const oldStatus = newLoanStatus; // Capture the old status before changing
+    const newStatus = event.target.value;
+    setNewLoanStatus(newStatus);
+
     try {
-      const { data } = await axios.patch(
+      await axios.patch(
         'http://localhost:8080/api/v1/update-loan-tracking',
         {
           customer_application_id: ids.applicationId,
-          status: event.target.value,
+          status: newStatus,
         }
       );
+      const loggedInUser = decodedToken()?.username;
+      const historyMessage = `<b>${loggedInUser}</b> changed status from ${oldStatus} to ${newStatus}`;
+
+      await createTicketHistory({
+        ticket_id: storedTicketId,
+        action: historyMessage
+      });
+
       toastAndNavigate(dispatch, true, "info", "Status Changed Successfully");
+      await refetch();
     } catch (error) {
       toastAndNavigate(dispatch, true, "error", "Error Changing Status");
       console.log('Error updating loan tracking:', error);
     }
   };
+  console.log(loanStatus, 'loan status')
 
   const handleChangeEmployeeStatus = async (event) => {
-    setNewEmployeeStatus(event.target.value);
-    try {
-      const updateData = event.target.value !== 'forwarded'
-        ? { status: event.target.value }
-        : { status: event.target.value, forwarded_to: null };
+    const oldStatus = newEmployeeStatus;
+    const newStatus = event.target.value;
+    setNewEmployeeStatus(newStatus);
 
+    try {
+      const updateData = newStatus !== 'forwarded'
+        ? { status: newStatus }
+        : { status: newStatus, forwarded_to: null };
       await modifyTicket(+storedTicketId, updateData);
-      if (event.target.value !== 'forwarded') {
+
+      const loggedInUser = decodedToken()?.username;
+      const historyMessage = `<b>${loggedInUser}</b> changed status from ${oldStatus} to ${newStatus}`;
+      await createTicketHistory({
+        ticket_id: storedTicketId,
+        action: historyMessage
+      });
+
+      if (newStatus !== 'forwarded') {
         toastAndNavigate(dispatch, true, "info", "Status Changed Successfully");
       }
+      await refetch();
+
     } catch (error) {
       toastAndNavigate(dispatch, true, "error", "Error Changing Status");
       console.log('Error updating loan tracking:', error);
@@ -250,9 +293,18 @@ const Progress: React.FC = () => {
       await modifyTicket(+storedTicketId,
         { forwarded_to: value.id }
       );
-      toastAndNavigate(dispatch, true, "info", "User Assigned Successfully");
+
+      const loggedInUser = decodedToken()?.username;
+      const historyMessage = `<b>${loggedInUser}</b> forwarded the ticket to <b>${value.username}</b>`;
+      await createTicketHistory({
+        ticket_id: storedTicketId,
+        action: historyMessage
+      });
+
+      toastAndNavigate(dispatch, true, "info", "User Forwarded Successfully");
+      await refetch();
     } catch (error) {
-      toastAndNavigate(dispatch, true, "error", "Error Assigning User");
+      toastAndNavigate(dispatch, true, "error", "Error Forwarding User");
       console.log('Error updating loan tracking:', error);
     }
   };
@@ -594,52 +646,7 @@ const Progress: React.FC = () => {
 
                   {/* History Section */}
                   {activeSection === "History" && (
-                    <>
-                      <Box mt={2}>
-                        <Typography variant="h6" fontWeight="bold">
-                          History:
-                        </Typography>
-                        <Divider sx={{ my: 1 }} />
-                        <Box mt={1}>
-                          <Typography variant="body1">
-                            <BoltIcon
-                              fontSize="small"
-                              sx={{
-                                color: "#2c3ce3",
-                                marginRight: "5px",
-                              }}
-                            />
-                            <strong>16 Aug 2003:</strong> Action performed by
-                            Rajiv.
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            sx={{ marginLeft: "24px" }}
-                          >
-                            Updated customer information.
-                          </Typography>
-                        </Box>
-                        <Box mt={1}>
-                          <Typography variant="body1">
-                            <BoltIcon
-                              fontSize="small"
-                              sx={{
-                                color: "#2c3ce3",
-                                marginRight: "5px",
-                              }}
-                            />
-                            <strong>15 Aug 2003:</strong> Action performed by
-                            Anjali.
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            sx={{ marginLeft: "24px" }}
-                          >
-                            Approved loan application.
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </>
+                    <History ticketHistory={ticketHistory?.data} />
                   )}
 
                   {activeSection === "WorkLog" && (

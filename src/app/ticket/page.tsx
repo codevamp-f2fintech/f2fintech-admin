@@ -8,6 +8,7 @@ import dayjs, { Dayjs } from "dayjs";
 
 import Header from "../components/common/Header";
 import { useGetTickets, useModifyTicket } from "@/hooks/ticket";
+import { useCreateTicketHistory } from '@/hooks/ticketHistory';
 import { fetcher } from "@/apis/apiClient";
 import { Utility } from "@/utils";
 import ApplicationCard from "../components/ticket/ApplicationCard";
@@ -32,6 +33,9 @@ const Ticket = () => {
   );
 
   const { modifyTicket, error: updateError } = useModifyTicket("update-ticket");
+
+  // Hook for creating new ticket history
+  const { createTicketHistory } = useCreateTicketHistory("create-ticket-history");
 
   useEffect(() => {
     const handleRouteChange = () => {
@@ -158,7 +162,7 @@ const Ticket = () => {
     }
   };
 
-  const handleStartClick = (customerId, applicationId, estimate, status) => {
+  const handleStartClick = async (customerId, applicationId, estimate, status) => {
     const selectedTicket = ticketData?.data.find(
       (ticket) =>
         ticket.user_id === decodedToken()?.id &&
@@ -172,6 +176,12 @@ const Ticket = () => {
       setLocalStorage("ticketId", generatedTicketId);
 
       if (status !== "forwarded") {
+        const loggedInUser = decodedToken()?.username;
+        const historyMessage = `<b>${loggedInUser}</b> started work`;
+        await createTicketHistory({
+          ticket_id: ticketId,
+          action: historyMessage
+        });
         modifyTicket(ticketId, { status: "in progress" });
       }
       setLocalStorage("ids", { customerId, applicationId, estimate });
