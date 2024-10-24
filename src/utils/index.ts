@@ -3,6 +3,7 @@ import { jwtDecode } from "jwt-decode";
 
 import { User } from "@/types/user";
 import { setToast } from "@/redux/features/toastSlice";
+import { cookies } from "next/headers";
 
 export const Utility = () => {
   /**

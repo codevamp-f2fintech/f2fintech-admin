@@ -2,28 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import {
-  Box,
-  Card,
-  CardContent,
-  Avatar,
-  Grid,
-  Typography,
-  Button,
-} from "@mui/material";
+import { Box, Grid, Typography } from "@mui/material";
 
-import PersonIcon from "@mui/icons-material/Person";
-import EmailIcon from "@mui/icons-material/Email";
-import PhoneIcon from "@mui/icons-material/Phone";
-import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
 import dayjs, { Dayjs } from "dayjs";
 
 import Header from "../components/common/Header";
 import { useGetTickets, useModifyTicket } from "@/hooks/ticket";
 import { fetcher } from "@/apis/apiClient";
 import { Utility } from "@/utils";
+import ApplicationCard from "../components/ticket/ApplicationCard";
 
 const Ticket = () => {
   const [customerApplications, setCustomerApplications] = useState([]);
@@ -63,7 +50,9 @@ const Ticket = () => {
         );
         try {
           const fetchedApplications = await Promise.all(
-            applicationIds.map((id) => fetcher(`get-application-as-ticket/${id}`))
+            applicationIds.map((id) =>
+              fetcher(`get-application-as-ticket/${id}`)
+            )
           );
           const combinedData = fetchedApplications.flatMap((item) => item.data);
           setCustomerApplications(combinedData);
@@ -77,7 +66,7 @@ const Ticket = () => {
           }));
           setTicketStatus(ticketStatus);
         } catch (err) {
-          console.log(err, 'fetch application as ticket error');
+          console.log(err, "fetch application as ticket error");
         }
       };
       fetchApplications();
@@ -87,16 +76,17 @@ const Ticket = () => {
   // Initial filter to show only "to do" tickets by default
   useEffect(() => {
     if (customerApplications.length && ticketStatus.length) {
-      const initialFilteredApplications = customerApplications.filter((customer) =>
-        ticketStatus.some((status) => {
-          console.log(status, 'status')
-          return (
-            status.customer_application_id === customer.applicationId &&
-            status.status === "to do" // Filter by "to do"
-          );
-        })
+      const initialFilteredApplications = customerApplications.filter(
+        (customer) =>
+          ticketStatus.some((status) => {
+            console.log(status, "status");
+            return (
+              status.customer_application_id === customer.applicationId &&
+              status.status === "to do" // Filter by "to do"
+            );
+          })
       );
-      console.log(initialFilteredApplications, 'initialfilter')
+      console.log(initialFilteredApplications, "initialfilter");
       setFilteredApplications(initialFilteredApplications);
     }
   }, [customerApplications, ticketStatus]);
@@ -171,7 +161,8 @@ const Ticket = () => {
   const handleStartClick = (customerId, applicationId, estimate, status) => {
     const selectedTicket = ticketData?.data.find(
       (ticket) =>
-        ticket.user_id === decodedToken()?.id && ticket.customer_application_id === applicationId
+        ticket.user_id === decodedToken()?.id &&
+        ticket.customer_application_id === applicationId
     );
 
     if (selectedTicket) {
@@ -209,31 +200,47 @@ const Ticket = () => {
     }
   };
 
-  // const handleChooseMoreTickets = () => {
-  //   router.push("/home");    Needs to be implemented
-  //   console.log("Navigate to home");
-  // };
   return (
     <>
-      <Header
-        searchTerm=""
-        setSearchTerm={() => { }}
-        customerLength={customerApplications.length}
-        isLoggedIn={true}
-        handleLogout={() => { }}
-        handleLogin={() => { }}
-        handleChooseMoreTickets={() =>
-          console.log("Navigate to choose more tickets")
-        }
-        handleSortChange={handleSortChange}
-        filter={filter}
-        setFilter={setFilter}
-        startDate={startDate}
-        setStartDate={setStartDate}
-        endDate={endDate}
-        setEndDate={setEndDate}
-      />
-      <Box sx={{ padding: 3, backgroundColor: "grey.100", marginTop: "64px" }}>
+      <Box
+        sx={{
+          // padding: 3,
+          border: "2px solid black",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <Box sx={{ border: "2px solid black", height: "8vh" }}>
+          <Header
+            searchTerm=""
+            setSearchTerm={() => {}}
+            customerLength={customerApplications.length}
+            isLoggedIn={true}
+            handleLogout={() => {}}
+            handleLogin={() => {}}
+            handleChooseMoreTickets={() =>
+              console.log("Navigate to choose more tickets")
+            }
+            handleSortChange={handleSortChange}
+            filter={filter}
+            setFilter={setFilter}
+            startDate={startDate}
+            setStartDate={setStartDate}
+            endDate={endDate}
+            setEndDate={setEndDate}
+            notificationsCount={0}
+            anchorEl={null}
+            handleMenuClick={function (
+              event: React.MouseEvent<HTMLElement>
+            ): void {
+              throw new Error("Function not implemented.");
+            }}
+            handleMenuClose={function (): void {
+              throw new Error("Function not implemented.");
+            }}
+            sortBy={""}
+          />
+        </Box>
         <Grid container spacing={4} mt={3}>
           {filteredApplications.length > 0 ? (
             filteredApplications.map((customer, id) => {
@@ -243,206 +250,11 @@ const Ticket = () => {
               );
 
               return (
-                <Grid item xs={12} sm={6} md={4} key={id}>
-                  <Card
-                    variant="outlined"
-                    sx={{
-                      borderRadius: "12px",
-                      border: "none",
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
-                      backgroundColor: "#ffffff",
-                      height: "100%",
-                      borderTop: `4px solid ${getStatusColor(ticket.status)}`,
-                    }}
-                  >
-                    <CardContent
-                      sx={{ paddingBottom: "8px", paddingTop: "8px" }}
-                    >
-                      <Grid container spacing={2} alignItems="center">
-                        <Grid item>
-                          <Avatar
-                            alt={customer.Name}
-                            src={customer.Image}
-                            sx={{
-                              width: 70,
-                              height: 70,
-                              boxShadow: "0px 5px 10px rgba(0, 0, 0, 0.2)",
-                              border: "2px solid #fff",
-                            }}
-                          />
-                        </Grid>
-                        <Grid item xs>
-                          <Box display="flex" alignItems="center">
-                            <PersonIcon
-                              sx={{ color: "#1976d2", marginRight: "8px" }}
-                            />
-                            <Typography
-                              variant="h6"
-                              component="div"
-                              sx={{
-                                fontWeight: "bold",
-                                color: "#1976d2",
-                                fontSize: "18px",
-                              }}
-                            >
-                              {customer.Name.toUpperCase()}
-                            </Typography>
-                          </Box>
-                          <hr
-                            style={{
-                              border: "none",
-                              height: "1px",
-                              backgroundColor: "#ddd",
-                              margin: "4px 0",
-                            }}
-                          />
-
-                          <Box display="flex" alignItems="center">
-                            <EmailIcon
-                              sx={{ color: "#1976d2", marginRight: "8px" }}
-                            />
-                            <Typography
-                              variant="body2"
-                              color="text.primary"
-                              sx={{
-                                padding: "2px",
-                                borderRadius: "4px",
-                                marginTop: "2px",
-                                fontSize: "15px",
-                              }}
-                            >
-                              <span
-                                style={{
-                                  color: "#1976d2",
-                                  fontSize: "16px",
-                                }}
-                              >
-                                Email:
-                              </span>{" "}
-                              {customer.Email}
-                            </Typography>
-                          </Box>
-
-                          <Box display="flex" alignItems="center">
-                            <PhoneIcon
-                              sx={{ color: "#1976d2", marginRight: "8px" }}
-                            />
-                            <Typography
-                              variant="body2"
-                              color="text.primary"
-                              sx={{
-                                padding: "2px",
-                                borderRadius: "4px",
-                                marginTop: "2px",
-                                fontSize: "15px",
-                              }}
-                            >
-                              <span
-                                style={{
-                                  color: "#1976d2",
-                                  fontSize: "16px",
-                                }}
-                              >
-                                Phone:
-                              </span>{" "}
-                              {customer.Contact}
-                            </Typography>
-                          </Box>
-
-                          <Box display="flex" alignItems="center">
-                            <AttachMoneyIcon
-                              sx={{ color: "#1976d2", marginRight: "8px" }}
-                            />
-                            <Typography
-                              variant="body2"
-                              color="text.primary"
-                              sx={{
-                                padding: "2px",
-                                borderRadius: "4px",
-                                marginTop: "2px",
-                                fontSize: "15px",
-                              }}
-                            >
-                              <span
-                                style={{
-                                  color: "#1976d2",
-                                  fontSize: "16px",
-                                }}
-                              >
-                                Amount:
-                              </span>{" "}
-                              {customer.Amount}
-                            </Typography>
-                          </Box>
-
-                          <Box display="flex" alignItems="center">
-                            <AccessTimeIcon
-                              sx={{ color: "#1976d2", marginRight: "8px" }}
-                            />
-                            <Typography
-                              variant="body2"
-                              color="text.primary"
-                              sx={{
-                                padding: "2px",
-                                borderRadius: "4px",
-                                marginTop: "2px",
-                                fontSize: "15px",
-                              }}
-                            >
-                              <span
-                                style={{
-                                  color: "#1976d2",
-                                  fontSize: "16px",
-                                }}
-                              >
-                                Tenure:
-                              </span>{" "}
-                              {customer.Tenure} months
-                            </Typography>
-                          </Box>
-
-                          <Box display="flex" alignItems="center">
-                            <LocationOnIcon
-                              sx={{ color: "#1976d2", marginRight: "8px" }}
-                            />
-                            <Typography
-                              variant="body2"
-                              color="text.primary"
-                              sx={{
-                                padding: "2px",
-                                borderRadius: "4px",
-                                marginTop: "2px",
-                                fontSize: "15px",
-                              }}
-                            >
-                              <span
-                                style={{
-                                  color: "#1976d2",
-                                  fontSize: "16px",
-                                }}
-                              >
-                                Location:
-                              </span>{" "}
-                              {customer.Location}
-                            </Typography>
-                          </Box>
-                        </Grid>
-                      </Grid>
-                    </CardContent>
-
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      sx={{ width: "100%", borderRadius: 0 }}
-                      onClick={() =>
-                        handleStartClick(customer.Id, customer.applicationId, ticket.original_estimate, ticket.status)
-                      }
-                    >
-                      Start Work
-                    </Button>
-                  </Card>
-                </Grid>
+                <ApplicationCard
+                  contact={customer}
+                  ticket={ticket}
+                  handleStartClick={handleStartClick}
+                />
               );
             })
           ) : (
