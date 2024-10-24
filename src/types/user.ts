@@ -8,4 +8,5 @@ export interface User {
   gender: string;
   designation: string;
   avatar: string;
+  avatar: string;
 }

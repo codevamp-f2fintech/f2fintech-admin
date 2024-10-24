@@ -39,6 +39,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
   const dispatch: AppDispatch = useDispatch();
   const { user, reduxLoading } = useSelector((state: RootState) => state.user);
   const router = useRouter();
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   const validInitialData = useMemo(() => {
     return initialData
@@ -91,61 +92,62 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
       >
         <Box
           sx={{
-            width: "35vw",
+            height: "10vh",
+            width: "80vw",
             display: "flex",
-            justifyContent: "space-around",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "1rem",
+            marginBottom: "1rem",
           }}
         >
-          <Button
-            sx={{
-              top: "1vh",
-              height: "6vh",
-              width: "13vw",
-              borderRadius: "20px",
-              background:
-                "linear-gradient(125deg, #ECFCFF 0%, #ECFCFF 40%, #B2FCFF calc(40% + 1px), #B2FCFF 60%, #5EDFFF calc(60% + 1px), #5EDFFF 72%, #3E64FF calc(72% + 1px), #3E64FF 100%)",
-              transform: "scale(1.05)",
-              color: "black",
-            }}
-            onClick={() => router.push("/user/create")}
-          >
-            Create New User
-          </Button>
           <TextField
-            label="Search"
-            type="search"
-            variant="outlined"
-            autoComplete="off"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)} // Update search query on input change
+            label="Search by name..."
+            size="small"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             sx={{
               backgroundColor: "#f2f2f2",
+              marginLeft: "48vw",
 
               borderRadius: "20px",
               "& .MuiInputLabel-root": {
-                color: "black", // Replace 'yourColor' with your desired color value
+                color: "black",
               },
               "& .MuiInputBase-root": {
                 borderRadius: "20px",
               },
               "& .MuiFilledInput-root": {
-                backgroundColor: "white", // Replace with your desired background color
+                backgroundColor: "white",
               },
             }}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
-                  <SearchIcon sx={{ color: "black", fontSize: "2rem" }} />
+                  <SearchIcon sx={{ color: "black", fontSize: "1.5rem" }} />
                 </InputAdornment>
               ),
               disableUnderline: true,
             }}
             InputLabelProps={{
               style: {
-                color: "black", // Label color
+                color: "black",
               },
             }}
           />
+          <Button
+            sx={{
+              height: "6vh",
+              width: "13vw",
+              borderRadius: "20px",
+              backgroundColor: "#1565c0",
+              color: "black",
+            }}
+            onClick={() => router.push("/user/create")}
+          >
+            Create New User
+          </Button>
         </Box>
         <Box
           sx={{
@@ -155,10 +157,8 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
             minHeight: "90vh",
             overflowX: "hidden",
             overflowY: "hidden",
-            p: 5,
+            p: 2,
             mb: 2,
-            background:
-              "linear-gradient(125deg, #ECFCFF 0%, #ECFCFF 40%, #B2FCFF calc(40% + 1px), #B2FCFF 60%, #5EDFFF calc(60% + 1px), #5EDFFF 72%, #3E64FF calc(72% + 1px), #3E64FF 100%)",
           }}
         >
           <Grid sx={{ margin: "0.5vh" }} container spacing={2}>
@@ -168,30 +168,37 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
                   sx={{
                     height: "30vh",
                     display: "flex",
-                    // backgroundImage: "url('/front1.jpg')",
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                    backgroundRepeat: "no-repeat",
+                    background: `
+      linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
+    `,
                     padding: 2,
                     borderRadius: "40px",
                     boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
                     justifyContent: "center",
                     flexDirection: "column",
                     alignItems: "center",
-
                     ":hover": {
                       transform: "scale(1.05)",
                       transition: "all 300ms ease-in-out",
                     },
                   }}
                 >
-                  <Typography sx={{ fontSize: "1.5rem" }} variant="h6">
+                  <Typography
+                    sx={{ fontSize: "1.5rem", color: "white" }}
+                    variant="h6"
+                  >
                     {capitalizeFirstLetter(val.username)}
                   </Typography>
-                  <Typography sx={{ fontSize: "1.1rem" }} variant="body1">
+                  <Typography
+                    sx={{ fontSize: "1.1rem", color: "white" }}
+                    variant="body1"
+                  >
                     {val.email}
                   </Typography>
-                  <Typography sx={{ fontSize: "1.1rem" }} variant="body1">
+                  <Typography
+                    sx={{ fontSize: "1.1rem", color: "white" }}
+                    variant="body1"
+                  >
                     {val.gender}
                   </Typography>
                 </Box>

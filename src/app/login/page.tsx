@@ -137,6 +137,7 @@ const Login = (): JSX.Element => {
                 fontFamily: "monospace",
                 fontSize: "2.3rem",
                 fontWeight: "400",
+                color: "white",
               }}
               component="h1"
               variant="h5"
@@ -171,9 +172,10 @@ const Login = (): JSX.Element => {
                           <Email sx={{ color: "black" }} />
                         </InputAdornment>
                       ),
+                      sx: { color: "white" },
                     }}
                     InputLabelProps={{
-                      style: { color: "black" },
+                      style: { color: "white" },
                     }}
                     error={touched.email && Boolean(errors.email)}
                     helperText={touched.email && errors.email}
@@ -193,10 +195,11 @@ const Login = (): JSX.Element => {
                           <Lock sx={{ color: "black" }} />
                         </InputAdornment>
                       ),
+                      sx: { color: "white" },
                       endAdornment: (
                         <InputAdornment position="end">
                           <IconButton
-                            sx={{ color: "#1976D2" }}
+                            sx={{ color: "white" }}
                             aria-label="toggle password visibility"
                             onClick={handleClickShowPassword}
                             onMouseDown={handleMouseDownPassword}
@@ -208,7 +211,7 @@ const Login = (): JSX.Element => {
                       ),
                     }}
                     InputLabelProps={{
-                      style: { color: "black" },
+                      style: { color: "white" },
                     }}
                     error={touched.password && Boolean(errors.password)}
                     helperText={touched.password && errors.password}
