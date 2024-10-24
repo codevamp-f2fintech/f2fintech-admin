@@ -244,8 +244,8 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
               sx={{ width: "100%", borderRadius: 0 }}
               onClick={() =>
                 handleStartClick(
-                  customer.Id,
-                  customer.applicationId,
+                  contact.Id,
+                  contact.applicationId,
                   ticket.original_estimate,
                   ticket.status
                 )
