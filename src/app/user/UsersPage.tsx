@@ -140,7 +140,12 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
               width: "13vw",
               borderRadius: "20px",
               backgroundColor: "#1565c0",
-              color: "black",
+              color: "white",
+              "&:hover": {
+                transform: "scale(1.02)",
+                transition: "transform 0.3s ease",
+                backgroundColor: "#1565c0",
+              },
             }}
             onClick={() => router.push("/user/create")}
           >
