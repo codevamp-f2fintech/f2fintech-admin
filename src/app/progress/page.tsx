@@ -34,7 +34,10 @@ import { ThemeProvider } from "@mui/material/styles";
 import { useMode, ColorModeContext } from "../../../theme";
 import { useGetUsers } from "@/hooks/user";
 import { useGetTickets, useModifyTicket } from "@/hooks/ticket";
-import { useGetTicketHistory, useCreateTicketHistory } from '@/hooks/ticketHistory';
+import {
+  useGetTicketHistory,
+  useCreateTicketHistory,
+} from "@/hooks/ticketHistory";
 import {
   fetchStatusAndDocuments,
   fetchEmployeeStatus,
@@ -60,8 +63,8 @@ const Progress: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState([]);
   const [progress, setProgress] = useState(0); // State to store progress percentage
   const [overage, setOverage] = useState(0); // Orange part (exceeding estimated time)
-  const [newLoanStatus, setNewLoanStatus] = useState('');
-  const [newEmployeeStatus, setNewEmployeeStatus] = useState('');
+  const [newLoanStatus, setNewLoanStatus] = useState("");
+  const [newEmployeeStatus, setNewEmployeeStatus] = useState("");
   const {
     status: employeeStatus,
     loanStatus,
@@ -70,7 +73,13 @@ const Progress: React.FC = () => {
   const { toast } = useSelector((state: RootState) => state.toast);
 
   const dispatch = useDispatch();
-  const { decodedToken, getLocalStorage, setSessionStorage, getSessionStorage, toastAndNavigate } = Utility();
+  const {
+    decodedToken,
+    getLocalStorage,
+    setSessionStorage,
+    getSessionStorage,
+    toastAndNavigate,
+  } = Utility();
   const original_estimate = getLocalStorage("ids")?.estimate;
   const ids = getLocalStorage("ids");
   const forwardedUserId = getSessionStorage("forwardedUserId");
@@ -101,14 +110,18 @@ const Progress: React.FC = () => {
   );
 
   // Hook for creating new ticket history
-  const { createTicketHistory } = useCreateTicketHistory("create-ticket-history");
+  const { createTicketHistory } = useCreateTicketHistory(
+    "create-ticket-history"
+  );
 
   useEffect(() => {
     if (userData?.data) {
       setAllUsers(userData.data);
 
       if (forwardedUserId) {
-        const forwardedUser = userData.data.find(user => user.id === parseInt(forwardedUserId, 10));
+        const forwardedUser = userData.data.find(
+          (user) => user.id === parseInt(forwardedUserId, 10)
+        );
         setSelectedUser(forwardedUser || null);
       }
     }
@@ -116,14 +129,18 @@ const Progress: React.FC = () => {
 
   useEffect(() => {
     if (ids.applicationId && ids.customerId) {
-      dispatch(fetchStatusAndDocuments({
-        applicationId: ids.applicationId,
-        customerId: ids.customerId,
-      }));
+      dispatch(
+        fetchStatusAndDocuments({
+          applicationId: ids.applicationId,
+          customerId: ids.customerId,
+        })
+      );
       dispatch(fetchEmployeeStatus(ids.applicationId));
-      console.log('it is running')
+      console.log("it is running");
     }
-    const selectedCustomer = applicationData?.data?.find(cust => cust.Id === ids.customerId);
+    const selectedCustomer = applicationData?.data?.find(
+      (cust) => cust.Id === ids.customerId
+    );
     if (selectedCustomer) {
       setSelectedCustomer(selectedCustomer);
     }
@@ -131,12 +148,12 @@ const Progress: React.FC = () => {
 
   useEffect(() => {
     if (loanStatus) {
-      console.log('loan status', loanStatus);
+      console.log("loan status", loanStatus);
       setNewLoanStatus(loanStatus);
     }
 
     if (employeeStatus) {
-      console.log('employee status', employeeStatus);
+      console.log("employee status", employeeStatus);
       setNewEmployeeStatus(employeeStatus);
     }
   }, [loanStatus, employeeStatus]);
@@ -160,14 +177,20 @@ const Progress: React.FC = () => {
         ...timeLoggingEstimate,
         timeSpent: finalTime,
       });
-      const originalEstimate = parseTimeSpent(timeLoggingEstimate.originalEstimate);
+      const originalEstimate = parseTimeSpent(
+        timeLoggingEstimate.originalEstimate
+      );
 
       // Only recalculate progress if originalEstimate and totalHours are valid
       if (originalEstimate > 0) {
-        const calculatedProgress = Math.min((totalHours / originalEstimate) * 100, 100); // max 100%
-        const calculatedOverage = totalHours > originalEstimate
-          ? ((totalHours - originalEstimate) / originalEstimate) * 100
-          : 0;
+        const calculatedProgress = Math.min(
+          (totalHours / originalEstimate) * 100,
+          100
+        ); // max 100%
+        const calculatedOverage =
+          totalHours > originalEstimate
+            ? ((totalHours - originalEstimate) / originalEstimate) * 100
+            : 0;
 
         setProgress(calculatedProgress); // Blue bar
         setOverage(calculatedOverage); // Orange bar
@@ -233,29 +256,26 @@ const Progress: React.FC = () => {
     setNewLoanStatus(newStatus);
 
     try {
-      await axios.patch(
-        'http://localhost:8080/api/v1/update-loan-tracking',
-        {
-          customer_application_id: ids.applicationId,
-          status: newStatus,
-        }
-      );
+      await axios.patch("http://localhost:8080/api/v1/update-loan-tracking", {
+        customer_application_id: ids.applicationId,
+        status: newStatus,
+      });
       const loggedInUser = decodedToken()?.username;
       const historyMessage = `<b>${loggedInUser}</b> changed status from ${oldStatus} to ${newStatus}`;
 
       await createTicketHistory({
         ticket_id: storedTicketId,
-        action: historyMessage
+        action: historyMessage,
       });
 
       toastAndNavigate(dispatch, true, "info", "Status Changed Successfully");
       await refetch();
     } catch (error) {
       toastAndNavigate(dispatch, true, "error", "Error Changing Status");
-      console.log('Error updating loan tracking:', error);
+      console.log("Error updating loan tracking:", error);
     }
   };
-  console.log(loanStatus, 'loan status')
+  console.log(loanStatus, "loan status");
 
   const handleChangeEmployeeStatus = async (event) => {
     const oldStatus = newEmployeeStatus;
@@ -263,26 +283,26 @@ const Progress: React.FC = () => {
     setNewEmployeeStatus(newStatus);
 
     try {
-      const updateData = newStatus !== 'forwarded'
-        ? { status: newStatus }
-        : { status: newStatus, forwarded_to: null };
+      const updateData =
+        newStatus !== "forwarded"
+          ? { status: newStatus }
+          : { status: newStatus, forwarded_to: null };
       await modifyTicket(+storedTicketId, updateData);
 
       const loggedInUser = decodedToken()?.username;
       const historyMessage = `<b>${loggedInUser}</b> changed status from ${oldStatus} to ${newStatus}`;
       await createTicketHistory({
         ticket_id: storedTicketId,
-        action: historyMessage
+        action: historyMessage,
       });
 
-      if (newStatus !== 'forwarded') {
+      if (newStatus !== "forwarded") {
         toastAndNavigate(dispatch, true, "info", "Status Changed Successfully");
       }
       await refetch();
-
     } catch (error) {
       toastAndNavigate(dispatch, true, "error", "Error Changing Status");
-      console.log('Error updating loan tracking:', error);
+      console.log("Error updating loan tracking:", error);
     }
   };
 
@@ -290,22 +310,20 @@ const Progress: React.FC = () => {
     setSelectedUser(value);
     setSessionStorage("forwardedUserId", value.id);
     try {
-      await modifyTicket(+storedTicketId,
-        { forwarded_to: value.id }
-      );
+      await modifyTicket(+storedTicketId, { forwarded_to: value.id });
 
       const loggedInUser = decodedToken()?.username;
       const historyMessage = `<b>${loggedInUser}</b> forwarded the ticket to <b>${value.username}</b>`;
       await createTicketHistory({
         ticket_id: storedTicketId,
-        action: historyMessage
+        action: historyMessage,
       });
 
       toastAndNavigate(dispatch, true, "info", "User Forwarded Successfully");
       await refetch();
     } catch (error) {
       toastAndNavigate(dispatch, true, "error", "Error Forwarding User");
-      console.log('Error updating loan tracking:', error);
+      console.log("Error updating loan tracking:", error);
     }
   };
 
@@ -326,49 +344,29 @@ const Progress: React.FC = () => {
       <ColorModeContext.Provider value={colorMode}>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <Container
-            maxWidth={false}
             sx={{
-              height: "auto",
-              width: "100vw",
-              backgroundColor: "#f0f2f5",
               display: "flex",
-              justifyContent: "center",
+              justifyContent: "space-around",
               alignItems: "center",
-              paddingTop: 7,
             }}
           >
-            <AppBar position="fixed" sx={{ boxShadow: "none" }}>
-              <Toolbar>
-                <IconButton edge="start" color="inherit" onClick={handleBack}>
-                  <ArrowBackIcon />
-                </IconButton>
-                <Typography
-                  variant="h6"
-                  sx={{ flexGrow: 1, textAlign: "center" }}
-                >
-                  F2 Fintech Sales Ticketing System
-                </Typography>
-                <Avatar
-                  sx={{
-                    bgcolor: "#ffffff",
-                    color: theme.palette.primary.main,
-                  }}
-                  alt={selectedCustomer.Name}
-                  src={selectedCustomer.Image}
-                />
-              </Toolbar>
-            </AppBar>
-
-            <Grid container spacing={2} sx={{ width: "100%", mt: 5 }}>
+            <Grid
+              container
+              spacing={3}
+              sx={{ mt: 0, display: "flex", alignItems: "center" }}
+              padding={0}
+            >
               <Grid item xs={12} md={8}>
                 <Paper
                   elevation={5}
                   sx={{
                     padding: 4,
-                    height: "auto",
-                    marginTop: "-50px",
-                    background: "#fff",
-                    marginLeft: "-60px",
+                    background: `
+      linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
+    `,
+                    borderRadius: "20px",
+                    boxShadow:
+                      "rgba(0, 0, 0, 0.17) 0px -23px 25px 0px inset, rgba(0, 0, 0, 0.15) 0px -36px 30px 0px inset, rgba(0, 0, 0, 0.1) 0px -79px 40px 0px inset, rgba(0, 0, 0, 0.06) 0px 2px 1px, rgba(0, 0, 0, 0.09) 0px 4px 2px, rgba(0, 0, 0, 0.09) 0px 8px 4px, rgba(0, 0, 0, 0.09) 0px 16px 8px, rgba(0, 0, 0, 0.09) 0px 32px 16px",
                   }}
                 >
                   <Box
@@ -376,13 +374,17 @@ const Progress: React.FC = () => {
                     justifyContent="space-between"
                     alignItems="center"
                     mb={1}
+                    sx={{}}
                   >
                     <Typography
                       variant="h5"
                       sx={{
-                        color: "#2c3ce3",
-                        textDecoration: "underline",
-                        fontSize: "24px",
+                        color: "white",
+                        textDecoration: "none",
+                        fontSize: "1.5rem",
+                        fontFamily: "monospace",
+                        fontStyle: "revert-layer",
+                        fontWeight: "bold",
                       }}
                     >
                       Ticket ID: {ticketId}
@@ -393,11 +395,14 @@ const Progress: React.FC = () => {
                     mt={2}
                     p={2}
                     border={1}
-                    borderColor="rgba(0, 0, 0, 0.1)"
+                    borderColor="white"
                     display="flex"
                     alignItems="center"
+                    justifyContent={"space-between"}
                     gap={2}
-                    sx={{ borderRadius: "14px" }}
+                    sx={{
+                      borderRadius: "14px",
+                    }}
                   >
                     <Avatar
                       src={selectedCustomer.Image}
@@ -408,8 +413,12 @@ const Progress: React.FC = () => {
                       sx={{
                         flex: 1,
                         p: 2,
-                        borderRadius: 2,
-                        bgcolor: "background.paper",
+                        borderRadius: 3,
+                        bgcolor: "#212121",
+                        "&:hover": {
+                          transform: "scale(1.02)",
+                          transition: "transform 0.3s ease",
+                        },
                       }}
                     >
                       <Grid container spacing={2}>
@@ -418,22 +427,28 @@ const Progress: React.FC = () => {
                           <Typography variant="h6" fontWeight="bold">
                             <Typography
                               component="span"
-                              sx={{ color: "black", mr: 1 }}
+                              sx={{ color: "white", mr: 1 }}
                             >
                               Name:
                             </Typography>
-                            <Typography component="span" sx={{ color: "blue" }}>
+                            <Typography
+                              component="span"
+                              sx={{ color: "white" }}
+                            >
                               {selectedCustomer.Name}
                             </Typography>
                           </Typography>
                           <Typography variant="h6" fontWeight="bold">
                             <Typography
                               component="span"
-                              sx={{ color: "black", mr: 1 }}
+                              sx={{ color: "white", mr: 1 }}
                             >
                               Email:
                             </Typography>
-                            <Typography component="span" sx={{ color: "blue" }}>
+                            <Typography
+                              component="span"
+                              sx={{ color: "white" }}
+                            >
                               {selectedCustomer.Email}
                             </Typography>
                           </Typography>
@@ -443,22 +458,28 @@ const Progress: React.FC = () => {
                           <Typography variant="h6" fontWeight="bold">
                             <Typography
                               component="span"
-                              sx={{ color: "black", mr: 1 }}
+                              sx={{ color: "white", mr: 1 }}
                             >
                               Contact:
                             </Typography>
-                            <Typography component="span" sx={{ color: "blue" }}>
+                            <Typography
+                              component="span"
+                              sx={{ color: "white" }}
+                            >
                               {selectedCustomer.Contact}
                             </Typography>
                           </Typography>
                           <Typography variant="h6" fontWeight="bold">
                             <Typography
                               component="span"
-                              sx={{ color: "black", mr: 1 }}
+                              sx={{ color: "white", mr: 1 }}
                             >
                               Designation:
                             </Typography>
-                            <Typography component="span" sx={{ color: "blue" }}>
+                            <Typography
+                              component="span"
+                              sx={{ color: "white" }}
+                            >
                               {selectedCustomer.Designation}
                             </Typography>
                           </Typography>
@@ -467,22 +488,28 @@ const Progress: React.FC = () => {
                           <Typography variant="h6" fontWeight="bold">
                             <Typography
                               component="span"
-                              sx={{ color: "black", mr: 1 }}
+                              sx={{ color: "white", mr: 1 }}
                             >
                               Location:
                             </Typography>
-                            <Typography component="span" sx={{ color: "blue" }}>
+                            <Typography
+                              component="span"
+                              sx={{ color: "white" }}
+                            >
                               {selectedCustomer.Location}
                             </Typography>
                           </Typography>
                           <Typography variant="h6" fontWeight="bold">
                             <Typography
                               component="span"
-                              sx={{ color: "black", mr: 1 }}
+                              sx={{ color: "white", mr: 1 }}
                             >
                               tenure:
                             </Typography>
-                            <Typography component="span" sx={{ color: "blue" }}>
+                            <Typography
+                              component="span"
+                              sx={{ color: "white" }}
+                            >
                               {selectedCustomer.Tenure}
                             </Typography>
                           </Typography>
@@ -490,21 +517,24 @@ const Progress: React.FC = () => {
                         <Grid item xs={12} sm={6}>
                           <Typography
                             component="span"
-                            sx={{ color: "black", mr: 1 }}
+                            sx={{ color: "white", mr: 1 }}
                           >
                             Amount:
                           </Typography>
-                          <Typography component="span" sx={{ color: "blue" }}>
+                          <Typography component="span" sx={{ color: "white" }}>
                             {selectedCustomer.Amount}
                           </Typography>
                           <Typography variant="h6" fontWeight="bold">
                             <Typography
                               component="span"
-                              sx={{ color: "black", mr: 1 }}
+                              sx={{ color: "white", mr: 1 }}
                             >
                               Application Date:
                             </Typography>
-                            <Typography component="span" sx={{ color: "blue" }}>
+                            <Typography
+                              component="span"
+                              sx={{ color: "white" }}
+                            >
                               {selectedCustomer.applicationDate}
                             </Typography>
                           </Typography>
@@ -518,15 +548,28 @@ const Progress: React.FC = () => {
                       elevation={5}
                       sx={{
                         padding: 2,
-                        marginTop: "30px",
+                        marginTop: "5vh",
                         background: "#fff",
                         display: "flex",
-                        width: "145%",
                         flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
                         borderRadius: "10px",
+                        width: "43vw",
+                        background: `
+      linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
+    `,
                       }}
                     >
-                      <Typography variant="h6" sx={{ mb: 2, mt: 1 }}>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          mb: 0,
+                          mt: 0,
+                          color: "white",
+                          fontSize: "1rem",
+                        }}
+                      >
                         Documents:
                       </Typography>
                       {documents.length > 0 ? (
@@ -542,23 +585,26 @@ const Progress: React.FC = () => {
                             <Box
                               key={index}
                               sx={{
-                                mt: 0.5,
+                                // mt: 0.5,
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "space-between",
-                                padding: "10px",
-                                backgroundColor: "#F5F5F5",
+                                padding: ".8rem",
+                                background: "white",
                                 borderRadius: "8px",
                                 boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
                                 transition: "transform 0.2s ease",
+                                width: "30vw",
+                                marginLeft: "1.5rem",
                                 "&:hover": {
                                   transform: "scale(1.02)",
+                                  transition: "transform 0.3s ease",
                                 },
                               }}
                             >
                               <Typography
                                 variant="body1"
-                                sx={{ color: "#2C3CE3", flexGrow: 1 }}
+                                sx={{ color: "black", flexGrow: 1 }}
                               >
                                 {doc.type}
                               </Typography>
@@ -568,7 +614,7 @@ const Progress: React.FC = () => {
                                 rel="noopener noreferrer"
                                 style={{
                                   textDecoration: "none",
-                                  color: "#2C3CE3",
+                                  color: "black",
                                   fontWeight: "bold",
                                 }}
                               >
@@ -583,8 +629,31 @@ const Progress: React.FC = () => {
                     </Paper>
                   </Grid>
 
-                  <Box mt={2} mb={3}>
-                    <Typography variant="h6" fontWeight="bold">
+                  <Box
+                    mt={4}
+                    mb={4}
+                    sx={{
+                      height: "7vh",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "flex-start",
+                      borderRadius: "15px",
+                      width: "22vw",
+                      background: `
+      linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
+    `,
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      // fontWeight="bold"
+                      sx={{
+                        ml: 2,
+                        mt: 0,
+                        color: "white",
+                        fontSize: "1rem",
+                      }}
+                    >
                       Activity:
                       <Typography
                         component="span"
@@ -598,6 +667,7 @@ const Progress: React.FC = () => {
                           marginLeft: "10px",
                           padding: "6px",
                           cursor: "pointer",
+                          color: "black",
                         }}
                         onClick={showComments}
                       >
@@ -615,6 +685,7 @@ const Progress: React.FC = () => {
                           marginLeft: "10px",
                           padding: "6px",
                           cursor: "pointer",
+                          color: "black",
                         }}
                         onClick={showHistory}
                       >
@@ -632,6 +703,7 @@ const Progress: React.FC = () => {
                           marginLeft: "10px",
                           padding: "6px",
                           cursor: "pointer",
+                          color: "black",
                         }}
                         onClick={showWorkLog}
                       >
@@ -659,42 +731,66 @@ const Progress: React.FC = () => {
                   elevation={4}
                   sx={{
                     padding: 3,
-                    height: "60vh",
-                    marginTop: "-50px",
+                    height: "70vh",
+                    // marginTop: "-50px",
                     width: "400px",
-                    mb: 7,
+                    borderRadius: "20px",
+                    position: "fixed",
+                    top: "21vh",
+                    background: `
+      linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
+    `,
                   }}
                 >
                   <Box
                     display="flex"
                     justifyContent="space-between"
                     alignItems="center"
-                    sx={{ width: "100%", padding: 1 }}
+                    sx={{
+                      padding: 2,
+                      border: "1px solid white",
+                      borderRadius: "15px",
+                      fontSize: "1rem",
+                      background: `
+      linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
+    `,
+                      "&:hover": {
+                        transform: "scale(1.02)",
+                        transition: "transform 0.3s ease",
+                      },
+                    }}
                   >
                     <Typography
                       variant="subtitle1"
                       color="text.primary"
                       sx={{
-                        color: "#2c3ce3",
+                        color: "white",
                         fontWeight: "bold",
                       }}
                     >
                       Loan Status:
                     </Typography>
 
-                    <Grid item xs={6} md={4} mt={1}>
+                    <Grid item xs={6} md={5} mt={0}>
                       <FormControl
                         variant="filled"
-                        sx={{ minWidth: 140 }}
+                        sx={{
+                          background: "white",
+                          borderRadius: "15px",
+                          "&:hover": {
+                            transform: "scale(1.02)",
+                            transition: "transform 0.3s ease",
+                          },
+                        }}
                       >
-                        <InputLabel>
-                          Loan Status
-                        </InputLabel>
+                        <InputLabel>Loan Status</InputLabel>
                         <Select
                           label="Loan Status"
                           variant="filled"
+                          disableUnderline
                           value={newLoanStatus}
                           onChange={handleChangeLoanStatus}
+                          sx={{ borderRadius: "15px", width: "8vw" }}
                         >
                           <MenuItem value="submitted">Submitted</MenuItem>
                           <MenuItem value="under_review">Under Review</MenuItem>
@@ -712,34 +808,54 @@ const Progress: React.FC = () => {
                     display="flex"
                     justifyContent="space-between"
                     alignItems="center"
-                    sx={{ width: "100%", padding: 1 }}
+                    sx={{
+                      padding: 2,
+                      border: "1px solid white",
+                      borderRadius: "15px",
+                      fontSize: "1rem",
+                      mt: "1rem",
+                      background: `
+      linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
+    `,
+                      "&:hover": {
+                        transform: "scale(1.02)",
+                        transition: "transform 0.3s ease",
+                      },
+                    }}
                   >
                     {/* Left side: Typography */}
                     <Typography
                       variant="subtitle1"
                       color="text.primary"
                       sx={{
-                        color: "#2c3ce3",
+                        color: "white",
                         fontWeight: "bold",
+                        "&:hover": {
+                          transform: "scale(1.02)",
+                          transition: "transform 0.3s ease",
+                        },
                       }}
                     >
                       Employee Status:
                     </Typography>
 
                     {/* Right side: FormControl in Grid */}
-                    <Grid item xs={6} md={4} mt={2}>
+                    <Grid item xs={6} md={5} mt={0}>
                       <FormControl
                         variant="filled"
-                        sx={{ minWidth: 140 }}
+                        sx={{
+                          background: "white",
+                          borderRadius: "15px",
+                        }}
                       >
-                        <InputLabel>
-                          Employee Status
-                        </InputLabel>
+                        <InputLabel>Employee Status</InputLabel>
                         <Select
                           label="Employee Status"
                           variant="filled"
+                          disableUnderline
                           value={newEmployeeStatus}
                           onChange={handleChangeEmployeeStatus}
+                          sx={{ borderRadius: "15px", width: "8vw" }}
                         >
                           <MenuItem value="to do">To Do</MenuItem>
                           <MenuItem value="in progress">In Progress</MenuItem>
@@ -759,9 +875,11 @@ const Progress: React.FC = () => {
                         options={allUsers || []}
                         getOptionLabel={(option) => option.username}
                         value={selectedUser}
-                        onChange={(event, value) => handleForwardAutocomplete(value)}
-                        sx={{ width: '400px' }}
-                        renderInput={params => (
+                        onChange={(event, value) =>
+                          handleForwardAutocomplete(value)
+                        }
+                        sx={{ width: "400px" }}
+                        renderInput={(params) => (
                           <TextField
                             {...params}
                             label="Select User"
@@ -772,30 +890,33 @@ const Progress: React.FC = () => {
                       />
                     )}
                   </Box>
-                  <Divider sx={{ my: 1 }} />
+                  <Divider sx={{ my: 2 }} />
                   <Box display="flex" justifyContent="space-between" mt={2}>
                     <Typography
                       variant="body2"
                       sx={{
                         fontSize: "14px",
                         fontWeight: "bold",
+                        color: "white",
+                        marginLeft: ".5rem",
                       }}
                     >
                       Assignee
                     </Typography>
                     <Box display="flex" alignItems="center">
+                      <Typography variant="body2" sx={{ mr: "1vw" }}>
+                        {selectedCustomer.Name}
+                      </Typography>
                       <Avatar
                         sx={{
                           bgcolor: "#fff",
+                          mr: ".8rem",
 
                           color: theme.palette.primary.main,
                         }}
                         alt={selectedCustomer.Name}
                         src={selectedCustomer.Image}
                       />
-                      <Typography variant="body2">
-                        {selectedCustomer.Name}
-                      </Typography>
                     </Box>
                   </Box>
 
@@ -817,7 +938,16 @@ const Progress: React.FC = () => {
                       }))
                     }
                   >
-                    <Typography variant="body2" fontWeight="bold">
+                    <Typography
+                      variant="body2"
+                      fontWeight="bold"
+                      sx={{
+                        fontSize: "14px",
+                        fontWeight: "bold",
+                        color: "white",
+                        marginLeft: ".5rem",
+                      }}
+                    >
                       Original estimate:
                     </Typography>
 
@@ -826,8 +956,10 @@ const Progress: React.FC = () => {
                         variant="body2"
                         sx={{
                           borderRadius: "50%",
-                          backgroundColor: "#DFE1E6",
-                          padding: "6px",
+                          backgroundColor: "#fff",
+                          padding: ".8rem",
+                          mr: ".8rem",
+                          fontSize: ".8rem",
                         }}
                       >
                         {timeLoggingEstimate.originalEstimate}
@@ -850,9 +982,9 @@ const Progress: React.FC = () => {
                           }))
                         }
                         sx={{
-                          width: "60%",
+                          width: "10vw",
                           border: "none !important",
-                          height: "20% !important",
+                          // height: "10vh !important",
                           backgroundColor: timeLoggingEstimate.isHovered
                             ? "#e0e0e0"
                             : "transparent",
@@ -869,14 +1001,26 @@ const Progress: React.FC = () => {
                       variant="body2"
                       fontWeight="bold"
                       sx={{
-                        marginTop: "20px",
-                        padding: "0px 1px",
+                        marginTop: "3vh",
+                        ml: ".5rem",
+                        color: "white",
                       }}
                     >
                       Time tracking
                     </Typography>
 
-                    <Box display="flex" width="60%" mt={2}>
+                    <Box
+                      display="flex"
+                      width="12vw"
+                      mt={2}
+                      sx={{
+                        color: "white",
+                        mr: ".5vw",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
                       <ProgressBar
                         setOpenDialog={setOpenDialog}
                         timeLoggingEstimate={timeLoggingEstimate}

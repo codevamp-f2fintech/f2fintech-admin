@@ -112,6 +112,7 @@ const Home: React.FC = () => {
               fontWeight: "bold",
               color: "black",
               whiteSpace: "nowrap",
+              fontSize: "1.7rem",
             }}
           >
             Total Applications: {customer.length}
@@ -123,7 +124,7 @@ const Home: React.FC = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             sx={{
               backgroundColor: "#f2f2f2",
-              marginLeft: "30vw",
+              marginLeft: "25vw",
 
               borderRadius: "20px",
               "& .MuiInputLabel-root": {

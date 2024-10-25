@@ -8,10 +8,10 @@ import dayjs, { Dayjs } from "dayjs";
 
 import Header from "../components/common/Header";
 import { useGetTickets, useModifyTicket } from "@/hooks/ticket";
-import { useCreateTicketHistory } from '@/hooks/ticketHistory';
 import { fetcher } from "@/apis/apiClient";
 import { Utility } from "@/utils";
 import ApplicationCard from "../components/ticket/ApplicationCard";
+import Loader from "../components/common/Loader";
 
 const Ticket = () => {
   const [customerApplications, setCustomerApplications] = useState([]);
@@ -33,9 +33,6 @@ const Ticket = () => {
   );
 
   const { modifyTicket, error: updateError } = useModifyTicket("update-ticket");
-
-  // Hook for creating new ticket history
-  const { createTicketHistory } = useCreateTicketHistory("create-ticket-history");
 
   useEffect(() => {
     const handleRouteChange = () => {
@@ -140,29 +137,7 @@ const Ticket = () => {
     setFilteredApplications(filtered);
   }, [filter, startDate, endDate, customerApplications, ticketStatus]);
 
-  // Function to get status border color
-  const getStatusColor = (status: string | undefined): string => {
-    switch (status) {
-      case "in progress":
-        return "LightSalmon";
-      case "forwarded":
-        return "Aqua";
-      case "close":
-        return "red";
-      case "to do":
-        return "blue";
-      case "done":
-        return "green";
-      case "on hold":
-        return "yellow";
-      case "No status available":
-        return "transparent";
-      default:
-        return "transparent";
-    }
-  };
-
-  const handleStartClick = async (customerId, applicationId, estimate, status) => {
+  const handleStartClick = (customerId, applicationId, estimate, status) => {
     const selectedTicket = ticketData?.data.find(
       (ticket) =>
         ticket.user_id === decodedToken()?.id &&
@@ -176,12 +151,6 @@ const Ticket = () => {
       setLocalStorage("ticketId", generatedTicketId);
 
       if (status !== "forwarded") {
-        const loggedInUser = decodedToken()?.username;
-        const historyMessage = `<b>${loggedInUser}</b> started work`;
-        await createTicketHistory({
-          ticket_id: ticketId,
-          action: historyMessage
-        });
         modifyTicket(ticketId, { status: "in progress" });
       }
       setLocalStorage("ids", { customerId, applicationId, estimate });
@@ -214,71 +183,143 @@ const Ticket = () => {
     <>
       <Box
         sx={{
-          // padding: 3,
-          border: "2px solid black",
           display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
           flexDirection: "column",
         }}
       >
-        <Box sx={{ border: "2px solid black", height: "8vh" }}>
-          <Header
-            searchTerm=""
-            setSearchTerm={() => {}}
-            customerLength={customerApplications.length}
-            isLoggedIn={true}
-            handleLogout={() => {}}
-            handleLogin={() => {}}
-            handleChooseMoreTickets={() =>
-              console.log("Navigate to choose more tickets")
-            }
-            handleSortChange={handleSortChange}
-            filter={filter}
-            setFilter={setFilter}
-            startDate={startDate}
-            setStartDate={setStartDate}
-            endDate={endDate}
-            setEndDate={setEndDate}
-            notificationsCount={0}
-            anchorEl={null}
-            handleMenuClick={function (
-              event: React.MouseEvent<HTMLElement>
-            ): void {
-              throw new Error("Function not implemented.");
+        <Box
+          sx={{
+            height: "10vh",
+            width: "80vw",
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "1rem",
+          }}
+        >
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{
+              fontWeight: "bold",
+              color: "black",
+              whiteSpace: "nowrap",
+              fontSize: "1.7rem",
             }}
-            handleMenuClose={function (): void {
-              throw new Error("Function not implemented.");
-            }}
-            sortBy={""}
-          />
-        </Box>
-        <Grid container spacing={4} mt={3}>
-          {filteredApplications.length > 0 ? (
-            filteredApplications.map((customer, id) => {
-              const ticket = ticketStatus.find(
-                (ticket) =>
-                  ticket.customer_application_id === customer.applicationId
-              );
+          >
+            Ticket Management
+          </Typography>
 
-              return (
-                <ApplicationCard
-                  contact={customer}
-                  ticket={ticket}
-                  handleStartClick={handleStartClick}
-                />
-              );
-            })
-          ) : (
-            <Typography
-              sx={{
-                width: "100%",
-                textAlign: "center",
-                color: "text.secondary",
+          {/* Search Input */}
+          <Box
+            sx={{
+              height: "6vh",
+              width: "50vw",
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <input
+              type="text"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              placeholder="Search by name,amount,or tenure..."
+              style={{
+                width: "15vw",
+                padding: ".8rem",
+                border: "1px solid #ddd",
+                borderRadius: "15px",
+              }}
+            />
+
+            {/* Sort Dropdown */}
+            <select
+              value={sortBy}
+              onChange={handleSortChange}
+              style={{
+                padding: ".8rem",
+                border: "1px solid #ddd",
+                borderRadius: "15px",
               }}
             >
-              No Tickets Found. Start Picking Some!
-            </Typography>
-          )}
-        </Grid>
+              <option value="to do">To Do</option>
+              <option value="in progress">In Progress</option>
+              <option value="forwarded">Forwarded</option>
+              <option value="done">Done</option>
+              <option value="all">All</option>
+            </select>
+
+            {/* Date Filters */}
+
+            <Typography variant="body2">Start Date:</Typography>
+            <input
+              type="date"
+              value={startDate ? dayjs(startDate).format("YYYY-MM-DD") : ""}
+              onChange={(e) => setStartDate(dayjs(e.target.value))}
+              style={{
+                padding: ".8rem",
+                border: "1px solid #ddd",
+                borderRadius: "15px",
+              }}
+            />
+
+            <Typography variant="body2">End Date:</Typography>
+            <input
+              type="date"
+              value={endDate ? dayjs(endDate).format("YYYY-MM-DD") : ""}
+              onChange={(e) => setEndDate(dayjs(e.target.value))}
+              style={{
+                padding: ".8rem",
+                border: "1px solid #ddd",
+                borderRadius: "15px",
+              }}
+            />
+          </Box>
+        </Box>
+
+        <Box
+          sx={{
+            minWidth: "80vw",
+            minHeight: "90vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Grid container spacing={2} paddingLeft={7} mt={0.4}>
+            {filteredApplications.length > 0 ? (
+              filteredApplications.map((customer, id) => {
+                const ticket = ticketStatus.find(
+                  (ticket) =>
+                    ticket.customer_application_id === customer.applicationId
+                );
+
+                return (
+                  <ApplicationCard
+                    contact={customer}
+                    ticket={ticket}
+                    handleStartClick={handleStartClick}
+                  />
+                );
+              })
+            ) : (
+              <Typography
+                sx={{
+                  width: "100%",
+                  textAlign: "center",
+                  color: "text.secondary",
+                }}
+              >
+                No Tickets Found. Start Picking Some!
+              </Typography>
+            )}
+          </Grid>
+        </Box>
       </Box>
     </>
   );
