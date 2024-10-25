@@ -25,7 +25,6 @@ interface UsersPageProps {
   initialData: User[];
 }
 
-// Moved capitalizeFirstLetter outside the component function
 const capitalizeFirstLetter = (str: string) => {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
@@ -35,11 +34,10 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
     page: 1,
     size: 5,
   });
-  const [searchQuery, setSearchQuery] = useState<string>(""); // State for search input
-  const dispatch: AppDispatch = useDispatch();
-  const { user, reduxLoading } = useSelector((state: RootState) => state.user);
-  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const { user, reduxLoading } = useSelector((state: RootState) => state.user);
+  const dispatch: AppDispatch = useDispatch();
+  const router = useRouter();
 
   const validInitialData = useMemo(() => {
     return initialData
@@ -72,12 +70,12 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
     user.length > 0
       ? user
       : validInitialData.length > 0
-      ? validInitialData
-      : [];
+        ? validInitialData
+        : [];
 
-  // Filter users by username based on the search query
-  const filteredUsers = displayData.filter((val) =>
-    val.username?.toLowerCase().includes(searchQuery.toLowerCase())
+  // Filter users by username based on the search term
+  const filteredUsers = displayData?.filter((val) =>
+    val.username?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -199,7 +197,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
                     sx={{ fontSize: "1.1rem", color: "white" }}
                     variant="body1"
                   >
-                    {val.gender}
+                    {capitalizeFirstLetter(val.gender)}
                   </Typography>
                 </Box>
               </Grid>

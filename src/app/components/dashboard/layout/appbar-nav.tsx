@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Avatar from "@mui/material/Avatar";
@@ -8,30 +9,47 @@ import Badge from "@mui/material/Badge";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Tooltip from "@mui/material/Tooltip";
+import { Menu, MenuItem } from "@mui/material";
+import { usePathname } from "next/navigation";
 import { Bell as BellIcon } from "@phosphor-icons/react/dist/ssr/Bell";
 import { List as ListIcon } from "@phosphor-icons/react/dist/ssr/List";
+
 import { MobileNav } from "./mobile-nav";
-import router from "next/router";
-import { usePathname } from "next/navigation";
+import { Utility } from "@/utils";
 
 export function AppBarNav(): React.JSX.Element {
-  const pathname = usePathname();
   const [openNav, setOpenNav] = React.useState<boolean>(false);
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [searchQuery, setSearchQuery] = React.useState<string>("");
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const { decodedToken } = Utility();
+
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
   };
 
   const handleLogout = () => {
-    // Add your logout logic here
-    // For example, clear tokens and navigate to the login page
-    // localStorage.removeItem("token"); // or sessionStorage.removeItem("token");
-    router.push("/login");
+    try {
+      document.cookie = "token=; path=/; max-age=0; secure; samesite=strict";
+      handleMenuClose();
+      router.push("/login");
+    } catch (error) {
+      console.log("Error during logout:", error);
+    }
   };
 
   // Hide AppBarNav on login page
-  if (pathname === "/login") return null;
+  if (pathname === "/login") return <></>;
 
   return (
     <React.Fragment>
@@ -77,7 +95,23 @@ export function AppBarNav(): React.JSX.Element {
                   </IconButton>
                 </Badge>
               </Tooltip>
-              <Avatar src="/assets/avatar.png" sx={{ cursor: "pointer" }} />
+              <IconButton onClick={handleMenuClick}>
+                <Avatar>
+                  {decodedToken()?.username?.charAt(0).toUpperCase()}
+                </Avatar>
+              </IconButton>
+
+              <Menu
+                id="avatar-menu"
+                anchorEl={anchorEl}
+                keepMounted
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+              >
+                <MenuItem onClick={handleLogout}
+                  sx={{ cursor: "pointer" }}
+                >Logout</MenuItem>
+              </Menu>
             </Stack>
           </Stack>
         </Toolbar>

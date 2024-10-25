@@ -22,6 +22,10 @@ import { useCreateTicket } from "@/hooks/ticket";
 import { Utility } from "@/utils";
 import { useGetCustomers, useModifyCustomer } from "@/hooks/customer";
 
+const capitalizeFirstLetter = (str: string) => {
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
 function InfoRow({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -146,7 +150,7 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
             }}
           >
             <Avatar
-              alt={contact.Name}
+              alt={capitalizeFirstLetter(contact.Name)}
               src={contact.Image}
               sx={{
                 width: 80,
@@ -191,7 +195,7 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
               text={`${contact.Tenure} months`}
             />
             {contact.Location && (
-              <InfoRow icon={<LocationOnRounded />} text={contact.Location} />
+              <InfoRow icon={<LocationOnRounded />} text={capitalizeFirstLetter(contact.Location)} />
             )}
           </Box>
           {!ticket && (

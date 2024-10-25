@@ -19,17 +19,21 @@ import { isNavItemActive } from "@/lib/auth/is-nav-item-active";
 import { Logo } from "@/app/components/core/logo";
 import { navItems } from "./config";
 import { navIcons } from "./nav-icons";
+import { Utility } from "@/utils";
 
 export function SideNav(): React.JSX.Element {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = React.useState(false); // Collapse state
+  const { decodedToken } = Utility();
+
+  const userRole = decodedToken()?.role;
 
   // Toggle collapse state
   const handleToggleCollapse = () => setCollapsed((prev) => !prev);
 
   // Hide SideNav if on login page
   if (pathname === "/login") {
-    return null; // This will not render the SideNav
+    return <></>;
   }
 
   return (
@@ -88,7 +92,7 @@ export function SideNav(): React.JSX.Element {
       </Stack>
       <Divider sx={{ borderColor: "lightgray" }} />
       <Box component="nav">
-        {renderNavItems({ pathname, items: navItems, collapsed })}
+        {renderNavItems({ pathname, items: navItems, collapsed, userRole })}
       </Box>
       <Divider sx={{ borderColor: "lightgray" }} />
     </Box>
@@ -99,14 +103,20 @@ function renderNavItems({
   items = [],
   pathname,
   collapsed,
+  userRole
 }: {
   items?: NavItemConfig[];
   pathname: string;
   collapsed: boolean;
+  userRole: string;
 }): React.JSX.Element {
   const children = items.reduce(
     (acc: React.ReactNode[], curr: NavItemConfig): React.ReactNode[] => {
       const { key, ...item } = curr;
+      console.log(item, userRole, 'side')
+      if (item.title === "Users" && userRole !== "admin") {
+        return acc;
+      }
 
       acc.push(
         <NavItem
@@ -158,11 +168,11 @@ function NavItem({
       <Box
         {...(href
           ? {
-              component: external ? "a" : RouterLink,
-              href,
-              target: external ? "_blank" : undefined,
-              rel: external ? "noreferrer" : undefined,
-            }
+            component: external ? "a" : RouterLink,
+            href,
+            target: external ? "_blank" : undefined,
+            rel: external ? "noreferrer" : undefined,
+          }
           : { role: "button" })}
         sx={{
           alignItems: "center",
