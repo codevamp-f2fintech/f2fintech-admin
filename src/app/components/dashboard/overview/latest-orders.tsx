@@ -1,3 +1,5 @@
+'use client';
+
 import * as React from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -14,6 +16,8 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import { ArrowRight as ArrowRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowRight";
 import dayjs from "dayjs";
+import { User } from "@/types/user";
+import { useGetUsers } from "@/hooks/user";
 
 const statusMap = {
   pending: { label: "Pending", color: "warning" },
@@ -21,62 +25,56 @@ const statusMap = {
   refunded: { label: "Refunded", color: "error" },
 } as const;
 
-export interface Order {
-  id: string;
-  customer: { name: string };
-  amount: number;
-  status: "pending" | "delivered" | "refunded";
-  createdAt: Date;
-}
 
-export interface LatestOrdersProps {
-  orders?: Order[];
+const capitalizeFirstLetter = (str: string) => {
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
+export interface LatestUsersProps {
   sx?: SxProps;
 }
 
 export function LatestOrders({
-  orders = [],
   sx,
-}: LatestOrdersProps): React.JSX.Element {
+}: LatestUsersProps): React.JSX.Element {
+
+  const { data: users, swrLoading } = useGetUsers(
+    [],
+    `get-users?&_page=${0}&_limit=${10}`
+  );
+
   return (
     <Card sx={sx}>
-      <CardHeader title="User's" />
+      <CardHeader title="Agent List" />
       <Divider />
       <Box sx={{ overflowX: "auto" }}>
         <Table sx={{ minWidth: 800 }}>
           <TableHead>
             <TableRow>
-              <TableCell>Order</TableCell>
-              <TableCell>Customer</TableCell>
+              <TableCell>Username</TableCell>
+              <TableCell>Email</TableCell>
+              <TableCell>Contact</TableCell>
+              <TableCell>Designation</TableCell>
               <TableCell sortDirection="desc">Date</TableCell>
-              <TableCell>Status</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {orders.map((order) => {
-              const { label, color } = statusMap[order.status] ?? {
-                label: "Unknown",
-                color: "default",
-              };
-
-              return (
-                <TableRow hover key={order.id}>
-                  <TableCell>{order.id}</TableCell>
-                  <TableCell>{order.customer.name}</TableCell>
-                  <TableCell>
-                    {dayjs(order.createdAt).format("MMM D, YYYY")}
-                  </TableCell>
-                  <TableCell>
-                    <Chip color={color} label={label} size="small" />
-                  </TableCell>
+            {!users?.data?.length ?
+              null :
+              users.data.map((user) => (
+                <TableRow hover key={user.id}>
+                  <TableCell>{capitalizeFirstLetter(user.username)}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.number}</TableCell>
+                  <TableCell>{capitalizeFirstLetter(user.designation)}</TableCell>
+                  <TableCell>{dayjs(user.created_at).format("MMM D, YYYY")}</TableCell>
                 </TableRow>
-              );
-            })}
+              ))}
           </TableBody>
         </Table>
       </Box>
       <Divider />
-      <CardActions sx={{ justifyContent: "flex-end" }}>
+      {/* <CardActions sx={{ justifyContent: "flex-end" }}>
         <Button
           color="inherit"
           endIcon={<ArrowRightIcon fontSize="var(--icon-fontSize-md)" />}
@@ -85,7 +83,7 @@ export function LatestOrders({
         >
           View all
         </Button>
-      </CardActions>
+      </CardActions> */}
     </Card>
   );
 }

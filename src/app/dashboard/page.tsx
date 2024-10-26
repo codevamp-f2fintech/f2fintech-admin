@@ -1,5 +1,6 @@
 import * as React from "react";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import Grid from "@mui/material/Unstable_Grid2";
 import dayjs from "dayjs";
 
@@ -9,7 +10,6 @@ import { LatestOrders } from "@/app/components/dashboard/overview/latest-orders"
 import { LatestProducts } from "@/app/components/dashboard/overview/latest-products";
 import { Sales } from "@/app/components/dashboard/overview/sales";
 import { Traffic } from "@/app/components/dashboard/overview/traffic";
-import { cookies } from "next/headers";
 import { Utility } from "@/utils";
 
 export const metadata = {
@@ -19,14 +19,15 @@ export const metadata = {
 // Server-side function to fetch total applications count
 async function fetchTotalApplications() {
   try {
-    const response = await fetch(
-      "http://localhost:3001/api/v1/application/count"
-    );
+    const response = await fetch("http://localhost:3001/api/v1/application/count", {
+      cache: "no-store",     // To Prevent caching
+    });
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const resData = await response.json();
-    return resData.data; // Assuming the response has a 'data' field
+    return resData.data;
   } catch (error) {
     console.error("Failed to fetch total applications:", error);
     return null;
@@ -35,32 +36,36 @@ async function fetchTotalApplications() {
 
 async function fetchTotalTickets(
   status: string | null = null,
-  id: number,
+  id: number | null = null,
   role: string
 ): Promise<number> {
   let url = `http://localhost:3001/api/v1/dashboard/tickets/count`;
-  if (role === "sales") {
+
+  if (role === "sales" && id !== null) {
     url += `/${id}`;
   }
+
   if (status) {
-    url += `/${status}`;
+    url += `/${encodeURIComponent(status)}`;
   }
   console.log(url, "ticket count url");
-  const response = await fetch(url);
+  const response = await fetch(url,
+    {
+      cache: "no-store"
+    });     // To Prevent caching
 
   if (!response.ok) {
     throw new Error("Failed to fetch total Tickets");
   }
   const resData = await response.json();
-  console.log(resData, "ticket count");
-  return resData.data; // Assuming the response has a 'count' field
+  return resData.data;
 }
 
 async function fetchAgentCount(): Promise<number> {
   const response = await fetch(
     "http://localhost:3001/api/v1/dashboard/agents/count",
     {
-      cache: "no-store",
+      cache: "no-store",    // To Prevent Caching
     }
   );
 
@@ -72,13 +77,10 @@ async function fetchAgentCount(): Promise<number> {
 }
 
 export default async function Page(): Promise<React.JSX.Element> {
-  //get token from cookie
   const cookieStore = cookies();
   const { decodedToken } = Utility();
   const userToken = cookieStore.get("token");
   const { id, role } = decodedToken(userToken?.value);
-  console.log("userToken", userToken);
-  // let id, role;
   const [
     totalApplications,
     totalTickets,
@@ -189,7 +191,7 @@ export default async function Page(): Promise<React.JSX.Element> {
       <Grid lg={4} md={6} xs={12}>
         <Traffic
           chartSeries={[63, 15, 22]}
-          labels={["Desktop", "Tablet", "Phone"]}
+          labels={["Total Tickets", "In Progress", "To Do"]}
           sx={{ height: "100%" }}
         />
       </Grid>
@@ -243,53 +245,7 @@ export default async function Page(): Promise<React.JSX.Element> {
         />
       </Grid>
       <Grid lg={8} md={12} xs={12}>
-        <LatestOrders
-          orders={[
-            {
-              id: "ORD-007",
-              customer: { name: "Ekaterina Tankova" },
-              amount: 30.5,
-              status: "pending",
-              createdAt: dayjs().subtract(10, "minutes").toDate(),
-            },
-            {
-              id: "ORD-006",
-              customer: { name: "Cao Yu" },
-              amount: 25.1,
-              status: "delivered",
-              createdAt: dayjs().subtract(10, "minutes").toDate(),
-            },
-            {
-              id: "ORD-004",
-              customer: { name: "Alexa Richardson" },
-              amount: 10.99,
-              status: "refunded",
-              createdAt: dayjs().subtract(10, "minutes").toDate(),
-            },
-            {
-              id: "ORD-003",
-              customer: { name: "Anje Keizer" },
-              amount: 96.43,
-              status: "pending",
-              createdAt: dayjs().subtract(10, "minutes").toDate(),
-            },
-            {
-              id: "ORD-002",
-              customer: { name: "Clarke Gillebert" },
-              amount: 32.54,
-              status: "delivered",
-              createdAt: dayjs().subtract(10, "minutes").toDate(),
-            },
-            {
-              id: "ORD-001",
-              customer: { name: "Adam Denisov" },
-              amount: 16.76,
-              status: "delivered",
-              createdAt: dayjs().subtract(10, "minutes").toDate(),
-            },
-          ]}
-          sx={{ height: "100%" }}
-        />
+        <LatestOrders sx={{ height: "100%" }} />
       </Grid>
     </Grid>
   );

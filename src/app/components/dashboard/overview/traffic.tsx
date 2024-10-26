@@ -37,7 +37,7 @@ export function Traffic({
 
   return (
     <Card sx={sx}>
-      <CardHeader title="Tikets Progress" />
+      <CardHeader title="Tickets" />
       <CardContent>
         <Stack spacing={2}>
           <Chart

@@ -113,7 +113,6 @@ function renderNavItems({
   const children = items.reduce(
     (acc: React.ReactNode[], curr: NavItemConfig): React.ReactNode[] => {
       const { key, ...item } = curr;
-      console.log(item, userRole, 'side')
       if (item.title === "Users" && userRole !== "admin") {
         return acc;
       }

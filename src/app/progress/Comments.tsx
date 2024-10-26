@@ -104,6 +104,7 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
       const createdComment = await createTicketActivity(newCommentData);
       if (createdComment) {
         setNewComment("");
+        setAttachment(null);
         setAttachmentPreview("");
         toastAndNavigate(dispatch, true, "info", "Commented Successfully");
         refetch(); // Refetch the comments after successful creation
@@ -163,6 +164,7 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
         if (updatedComment) {
           setEditingCommentId(null); // Reset editing mode
           setEditedComment("");
+          setAttachment(null);
           toastAndNavigate(dispatch, true, "info", "Updated Successfully");
           refetch(); // Refetch comments after successful update
         }

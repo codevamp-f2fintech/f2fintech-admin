@@ -57,20 +57,20 @@ const Login = (): JSX.Element => {
       const response = await UserAPI.login(values); // Call the UserAPI login method
       if (response?.data?.data.token) {
         // Save the token in a cookie manually
-        document.cookie = `token=${
-          response.data.data.token.access_token
-        }; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
+        document.cookie = `token=${response.data.data.token.access_token
+          }; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
         toastAndNavigate(dispatch, true, "success", "Signin Success");
+
         const role = decodedToken(response.data.data.token.access_token)?.role;
         if (role === "admin") {
           router.push("/dashboard");
         } else if (role === "sales") {
-          router.push("/dashboard");
+          router.push("/home");
         }
-        // Handle successful login (e.g., redirect)
       }
     } catch (error) {
       toastAndNavigate(dispatch, true, "error", "Error Signin");
+      console.log(error, 'signin error')
     }
   };
   return (
