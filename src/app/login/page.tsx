@@ -80,12 +80,13 @@ const Login = (): JSX.Element => {
         component="main"
         sx={{
           height: "100vh",
-          marginRight: "40px",
+          marginRight: "10vw",
           background:
             "linear-gradient(125deg, #ECFCFF 0%, #ECFCFF 40%, #B2FCFF calc(40% + 1px), #B2FCFF 60%, #5EDFFF calc(60% + 1px), #5EDFFF 72%, #3E64FF calc(72% + 1px), #3E64FF 100%)",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
+          position: "fixed",
         }}
       >
         <CssBaseline />
@@ -98,6 +99,7 @@ const Login = (): JSX.Element => {
             height: "80vh",
             width: "70vw",
             borderRadius: "80px",
+            marginRight: "15vh",
             background:
               "linear-gradient(235deg, #FFFFFF 0%, #000F25 100%), linear-gradient(180deg, #6100FF 0%, #000000 100%), linear-gradient(235deg, #FFA3AC 0%, #FFA3AC 40%, #00043C calc(40% + 1px), #00043C 60%, #005D6C calc(60% + 1px), #005D6C 70%, #00C9B1 calc(70% + 1px), #00C9B1 100%), linear-gradient(125deg, #FFA3AC 0%, #FFA3AC 40%, #00043C calc(40% + 1px), #00043C 60%, #005D6C calc(60% + 1px), #005D6C 70%, #00C9B1 calc(70% + 1px), #00C9B1 100%)",
             backgroundBlendMode: "soft-light, screen, darken, normal",
@@ -241,15 +243,6 @@ const Login = (): JSX.Element => {
                 </Form>
               )}
             </Formik>
-            {/* <Grid container>
-              <Grid item xs>                    needs to be done
-                <Link href="#" passHref>
-                  <Typography sx={{ color: "#0000CC" }}>
-                    Forgot password?
-                  </Typography>
-                </Link>
-              </Grid>
-            </Grid> */}
           </Box>
         </Grid>
       </Grid>

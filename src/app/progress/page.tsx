@@ -53,6 +53,10 @@ import { RootState } from "../../redux/store";
 import { Utility } from "@/utils";
 import History from "./History";
 
+const capitalizeFirstLetter = (str: string) => {
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
 const Progress: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [theme, colorMode] = useMode();
@@ -549,16 +553,15 @@ const Progress: React.FC = () => {
                       sx={{
                         padding: 2,
                         marginTop: "5vh",
-                        background: "#fff",
                         display: "flex",
                         flexDirection: "row",
                         alignItems: "center",
                         justifyContent: "space-between",
                         borderRadius: "10px",
-                        width: "43vw",
+                        width: "41vw",
                         background: `
-      linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
-    `,
+                          linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
+                        `,
                       }}
                     >
                       <Typography
@@ -585,7 +588,6 @@ const Progress: React.FC = () => {
                             <Box
                               key={index}
                               sx={{
-                                // mt: 0.5,
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "space-between",
@@ -638,7 +640,7 @@ const Progress: React.FC = () => {
                       alignItems: "center",
                       justifyContent: "flex-start",
                       borderRadius: "15px",
-                      width: "22vw",
+                      width: "20vw",
                       background: `
       linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
     `,
@@ -731,8 +733,7 @@ const Progress: React.FC = () => {
                   elevation={4}
                   sx={{
                     padding: 3,
-                    height: "70vh",
-                    // marginTop: "-50px",
+                    height: "78vh",
                     width: "400px",
                     borderRadius: "20px",
                     position: "fixed",
@@ -869,7 +870,14 @@ const Progress: React.FC = () => {
                   </Box>
 
                   {/* Conditionally render the dropdown if the status is forwarded */}
-                  <Box>
+                  <Box
+                    sx={{
+                      borderRadius: "20px",
+                      height: "7vh",
+                      mt: "1vw",
+                      width: "20.5vw",
+                    }}
+                  >
                     {newEmployeeStatus === "forwarded" && (
                       <Autocomplete
                         options={allUsers || []}
@@ -878,13 +886,31 @@ const Progress: React.FC = () => {
                         onChange={(event, value) =>
                           handleForwardAutocomplete(value)
                         }
-                        sx={{ width: "400px" }}
                         renderInput={(params) => (
                           <TextField
                             {...params}
                             label="Select User"
-                            variant="filled"
+                            variant="outlined"
                             type="text"
+                            sx={{
+                              borderRadius: "20px",
+                              "& .MuiOutlinedInput-root": {
+                                color: "black",
+                                backgroundColor: "darkgray",
+                                "& fieldset": {
+                                  borderColor: "lightblue",
+                                },
+                                "&:hover fieldset": {
+                                  borderColor: "cyan",
+                                },
+                                "&.Mui-focused fieldset": {
+                                  borderColor: "blue",
+                                },
+                              },
+                              "& .MuiInputLabel-root": {
+                                color: "black",
+                              },
+                            }}
                           />
                         )}
                       />
@@ -905,7 +931,7 @@ const Progress: React.FC = () => {
                     </Typography>
                     <Box display="flex" alignItems="center">
                       <Typography variant="body2" sx={{ mr: "1vw" }}>
-                        {selectedCustomer.Name}
+                        {capitalizeFirstLetter(decodedToken()?.username)}
                       </Typography>
                       <Avatar
                         sx={{
@@ -914,7 +940,7 @@ const Progress: React.FC = () => {
 
                           color: theme.palette.primary.main,
                         }}
-                        alt={selectedCustomer.Name}
+                        alt={capitalizeFirstLetter(decodedToken()?.username)}
                         src={selectedCustomer.Image}
                       />
                     </Box>
@@ -948,14 +974,14 @@ const Progress: React.FC = () => {
                         marginLeft: ".5rem",
                       }}
                     >
-                      Original estimate:
+                      Original Estimate
                     </Typography>
 
                     {!timeLoggingEstimate.isHovered ? (
                       <Typography
                         variant="body2"
                         sx={{
-                          borderRadius: "50%",
+                          borderRadius: "50px",
                           backgroundColor: "#fff",
                           padding: ".8rem",
                           mr: ".8rem",
@@ -1004,9 +1030,11 @@ const Progress: React.FC = () => {
                         marginTop: "3vh",
                         ml: ".5rem",
                         color: "white",
+                        fontSize: "14px",
+                        fontWeight: "bold",
                       }}
                     >
-                      Time tracking
+                      Time Tracking
                     </Typography>
 
                     <Box

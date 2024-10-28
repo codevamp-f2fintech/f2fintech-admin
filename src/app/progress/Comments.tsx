@@ -199,6 +199,10 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
     setAttachmentPreview("");
   };
 
+  const capitalizeFirstLetter = (str: string) => {
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  };
+
   return (
     <Box mt={2} mb={2} sx={{ position: "relative" }}>
       <Box sx={{ position: "relative", mb: 2 }}>
@@ -231,7 +235,12 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
               component="img"
               src={attachmentPreview}
               alt="Preview"
-              sx={{ maxHeight: 100, maxWidth: 100, ml: 2, borderRadius: 2 }}
+              sx={{
+                maxHeight: 100,
+                maxWidth: 100,
+                ml: 2,
+                borderRadius: 2,
+              }}
             />
           )}
           <IconButton onClick={handleAttachmentDelete} sx={{ ml: 2 }}>
@@ -269,6 +278,7 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
               sx={{
                 display: "flex",
                 alignItems: "flex-start",
+                // border: "2px solid white",
               }}
             >
               {/* User Avatar */}
@@ -278,11 +288,21 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
 
               <Box sx={{ flexGrow: 1 }}>
                 {/* Comment Header: User Name, Date */}
-                <Box sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    mb: 0.5,
+                  }}
+                >
                   <Typography fontWeight="bold" sx={{ marginRight: "8px" }}>
-                    {decodedToken()?.username}
+                    {capitalizeFirstLetter(decodedToken()?.username)}
                   </Typography>
-                  <Typography variant="body2" color="textSecondary">
+                  <Typography
+                    variant="body2"
+                    color="cornsilk"
+                    sx={{ ml: "20vw" }}
+                  >
                     {formatDistanceToNow(new Date(comment.created_at))} ago
                   </Typography>
                 </Box>
@@ -294,7 +314,9 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
                       fullWidth
                       multiline
                       value={editedComment}
-                      onChange={(e) => setEditedComment(e.target.value)}
+                      onChange={(e) =>
+                        setEditedComment(capitalizeFirstLetter(e.target.value))
+                      }
                       rows={3}
                       variant="outlined"
                     />
@@ -302,6 +324,7 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
                       <Button
                         variant="contained"
                         color="primary"
+                        sx={{ color: "white", bgcolor: "green" }}
                         onClick={() =>
                           handleSaveEditComment(comment.id, comment.ticket_id)
                         }
@@ -309,9 +332,8 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
                         Save
                       </Button>
                       <Button
-                        variant="text"
-                        color="secondary"
-                        sx={{ ml: 2 }}
+                        variant="contained"
+                        sx={{ ml: 2, color: "white", bgcolor: "red" }}
                         onClick={handleCancelEdit}
                       >
                         Cancel
@@ -322,20 +344,28 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
                   <Box>
                     {/* Comment Text */}
                     <Typography variant="body1" sx={{ mb: 1, color: "white" }}>
-                      {comment.comment}
+                      {capitalizeFirstLetter(comment.comment)}
                     </Typography>
                     {/* Attachment Preview (if present) */}
                     {comment.attachment && (
                       <Box
-                        sx={{ display: "flex", alignItems: "center", mb: 1 }}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          mb: 1,
+                        }}
                       >
-                        <Typography variant="body2" color="black">
+                        <Typography sx={{ color: "white" }}>
                           <a
                             href={comment.attachment}
                             target="_blank"
                             rel="noopener noreferrer"
+                            style={{
+                              color: "cyan",
+                              textDecoration: "underline",
+                            }}
                           >
-                            View Attachment
+                            *View Attachment
                           </a>
                         </Typography>
                       </Box>
@@ -349,6 +379,7 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
                         alignItems: "center",
                         flexDirection: "space-between",
                         color: "#5e6c84",
+                        mt: "5vh",
                       }}
                     >
                       <Button
@@ -356,7 +387,12 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
                         sx={{
                           textTransform: "none",
                           fontSize: "0.85rem",
-                          color: "black",
+                          bgcolor: "gray",
+                          color: "white",
+                          "&:hover": {
+                            bgcolor: "darkgray",
+                            color: "black",
+                          },
                         }}
                         onClick={() =>
                           handleEditComment(comment.id, comment.comment)
@@ -369,8 +405,14 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
                         sx={{
                           textTransform: "none",
                           fontSize: "0.85rem",
-                          color: "black",
+                          color: "white",
                           padding: "4px",
+                          bgcolor: "gray",
+                          ml: "2vw",
+                          "&:hover": {
+                            bgcolor: "darkgray",
+                            color: "black",
+                          },
                         }}
                         onClick={() => handleDeleteComment(comment.id)}
                       >
