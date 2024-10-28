@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import * as React from "react";
 import Box from "@mui/material/Box";
@@ -25,7 +25,6 @@ const statusMap = {
   refunded: { label: "Refunded", color: "error" },
 } as const;
 
-
 const capitalizeFirstLetter = (str: string) => {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
@@ -34,10 +33,7 @@ export interface LatestUsersProps {
   sx?: SxProps;
 }
 
-export function LatestOrders({
-  sx,
-}: LatestUsersProps): React.JSX.Element {
-
+export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
   const { data: users, swrLoading } = useGetUsers(
     [],
     `get-users?&_page=${0}&_limit=${10}`
@@ -59,17 +55,23 @@ export function LatestOrders({
             </TableRow>
           </TableHead>
           <TableBody>
-            {!users?.data?.length ?
-              null :
-              users.data.map((user) => (
-                <TableRow hover key={user.id}>
-                  <TableCell>{capitalizeFirstLetter(user.username)}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.number}</TableCell>
-                  <TableCell>{capitalizeFirstLetter(user.designation)}</TableCell>
-                  <TableCell>{dayjs(user.created_at).format("MMM D, YYYY")}</TableCell>
-                </TableRow>
-              ))}
+            {!users?.data?.length
+              ? null
+              : users.data.map((user) => (
+                  <TableRow hover key={user.id}>
+                    <TableCell>
+                      {capitalizeFirstLetter(user.username)}
+                    </TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.number}</TableCell>
+                    <TableCell>
+                      {capitalizeFirstLetter(user.designation)}
+                    </TableCell>
+                    <TableCell>
+                      {dayjs(user.created_at).format("MMM D, YYYY")}
+                    </TableCell>
+                  </TableRow>
+                ))}
           </TableBody>
         </Table>
       </Box>

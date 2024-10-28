@@ -1,56 +1,71 @@
-import React from 'react';
-import { Box, Divider, Typography } from '@mui/material';
+import React from "react";
+import { Box, Divider, Typography } from "@mui/material";
 import { Bolt as BoltIcon } from "@mui/icons-material";
 import { format, formatDistanceToNow } from "date-fns";
 
 interface HistoryProps {
-    ticketHistory: Array<{
-        id: number;
-        ticket_id: number;
-        action: string;
-        created_at: string;
-    }>;
+  ticketHistory: Array<{
+    id: number;
+    ticket_id: number;
+    action: string;
+    created_at: string;
+  }>;
 }
+
+const capitalizeFirstLetter = (str: string) => {
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
 
 const History: React.FC<HistoryProps> = ({ ticketHistory }) => {
+  return (
+    <Box>
+      {ticketHistory.length ? (
+        ticketHistory.map((history, index) => {
+          const dateObj = new Date(history.created_at);
 
-    return (
-        <Box>
-            {ticketHistory.length ? (
-                ticketHistory.map((history, index) => {
-                    const dateObj = new Date(history.created_at);
-                    return (
-                        <React.Fragment key={history.id}>
-                            <Divider sx={{ my: 1 }} />
-                            <Box mt={1} display='flex'>
-                                <BoltIcon
-                                    fontSize="small"
-                                    sx={{
-                                        color: "#2c3ce3",
-                                        marginRight: "5px",
-                                    }}
-                                />
-                                <Typography variant="body1"
-                                    dangerouslySetInnerHTML={{ __html: history.action }}
-                                />
-                                <Typography variant="body2" color="textSecondary">
-                                    {format(dateObj, 'dd MMM yyyy HH:mm')} ({formatDistanceToNow(dateObj)} ago)
-                                </Typography>
-                            </Box>
-                        </React.Fragment>
-                    )
-                })
-            ) : (
+          return (
+            <React.Fragment key={history.id}>
+              <Divider sx={{ my: 1 }} />
+              <Box mt={1} display="flex">
+                <BoltIcon
+                  fontSize="small"
+                  sx={{
+                    color: "#2c3ce3",
+                    marginRight: "5px",
+                  }}
+                />
                 <Typography
-                    variant="body2"
-                    mt={2}
-                    sx={{ padding: "0 10px" }}
+                  variant="body1"
+                  dangerouslySetInnerHTML={{ __html: history.action }}
+                  sx={{
+                    height: "10vh",
+                    width: "32vw",
+                    color: "white",
+                  }}
+                />
+                <Typography
+                  variant="body2"
+                  color="textSecondary"
+                  sx={{
+                    ml: "3vw",
+                    height: "10vh",
+                    color: "cyan",
+                  }}
                 >
-                    No history
+                  {format(dateObj, "dd MMM yyyy HH:mm")} (
+                  {formatDistanceToNow(dateObj)} ago)
                 </Typography>
-            )}
-        </Box >
-    );
-}
+              </Box>
+            </React.Fragment>
+          );
+        })
+      ) : (
+        <Typography variant="body2" mt={2} sx={{ padding: "0 10px" }}>
+          No history
+        </Typography>
+      )}
+    </Box>
+  );
+};
 
 export default History;

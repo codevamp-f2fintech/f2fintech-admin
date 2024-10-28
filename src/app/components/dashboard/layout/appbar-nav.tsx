@@ -108,9 +108,9 @@ export function AppBarNav(): React.JSX.Element {
                 open={Boolean(anchorEl)}
                 onClose={handleMenuClose}
               >
-                <MenuItem onClick={handleLogout}
-                  sx={{ cursor: "pointer" }}
-                >Logout</MenuItem>
+                <MenuItem onClick={handleLogout} sx={{ cursor: "pointer" }}>
+                  Logout
+                </MenuItem>
               </Menu>
             </Stack>
           </Stack>

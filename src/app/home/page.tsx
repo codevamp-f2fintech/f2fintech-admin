@@ -64,15 +64,17 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     const handleScroll = () => {
+      console.log("SCROLL");
       const scrollTop = document.documentElement.scrollTop;
       const windowHeight = window.innerHeight;
       const offsetHeight = document.documentElement.offsetHeight;
-
+      console.log("data", windowHeight, scrollTop, offsetHeight);
       if (
         windowHeight + scrollTop >= offsetHeight - 50 &&
         currentPage < totalPages &&
         !paginationLoading
       ) {
+        console.log("SET CURRENT PAGE");
         setCurrentPage((prevPage) => prevPage + 1);
       }
     };
