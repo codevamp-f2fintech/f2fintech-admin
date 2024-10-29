@@ -19,9 +19,12 @@ export const metadata = {
 // Server-side function to fetch total applications count
 async function fetchTotalApplications() {
   try {
-    const response = await fetch("http://localhost:3001/api/v1/application/count", {
-      cache: "no-store",     // To Prevent caching
-    });
+    const response = await fetch(
+      "http://localhost:3002/api/v1/application/count",
+      {
+        cache: "no-store", // To Prevent caching
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -39,7 +42,7 @@ async function fetchTotalTickets(
   id: number | null = null,
   role: string
 ): Promise<number> {
-  let url = `http://localhost:3001/api/v1/dashboard/tickets/count`;
+  let url = `http://localhost:3002/api/v1/dashboard/tickets/count`;
 
   if (role === "sales" && id !== null) {
     url += `/${id}`;
@@ -49,10 +52,9 @@ async function fetchTotalTickets(
     url += `/${encodeURIComponent(status)}`;
   }
   console.log(url, "ticket count url");
-  const response = await fetch(url,
-    {
-      cache: "no-store"
-    });     // To Prevent caching
+  const response = await fetch(url, {
+    cache: "no-store",
+  }); // To Prevent caching
 
   if (!response.ok) {
     throw new Error("Failed to fetch total Tickets");
@@ -63,9 +65,9 @@ async function fetchTotalTickets(
 
 async function fetchAgentCount(): Promise<number> {
   const response = await fetch(
-    "http://localhost:3001/api/v1/dashboard/agents/count",
+    "http://localhost:3002/api/v1/dashboard/agents/count",
     {
-      cache: "no-store",    // To Prevent Caching
+      cache: "no-store", // To Prevent Caching
     }
   );
 

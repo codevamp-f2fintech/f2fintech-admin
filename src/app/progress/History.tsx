@@ -22,6 +22,9 @@ const History: React.FC<HistoryProps> = ({ ticketHistory }) => {
       {ticketHistory.length ? (
         ticketHistory.map((history, index) => {
           const dateObj = new Date(history.created_at);
+          const capitalizedAction = capitalizeFirstLetter(
+            history.action.replace(/<\/?[^>]+(>|$)/g, "")
+          );
 
           return (
             <React.Fragment key={history.id}>
@@ -31,18 +34,19 @@ const History: React.FC<HistoryProps> = ({ ticketHistory }) => {
                   fontSize="small"
                   sx={{
                     color: "#2c3ce3",
-                    marginRight: "5px",
+                    marginRight: "1vw",
                   }}
                 />
                 <Typography
                   variant="body1"
-                  dangerouslySetInnerHTML={{ __html: history.action }}
                   sx={{
                     height: "10vh",
                     width: "32vw",
                     color: "white",
                   }}
-                />
+                >
+                  {capitalizedAction}
+                </Typography>
                 <Typography
                   variant="body2"
                   color="textSecondary"

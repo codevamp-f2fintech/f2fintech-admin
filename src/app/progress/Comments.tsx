@@ -278,7 +278,6 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
               sx={{
                 display: "flex",
                 alignItems: "flex-start",
-                // border: "2px solid white",
               }}
             >
               {/* User Avatar */}
@@ -311,6 +310,15 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
                 {editingCommentId === comment.id ? (
                   <Box>
                     <TextField
+                      sx={{
+                        bgcolor: "white",
+                        borderRadius: "10px",
+                        "& .MuiFilledInput-root": {
+                          "&:before, &:after": {
+                            display: "none", // Removes the underline
+                          },
+                        },
+                      }}
                       fullWidth
                       multiline
                       value={editedComment}
@@ -318,7 +326,7 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
                         setEditedComment(capitalizeFirstLetter(e.target.value))
                       }
                       rows={3}
-                      variant="outlined"
+                      variant="filled"
                     />
                     <Box mt={1}>
                       <Button
