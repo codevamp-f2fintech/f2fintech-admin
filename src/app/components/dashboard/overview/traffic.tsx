@@ -8,19 +8,9 @@ import Stack from "@mui/material/Stack";
 import { useTheme } from "@mui/material/styles";
 import type { SxProps } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
-import type { Icon } from "@phosphor-icons/react/dist/lib/types";
-import { Desktop as DesktopIcon } from "@phosphor-icons/react/dist/ssr/Desktop";
-import { DeviceTablet as DeviceTabletIcon } from "@phosphor-icons/react/dist/ssr/DeviceTablet";
-import { Phone as PhoneIcon } from "@phosphor-icons/react/dist/ssr/Phone";
 import type { ApexOptions } from "apexcharts";
 
 import { Chart } from "@/app/components/core/chart";
-
-const iconMapping = {
-  Desktop: DesktopIcon,
-  Tablet: DeviceTabletIcon,
-  Phone: PhoneIcon,
-} as Record<string, Icon>;
 
 export interface TrafficProps {
   chartSeries: number[];
@@ -49,23 +39,17 @@ export function Traffic({
           />
           <Stack
             direction="row"
-            spacing={2}
-            sx={{ alignItems: "center", justifyContent: "center" }}
+            spacing={1}
+            sx={{ alignItems: "center", justifyContent: "center", flexWrap: "wrap", rowGap: 2, columnGap: 3 }}
           >
-            {chartSeries.map((item, index) => {
-              const label = labels[index];
-              const Icon = iconMapping[label];
-
-              return (
-                <Stack key={label} spacing={1} sx={{ alignItems: "center" }}>
-                  {Icon ? <Icon fontSize="var(--icon-fontSize-lg)" /> : null}
-                  <Typography variant="h6">{label}</Typography>
-                  <Typography color="text.secondary" variant="subtitle2">
-                    {item}%
-                  </Typography>
-                </Stack>
-              );
-            })}
+            {chartSeries.map((item, index) => (
+              <Stack key={labels[index]} spacing={1} sx={{ alignItems: "center", minWidth: '80px' }}>
+                <Typography variant="body2" fontWeight="bold">{labels[index]}</Typography>
+                <Typography color="text.secondary" variant="subtitle2">
+                  {item}
+                </Typography>
+              </Stack>
+            ))}
           </Stack>
         </Stack>
       </CardContent>
@@ -80,8 +64,11 @@ function useChartOptions(labels: string[]): ApexOptions {
     chart: { background: "transparent" },
     colors: [
       theme.palette.primary.main,
-      theme.palette.success.main,
       theme.palette.warning.main,
+      "#26C6DA",
+      theme.palette.secondary.main,
+      theme.palette.error.main,
+      theme.palette.success.main,
     ],
     dataLabels: { enabled: false },
     labels,

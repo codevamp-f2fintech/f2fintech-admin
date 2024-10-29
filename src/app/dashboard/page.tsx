@@ -16,6 +16,11 @@ export const metadata = {
   title: `Overview | Dashboard | ${config.site.name}`,
 } satisfies Metadata;
 
+interface Ticket {
+  month: string;
+  count: number;
+}
+
 // Server-side function to fetch total applications count
 async function fetchTotalApplications() {
   try {
@@ -48,7 +53,7 @@ async function fetchTotalTickets(
   if (status) {
     url += `/${encodeURIComponent(status)}`;
   }
-  console.log(url, "ticket count url");
+  // console.log(url, "ticket count url");
   const response = await fetch(url,
     {
       cache: "no-store"
@@ -60,6 +65,37 @@ async function fetchTotalTickets(
   const resData = await response.json();
   return resData.data;
 }
+
+async function getTotalTicketsByMonth(year: number): Promise<Ticket[]> {
+  const response = await fetch(
+    `http://localhost:3001/api/v1/dashboard/tickets/counts-by-month?year=${year}`,
+    {
+      cache: "no-store",    // To Prevent Caching
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch monthly count");
+  }
+  const resData = await response.json();
+  return resData.data.map((ticket: Ticket) => ticket.count);
+}
+
+async function getDoneTicketsByMonth(year: number): Promise<Ticket[]> {
+  const response = await fetch(
+    `http://localhost:3001/api/v1/dashboard/tickets/done-counts-by-month?year=${year}`,
+    {
+      cache: "no-store",    // To Prevent Caching
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch monthly done count");
+  }
+  const resData = await response.json();
+  return resData.data.map((ticket: Ticket) => ticket.count);
+}
+
 
 async function fetchAgentCount(): Promise<number> {
   const response = await fetch(
@@ -90,6 +126,8 @@ export default async function Page(): Promise<React.JSX.Element> {
     totalCloseTickets,
     totalCompletedTickets,
     totalAgents,
+    totalTicketsByMonth,
+    doneTicketsByMonth
   ] = await Promise.all([
     fetchTotalApplications(),
     fetchTotalTickets(null, id, role),
@@ -99,6 +137,8 @@ export default async function Page(): Promise<React.JSX.Element> {
     fetchTotalTickets("close", id, role),
     fetchTotalTickets("done", id, role),
     fetchAgentCount(),
+    getTotalTicketsByMonth(2024),
+    getDoneTicketsByMonth(2024)
   ]);
 
   const dashboardItems = [
@@ -151,6 +191,8 @@ export default async function Page(): Promise<React.JSX.Element> {
       count: totalAgents,
     },
   ];
+  console.log(totalTickets, totalOpenTickets, totalInProgressTickets,
+    totalForwardedTickets, totalCloseTickets, 'tickets count')
 
   return (
     <Grid container spacing={3}>
@@ -177,12 +219,12 @@ export default async function Page(): Promise<React.JSX.Element> {
         <Sales
           chartSeries={[
             {
-              name: "This year",
-              data: [18, 16, 5, 8, 3, 14, 14, 16, 17, 19, 18, 20],
+              name: "Total Tickets",
+              data: totalTicketsByMonth,
             },
             {
-              name: "Last year",
-              data: [12, 11, 4, 6, 2, 9, 9, 10, 11, 12, 13, 13],
+              name: "Done Tickets",
+              data: doneTicketsByMonth,
             },
           ]}
           sx={{ height: "100%" }}
@@ -190,8 +232,9 @@ export default async function Page(): Promise<React.JSX.Element> {
       </Grid>
       <Grid lg={4} md={6} xs={12}>
         <Traffic
-          chartSeries={[63, 15, 22]}
-          labels={["Total Tickets", "In Progress", "To Do"]}
+          chartSeries={[totalTickets, totalOpenTickets, totalInProgressTickets, totalForwardedTickets,
+            totalCloseTickets, totalCompletedTickets]}
+          labels={["Total Tickets", "To Do", "In Progress", "Forwarded", "Close", "Done"]}
           sx={{ height: "100%" }}
         />
       </Grid>
