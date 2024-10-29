@@ -66,7 +66,9 @@ const Ticket = () => {
             created_at: ticket.created_at,
           }));
           setTicketStatus(ticketStatus);
-        } catch (err) {}
+        } catch (err) {
+          console.error(err, "fetch application as ticket error");
+        }
       };
       fetchApplications();
     }
@@ -152,6 +154,9 @@ const Ticket = () => {
       setLocalStorage("ids", { customerId, applicationId, estimate });
       router.push(`/progress`);
     } else {
+      console.error(
+        "No ticket found for the given customerId and applicationId"
+      );
     }
   };
 
