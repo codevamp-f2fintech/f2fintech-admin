@@ -18,7 +18,8 @@ const Ticket = () => {
   const [filteredApplications, setFilteredApplications] = useState([]);
   const [ticketStatus, setTicketStatus] = useState([]);
   const [filter, setFilter] = useState("");
-  const [sortBy, setSortBy] = useState("to do");
+  const [sortBy, setSortBy] = useState("all");
+  const[statusCount,setStatusCount] = useState(0);
 
   // date states
   const [startDate, setStartDate] = useState<Dayjs | null>(null);
@@ -163,9 +164,10 @@ const Ticket = () => {
   const handleSortChange = (event) => {
     const selectedStatus = event.target.value.toLowerCase();
     setSortBy(selectedStatus);
-
+  
     if (selectedStatus === "all") {
       setFilteredApplications(customerApplications);
+      setStatusCount(customerApplications.length); // Count of all tickets
     } else {
       const filteredApplications = customerApplications.filter((customer) =>
         ticketStatus.some((status) => {
@@ -175,9 +177,12 @@ const Ticket = () => {
           );
         })
       );
+  
       setFilteredApplications(filteredApplications);
+      setStatusCount(filteredApplications.length); // Count of filtered tickets
     }
   };
+  
 
   return (
     <>
@@ -200,18 +205,37 @@ const Ticket = () => {
             padding: "1rem",
           }}
         >
-          <Typography
-            variant="h6"
-            component="div"
-            sx={{
-              fontWeight: "bold",
-              color: "black",
-              whiteSpace: "nowrap",
-              fontSize: "1.7rem",
-            }}
-          >
-            Ticket Management
-          </Typography>
+           {sortBy === "all" ? (
+            <Typography
+              variant="h6"
+              component="div"
+              sx={{
+               
+                color: "#black",
+                whiteSpace: "nowrap",
+                fontSize: "2.1rem",
+                marginLeft: "50px",
+              }}
+            >
+             All Tickets: {customerApplications.length}
+            </Typography>
+          ) : (
+            <Typography
+              variant="h4"
+              component="div"
+              sx={{
+                marginLeft: "20px",
+                padding: "1.4rem",
+              }}
+            >
+              <span style={{ marginRight: "0.5rem" }}>
+                {sortBy === "all" ? "📊" : ""}
+              </span>
+              Tickets {sortBy}: {statusCount}
+            </Typography>
+          )}
+
+
 
           {/* Search Input */}
           <Box
