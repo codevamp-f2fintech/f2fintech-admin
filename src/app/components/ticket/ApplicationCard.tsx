@@ -255,7 +255,7 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
                 )
               }
             >
-              Start Work
+              Visit Ticket
             </Button>
           )}
         </CardContent>
