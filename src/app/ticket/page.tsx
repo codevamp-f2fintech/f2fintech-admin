@@ -18,7 +18,8 @@ const Ticket = () => {
   const [filteredApplications, setFilteredApplications] = useState([]);
   const [ticketStatus, setTicketStatus] = useState([]);
   const [filter, setFilter] = useState("");
-  const [sortBy, setSortBy] = useState("to do");
+  const [sortBy, setSortBy] = useState("all");
+  const[statusCount,setStatusCount] = useState(0);
 
   // date states
   const [startDate, setStartDate] = useState<Dayjs | null>(null);
@@ -67,7 +68,7 @@ const Ticket = () => {
           }));
           setTicketStatus(ticketStatus);
         } catch (err) {
-          console.log(err, "fetch application as ticket error");
+          console.error(err, "fetch application as ticket error");
         }
       };
       fetchApplications();
@@ -80,14 +81,12 @@ const Ticket = () => {
       const initialFilteredApplications = customerApplications.filter(
         (customer) =>
           ticketStatus.some((status) => {
-            console.log(status, "status");
             return (
               status.customer_application_id === customer.applicationId &&
               status.status === "to do" // Filter by "to do"
             );
           })
       );
-      console.log(initialFilteredApplications, "initialfilter");
       setFilteredApplications(initialFilteredApplications);
     }
   }, [customerApplications, ticketStatus]);
@@ -156,16 +155,19 @@ const Ticket = () => {
       setLocalStorage("ids", { customerId, applicationId, estimate });
       router.push(`/progress`);
     } else {
-      console.log("No ticket found for the given customerId and applicationId");
+      console.error(
+        "No ticket found for the given customerId and applicationId"
+      );
     }
   };
 
   const handleSortChange = (event) => {
     const selectedStatus = event.target.value.toLowerCase();
     setSortBy(selectedStatus);
-
+  
     if (selectedStatus === "all") {
       setFilteredApplications(customerApplications);
+      setStatusCount(customerApplications.length); // Count of all tickets
     } else {
       const filteredApplications = customerApplications.filter((customer) =>
         ticketStatus.some((status) => {
@@ -175,9 +177,12 @@ const Ticket = () => {
           );
         })
       );
+  
       setFilteredApplications(filteredApplications);
+      setStatusCount(filteredApplications.length); // Count of filtered tickets
     }
   };
+  
 
   return (
     <>
@@ -187,6 +192,7 @@ const Ticket = () => {
           alignItems: "center",
           justifyContent: "space-between",
           flexDirection: "column",
+          
         }}
       >
         <Box
@@ -197,21 +203,40 @@ const Ticket = () => {
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
-            padding: "1rem",
+            padding: "0.1rem",
           }}
         >
-          <Typography
-            variant="h6"
-            component="div"
-            sx={{
-              fontWeight: "bold",
-              color: "black",
-              whiteSpace: "nowrap",
-              fontSize: "1.7rem",
-            }}
-          >
-            Ticket Management
-          </Typography>
+           {sortBy === "all" ? (
+            <Typography
+              variant="h6"
+              component="div"
+              sx={{
+               
+                color: "#black",
+                whiteSpace: "nowrap",
+                fontSize: "2.1rem",
+                marginLeft: "50px",
+              }}
+            >
+             All Tickets: {customerApplications.length}
+            </Typography>
+          ) : (
+            <Typography
+              variant="h4"
+              component="div"
+              sx={{
+                marginLeft: "20px",
+                padding: "1.4rem",
+              }}
+            >
+              <span style={{ marginRight: "0.5rem" }}>
+                {sortBy === "all" ? "📊" : ""}
+              </span>
+              Tickets {sortBy}: {statusCount}
+            </Typography>
+          )}
+
+
 
           {/* Search Input */}
           <Box
@@ -283,43 +308,46 @@ const Ticket = () => {
         </Box>
 
         <Box
-          sx={{
-            minWidth: "80vw",
-            minHeight: "90vh",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Grid container spacing={2} paddingLeft={7} mt={0.4}>
-            {filteredApplications.length > 0 ? (
-              filteredApplications.map((customer, id) => {
-                const ticket = ticketStatus.find(
-                  (ticket) =>
-                    ticket.customer_application_id === customer.applicationId
-                );
+        sx={{
+        minWidth: "80vw",
+        minHeight: "70vh", 
+        display: "flex",
+        alignItems: "flex-start", 
+        justifyContent: "space-between",
+        paddingTop: "20px", 
+        marginBottom: "0", 
+      }}
+    >
+      <Grid container spacing={2} paddingLeft={7}>
+        {filteredApplications.length > 0 ? (
+          filteredApplications.map((customer, id) => {
+            const ticket = ticketStatus.find(
+              (ticket) => ticket.customer_application_id === customer.applicationId
+            );
 
-                return (
-                  <ApplicationCard
-                    contact={customer}
-                    ticket={ticket}
-                    handleStartClick={handleStartClick}
-                  />
-                );
-              })
-            ) : (
-              <Typography
-                sx={{
-                  width: "100%",
-                  textAlign: "center",
-                  color: "text.secondary",
-                }}
-              >
-                No Tickets Found. Start Picking Some!
-              </Typography>
-            )}
-          </Grid>
-        </Box>
+        return (
+          <ApplicationCard
+            key={id} 
+            contact={customer}
+            ticket={ticket}
+            handleStartClick={handleStartClick}
+          />
+        );
+      })
+    ) : (
+      <Typography
+        sx={{
+          width: "100%",
+          textAlign: "center",
+          color: "text.secondary",
+        }}
+      >
+        No Tickets Found. Start Picking Some!
+      </Typography>
+    )}
+  </Grid>
+</Box>
+
       </Box>
     </>
   );

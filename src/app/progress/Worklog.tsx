@@ -15,6 +15,10 @@ interface WorkLogListProps {
 const WorkLogList: React.FC<WorkLogListProps> = ({ ticketData }) => {
   const { decodedToken } = Utility();
 
+  const capitalizeFirstLetter = (str: string) => {
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  };
+
   return (
     <Box>
       {ticketData.length ? (
@@ -38,7 +42,7 @@ const WorkLogList: React.FC<WorkLogListProps> = ({ ticketData }) => {
               padding=".5rem"
             >
               <Typography fontWeight="bold" sx={{ mr: "1vw" }}>
-                {decodedToken()?.username}
+                {capitalizeFirstLetter(decodedToken()?.username)}
               </Typography>
 
               <Typography
@@ -71,7 +75,7 @@ const WorkLogList: React.FC<WorkLogListProps> = ({ ticketData }) => {
                 fontSize: "0.9rem",
               }}
             >
-              {log.work_description}
+              {capitalizeFirstLetter(log.work_description)}
             </Typography>
           </Paper>
         ))

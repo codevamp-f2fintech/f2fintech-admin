@@ -24,9 +24,12 @@ interface Ticket {
 // Server-side function to fetch total applications count
 async function fetchTotalApplications() {
   try {
-    const response = await fetch("http://localhost:3001/api/v1/application/count", {
-      cache: "no-store",     // To Prevent caching
-    });
+    const response = await fetch(
+      "http://localhost:3001/api/v1/application/count",
+      {
+        cache: "no-store", // To Prevent caching
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -101,7 +104,7 @@ async function fetchAgentCount(): Promise<number> {
   const response = await fetch(
     "http://localhost:3001/api/v1/dashboard/agents/count",
     {
-      cache: "no-store",    // To Prevent Caching
+      cache: "no-store", // To Prevent Caching
     }
   );
 

@@ -165,7 +165,6 @@ const TrackingForm: React.FC<FormComponentProps> = ({
             data
           );
           if (createdResponse?.statusCode === 200) {
-            console.log("Created Ticket Response:", createdResponse);
             setLoading(false);
             toastAndNavigate(
               dispatch,
@@ -178,7 +177,6 @@ const TrackingForm: React.FC<FormComponentProps> = ({
             );
           }
         } catch (error) {
-          console.log("Error creating ticket log:", error);
           toastAndNavigate(
             dispatch,
             true,
@@ -206,7 +204,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
         aria-labelledby="responsive-dialog-title"
         sx={{
           top: isMobile ? "33%" : isTab ? "25%" : "20%",
-          height: isMobile ? "49%" : isTab ? "39%" : "60%",
+          height: isMobile ? "49%" : isTab ? "39%" : "80vh",
           "& .MuiPaper-root": {
             width: "100%",
             backgroundImage:

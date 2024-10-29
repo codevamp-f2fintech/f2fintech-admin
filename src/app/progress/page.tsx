@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, MouseEvent, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import {
@@ -8,24 +8,16 @@ import {
   Box,
   Grid,
   Typography,
-  Button,
   Divider,
   TextField,
   Paper,
   Avatar,
   MenuItem,
-  AppBar,
-  Toolbar,
-  IconButton,
   Autocomplete,
   InputLabel,
   Select,
   FormControl,
 } from "@mui/material";
-import {
-  ArrowDropDown as ArrowDropDownIcon,
-  ArrowBack as ArrowBackIcon,
-} from "@mui/icons-material";
 
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers";
@@ -140,7 +132,6 @@ const Progress: React.FC = () => {
         })
       );
       dispatch(fetchEmployeeStatus(ids.applicationId));
-      console.log("it is running");
     }
     const selectedCustomer = applicationData?.data?.find(
       (cust) => cust.Id === ids.customerId
@@ -152,12 +143,10 @@ const Progress: React.FC = () => {
 
   useEffect(() => {
     if (loanStatus) {
-      console.log("loan status", loanStatus);
       setNewLoanStatus(loanStatus);
     }
 
     if (employeeStatus) {
-      console.log("employee status", employeeStatus);
       setNewEmployeeStatus(employeeStatus);
     }
   }, [loanStatus, employeeStatus]);
@@ -176,7 +165,6 @@ const Progress: React.FC = () => {
       }, 0);
 
       const finalTime = convertHoursToDaysAndHours(totalHours);
-      console.log(finalTime, "final total time");
       setTimeLoggingEstimate({
         ...timeLoggingEstimate,
         timeSpent: finalTime,
@@ -276,10 +264,8 @@ const Progress: React.FC = () => {
       await refetch();
     } catch (error) {
       toastAndNavigate(dispatch, true, "error", "Error Changing Status");
-      console.log("Error updating loan tracking:", error);
     }
   };
-  console.log(loanStatus, "loan status");
 
   const handleChangeEmployeeStatus = async (event) => {
     const oldStatus = newEmployeeStatus;
@@ -306,7 +292,6 @@ const Progress: React.FC = () => {
       await refetch();
     } catch (error) {
       toastAndNavigate(dispatch, true, "error", "Error Changing Status");
-      console.log("Error updating loan tracking:", error);
     }
   };
 
@@ -327,7 +312,6 @@ const Progress: React.FC = () => {
       await refetch();
     } catch (error) {
       toastAndNavigate(dispatch, true, "error", "Error Forwarding User");
-      console.log("Error updating loan tracking:", error);
     }
   };
 
@@ -733,11 +717,11 @@ const Progress: React.FC = () => {
                   elevation={4}
                   sx={{
                     padding: 3,
-                    height: "78vh",
+                    height: "72vh",
                     width: "400px",
                     borderRadius: "20px",
                     position: "fixed",
-                    top: "21vh",
+                    top: "20vh",
                     background: `
       linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
     `,
@@ -896,15 +880,15 @@ const Progress: React.FC = () => {
                               borderRadius: "20px",
                               "& .MuiOutlinedInput-root": {
                                 color: "black",
-                                backgroundColor: "darkgray",
+                                backgroundColor: "#eeeeee",
                                 "& fieldset": {
                                   borderColor: "lightblue",
                                 },
                                 "&:hover fieldset": {
-                                  borderColor: "cyan",
+                                  borderColor: "white",
                                 },
                                 "&.Mui-focused fieldset": {
-                                  borderColor: "blue",
+                                  borderColor: "white",
                                 },
                               },
                               "& .MuiInputLabel-root": {
@@ -917,20 +901,31 @@ const Progress: React.FC = () => {
                     )}
                   </Box>
                   <Divider sx={{ my: 2 }} />
-                  <Box display="flex" justifyContent="space-between" mt={2}>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        fontSize: "14px",
-                        fontWeight: "bold",
-                        color: "white",
-                        marginLeft: ".5rem",
-                      }}
-                    >
-                      Assignee
-                    </Typography>
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    mt={2}
+                  >
+                    <Box>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontSize: "14px",
+                          fontWeight: "bold",
+                          color: "white",
+                          marginLeft: ".5rem",
+                        }}
+                      >
+                        Assignee
+                      </Typography>
+                    </Box>
+
                     <Box display="flex" alignItems="center">
-                      <Typography variant="body2" sx={{ mr: "1vw" }}>
+                      <Typography
+                        variant="body2"
+                        sx={{ mr: "1vw", color: "white" }}
+                      >
                         {capitalizeFirstLetter(decodedToken()?.username)}
                       </Typography>
                       <Avatar
@@ -1008,13 +1003,11 @@ const Progress: React.FC = () => {
                           }))
                         }
                         sx={{
-                          width: "10vw",
+                          width: "5vw",
                           border: "none !important",
-                          // height: "10vh !important",
                           backgroundColor: timeLoggingEstimate.isHovered
                             ? "#e0e0e0"
                             : "transparent",
-                          // borderRadius: "4px",
                           visibility: timeLoggingEstimate.isHovered
                             ? "show"
                             : "hidden",

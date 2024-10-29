@@ -3,7 +3,6 @@ import { jwtDecode } from "jwt-decode";
 
 import { User } from "@/types/user";
 import { setToast } from "@/redux/features/toastSlice";
-import { cookies } from "next/headers";
 
 export const Utility = () => {
   /**
@@ -141,7 +140,7 @@ export const Utility = () => {
    * @returns {Object} An object representing the cookies.
    */
   const getCookies = (): object => {
-    const cookieString = document.cookie; // Get cookies as a string
+    const cookieString = document?.cookie; // Get cookies as a string
     const cookiesArray = cookieString.split("; "); // Split into an array
     const cookies: Record<string, string> = {};
 
