@@ -192,6 +192,7 @@ const Ticket = () => {
           alignItems: "center",
           justifyContent: "space-between",
           flexDirection: "column",
+          
         }}
       >
         <Box
@@ -202,7 +203,7 @@ const Ticket = () => {
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
-            padding: "1rem",
+            padding: "0.1rem",
           }}
         >
            {sortBy === "all" ? (
@@ -307,43 +308,46 @@ const Ticket = () => {
         </Box>
 
         <Box
-          sx={{
-            minWidth: "80vw",
-            minHeight: "90vh",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Grid container spacing={2} paddingLeft={7} mt={0.4}>
-            {filteredApplications.length > 0 ? (
-              filteredApplications.map((customer, id) => {
-                const ticket = ticketStatus.find(
-                  (ticket) =>
-                    ticket.customer_application_id === customer.applicationId
-                );
+        sx={{
+        minWidth: "80vw",
+        minHeight: "70vh", 
+        display: "flex",
+        alignItems: "flex-start", 
+        justifyContent: "space-between",
+        paddingTop: "20px", 
+        marginBottom: "0", 
+      }}
+    >
+      <Grid container spacing={2} paddingLeft={7}>
+        {filteredApplications.length > 0 ? (
+          filteredApplications.map((customer, id) => {
+            const ticket = ticketStatus.find(
+              (ticket) => ticket.customer_application_id === customer.applicationId
+            );
 
-                return (
-                  <ApplicationCard
-                    contact={customer}
-                    ticket={ticket}
-                    handleStartClick={handleStartClick}
-                  />
-                );
-              })
-            ) : (
-              <Typography
-                sx={{
-                  width: "100%",
-                  textAlign: "center",
-                  color: "text.secondary",
-                }}
-              >
-                No Tickets Found. Start Picking Some!
-              </Typography>
-            )}
-          </Grid>
-        </Box>
+        return (
+          <ApplicationCard
+            key={id} 
+            contact={customer}
+            ticket={ticket}
+            handleStartClick={handleStartClick}
+          />
+        );
+      })
+    ) : (
+      <Typography
+        sx={{
+          width: "100%",
+          textAlign: "center",
+          color: "text.secondary",
+        }}
+      >
+        No Tickets Found. Start Picking Some!
+      </Typography>
+    )}
+  </Grid>
+</Box>
+
       </Box>
     </>
   );
