@@ -66,9 +66,7 @@ const Ticket = () => {
             created_at: ticket.created_at,
           }));
           setTicketStatus(ticketStatus);
-        } catch (err) {
-          console.log(err, "fetch application as ticket error");
-        }
+        } catch (err) {}
       };
       fetchApplications();
     }
@@ -80,14 +78,12 @@ const Ticket = () => {
       const initialFilteredApplications = customerApplications.filter(
         (customer) =>
           ticketStatus.some((status) => {
-            console.log(status, "status");
             return (
               status.customer_application_id === customer.applicationId &&
               status.status === "to do" // Filter by "to do"
             );
           })
       );
-      console.log(initialFilteredApplications, "initialfilter");
       setFilteredApplications(initialFilteredApplications);
     }
   }, [customerApplications, ticketStatus]);
@@ -156,7 +152,6 @@ const Ticket = () => {
       setLocalStorage("ids", { customerId, applicationId, estimate });
       router.push(`/progress`);
     } else {
-      console.log("No ticket found for the given customerId and applicationId");
     }
   };
 
