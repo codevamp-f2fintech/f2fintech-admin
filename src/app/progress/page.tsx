@@ -29,7 +29,7 @@ import { useGetTickets, useModifyTicket } from "@/hooks/ticket";
 import {
   useGetTicketHistory,
   useCreateTicketHistory,
-} from "@/hooks/ticketHistory";
+} from "@/hooks/tickethistory";
 import {
   fetchStatusAndDocuments,
   fetchEmployeeStatus,
