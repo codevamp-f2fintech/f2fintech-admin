@@ -75,7 +75,7 @@ export const Utility = () => {
   const remLocalStorage = (key: string): void => {
     try {
       localStorage.removeItem(key);
-    } catch (err) {}
+    } catch (err) { }
   };
 
   /**
@@ -87,7 +87,7 @@ export const Utility = () => {
   const setLocalStorage = (key: string, value: any): void => {
     try {
       localStorage.setItem(key, JSON.stringify(value));
-    } catch (err) {}
+    } catch (err) { }
   };
 
   /**
@@ -140,8 +140,11 @@ export const Utility = () => {
    * @returns {Object} An object representing the cookies.
    */
   const getCookies = (): object => {
-    const cookieString = document?.cookie; // Get cookies as a string
-    const cookiesArray = cookieString.split("; "); // Split into an array
+    if (typeof document === "undefined") {
+      return {};
+    }
+    const cookieString = document?.cookie;          // Get cookies as a string
+    const cookiesArray = cookieString.split("; ");   // Split into an array
     const cookies: Record<string, string> = {};
 
     // Convert array into a key-value pair object
@@ -170,6 +173,9 @@ export const Utility = () => {
    * @returns {any | null} - Decoded token payload, or null if token not found or invalid.
    */
   const decodedToken = (token = null): any | null => {
+    if (typeof document === "undefined") {
+      return {};
+    }
     if (!token) {
       const cookies = getCookies();
       token = cookies.token;

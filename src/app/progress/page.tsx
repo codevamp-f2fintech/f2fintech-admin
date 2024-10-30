@@ -95,7 +95,7 @@ const Progress: React.FC = () => {
   );
   const { value: applicationData } = useGetTickets(
     [],
-    `get-application-as-ticket/${ids.applicationId}`
+    `get-application-as-ticket/${ids?.applicationId}`
   );
   const { modifyTicket } = useModifyTicket("update-ticket");
 
@@ -124,14 +124,14 @@ const Progress: React.FC = () => {
   }, [userData?.data, forwardedUserId]);
 
   useEffect(() => {
-    if (ids.applicationId && ids.customerId) {
+    if (ids?.applicationId && ids?.customerId) {
       dispatch(
         fetchStatusAndDocuments({
           applicationId: ids.applicationId,
           customerId: ids.customerId,
         })
       );
-      dispatch(fetchEmployeeStatus(ids.applicationId));
+      dispatch(fetchEmployeeStatus(ids?.applicationId));
     }
     const selectedCustomer = applicationData?.data?.find(
       (cust) => cust.Id === ids.customerId
@@ -249,7 +249,7 @@ const Progress: React.FC = () => {
 
     try {
       await axios.patch("http://localhost:8080/api/v1/update-loan-tracking", {
-        customer_application_id: ids.applicationId,
+        customer_application_id: ids?.applicationId,
         status: newStatus,
       });
       const loggedInUser = decodedToken()?.username;
