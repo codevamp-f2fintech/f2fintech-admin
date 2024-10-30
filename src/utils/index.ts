@@ -75,7 +75,7 @@ export const Utility = () => {
   const remLocalStorage = (key: string): void => {
     try {
       localStorage.removeItem(key);
-    } catch (err) { }
+    } catch (err) {}
   };
 
   /**
@@ -87,7 +87,7 @@ export const Utility = () => {
   const setLocalStorage = (key: string, value: any): void => {
     try {
       localStorage.setItem(key, JSON.stringify(value));
-    } catch (err) { }
+    } catch (err) {}
   };
 
   /**
@@ -143,8 +143,8 @@ export const Utility = () => {
     if (typeof document === "undefined") {
       return {};
     }
-    const cookieString = document?.cookie;          // Get cookies as a string
-    const cookiesArray = cookieString.split("; ");   // Split into an array
+    const cookieString = document?.cookie; // Get cookies as a string
+    const cookiesArray = cookieString.split("; "); // Split into an array
     const cookies: Record<string, string> = {};
 
     // Convert array into a key-value pair object
@@ -178,7 +178,7 @@ export const Utility = () => {
     }
     if (!token) {
       const cookies = getCookies();
-      token = cookies.token;
+      token = cookies?.token;
     }
 
     if (token) {
