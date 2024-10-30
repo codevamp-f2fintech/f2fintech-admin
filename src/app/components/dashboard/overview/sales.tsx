@@ -26,17 +26,17 @@ export function Sales({ chartSeries, sx }: SalesProps): React.JSX.Element {
   return (
     <Card sx={sx}>
       <CardHeader
-        action={
-          <Button
-            color="inherit"
-            size="small"
-            startIcon={
-              <ArrowClockwiseIcon fontSize="var(--icon-fontSize-md)" />
-            }
-          >
-            Sync
-          </Button>
-        }
+        // action={
+        //   <Button
+        //     color="inherit"
+        //     size="small"
+        //     startIcon={
+        //       <ArrowClockwiseIcon fontSize="var(--icon-fontSize-md)" />
+        //     }
+        //   >
+        //     Sync
+        //   </Button>
+        // }
         title="Tickets Overview"
       />
       <CardContent>
@@ -49,7 +49,7 @@ export function Sales({ chartSeries, sx }: SalesProps): React.JSX.Element {
         />
       </CardContent>
       <Divider />
-      <CardActions sx={{ justifyContent: "flex-end" }}>
+      {/* <CardActions sx={{ justifyContent: "flex-end" }}>
         <Button
           color="inherit"
           endIcon={<ArrowRightIcon fontSize="var(--icon-fontSize-md)" />}
@@ -57,7 +57,7 @@ export function Sales({ chartSeries, sx }: SalesProps): React.JSX.Element {
         >
           Overview
         </Button>
-      </CardActions>
+      </CardActions> */}
     </Card>
   );
 }
@@ -108,7 +108,7 @@ function useChartOptions(): ApexOptions {
     },
     yaxis: {
       labels: {
-        formatter: (value) => (value > 0 ? `${value}K` : `${value}`),
+        formatter: (value) => `${value}`,
         offsetX: -10,
         style: { colors: theme.palette.text.secondary },
       },
