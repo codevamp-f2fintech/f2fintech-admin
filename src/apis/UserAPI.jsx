@@ -14,7 +14,7 @@ export const UserAPI = {
    */
   login: async (loginInfo, cancel = false) => {
     return await axiosInstance.request({
-      url: `login`,
+      url: `/login`,
       method: "POST",
       data: loginInfo,
       signal: cancel
@@ -41,7 +41,7 @@ export const UserAPI = {
       method: "GET",
       signal: cancel
         ? cancelApiObject[this.getuserProfile.name].handleRequestCancellation()
-          .signal
+            .signal
         : undefined,
     });
   },
@@ -70,7 +70,8 @@ export const UserAPI = {
       method: "POST",
       data: document,
       signal: cancel
-        ? cancelApiObject[this.uploadDocument.name].handleRequestCancellation().signal
+        ? cancelApiObject[this.uploadDocument.name].handleRequestCancellation()
+            .signal
         : undefined,
     });
   },

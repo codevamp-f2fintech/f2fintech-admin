@@ -57,8 +57,9 @@ const Login = (): JSX.Element => {
       const response = await UserAPI.login(values); // Call the UserAPI login method
       if (response?.data?.data.token) {
         // Save the token in a cookie manually
-        document.cookie = `token=${response.data.data.token.access_token
-          }; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
+        document.cookie = `token=${
+          response.data.data.token.access_token
+        }; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
         toastAndNavigate(dispatch, true, "success", "Signin Success");
 
         const role = decodedToken(response.data.data.token.access_token)?.role;
@@ -70,7 +71,7 @@ const Login = (): JSX.Element => {
       }
     } catch (error) {
       toastAndNavigate(dispatch, true, "error", "Error Signin");
-      console.log(error, 'signin error')
+      console.log(error, "signin error");
     }
   };
   return (
@@ -79,14 +80,14 @@ const Login = (): JSX.Element => {
         container
         component="main"
         sx={{
-          height: "100vh",
+          height: "90vh",
           marginRight: "10vw",
           background:
             "linear-gradient(125deg, #ECFCFF 0%, #ECFCFF 40%, #B2FCFF calc(40% + 1px), #B2FCFF 60%, #5EDFFF calc(60% + 1px), #5EDFFF 72%, #3E64FF calc(72% + 1px), #3E64FF 100%)",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          position: "fixed",
+          // position: "fixed",
         }}
       >
         <CssBaseline />

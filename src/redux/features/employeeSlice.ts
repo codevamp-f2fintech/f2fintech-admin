@@ -19,7 +19,7 @@ export const fetchEmployeeStatus = createAsyncThunk<string, number>(
 
   async (applicationId) => {
     const response = await axios.get(
-      `http://localhost:3001/api/v1/get-by-application-id/${applicationId}`
+      `${process.env.NEXT_PUBLIC_API_URL}/get-by-application-id/${applicationId}`
     );
     return response.data.data.status;
   }
@@ -47,7 +47,7 @@ export const fetchStatusAndDocuments = createAsyncThunk<
   async ({ applicationId, customerId }, { rejectWithValue }) => {
     try {
       const response = await axios.get(
-        `http://localhost:3001/api/v1/get-status-and-documents/${customerId}/${applicationId}`
+        `${process.env.NEXT_PUBLIC_API_URL}/get-status-and-documents/${customerId}/${applicationId}`
       );
       if (response.data && response.data.data) {
         return response.data;

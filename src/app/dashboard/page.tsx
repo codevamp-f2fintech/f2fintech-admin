@@ -25,7 +25,7 @@ interface Ticket {
 async function fetchTotalApplications() {
   try {
     const response = await fetch(
-      "http://localhost:3001/api/v1/application/count",
+      `${process.env.NEXT_PUBLIC_API_URL}/application/count`,
       {
         cache: "no-store", // To Prevent caching
       }
@@ -47,7 +47,7 @@ async function fetchTotalTickets(
   id: number | null = null,
   role: string
 ): Promise<number> {
-  let url = `http://localhost:3001/api/v1/dashboard/tickets/count`;
+  let url = `${process.env.NEXT_PUBLIC_API_URL}/dashboard/tickets/count`;
 
   if (role === "sales" && id !== null) {
     url += `/${id}`;
@@ -57,10 +57,9 @@ async function fetchTotalTickets(
     url += `/${encodeURIComponent(status)}`;
   }
   // console.log(url, "ticket count url");
-  const response = await fetch(url,
-    {
-      cache: "no-store"
-    });     // To Prevent caching
+  const response = await fetch(url, {
+    cache: "no-store",
+  }); // To Prevent caching
 
   if (!response.ok) {
     throw new Error("Failed to fetch total Tickets");
@@ -71,9 +70,9 @@ async function fetchTotalTickets(
 
 async function getTotalTicketsByMonth(year: number): Promise<Ticket[]> {
   const response = await fetch(
-    `http://localhost:3001/api/v1/dashboard/tickets/counts-by-month?year=${year}`,
+    `${process.env.NEXT_PUBLIC_API_URL}/dashboard/tickets/counts-by-month?year=${year}`,
     {
-      cache: "no-store",    // To Prevent Caching
+      cache: "no-store", // To Prevent Caching
     }
   );
 
@@ -86,9 +85,9 @@ async function getTotalTicketsByMonth(year: number): Promise<Ticket[]> {
 
 async function getDoneTicketsByMonth(year: number): Promise<Ticket[]> {
   const response = await fetch(
-    `http://localhost:3001/api/v1/dashboard/tickets/done-counts-by-month?year=${year}`,
+    `${process.env.NEXT_PUBLIC_API_URL}/dashboard/tickets/done-counts-by-month?year=${year}`,
     {
-      cache: "no-store",    // To Prevent Caching
+      cache: "no-store", // To Prevent Caching
     }
   );
 
@@ -99,10 +98,9 @@ async function getDoneTicketsByMonth(year: number): Promise<Ticket[]> {
   return resData.data.map((ticket: Ticket) => ticket.count);
 }
 
-
 async function fetchAgentCount(): Promise<number> {
   const response = await fetch(
-    "http://localhost:3001/api/v1/dashboard/agents/count",
+    `${process.env.NEXT_PUBLIC_API_URL}/dashboard/agents/count`,
     {
       cache: "no-store", // To Prevent Caching
     }
@@ -130,7 +128,7 @@ export default async function Page(): Promise<React.JSX.Element> {
     totalCompletedTickets,
     totalAgents,
     totalTicketsByMonth,
-    doneTicketsByMonth
+    doneTicketsByMonth,
   ] = await Promise.all([
     fetchTotalApplications(),
     fetchTotalTickets(null, id, role),
@@ -141,7 +139,7 @@ export default async function Page(): Promise<React.JSX.Element> {
     fetchTotalTickets("done", id, role),
     fetchAgentCount(),
     getTotalTicketsByMonth(2024),
-    getDoneTicketsByMonth(2024)
+    getDoneTicketsByMonth(2024),
   ]);
 
   const dashboardItems = [
@@ -194,8 +192,14 @@ export default async function Page(): Promise<React.JSX.Element> {
       count: totalAgents,
     },
   ];
-  console.log(totalTickets, totalOpenTickets, totalInProgressTickets,
-    totalForwardedTickets, totalCloseTickets, 'tickets count')
+  console.log(
+    totalTickets,
+    totalOpenTickets,
+    totalInProgressTickets,
+    totalForwardedTickets,
+    totalCloseTickets,
+    "tickets count"
+  );
 
   return (
     <Grid container spacing={3}>
@@ -235,9 +239,22 @@ export default async function Page(): Promise<React.JSX.Element> {
       </Grid>
       <Grid lg={4} md={6} xs={12}>
         <Traffic
-          chartSeries={[totalTickets, totalOpenTickets, totalInProgressTickets, totalForwardedTickets,
-            totalCloseTickets, totalCompletedTickets]}
-          labels={["Total Tickets", "To Do", "In Progress", "Forwarded", "Close", "Done"]}
+          chartSeries={[
+            totalTickets,
+            totalOpenTickets,
+            totalInProgressTickets,
+            totalForwardedTickets,
+            totalCloseTickets,
+            totalCompletedTickets,
+          ]}
+          labels={[
+            "Total Tickets",
+            "To Do",
+            "In Progress",
+            "Forwarded",
+            "Close",
+            "Done",
+          ]}
           sx={{ height: "100%" }}
         />
       </Grid>
