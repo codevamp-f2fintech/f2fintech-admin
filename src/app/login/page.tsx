@@ -59,7 +59,7 @@ const Login = (): JSX.Element => {
         // Save the token in a cookie manually
         document.cookie = `token=${
           response.data.data.token.access_token
-        }; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
+        }; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=none`;
         toastAndNavigate(dispatch, true, "success", "Signin Success");
 
         const role = decodedToken(response.data.data.token.access_token)?.role;
