@@ -49,6 +49,8 @@ const Home: React.FC = () => {
   useEffect(() => {
     if (data?.success === true) {
       updateCustomerData(data.data);
+    } else {
+      setLoading(false);
     }
   }, [data, currentPage, pageSize, dispatch]);
 
@@ -59,7 +61,11 @@ const Home: React.FC = () => {
     const pages = Math.ceil(fetchedData.totalCount / pageSize);
     setTotalPages(pages > 0 ? pages : 1);
     setLoading(false);
-    setPaginationLoading(false);
+    // setPaginationLoading(false);
+
+    if (fetchedData.data.length === 0) {
+      setPaginationLoading(false);
+    }
   };
 
   useEffect(() => {
