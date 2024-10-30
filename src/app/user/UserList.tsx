@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import UsersPage from "./UsersPage";
 import { User } from "@/types/user";
 
-const url = "http://localhost:3002/api/v1/get-users";
+const url = `${process.env.NEXT_PUBLIC_API_URL}/get-users`;
 const PAGE = 1;
 const SIZE = 5;
 

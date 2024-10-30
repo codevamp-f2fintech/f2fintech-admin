@@ -49,8 +49,9 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
             <TableRow>
               <TableCell>Username</TableCell>
               <TableCell>Email</TableCell>
-              <TableCell>Contact</TableCell>
-              <TableCell>Designation</TableCell>
+              <TableCell>Open Tickets</TableCell>
+              <TableCell>In-progress</TableCell>
+              <TableCell>Done Tickets</TableCell>
               <TableCell sortDirection="desc">Date</TableCell>
             </TableRow>
           </TableHead>
@@ -63,10 +64,10 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
                       {capitalizeFirstLetter(user.username)}
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
-                    <TableCell>{user.number}</TableCell>
-                    <TableCell>
-                      {capitalizeFirstLetter(user.designation)}
-                    </TableCell>
+                    <TableCell>{user.openTickets}</TableCell>
+                    <TableCell>{user.inProgress}</TableCell>
+                    <TableCell>{user.done}</TableCell>
+
                     <TableCell>
                       {dayjs(user.created_at).format("MMM D, YYYY")}
                     </TableCell>

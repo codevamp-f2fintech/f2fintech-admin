@@ -7,19 +7,18 @@ import { Box, Grid, Typography } from "@mui/material";
 import dayjs, { Dayjs } from "dayjs";
 
 import Header from "../components/common/Header";
+import Loader from "../components/common/Loader";
 import { useGetTickets, useModifyTicket } from "@/hooks/ticket";
 import { fetcher } from "@/apis/apiClient";
 import { Utility } from "@/utils";
 import ApplicationCard from "../components/ticket/ApplicationCard";
-import Loader from "../components/common/Loader";
 
 const Ticket = () => {
   const [customerApplications, setCustomerApplications] = useState([]);
   const [filteredApplications, setFilteredApplications] = useState([]);
-  const [ticketStatus, setTicketStatus] = useState([]);
+  const [tickets, setTickets] = useState([]);
   const [filter, setFilter] = useState("");
-  const [sortBy, setSortBy] = useState("all");
-  const[statusCount,setStatusCount] = useState(0);
+  const [sortBy, setSortBy] = useState("to do");
 
   // date states
   const [startDate, setStartDate] = useState<Dayjs | null>(null);
@@ -66,7 +65,7 @@ const Ticket = () => {
             due_date: ticket.due_date,
             created_at: ticket.created_at,
           }));
-          setTicketStatus(ticketStatus);
+          setTickets(ticketStatus);
         } catch (err) {
           console.error(err, "fetch application as ticket error");
         }
@@ -77,10 +76,10 @@ const Ticket = () => {
 
   // Initial filter to show only "to do" tickets by default
   useEffect(() => {
-    if (customerApplications.length && ticketStatus.length) {
+    if (customerApplications.length && tickets.length) {
       const initialFilteredApplications = customerApplications.filter(
         (customer) =>
-          ticketStatus.some((status) => {
+          tickets.some((status) => {
             return (
               status.customer_application_id === customer.applicationId &&
               status.status === "to do" // Filter by "to do"
@@ -89,52 +88,53 @@ const Ticket = () => {
       );
       setFilteredApplications(initialFilteredApplications);
     }
-  }, [customerApplications, ticketStatus]);
+  }, [customerApplications, tickets]);
 
   // Filter by search, date
   useEffect(() => {
-    if (!filter && !startDate && !endDate) {
+    if (!filter && !startDate && !endDate && !sortBy) {
+      console.log("get all applications");
       setFilteredApplications(customerApplications);
       return;
-    }
-
-    let filtered = customerApplications;
-    // Filter by Name, Amount, or Tenure
-    if (filter) {
-      const regex = new RegExp(filter, "i");
-      filtered = filtered.filter(
-        (app) =>
-          regex.test(app.Name) ||
-          regex.test(app.Amount.toString()) ||
-          app.Tenure.toString() === filter
-      );
-    }
-
-    // Filter by Date Range
-    if (startDate || endDate) {
-      const start = startDate ? new Date(startDate) : null;
-      const end = endDate ? new Date(endDate) : null;
-
-      filtered = filtered.filter((app) => {
-        const createdAt = new Date(
-          ticketStatus.find(
-            (ticket) => ticket.customer_application_id === app.applicationId
-          )?.created_at
+    } else if (filter || startDate || endDate) {
+      let filtered = customerApplications;
+      // Filter by Name, Amount, or Tenure
+      if (filter) {
+        const regex = new RegExp(filter, "i");
+        filtered = filtered.filter(
+          (app) =>
+            regex.test(app.Name) ||
+            regex.test(app.Amount.toString()) ||
+            app.Tenure.toString() === filter
         );
+      }
 
-        if (start && end) {
-          return createdAt >= start && createdAt <= end;
-        } else if (start) {
-          return createdAt >= start;
-        } else if (end) {
-          return createdAt <= end;
-        }
-        return true;
-      });
+      // Filter by Date Range
+      if (startDate || endDate) {
+        const start = startDate ? new Date(startDate) : null;
+        const end = endDate ? new Date(endDate) : null;
+
+        filtered = filtered.filter((app) => {
+          const createdAt = new Date(
+            tickets.find(
+              (ticket) => ticket.customer_application_id === app.applicationId
+            )?.created_at
+          );
+
+          if (start && end) {
+            return createdAt >= start && createdAt <= end;
+          } else if (start) {
+            return createdAt >= start;
+          } else if (end) {
+            return createdAt <= end;
+          }
+          return true;
+        });
+      }
+
+      setFilteredApplications(filtered);
     }
-
-    setFilteredApplications(filtered);
-  }, [filter, startDate, endDate, customerApplications, ticketStatus]);
+  }, [filter, startDate, endDate, customerApplications, tickets]);
 
   const handleStartClick = (customerId, applicationId, estimate, status) => {
     const selectedTicket = ticketData?.data.find(
@@ -164,25 +164,22 @@ const Ticket = () => {
   const handleSortChange = (event) => {
     const selectedStatus = event.target.value.toLowerCase();
     setSortBy(selectedStatus);
-  
+
     if (selectedStatus === "all") {
       setFilteredApplications(customerApplications);
-      setStatusCount(customerApplications.length); // Count of all tickets
     } else {
       const filteredApplications = customerApplications.filter((customer) =>
-        ticketStatus.some((status) => {
+        tickets.some((status) => {
           return (
             status.customer_application_id === customer.applicationId &&
             status.status.toLowerCase() === selectedStatus
           );
         })
       );
-  
+
       setFilteredApplications(filteredApplications);
-      setStatusCount(filteredApplications.length); // Count of filtered tickets
     }
   };
-  
 
   return (
     <>
@@ -192,7 +189,6 @@ const Ticket = () => {
           alignItems: "center",
           justifyContent: "space-between",
           flexDirection: "column",
-          
         }}
       >
         <Box
@@ -206,37 +202,36 @@ const Ticket = () => {
             padding: "0.1rem",
           }}
         >
-           {sortBy === "all" ? (
+          {sortBy === "all" ? (
             <Typography
               variant="h6"
               component="div"
               sx={{
-               
+                fontWeight: "bold",
                 color: "#black",
                 whiteSpace: "nowrap",
-                fontSize: "2.1rem",
-                marginLeft: "50px",
+                fontSize: "1.7rem",
               }}
             >
-             All Tickets: {customerApplications.length}
+              All Tickets: {customerApplications.length}
             </Typography>
           ) : (
             <Typography
               variant="h4"
               component="div"
               sx={{
-                marginLeft: "20px",
-                padding: "1.4rem",
+                fontWeight: "bold",
+                color: "#black",
+                whiteSpace: "nowrap",
+                fontSize: "1.7rem",
               }}
             >
               <span style={{ marginRight: "0.5rem" }}>
                 {sortBy === "all" ? "📊" : ""}
               </span>
-              Tickets {sortBy}: {statusCount}
+              Tickets {sortBy}: {filteredApplications.length}
             </Typography>
           )}
-
-
 
           {/* Search Input */}
           <Box
@@ -308,46 +303,50 @@ const Ticket = () => {
         </Box>
 
         <Box
-        sx={{
-        minWidth: "80vw",
-        minHeight: "70vh", 
-        display: "flex",
-        alignItems: "flex-start", 
-        justifyContent: "space-between",
-        paddingTop: "20px", 
-        marginBottom: "0", 
-      }}
-    >
-      <Grid container spacing={2} paddingLeft={7}>
-        {filteredApplications.length > 0 ? (
-          filteredApplications.map((customer, id) => {
-            const ticket = ticketStatus.find(
-              (ticket) => ticket.customer_application_id === customer.applicationId
-            );
+          sx={{
+            minWidth: "80vw",
+            minHeight: "70vh",
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            paddingTop: "20px",
+            marginBottom: "0",
+          }}
+        >
+          <Grid container spacing={2} paddingLeft={7}>
+            {filteredApplications.length > 0 ? (
+              filteredApplications.map((customer, id) => {
+                const ticket = tickets.find(
+                  (ticket) =>
+                    ticket.customer_application_id === customer.applicationId
+                );
 
-        return (
-          <ApplicationCard
-            key={id} 
-            contact={customer}
-            ticket={ticket}
-            handleStartClick={handleStartClick}
-          />
-        );
-      })
-    ) : (
-      <Typography
-        sx={{
-          width: "100%",
-          textAlign: "center",
-          color: "text.secondary",
-        }}
-      >
-        No Tickets Found. Start Picking Some!
-      </Typography>
-    )}
-  </Grid>
-</Box>
-
+                return (
+                  <ApplicationCard
+                    key={id}
+                    contact={customer}
+                    ticket={ticket}
+                    handleStartClick={handleStartClick}
+                  />
+                );
+              })
+            ) : (
+              <Typography
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "100%",
+                  textAlign: "center",
+                  color: "text.secondary",
+                  mt: "20vh",
+                }}
+              >
+                No Tickets Found. Start Picking Some!
+              </Typography>
+            )}
+          </Grid>
+        </Box>
       </Box>
     </>
   );

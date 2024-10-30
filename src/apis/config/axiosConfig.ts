@@ -12,7 +12,7 @@ import { cookies } from "next/headers";
  * @type {AxiosInstance}
  */
 export const axiosInstance: AxiosInstance = axios.create({
-  baseURL: "http://localhost:3002/api/v1/",
+  baseURL: `${process.env.NEXT_PUBLIC_API_URL}`,
   withCredentials: true,
   validateStatus: (status) => (status >= 200 && status < 300) || status == 404,
   timeout: 40000,

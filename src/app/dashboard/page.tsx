@@ -20,7 +20,7 @@ export const metadata = {
 async function fetchTotalApplications() {
   try {
     const response = await fetch(
-      "http://localhost:3002/api/v1/application/count",
+      `${process.env.NEXT_PUBLIC_API_URL}/application/count`,
       {
         cache: "no-store", // To Prevent caching
       }
@@ -42,7 +42,7 @@ async function fetchTotalTickets(
   id: number | null = null,
   role: string
 ): Promise<number> {
-  let url = `http://localhost:3002/api/v1/dashboard/tickets/count`;
+  let url = `${process.env.NEXT_PUBLIC_API_URL}/dashboard/tickets/count`;
 
   if (role === "sales" && id !== null) {
     url += `/${id}`;
@@ -65,7 +65,7 @@ async function fetchTotalTickets(
 
 async function fetchAgentCount(): Promise<number> {
   const response = await fetch(
-    "http://localhost:3002/api/v1/dashboard/agents/count",
+    `${process.env.NEXT_PUBLIC_API_URL}/dashboard/agents/count`,
     {
       cache: "no-store", // To Prevent Caching
     }

@@ -103,8 +103,7 @@ const Home: React.FC = () => {
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
-            padding: "1rem",
-            marginBottom: "1rem",
+            padding: "0.1rem",
           }}
         >
           <Typography
@@ -130,13 +129,13 @@ const Home: React.FC = () => {
 
               borderRadius: "20px",
               "& .MuiInputLabel-root": {
-                color: "black", // Replace 'yourColor' with your desired color value
+                color: "black",
               },
               "& .MuiInputBase-root": {
                 borderRadius: "20px",
               },
               "& .MuiFilledInput-root": {
-                backgroundColor: "white", // Replace with your desired background color
+                backgroundColor: "white",
               },
             }}
             InputProps={{
@@ -177,7 +176,7 @@ const Home: React.FC = () => {
             minWidth: "80vw",
             minHeight: "90vh",
             display: "flex",
-            alignItems: "center",
+            alignItems: "flex-start",
             justifyContent: "space-between",
           }}
         >
