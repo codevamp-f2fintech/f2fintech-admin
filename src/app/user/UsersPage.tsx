@@ -126,7 +126,6 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
                   <SearchIcon sx={{ color: "black", fontSize: "1.5rem" }} />
                 </InputAdornment>
               ),
-              disableUnderline: true,
             }}
             InputLabelProps={{
               style: {

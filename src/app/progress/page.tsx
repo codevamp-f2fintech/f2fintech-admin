@@ -772,7 +772,6 @@ const Progress: React.FC = () => {
                         <Select
                           label="Loan Status"
                           variant="filled"
-                          disableUnderline
                           value={newLoanStatus}
                           onChange={handleChangeLoanStatus}
                           sx={{ borderRadius: "15px", width: "8vw" }}
@@ -837,7 +836,6 @@ const Progress: React.FC = () => {
                         <Select
                           label="Employee Status"
                           variant="filled"
-                          disableUnderline
                           value={newEmployeeStatus}
                           onChange={handleChangeEmployeeStatus}
                           sx={{ borderRadius: "15px", width: "8vw" }}

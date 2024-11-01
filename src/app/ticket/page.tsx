@@ -12,6 +12,7 @@ import { useGetTickets, useModifyTicket } from "@/hooks/ticket";
 import { fetcher } from "@/apis/apiClient";
 import { Utility } from "@/utils";
 import ApplicationCard from "../components/ticket/ApplicationCard";
+import Link from "next/link";
 
 const Ticket = () => {
   const [customerApplications, setCustomerApplications] = useState([]);
@@ -81,8 +82,8 @@ const Ticket = () => {
         (customer) =>
           tickets.some((status) => {
             return (
-              status.customer_application_id === customer.applicationId &&
-              status.status === "to do" // Filter by "to do"
+              status?.customer_application_id === customer?.applicationId &&
+              status?.status === "to do" // Filter by "to do"
             );
           })
       );
@@ -114,10 +115,10 @@ const Ticket = () => {
         const start = startDate ? new Date(startDate) : null;
         const end = endDate ? new Date(endDate) : null;
 
-        filtered = filtered.filter((app) => {
+        filtered = filtered?.filter((app) => {
           const createdAt = new Date(
             tickets.find(
-              (ticket) => ticket.customer_application_id === app.applicationId
+              (ticket) => ticket?.customer_application_id === app?.applicationId
             )?.created_at
           );
 
@@ -139,8 +140,8 @@ const Ticket = () => {
   const handleStartClick = (customerId, applicationId, estimate, status) => {
     const selectedTicket = ticketData?.data.find(
       (ticket) =>
-        ticket.user_id === decodedToken()?.id &&
-        ticket.customer_application_id === applicationId
+        ticket?.user_id === decodedToken()?.id &&
+        ticket?.customer_application_id === applicationId
     );
 
     if (selectedTicket) {
@@ -171,8 +172,8 @@ const Ticket = () => {
       const filteredApplications = customerApplications.filter((customer) =>
         tickets.some((status) => {
           return (
-            status.customer_application_id === customer.applicationId &&
-            status.status.toLowerCase() === selectedStatus
+            status?.customer_application_id === customer?.applicationId &&
+            status?.status.toLowerCase() === selectedStatus
           );
         })
       );
@@ -213,7 +214,7 @@ const Ticket = () => {
                 fontSize: "1.7rem",
               }}
             >
-              All Tickets: {customerApplications.length}
+              All Tickets: {customerApplications?.length}
             </Typography>
           ) : (
             <Typography
@@ -229,7 +230,7 @@ const Ticket = () => {
               <span style={{ marginRight: "0.5rem" }}>
                 {sortBy === "all" ? "📊" : ""}
               </span>
-              Tickets {sortBy}: {filteredApplications.length}
+              Tickets {sortBy}: {filteredApplications?.length}
             </Typography>
           )}
 
@@ -342,7 +343,9 @@ const Ticket = () => {
                   mt: "20vh",
                 }}
               >
-                No Tickets Found. Start Picking Some!
+                <Link href="/home" passHref>
+                  No Tickets Found. Start Picking Some By Clicking Here!
+                </Link>
               </Typography>
             )}
           </Grid>
