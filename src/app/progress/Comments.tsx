@@ -76,7 +76,7 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
           formData.append("folder", `comment/${attachment.name}`);
 
           const uploadResponse = await axios.post(
-            `${process.env.WEB_URL}/upload-to-s3`,
+            `${process.env.NEXT_PUBLIC_API_URL}/upload-to-s3`,
             formData,
             {
               headers: {

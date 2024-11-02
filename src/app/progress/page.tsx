@@ -248,7 +248,7 @@ const Progress: React.FC = () => {
     setNewLoanStatus(newStatus);
 
     try {
-      await axios.patch(`${process.env.WEB_URL}/update-loan-tracking`, {
+      await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/update-loan-tracking`, {
         customer_application_id: ids?.applicationId,
         status: newStatus,
       });
