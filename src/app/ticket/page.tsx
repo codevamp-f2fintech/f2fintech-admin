@@ -1,18 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { Box, Grid, Typography } from "@mui/material";
-
 import dayjs, { Dayjs } from "dayjs";
 
-import Header from "../components/common/Header";
-import Loader from "../components/common/Loader";
+import ApplicationCard from "../components/ticket/ApplicationCard";
 import { useGetTickets, useModifyTicket } from "@/hooks/ticket";
+import { useCreateTicketHistory } from '@/hooks/tickethistory';
 import { fetcher } from "@/apis/apiClient";
 import { Utility } from "@/utils";
-import ApplicationCard from "../components/ticket/ApplicationCard";
-import Link from "next/link";
 
 const Ticket = () => {
   const [customerApplications, setCustomerApplications] = useState([]);
@@ -35,6 +33,9 @@ const Ticket = () => {
 
   const { modifyTicket, error: updateError } = useModifyTicket("update-ticket");
 
+  // Hook for creating new ticket history
+  const { createTicketHistory } = useCreateTicketHistory("create-ticket-history");
+
   useEffect(() => {
     const handleRouteChange = () => {
       if (typeof window !== "undefined") {
@@ -56,8 +57,23 @@ const Ticket = () => {
               fetcher(`get-application-as-ticket/${id}`)
             )
           );
-          const combinedData = fetchedApplications.flatMap((item) => item.data);
-          setCustomerApplications(combinedData);
+
+          const combinedData = fetchedApplications.flatMap((item) => {
+            if (item && item.data) {
+              return item.data;
+            } else {
+              console.log("Invalid data format in fetched application:", item);
+              return [];
+            }
+          });
+
+          console.log(fetchedApplications, 'fetched applications');
+          console.log(combinedData, 'combined applications');
+          if (combinedData.length > 0) {
+            setCustomerApplications(combinedData);
+          } else {
+            console.log("No customer applications data available to set.");
+          }
 
           const ticketStatus = ticketData.data.map((ticket) => ({
             status: ticket.status,
@@ -68,7 +84,7 @@ const Ticket = () => {
           }));
           setTickets(ticketStatus);
         } catch (err) {
-          console.error(err, "fetch application as ticket error");
+          console.log(err, "fetch application as ticket error");
         }
       };
       fetchApplications();
@@ -137,8 +153,8 @@ const Ticket = () => {
     }
   }, [filter, startDate, endDate, customerApplications, tickets]);
 
-  const handleStartClick = (customerId, applicationId, estimate, status) => {
-    const selectedTicket = ticketData?.data.find(
+  const handleStartClick = async (customerId, applicationId, estimate, status) => {
+    const selectedTicket = ticketData?.data?.find(
       (ticket) =>
         ticket?.user_id === decodedToken()?.id &&
         ticket?.customer_application_id === applicationId
@@ -151,6 +167,12 @@ const Ticket = () => {
       setLocalStorage("ticketId", generatedTicketId);
 
       if (status !== "forwarded") {
+        const loggedInUser = decodedToken()?.username;
+        const historyMessage = `<b>${loggedInUser}</b> started work`;
+        await createTicketHistory({
+          ticket_id: ticketId,
+          action: historyMessage
+        });
         modifyTicket(ticketId, { status: "in progress" });
       }
       setLocalStorage("ids", { customerId, applicationId, estimate });
