@@ -132,6 +132,7 @@ const Progress: React.FC = () => {
         })
       );
       dispatch(fetchEmployeeStatus(ids?.applicationId));
+      console.log('kya hai status', loanStatus, documents, employeeStatus)
     }
     const selectedCustomer = applicationData?.data?.find(
       (cust) => cust.Id === ids.customerId
@@ -143,6 +144,7 @@ const Progress: React.FC = () => {
 
   useEffect(() => {
     if (loanStatus) {
+      console.log('mai hoon', loanStatus)
       setNewLoanStatus(loanStatus);
     }
 
@@ -248,7 +250,7 @@ const Progress: React.FC = () => {
     setNewLoanStatus(newStatus);
 
     try {
-      await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/update-loan-tracking`, {
+      await axios.patch(`https://web.f2fintech.in/api/v1/update-loan-tracking`, {   //external server API
         customer_application_id: ids?.applicationId,
         status: newStatus,
       });
