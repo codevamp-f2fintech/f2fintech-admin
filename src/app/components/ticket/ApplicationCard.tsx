@@ -90,7 +90,7 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
         status: "to do",
       });
     } catch (error) {
-      console.error("Error creating ticket:", error);
+      console.log("Error creating ticket:", error);
     }
   };
 
@@ -102,17 +102,16 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
 
     if (!isAlreadySelected) {
       try {
-        await createNewTicket(applicationId);
-
+        await createNewTicket(applicationId);   // Create new Ticket
         await modifyCustomerApplication(applicationId, {
           is_picked: 1,
-        });
-        await refetch();
+        });       // Mark the Card as picked
 
         setSelectedContacts((prevSelectedContacts) => [
           ...prevSelectedContacts,
           contactId,
         ]);
+        await refetch();
       } catch (error) {
         console.log("Error in checkbox change:", error);
       }

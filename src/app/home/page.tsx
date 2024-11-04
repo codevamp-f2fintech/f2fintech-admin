@@ -38,27 +38,32 @@ const Home: React.FC = () => {
     pageSize
   );
 
+  // Function to update customer data after refetching
+  const updateCustomerData = (fetchedData) => {
+    dispatch(setCustomers(fetchedData));
+    if (fetchedData) {
+      const pages = Math.ceil(fetchedData.totalCount / pageSize);
+      setTotalPages(pages > 0 ? pages : 1);
+      setPaginationLoading(false);
+    }
+  };
+
   const filteredCustomers = customer?.filter((val) =>
     val.Name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   useEffect(() => {
-    if (data?.success) {
-      updateCustomerData(data.data);
-      console.log('refetchc hala')
+    if (data) {
+      if (data.success) {
+        updateCustomerData(data.data);
+      } else {
+        updateCustomerData(data.data);
+        setPaginationLoading(false);
+      }
     } else if (getApplicationsError) {
       setPaginationLoading(false);
     }
-  }, [data, currentPage, pageSize, dispatch]);
-
-  // Function to update customer data after refetching
-  const updateCustomerData = (fetchedData) => {
-    dispatch(setCustomers(fetchedData));
-
-    const pages = Math.ceil(fetchedData.totalCount / pageSize);
-    setTotalPages(pages > 0 ? pages : 1);
-    setPaginationLoading(false);
-  };
+  }, [data, getApplicationsError]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -66,13 +71,14 @@ const Home: React.FC = () => {
       const scrollTop = document.documentElement.scrollTop;
       const windowHeight = window.innerHeight;
       const offsetHeight = document.documentElement.offsetHeight;
-      console.log("data", windowHeight, scrollTop, offsetHeight);
+      // console.log("data", windowHeight, scrollTop, offsetHeight);
       if (
         windowHeight + scrollTop >= offsetHeight - 50 &&
         currentPage < totalPages &&
         !paginationLoading
       ) {
         console.log("SET CURRENT PAGE");
+        setPaginationLoading(true);
         setCurrentPage((prevPage) => prevPage + 1);
       }
     };
@@ -113,7 +119,7 @@ const Home: React.FC = () => {
             fontSize: "1.7rem",
           }}
         >
-          Total Applications: {customer?.length}
+          Total Applications: {filteredCustomers?.length || 0}
         </Typography>
         <TextField
           label="Search by name..."
