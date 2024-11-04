@@ -19,7 +19,7 @@ export const useGetCustomers = (
   pageSize: number = 6
 ) => {
   const { data: swrData, error } = useSWR<Customer[]>(
-    `${pathKey}?page=${page}&size=${pageSize}`,
+    `${pathKey}?page=${page}&offset=${pageSize}`,
     fetcher,
     {
       fallbackData: initialData,
@@ -29,7 +29,7 @@ export const useGetCustomers = (
   );
   // Manually re-trigger re-fetch
   const refetch = async () => {
-    await mutate(`${pathKey}?page=${page}&size=${pageSize}`);
+    await mutate(`${pathKey}?page=${page}&offset=${pageSize}`);
   };
 
   return { data: swrData || [], swrLoading: !error && !swrData, error, refetch };

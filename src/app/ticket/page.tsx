@@ -103,6 +103,7 @@ const Ticket = () => {
             );
           })
       );
+      console.log(initialFilteredApplications, 'initial');
       setFilteredApplications(initialFilteredApplications);
     }
   }, [customerApplications, tickets]);
@@ -110,7 +111,7 @@ const Ticket = () => {
   // Filter by search, date
   useEffect(() => {
     if (!filter && !startDate && !endDate && !sortBy) {
-      console.log("get all applications");
+      console.log("get all applications filter");
       setFilteredApplications(customerApplications);
       return;
     } else if (filter || startDate || endDate) {
@@ -199,7 +200,6 @@ const Ticket = () => {
           );
         })
       );
-
       setFilteredApplications(filteredApplications);
     }
   };

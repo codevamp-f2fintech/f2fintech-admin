@@ -45,6 +45,7 @@ const Home: React.FC = () => {
   useEffect(() => {
     if (data?.success) {
       updateCustomerData(data.data);
+      console.log('refetchc hala')
     } else if (getApplicationsError) {
       setPaginationLoading(false);
     }

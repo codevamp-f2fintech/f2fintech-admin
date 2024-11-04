@@ -10,8 +10,6 @@ export async function middleware(request: NextRequest) {
   const cookieStore = cookies();
   const token = cookieStore.get("token")?.value;
 
-  console.log("m Received Token:", token);
-
   // Redirect to the login page if not authenticated
   const publicPaths = ["/login"];
 
@@ -28,7 +26,6 @@ export async function middleware(request: NextRequest) {
         );
         const { payload } = await jwtVerify(token, jwtSecret);
         const role = payload.role;
-        console.log("m role", role);
         // Check if role is admin
         if (role !== "admin" && role !== "sales") {
           return NextResponse.redirect(new URL("/unauthorized", request.url));
@@ -42,7 +39,6 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
   }
-
   // Allow the request to proceed if authenticated
   return NextResponse.next();
 }
