@@ -32,8 +32,8 @@ import { Formik, Form, Field } from "formik";
 
 import * as Yup from "yup";
 import Link from "next/link";
-// Regular expression for validating Gmail addresses
-const emailRegExp = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+// Regular expression for validating email addresses
+const emailRegExp = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
 
 const UserSchema = Yup.object().shape({
   firstname: Yup.string().required("First name is required"),
@@ -41,12 +41,13 @@ const UserSchema = Yup.object().shape({
   password: Yup.string()
     .min(6, "Password must be at least 6 characters")
     .max(20, "Password cannot be more than 20 characters")
-    .required("Password is required")
     .matches(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .matches(/\d/, "Password must contain at least one number"),
-  gender: Yup.string().required("Gender is required"),
-  email: Yup.string()
-    .matches(emailRegExp, "Email Address must be a Gmail address")
+    .matches(/\d/, "Password must contain at least one number")
+    .required("Password is required"),
+  gender: Yup.string(),
+  email: Yup
+    .string()
+    .matches(emailRegExp, "Email address is not valid")
     .required("This field is required"),
 });
 
