@@ -215,7 +215,7 @@ export default async function Page(): Promise<React.JSX.Element> {
       {dashboardItems.map((item, index) => (
         <Grid lg={3} sm={6} xs={12} key={index}>
           <Link
-            href={item.link}
+            href={item.link || ""}
             style={{ textDecoration: "none", color: "inherit" }}
           >
             <Budget
