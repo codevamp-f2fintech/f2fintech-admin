@@ -1,4 +1,5 @@
 import * as React from "react";
+import Link from "next/link";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Grid from "@mui/material/Unstable_Grid2";
@@ -148,48 +149,56 @@ export default async function Page(): Promise<React.JSX.Element> {
       key: "totalApplications",
       color: "#2196f3",
       count: totalApplications,
+      link: "/",
     },
     {
       label: "Total Tickets",
       key: "totalTickets",
       color: "#ff6e40",
       count: totalTickets,
+      link: `/ticket?status=${decodeURIComponent("all")}`,
     },
     {
       label: "Open Tickets",
       key: "openTickets",
       color: "#ab47bc",
       count: totalOpenTickets,
+      link: `/ticket?status=${decodeURIComponent("to do")}`, // Link to the open tickets page
     },
     {
       label: "In Progress",
       key: "inProgress",
       color: "#4db6ac",
       count: totalInProgressTickets,
+      link: `/ticket?status=${decodeURIComponent("in progress")}`,
     },
     {
       label: "Forwarded Tickets",
       key: "forwardedTickets",
       color: "#cddc39",
       count: totalForwardedTickets,
+      link: `/ticket?status=${decodeURIComponent("forwarded")}`,
     },
     {
       label: "Closed Tickets",
       key: "closedTickets",
       color: "#4caf50",
       count: totalCloseTickets,
+      // link: `/ticket?status=${decodeURIComponent("close")}`,
     },
     {
       label: "Completed Tickets",
       key: "completedTickets",
       color: "#d32f2f",
       count: totalCompletedTickets,
+      link: `/ticket?status=${decodeURIComponent("done")}`,
     },
     {
       label: "Total Agents",
       key: "totalAgents",
       color: "#607d8b",
       count: totalAgents,
+      link: "", // Link to the agents page
     },
   ];
   console.log(
@@ -205,21 +214,26 @@ export default async function Page(): Promise<React.JSX.Element> {
     <Grid container spacing={3}>
       {dashboardItems.map((item, index) => (
         <Grid lg={3} sm={6} xs={12} key={index}>
-          <Budget
-            name={item.label}
-            sx={{
-              height: "100%",
-              backgroundColor: item.color,
-              borderRadius: "20px",
-              boxShadow:
-                "rgba(0, 0, 0, 0.17) 0px -23px 25px 0px inset, rgba(0, 0, 0, 0.15) 0px -36px 30px 0px inset, rgba(0, 0, 0, 0.1) 0px -79px 40px 0px inset, rgba(0, 0, 0, 0.06) 0px 2px 1px, rgba(0, 0, 0, 0.09) 0px 4px 2px, rgba(0, 0, 0, 0.09) 0px 8px 4px, rgba(0, 0, 0, 0.09) 0px 16px 8px, rgba(0, 0, 0, 0.09) 0px 32px 16px",
-              ":hover": {
-                transform: "scale(1.1)",
-                transition: "all 300ms ease-in-out",
-              },
-            }}
-            value={item.count}
-          />
+          <Link
+            href={item.link || ""}
+            style={{ textDecoration: "none", color: "inherit" }}
+          >
+            <Budget
+              name={item.label}
+              sx={{
+                height: "100%",
+                backgroundColor: item.color,
+                borderRadius: "20px",
+                boxShadow:
+                  "rgba(0, 0, 0, 0.17) 0px -23px 25px 0px inset, rgba(0, 0, 0, 0.15) 0px -36px 30px 0px inset, rgba(0, 0, 0, 0.1) 0px -79px 40px 0px inset, rgba(0, 0, 0, 0.06) 0px 2px 1px, rgba(0, 0, 0, 0.09) 0px 4px 2px, rgba(0, 0, 0, 0.09) 0px 8px 4px, rgba(0, 0, 0, 0.09) 0px 16px 8px, rgba(0, 0, 0, 0.09) 0px 32px 16px",
+                ":hover": {
+                  transform: "scale(1.1)",
+                  transition: "all 300ms ease-in-out",
+                },
+              }}
+              value={item.count}
+            />
+          </Link>
         </Grid>
       ))}
       <Grid lg={8} xs={12}>

@@ -16,10 +16,10 @@ import type { NavItemConfig } from "@/types/nav";
 import { paths } from "@/paths";
 import { isNavItemActive } from "@/lib/auth/is-nav-item-active";
 
-import { Logo } from "@/app/components/core/logo";
 import { navItems } from "./config";
 import { navIcons } from "./nav-icons";
 import { Utility } from "@/utils";
+import { Logo } from "../../core/logo";
 
 export function SideNav(): React.JSX.Element {
   const pathname = usePathname();
@@ -103,7 +103,7 @@ function renderNavItems({
   items = [],
   pathname,
   collapsed,
-  userRole
+  userRole,
 }: {
   items?: NavItemConfig[];
   pathname: string;
@@ -167,11 +167,11 @@ function NavItem({
       <Box
         {...(href
           ? {
-            component: external ? "a" : RouterLink,
-            href,
-            target: external ? "_blank" : undefined,
-            rel: external ? "noreferrer" : undefined,
-          }
+              component: external ? "a" : RouterLink,
+              href,
+              target: external ? "_blank" : undefined,
+              rel: external ? "noreferrer" : undefined,
+            }
           : { role: "button" })}
         sx={{
           alignItems: "center",

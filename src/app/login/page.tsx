@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 import * as React from "react";
 import { useState } from "react";
@@ -59,7 +60,7 @@ const Login = (): JSX.Element => {
         // Save the token in a cookie manually
         document.cookie = `token=${
           response.data.data.token.access_token
-        }; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=none`;
+        }; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
         toastAndNavigate(dispatch, true, "success", "Signin Success");
 
         const role = decodedToken(response.data.data.token.access_token)?.role;
@@ -80,14 +81,14 @@ const Login = (): JSX.Element => {
         container
         component="main"
         sx={{
-          height: "90vh",
+          height: "100vh",
           marginRight: "10vw",
           background:
             "linear-gradient(125deg, #ECFCFF 0%, #ECFCFF 40%, #B2FCFF calc(40% + 1px), #B2FCFF 60%, #5EDFFF calc(60% + 1px), #5EDFFF 72%, #3E64FF calc(72% + 1px), #3E64FF 100%)",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          // position: "fixed",
+          position: "fixed",
         }}
       >
         <CssBaseline />
@@ -126,15 +127,21 @@ const Login = (): JSX.Element => {
             }}
           >
             <Avatar
+              src="/img/f2Fintechlogo.png" // Path relative to the public folder
               sx={{
-                height: "15vh",
-                width: "15vh",
-                bgcolor: "secondary.main",
-                top: "-5vh",
+                height: "20vh",
+                width: "20vh",
+                top: "-7vh",
+                bgcolor: "white",
+                boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.3)",
+                "&:hover": {
+                  background: "black",
+                  transform: "scale(1.05)",
+                  boxShadow: "0px 6px 14px rgba(0, 0, 0, 0.4)",
+                },
               }}
-            >
-              <LockOutlined sx={{ height: "8vh", width: "8vh" }} />
-            </Avatar>
+            />
+
             <Typography
               sx={{
                 fontFamily: "monospace",
