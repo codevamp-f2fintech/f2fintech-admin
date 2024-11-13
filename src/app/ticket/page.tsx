@@ -1,15 +1,15 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import { Box, Grid, Typography, } from '@mui/material';
+import { Box, Grid, Typography } from "@mui/material";
 import { Dayjs } from "dayjs";
 
 import ApplicationCard from "../components/ticket/ApplicationCard";
 import FilterPanel from "../components/common/FilterPanel";
 import { useGetTickets, useModifyTicket } from "@/hooks/ticket";
-import { useCreateTicketHistory } from '@/hooks/tickethistory';
+import { useCreateTicketHistory } from "@/hooks/tickethistory";
 import { useGetUsers } from "@/hooks/user";
 import { fetcher } from "@/apis/apiClient";
 import { Utility } from "@/utils";
@@ -27,15 +27,18 @@ const Ticket = () => {
   const [endDate, setEndDate] = useState<Dayjs | null>(null);
 
   const router = useRouter();
+  const searchParams = useSearchParams(); // To get the query parameters
   const { decodedToken, setLocalStorage, remLocalStorage } = Utility();
   const userRole = decodedToken()?.role;
 
   const { value: ticketData } = useGetTickets(
     [],
-    `get-all-tickets/${selectedUser ? selectedUser.id : ''}`    // this is the selected user or ''
+    `get-all-tickets/${selectedUser ? selectedUser.id : ""}` // this is the selected user or ''
   );
   const { modifyTicket, error: updateError } = useModifyTicket("update-ticket");
-  const { createTicketHistory } = useCreateTicketHistory("create-ticket-history");
+  const { createTicketHistory } = useCreateTicketHistory(
+    "create-ticket-history"
+  );
   const { data: userData } = useGetUsers([], `get-users`);
 
   useEffect(() => {
@@ -69,9 +72,9 @@ const Ticket = () => {
             }
           });
 
-          console.log(combinedData, 'combined applications');
           if (combinedData.length > 0) {
             setCustomerApplications(combinedData);
+            console.log(combinedData, "combined applications");
           } else {
             console.log("No customer applications data available to set.");
           }
@@ -84,6 +87,7 @@ const Ticket = () => {
             created_at: ticket.created_at,
           }));
           setTickets(ticketStatus);
+          console.log(tickets, "tickets");
         } catch (err) {
           console.log(err, "fetch application as ticket error");
         }
@@ -92,22 +96,35 @@ const Ticket = () => {
     }
   }, [ticketData?.data, selectedUser]);
 
+  useEffect(() => {
+    const queryStatus = searchParams.get("status");
+    if (queryStatus) {
+      console.log(queryStatus, "querystatus");
+      setSortBy(queryStatus);
+    }
+  }, [searchParams]);
+
   // Initial filter to show only "to do" tickets by default
   useEffect(() => {
     if (customerApplications.length && tickets.length) {
       const initialFilteredApplications = customerApplications.filter(
         (customer) =>
-          tickets.some((status) => {
-            return (
-              status?.customer_application_id === customer?.applicationId &&
-              status?.status === "to do"     // Filter by "to do"
-            );
+          tickets.some((ticket) => {
+            // If sortBy is not all, filter by the status provided in sortBy
+            if (sortBy !== "all") {
+              return (
+                ticket?.customer_application_id === customer?.applicationId &&
+                ticket?.status === sortBy
+              );
+            }
+            // If sortBy is all, show all tickets (no filtering by status)
+            return ticket?.customer_application_id === customer?.applicationId;
           })
       );
-      console.log(initialFilteredApplications, 'initial');
+      console.log(initialFilteredApplications, "initial");
       setFilteredApplications(initialFilteredApplications);
     }
-  }, [customerApplications, tickets]);
+  }, [customerApplications, tickets, sortBy]);
 
   // Filter by search, date  and other criteria
   useEffect(() => {
@@ -155,7 +172,12 @@ const Ticket = () => {
     }
   }, [filter, startDate, endDate, customerApplications, tickets]);
 
-  const handleStartClick = async (customerId, applicationId, estimate, status) => {
+  const handleStartClick = async (
+    customerId,
+    applicationId,
+    estimate,
+    status
+  ) => {
     const selectedTicket = ticketData?.data?.find(
       (ticket) =>
         ticket?.user_id === decodedToken()?.id &&
@@ -173,7 +195,7 @@ const Ticket = () => {
         const historyMessage = `<b>${loggedInUser}</b> started work`;
         await createTicketHistory({
           ticket_id: ticketId,
-          action: historyMessage
+          action: historyMessage,
         });
         modifyTicket(ticketId, { status: "in progress" });
       }
@@ -186,8 +208,8 @@ const Ticket = () => {
     }
   };
 
-  const handleSortChange = (event) => {
-    const selectedStatus = event.target.value.toLowerCase();
+  const handleSortChange = (value: string) => {
+    const selectedStatus = value.toLowerCase();
     setSortBy(selectedStatus);
 
     if (selectedStatus === "all") {
@@ -207,10 +229,10 @@ const Ticket = () => {
 
   // Calculate the count of tickets for the selected status
   const ticketCount = (status: string): number => {
-    if (status === 'all') {
+    if (status === "all") {
       return tickets.length;
     }
-    return tickets.filter(ticket => ticket.status === status).length;
+    return tickets.filter((ticket) => ticket.status === status).length;
   };
 
   return (
@@ -223,9 +245,8 @@ const Ticket = () => {
           flexDirection: "column",
         }}
       >
-
         <FilterPanel
-          searchLabel='Search Tickets'
+          searchLabel="Search Tickets"
           sortBy={sortBy}
           filter={filter}
           setFilter={setFilter}
@@ -259,7 +280,6 @@ const Ticket = () => {
                   (ticket) =>
                     ticket.customer_application_id === customer.applicationId
                 );
-
                 return (
                   <ApplicationCard
                     key={id}
@@ -281,12 +301,13 @@ const Ticket = () => {
                   mt: "20vh",
                 }}
               >
-                {userRole === 'admin' ?
-                  'No Tickets Found' :
+                {userRole === "admin" ? (
+                  "No Tickets Found"
+                ) : (
                   <Link href="/home" passHref>
                     No Tickets Found. Start Picking Some By Clicking Here!
                   </Link>
-                }
+                )}
               </Typography>
             )}
           </Grid>

@@ -132,7 +132,7 @@ const Progress: React.FC = () => {
         })
       );
       dispatch(fetchEmployeeStatus(ids?.applicationId));
-      console.log('kya hai status', loanStatus, documents, employeeStatus)
+      console.log("kya hai status", loanStatus, documents, employeeStatus);
     }
     const selectedCustomer = applicationData?.data?.find(
       (cust) => cust.Id === ids.customerId
@@ -144,7 +144,7 @@ const Progress: React.FC = () => {
 
   useEffect(() => {
     if (loanStatus) {
-      console.log('mai hoon', loanStatus)
+      console.log("mai hoon", loanStatus);
       setNewLoanStatus(loanStatus);
     }
 
@@ -250,10 +250,14 @@ const Progress: React.FC = () => {
     setNewLoanStatus(newStatus);
 
     try {
-      await axios.patch(`https://web.f2fintech.in/api/v1/update-loan-tracking`, {   //external server API
-        customer_application_id: ids?.applicationId,
-        status: newStatus,
-      });
+      await axios.patch(
+        `https://web.f2fintech.in/api/v1/update-loan-tracking`,
+        {
+          //external server API
+          customer_application_id: ids?.applicationId,
+          status: newStatus,
+        }
+      );
       const loggedInUser = decodedToken()?.username;
       const historyMessage = `<b>${loggedInUser}</b> changed status from ${oldStatus} to ${newStatus}`;
 
@@ -327,6 +331,33 @@ const Progress: React.FC = () => {
 
   if (!selectedCustomer) {
     return <Loader />;
+  }
+
+  function formatTenure(tenure: number) {
+    if (tenure <= 60) {
+      return `${tenure} months`;
+    } else {
+      const years = (tenure / 12).toFixed(1); // convert to years with one decimal place if needed
+      return `${years} years`;
+    }
+  }
+
+  // Function to format the date
+  function formatDate(dateString) {
+    const date = new Date(dateString);
+    if (isNaN(date)) return "Invalid Date"; // Check if date is valid
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  }
+
+  // Function to format the amount in INR
+  function formatAmount(amount) {
+    return `₹ ${new Intl.NumberFormat("en-IN", {
+      maximumFractionDigits: 2,
+    }).format(amount)}`;
   }
 
   return (
@@ -456,7 +487,7 @@ const Progress: React.FC = () => {
                               component="span"
                               sx={{ color: "white" }}
                             >
-                              {selectedCustomer.Contact}
+                              +91 {selectedCustomer.Contact}
                             </Typography>
                           </Typography>
                           <Typography variant="h6" fontWeight="bold">
@@ -500,7 +531,7 @@ const Progress: React.FC = () => {
                               component="span"
                               sx={{ color: "white" }}
                             >
-                              {selectedCustomer.Tenure}
+                              {formatTenure(selectedCustomer.Tenure)}
                             </Typography>
                           </Typography>
                         </Grid>
@@ -512,7 +543,7 @@ const Progress: React.FC = () => {
                             Amount:
                           </Typography>
                           <Typography component="span" sx={{ color: "white" }}>
-                            {selectedCustomer.Amount}
+                            {formatAmount(selectedCustomer.Amount)}
                           </Typography>
                           <Typography variant="h6" fontWeight="bold">
                             <Typography
@@ -525,7 +556,7 @@ const Progress: React.FC = () => {
                               component="span"
                               sx={{ color: "white" }}
                             >
-                              {selectedCustomer.applicationDate}
+                              {formatDate(selectedCustomer.applicationDate)}
                             </Typography>
                           </Typography>
                         </Grid>

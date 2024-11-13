@@ -11,7 +11,8 @@ export async function middleware(request: NextRequest) {
   const token = cookieStore.get("token")?.value;
 
   // Redirect to the login page if not authenticated
-  const publicPaths = ["/login"];
+  // localhost:3002/img/f2Fintechlogo.png
+  const publicPaths = ["/login", "/img/f2Fintechlogo.png"];
 
   // Check if the request path is a public path
   const isPublicPath = publicPaths.includes(request.nextUrl.pathname);
