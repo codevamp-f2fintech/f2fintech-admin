@@ -19,6 +19,8 @@ import {
   LockOutlined,
   Visibility,
   VisibilityOff,
+  Wc,
+  SupervisorAccount
 } from "@mui/icons-material";
 
 import { setLoading } from "@/redux/features/userSlice";
@@ -36,14 +38,20 @@ import Link from "next/link";
 const emailRegExp = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
 
 const UserSchema = Yup.object().shape({
-  firstname: Yup.string().required("First name is required"),
-  lastname: Yup.string().required("Last name is required"),
+  firstname: Yup
+    .string()
+    .min(2, "Firstname is too short!")
+    .max(20, "Firstname is too long!")
+    .required("First name is required"),
+  lastname: Yup.string(),
   password: Yup.string()
-    .min(6, "Password must be at least 6 characters")
+    .min(8, 'Password Must Be 8 Characters Long')
+    .matches(/[A-Z]/, 'Password Must Contain At Least 1 Uppercase Letter')
+    .matches(/[a-z]/, 'Password Must Contain At Least 1 Lowercase Letter')
+    .matches(/[0-9]/, 'Password Must Contain At Least 1 Number')
+    .matches(/[^\w]/, 'Password Must Contain At Least 1 Special Character')
     .max(20, "Password cannot be more than 20 characters")
-    .matches(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .matches(/\d/, "Password must contain at least one number")
-    .required("Password is required"),
+    .required("This Field is Required"),
   gender: Yup.string(),
   email: Yup
     .string()
@@ -108,18 +116,19 @@ const UserForm = () => {
         <Link href="/dashboard" passHref>
           <Button
             variant="contained"
-            color="primary"
+            // color="primary"
             sx={{
               m: 1,
-              background: "linear-gradient(45deg, #2c3ce3, #1976d2, #FFF)",
+              // background: "linear-gradient(45deg, #2c3ce3, #1976d2, #FFF)",
+              background: "red",
               width: "13vw",
               height: 40,
               fontWeight: "Bold",
               fontSize: "1rem",
               borderRadius: "15px",
               "&:hover": {
-                background:
-                  "linear-gradient(125deg, #ECFCFF 0%, #ECFCFF 40%, #B2FCFF calc(40% + 1px), #B2FCFF 60%, #5EDFFF calc(60% + 1px), #5EDFFF 72%, #3E64FF calc(72% + 1px), #3E64FF 100%)",
+                // background:
+                  // "linear-gradient(125deg, #ECFCFF 0%, #ECFCFF 40%, #B2FCFF calc(40% + 1px), #B2FCFF 60%, #5EDFFF calc(60% + 1px), #5EDFFF 72%, #3E64FF calc(72% + 1px), #3E64FF 100%)",
                 transform: "scale(1.05)",
                 color: "black",
                 fontWeight: "Bold",
@@ -148,6 +157,7 @@ const UserForm = () => {
             email: "",
             gender: "",
             password: "",
+            role: "sales"
           }}
           validationSchema={UserSchema}
           onSubmit={async (values, { setSubmitting, resetForm }) => {
@@ -172,8 +182,7 @@ const UserForm = () => {
                   <Field
                     as={TextField}
                     fullWidth
-                    id="firstname"
-                    label="First Name"
+                    label="*First Name"
                     name="firstname"
                     autoFocus
                     InputProps={{
@@ -193,7 +202,6 @@ const UserForm = () => {
                   <Field
                     as={TextField}
                     fullWidth
-                    id="lastname"
                     label="Last Name"
                     name="lastname"
                     InputProps={{
@@ -213,8 +221,7 @@ const UserForm = () => {
                   <Field
                     as={TextField}
                     fullWidth
-                    id="email"
-                    label="Email Address"
+                    label="*Email Address"
                     name="email"
                     InputProps={{
                       startAdornment: (
@@ -235,7 +242,7 @@ const UserForm = () => {
                     as={TextField}
                     fullWidth
                     name="password"
-                    label="Password"
+                    label="*Password"
                     type={showPassword ? "text" : "password"}
                     id="password"
                     InputProps={{
@@ -268,13 +275,12 @@ const UserForm = () => {
                     as={TextField}
                     select
                     fullWidth
-                    id="gender"
                     label="Gender"
                     name="gender"
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <Person sx={{ color: "black" }} />
+                          <Wc sx={{ color: "black" }} />
                         </InputAdornment>
                       ),
                       style: { color: "black", fontSize: "15px" },
@@ -289,6 +295,30 @@ const UserForm = () => {
                     <MenuItem value="male">Male</MenuItem>
                     <MenuItem value="female">Female</MenuItem>
                     <MenuItem value="other">Other</MenuItem>
+                  </Field>
+                  <Field
+                    as={TextField}
+                    select
+                    fullWidth
+                    label="Role"
+                    name="role"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SupervisorAccount sx={{ color: "black" }} />
+                        </InputAdornment>
+                      ),
+                      style: { color: "black", fontSize: "15px" },
+                    }}
+                    InputLabelProps={{ style: { color: "black" } }}
+                    error={touched.role && Boolean(errors.role)}
+                    helperText={touched.role && errors.role}
+                  >
+                    <MenuItem value="">
+                      <em>None</em>
+                    </MenuItem>
+                    <MenuItem value="admin">Admin</MenuItem>
+                    <MenuItem value="sales">Sales</MenuItem>
                   </Field>
                 </Grid>
               </Grid>

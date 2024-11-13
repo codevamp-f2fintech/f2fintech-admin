@@ -3,12 +3,14 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import { Box, Grid, Typography } from "@mui/material";
-import dayjs, { Dayjs } from "dayjs";
+import { Box, Grid, Typography, } from '@mui/material';
+import { Dayjs } from "dayjs";
 
 import ApplicationCard from "../components/ticket/ApplicationCard";
+import FilterPanel from "../components/common/FilterPanel";
 import { useGetTickets, useModifyTicket } from "@/hooks/ticket";
 import { useCreateTicketHistory } from '@/hooks/tickethistory';
+import { useGetUsers } from "@/hooks/user";
 import { fetcher } from "@/apis/apiClient";
 import { Utility } from "@/utils";
 
@@ -18,6 +20,7 @@ const Ticket = () => {
   const [tickets, setTickets] = useState([]);
   const [filter, setFilter] = useState("");
   const [sortBy, setSortBy] = useState("to do");
+  const [selectedUser, setSelectedUser] = useState(null);
 
   // date states
   const [startDate, setStartDate] = useState<Dayjs | null>(null);
@@ -25,16 +28,15 @@ const Ticket = () => {
 
   const router = useRouter();
   const { decodedToken, setLocalStorage, remLocalStorage } = Utility();
+  const userRole = decodedToken()?.role;
 
   const { value: ticketData } = useGetTickets(
     [],
-    `get-all-tickets/${decodedToken()?.id}` // this is the logged in userId
+    `get-all-tickets/${selectedUser ? selectedUser.id : ''}`    // this is the selected user or ''
   );
-
   const { modifyTicket, error: updateError } = useModifyTicket("update-ticket");
-
-  // Hook for creating new ticket history
   const { createTicketHistory } = useCreateTicketHistory("create-ticket-history");
+  const { data: userData } = useGetUsers([], `get-users`);
 
   useEffect(() => {
     const handleRouteChange = () => {
@@ -67,7 +69,6 @@ const Ticket = () => {
             }
           });
 
-          console.log(fetchedApplications, 'fetched applications');
           console.log(combinedData, 'combined applications');
           if (combinedData.length > 0) {
             setCustomerApplications(combinedData);
@@ -89,7 +90,7 @@ const Ticket = () => {
       };
       fetchApplications();
     }
-  }, [ticketData?.data]);
+  }, [ticketData?.data, selectedUser]);
 
   // Initial filter to show only "to do" tickets by default
   useEffect(() => {
@@ -99,7 +100,7 @@ const Ticket = () => {
           tickets.some((status) => {
             return (
               status?.customer_application_id === customer?.applicationId &&
-              status?.status === "to do" // Filter by "to do"
+              status?.status === "to do"     // Filter by "to do"
             );
           })
       );
@@ -108,7 +109,7 @@ const Ticket = () => {
     }
   }, [customerApplications, tickets]);
 
-  // Filter by search, date
+  // Filter by search, date  and other criteria
   useEffect(() => {
     if (!filter && !startDate && !endDate && !sortBy) {
       console.log("get all applications filter");
@@ -204,6 +205,14 @@ const Ticket = () => {
     }
   };
 
+  // Calculate the count of tickets for the selected status
+  const ticketCount = (status: string): number => {
+    if (status === 'all') {
+      return tickets.length;
+    }
+    return tickets.filter(ticket => ticket.status === status).length;
+  };
+
   return (
     <>
       <Box
@@ -214,116 +223,23 @@ const Ticket = () => {
           flexDirection: "column",
         }}
       >
-        <Box
-          sx={{
-            height: "10vh",
-            width: "80vw",
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "0.1rem",
-          }}
-        >
-          {sortBy === "all" ? (
-            <Typography
-              variant="h6"
-              component="div"
-              sx={{
-                fontWeight: "bold",
-                color: "#black",
-                whiteSpace: "nowrap",
-                fontSize: "1.7rem",
-              }}
-            >
-              All Tickets: {customerApplications?.length}
-            </Typography>
-          ) : (
-            <Typography
-              variant="h4"
-              component="div"
-              sx={{
-                fontWeight: "bold",
-                color: "#black",
-                whiteSpace: "nowrap",
-                fontSize: "1.7rem",
-              }}
-            >
-              <span style={{ marginRight: "0.5rem" }}>
-                {sortBy === "all" ? "📊" : ""}
-              </span>
-              Tickets {sortBy}: {filteredApplications?.length}
-            </Typography>
-          )}
 
-          {/* Search Input */}
-          <Box
-            sx={{
-              height: "6vh",
-              width: "50vw",
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <input
-              type="text"
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              placeholder="Search by name,amount,or tenure..."
-              style={{
-                width: "15vw",
-                padding: ".8rem",
-                border: "1px solid #ddd",
-                borderRadius: "15px",
-              }}
-            />
-
-            {/* Sort Dropdown */}
-            <select
-              value={sortBy}
-              onChange={handleSortChange}
-              style={{
-                padding: ".8rem",
-                border: "1px solid #ddd",
-                borderRadius: "15px",
-              }}
-            >
-              <option value="to do">To Do</option>
-              <option value="in progress">In Progress</option>
-              <option value="forwarded">Forwarded</option>
-              <option value="done">Done</option>
-              <option value="all">All</option>
-            </select>
-
-            {/* Date Filters */}
-
-            <Typography variant="body2">Start Date:</Typography>
-            <input
-              type="date"
-              value={startDate ? dayjs(startDate).format("YYYY-MM-DD") : ""}
-              onChange={(e) => setStartDate(dayjs(e.target.value))}
-              style={{
-                padding: ".8rem",
-                border: "1px solid #ddd",
-                borderRadius: "15px",
-              }}
-            />
-
-            <Typography variant="body2">End Date:</Typography>
-            <input
-              type="date"
-              value={endDate ? dayjs(endDate).format("YYYY-MM-DD") : ""}
-              onChange={(e) => setEndDate(dayjs(e.target.value))}
-              style={{
-                padding: ".8rem",
-                border: "1px solid #ddd",
-                borderRadius: "15px",
-              }}
-            />
-          </Box>
-        </Box>
+        <FilterPanel
+          searchLabel='Search Tickets'
+          sortBy={sortBy}
+          filter={filter}
+          setFilter={setFilter}
+          startDate={startDate}
+          setStartDate={setStartDate}
+          endDate={endDate}
+          setEndDate={setEndDate}
+          selectedUser={selectedUser}
+          setSelectedUser={setSelectedUser}
+          handleSortChange={handleSortChange}
+          userData={userData}
+          userRole={userRole}
+          ticketCount={ticketCount}
+        />
 
         <Box
           sx={{
@@ -365,9 +281,12 @@ const Ticket = () => {
                   mt: "20vh",
                 }}
               >
-                <Link href="/home" passHref>
-                  No Tickets Found. Start Picking Some By Clicking Here!
-                </Link>
+                {userRole === 'admin' ?
+                  'No Tickets Found' :
+                  <Link href="/home" passHref>
+                    No Tickets Found. Start Picking Some By Clicking Here!
+                  </Link>
+                }
               </Typography>
             )}
           </Grid>

@@ -217,27 +217,30 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
                   "& .MuiChip-label": { color: "#6E44FF" },
                 }}
               />
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Typography
-                  variant="body2"
-                  sx={{ mr: 1, color: "white", fontWeight: "bold" }}
-                >
-                  Pick
-                </Typography>
-                <Checkbox
-                  checked={selectedContacts.includes(contact.Id)}
-                  onChange={() =>
-                    handleCheckboxChange(contact.Id, contact.applicationId)
-                  }
-                  size="small"
-                  sx={{
-                    color: "white",
-                    "&.Mui-checked": {
-                      color: "#FFD93D",
-                    },
-                  }}
-                />
-              </Box>
+              {decodedToken()?.role === 'admin' ?
+                null :
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ mr: 1, color: "white", fontWeight: "bold" }}
+                  >
+                    Pick
+                  </Typography>
+                  <Checkbox
+                    checked={selectedContacts.includes(contact.Id)}
+                    onChange={() =>
+                      handleCheckboxChange(contact.Id, contact.applicationId)
+                    }
+                    size="small"
+                    sx={{
+                      color: "white",
+                      "&.Mui-checked": {
+                        color: "#FFD93D",
+                      },
+                    }}
+                  />
+                </Box>
+              }
             </Box>
           )}
           {ticket && (
