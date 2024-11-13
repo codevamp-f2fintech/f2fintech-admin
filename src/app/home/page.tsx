@@ -18,6 +18,7 @@ import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { setCustomers } from "@/redux/features/customerSlice";
 import { useGetCustomers } from "@/hooks/customer";
+import { Utility } from "@/utils";
 
 const Home: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -30,6 +31,7 @@ const Home: React.FC = () => {
 
   const dispatch: AppDispatch = useDispatch();
   const { customer } = useSelector((state: RootState) => state.customer);
+  const { decodedToken } = Utility();
 
   const { data, error: getApplicationsError, swrLoading } = useGetCustomers(
     [],
@@ -166,7 +168,7 @@ const Home: React.FC = () => {
               fontWeight: "400",
             }}
           >
-            Show My Tickets
+            {decodedToken()?.role === 'admin' ? "Show Tickets" : "Show My Tickets"}
           </Button>
         </Link>
       </Box>

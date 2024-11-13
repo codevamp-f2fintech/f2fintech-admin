@@ -1,7 +1,9 @@
 "use client"; // Add this at the top
 
 import { useState } from "react";
-
+import { Formik, Form, Field } from "formik";
+import * as Yup from "yup";
+import { useRouter } from "next/navigation";
 import {
   Avatar,
   Button,
@@ -19,41 +21,51 @@ import {
   LockOutlined,
   Visibility,
   VisibilityOff,
+  Wc,
+  SupervisorAccount
 } from "@mui/icons-material";
 
+import Toast from "../../components/common/Toast";
 import { setLoading } from "@/redux/features/userSlice";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
-
-import { Utility } from "@/utils";
 import { UserAPI } from "@/apis/UserAPI";
-import Toast from "../../components/common/Toast";
-import { Formik, Form, Field } from "formik";
+import { Utility } from "@/utils";
 
-import * as Yup from "yup";
 
-// Regular expression for validating Gmail addresses
-const emailRegExp = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+// Regular expression for validating email addresses
+const emailRegExp = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
 
 const UserSchema = Yup.object().shape({
-  firstname: Yup.string().required("First name is required"),
-  lastname: Yup.string().required("Last name is required"),
+  firstname: Yup
+    .string()
+    .min(2, "Firstname is too short!")
+    .max(20, "Firstname is too long!")
+    .required("First name is required"),
+  lastname: Yup.string(),
   password: Yup.string()
-    .min(6, "Password must be at least 6 characters")
+    .min(8, 'Password Must Be 8 Characters Long')
+    .matches(/[A-Z]/, 'Password Must Contain At Least 1 Uppercase Letter')
+    .matches(/[a-z]/, 'Password Must Contain At Least 1 Lowercase Letter')
+    .matches(/[0-9]/, 'Password Must Contain At Least 1 Number')
+    .matches(/[^\w]/, 'Password Must Contain At Least 1 Special Character')
     .max(20, "Password cannot be more than 20 characters")
-    .required("Password is required")
-    .matches(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .matches(/\d/, "Password must contain at least one number"),
-  gender: Yup.string().required("Gender is required"),
-  email: Yup.string()
-    .matches(emailRegExp, "Email Address must be a Gmail address")
+    .required("This Field is Required"),
+  gender: Yup.string(),
+  role: Yup
+    .string()
+    .required("This field is required"),
+  email: Yup
+    .string()
+    .matches(emailRegExp, "Email address is not valid")
     .required("This field is required"),
 });
 
 const UserForm = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const dispatch: AppDispatch = useDispatch();
   const { toast } = useSelector((state: RootState) => state.toast);
+  const router = useRouter();
+  const dispatch: AppDispatch = useDispatch();
   const { toastAndNavigate } = Utility();
 
   const handleClickShowPassword = (): void => {
@@ -69,10 +81,11 @@ const UserForm = () => {
         email: values.email,
         password: values.password,
         gender: values.gender,
+        role: values.role
       };
-
-      const response = await UserAPI.create(registerInfo);
+      await UserAPI.create(registerInfo);
       toastAndNavigate(dispatch, true, "success", "User created successfully!");
+      router.push("/user");
     } catch (error) {
       toastAndNavigate(
         dispatch,
@@ -80,6 +93,7 @@ const UserForm = () => {
         "error",
         "Error signing up, please try again."
       );
+      console.log('user creation error=>', error)
     } finally {
       setLoading(false);
     }
@@ -122,6 +136,7 @@ const UserForm = () => {
             email: "",
             gender: "",
             password: "",
+            role: "agent"
           }}
           validationSchema={UserSchema}
           onSubmit={async (values, { setSubmitting, resetForm }) => {
@@ -146,8 +161,7 @@ const UserForm = () => {
                   <Field
                     as={TextField}
                     fullWidth
-                    id="firstname"
-                    label="First Name"
+                    label="*First Name"
                     name="firstname"
                     autoFocus
                     InputProps={{
@@ -167,7 +181,6 @@ const UserForm = () => {
                   <Field
                     as={TextField}
                     fullWidth
-                    id="lastname"
                     label="Last Name"
                     name="lastname"
                     InputProps={{
@@ -187,8 +200,7 @@ const UserForm = () => {
                   <Field
                     as={TextField}
                     fullWidth
-                    id="email"
-                    label="Email Address"
+                    label="*Email Address"
                     name="email"
                     InputProps={{
                       startAdornment: (
@@ -209,7 +221,7 @@ const UserForm = () => {
                     as={TextField}
                     fullWidth
                     name="password"
-                    label="Password"
+                    label="*Password"
                     type={showPassword ? "text" : "password"}
                     id="password"
                     InputProps={{
@@ -242,16 +254,15 @@ const UserForm = () => {
                     as={TextField}
                     select
                     fullWidth
-                    id="gender"
                     label="Gender"
                     name="gender"
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <Person sx={{ color: "black" }} />
+                          <Wc sx={{ color: "black" }} />
                         </InputAdornment>
                       ),
-                      style: { color: "black", fontSize: "15px" },
+                      style: { color: "black", fontSize: "15px", marginBottom: '20px' },
                     }}
                     InputLabelProps={{ style: { color: "black" } }}
                     error={touched.gender && Boolean(errors.gender)}
@@ -263,6 +274,32 @@ const UserForm = () => {
                     <MenuItem value="male">Male</MenuItem>
                     <MenuItem value="female">Female</MenuItem>
                     <MenuItem value="other">Other</MenuItem>
+                  </Field>
+                  <Field
+                    as={TextField}
+                    select
+                    fullWidth
+                    label="Role"
+                    name="role"
+                    value={values.role}
+                    onChange={handleChange}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SupervisorAccount sx={{ color: "black" }} />
+                        </InputAdornment>
+                      ),
+                      style: { color: "black", fontSize: "15px" },
+                    }}
+                    InputLabelProps={{ style: { color: "black" } }}
+                    error={touched.role && Boolean(errors.role)}
+                    helperText={touched.role && errors.role}
+                  >
+                    <MenuItem value="">
+                      <em>None</em>
+                    </MenuItem>
+                    <MenuItem value="admin">Admin</MenuItem>
+                    <MenuItem value="agent">Agent</MenuItem>
                   </Field>
                 </Grid>
               </Grid>
