@@ -73,7 +73,6 @@ const Home: React.FC = () => {
       const scrollTop = document.documentElement.scrollTop;
       const windowHeight = window.innerHeight;
       const offsetHeight = document.documentElement.offsetHeight;
-      // console.log("data", windowHeight, scrollTop, offsetHeight);
       if (
         windowHeight + scrollTop >= offsetHeight - 50 &&
         currentPage < totalPages &&

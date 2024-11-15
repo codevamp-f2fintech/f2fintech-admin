@@ -27,7 +27,7 @@ export async function middleware(request: NextRequest) {
         );
         const { payload } = await jwtVerify(token, jwtSecret);
         const role = payload.role;
-        // Check if role is admin
+        // Check if role is admin or agent
         if (role !== "admin" && role !== "agent") {
           return NextResponse.redirect(new URL("/unauthorized", request.url));
         }

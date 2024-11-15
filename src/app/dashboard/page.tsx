@@ -50,7 +50,7 @@ async function fetchTotalTickets(
 ): Promise<number> {
   let url = `${process.env.NEXT_PUBLIC_API_URL}/dashboard/tickets/count`;
 
-  if (role === "sales" && id !== null) {
+  if (role === "agent" && id !== null) {
     url += `/${id}`;
   }
 
