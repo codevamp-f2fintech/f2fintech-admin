@@ -33,7 +33,7 @@ const Ticket = () => {
 
   const { value: ticketData } = useGetTickets(
     [],
-    `get-all-tickets/${selectedUser ? selectedUser.id : ""}` // this is the selected user or ''
+    `get-all-tickets/${selectedUser ? selectedUser.id : decodedToken()?.id}` // this is the selected user id or agent id
   );
   const { modifyTicket, error: updateError } = useModifyTicket("update-ticket");
   const { createTicketHistory } = useCreateTicketHistory(
