@@ -3,6 +3,16 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Grid from "@mui/material/Unstable_Grid2";
+import {
+  FilterListRounded,
+  PersonRounded,
+  CheckCircleRounded,
+  RadioButtonUncheckedRounded,
+  AccessTimeRounded,
+  ForwardRounded,
+  PauseCircleOutlineRounded,
+  CancelRounded
+} from "@mui/icons-material";
 import dayjs from "dayjs";
 
 import { config } from "@/app/config";
@@ -127,7 +137,6 @@ export default async function Page(): Promise<React.JSX.Element> {
     totalForwardedTickets,
     totalCloseTickets,
     totalCompletedTickets,
-    totalAgents,
     totalTicketsByMonth,
     doneTicketsByMonth,
   ] = await Promise.all([
@@ -138,13 +147,18 @@ export default async function Page(): Promise<React.JSX.Element> {
     fetchTotalTickets("forwarded", id, role),
     fetchTotalTickets("close", id, role),
     fetchTotalTickets("done", id, role),
-    fetchAgentCount(),
     getTotalTicketsByMonth(2024),
     getDoneTicketsByMonth(2024),
   ]);
 
+  const totalOnHoldTickets = role !== 'admin'
+    ? await fetchTotalTickets("on hold", id, role)
+    : null; // Fetch tickets on hold only for non-admin roles
+  const totalAgents = role === 'admin' ? await fetchAgentCount() : null;
+
   const dashboardItems = [
     {
+      icon: FilterListRounded,
       label: "Total Applications",
       key: "totalApplications",
       color: "#2196f3",
@@ -152,6 +166,7 @@ export default async function Page(): Promise<React.JSX.Element> {
       link: "/",
     },
     {
+      icon: FilterListRounded,
       label: "Total Tickets",
       key: "totalTickets",
       color: "#ff6e40",
@@ -159,56 +174,69 @@ export default async function Page(): Promise<React.JSX.Element> {
       link: `/ticket?status=${decodeURIComponent("all")}`,
     },
     {
+      icon: RadioButtonUncheckedRounded,
       label: "Open Tickets",
       key: "openTickets",
-      color: "#ab47bc",
+      color: "#ff9800",
       count: totalOpenTickets,
-      link: `/ticket?status=${decodeURIComponent("to do")}`, // Link to the open tickets page
+      link: `/ticket?status=${decodeURIComponent("to do")}`,
     },
     {
+      icon: AccessTimeRounded,
       label: "In Progress",
       key: "inProgress",
-      color: "#4db6ac",
+      color: "#2196f3",
       count: totalInProgressTickets,
       link: `/ticket?status=${decodeURIComponent("in progress")}`,
     },
     {
+      icon: ForwardRounded,
       label: "Forwarded Tickets",
       key: "forwardedTickets",
-      color: "#cddc39",
+      color: "#9c27b0",
       count: totalForwardedTickets,
       link: `/ticket?status=${decodeURIComponent("forwarded")}`,
     },
     {
+      icon: CancelRounded,
       label: "Closed Tickets",
       key: "closedTickets",
-      color: "#4caf50",
+      color: "#d32f2f",
       count: totalCloseTickets,
-      // link: `/ticket?status=${decodeURIComponent("close")}`,
+      link: `/ticket?status=${decodeURIComponent("close")}`,
     },
     {
+      icon: CheckCircleRounded,
       label: "Completed Tickets",
       key: "completedTickets",
-      color: "#d32f2f",
+      color: "#4caf50",
       count: totalCompletedTickets,
       link: `/ticket?status=${decodeURIComponent("done")}`,
     },
-    {
-      label: "Total Agents",
-      key: "totalAgents",
-      color: "#607d8b",
-      count: totalAgents,
-      link: "", // Link to the agents page
-    },
+    ...(role === 'admin'
+      ? [
+        {
+          icon: PersonRounded,
+          label: "Total Agents",
+          key: "totalAgents",
+          color: "#607d8b",
+          count: totalAgents,
+          link: "/user",
+        },
+      ]
+      : [
+        {
+          icon: PauseCircleOutlineRounded,
+          label: "Tickets on Hold",
+          key: "onHold",
+          color: "#757575",
+          count: totalOnHoldTickets,
+          link: `/ticket?status=${decodeURIComponent("on hold")}`,
+        },
+      ]),
   ];
-  console.log(
-    totalTickets,
-    totalOpenTickets,
-    totalInProgressTickets,
-    totalForwardedTickets,
-    totalCloseTickets,
-    "tickets count"
-  );
+  console.log(role, 'role in dashbpard')
+  console.log(totalTickets, totalOpenTickets, totalInProgressTickets, totalForwardedTickets, totalCloseTickets, "tickets count");
 
   return (
     <Grid container spacing={3}>
@@ -219,6 +247,7 @@ export default async function Page(): Promise<React.JSX.Element> {
             style={{ textDecoration: "none", color: "inherit" }}
           >
             <Budget
+              Icon={item.icon}
               name={item.label}
               sx={{
                 height: "100%",
