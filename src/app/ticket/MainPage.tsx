@@ -3,7 +3,13 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import { Box, Grid, Typography } from "@mui/material";
+import {
+  Box,
+  Grid,
+  Pagination,
+  Typography,
+  useMediaQuery,
+} from "@mui/material";
 import { Dayjs } from "dayjs";
 
 import ApplicationCard from "../components/ticket/ApplicationCard";
@@ -14,6 +20,8 @@ import { useGetUsers } from "@/hooks/user";
 import { fetcher } from "@/apis/apiClient";
 import { Utility } from "@/utils";
 
+const ITEMS_PER_PAGE = 6;
+
 const Ticket = () => {
   const [customerApplications, setCustomerApplications] = useState([]);
   const [filteredApplications, setFilteredApplications] = useState([]);
@@ -21,6 +29,9 @@ const Ticket = () => {
   const [filter, setFilter] = useState("");
   const [sortBy, setSortBy] = useState("to do");
   const [selectedUser, setSelectedUser] = useState(null);
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const [currentPage, setCurrentPage] = useState(1); // For Pagination
 
   // date states
   const [startDate, setStartDate] = useState<Dayjs | null>(null);
@@ -239,6 +250,15 @@ const Ticket = () => {
     return tickets.filter((ticket) => ticket.status === status).length;
   };
 
+  const handlePageChange = (event, page) => {
+    setCurrentPage(page);
+  };
+
+  const paginatedApplications = filteredApplications.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   return (
     <>
       <Box
@@ -271,15 +291,25 @@ const Ticket = () => {
             minWidth: "80vw",
             minHeight: "70vh",
             display: "flex",
-            alignItems: "flex-start",
+            alignItems: isMobile ? "center" : isTab ? "" : "flex-start",
             justifyContent: "space-between",
             paddingTop: "20px",
             marginBottom: "0",
           }}
         >
-          <Grid container spacing={2} paddingLeft={7}>
-            {filteredApplications.length > 0 ? (
-              filteredApplications.map((customer, id) => {
+          <Grid
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              flexDirection: "row",
+              justifyContent: "center",
+            }}
+            container
+            spacing={2}
+            paddingLeft={0}
+          >
+            {paginatedApplications.length > 0 ? (
+              paginatedApplications.map((customer, id) => {
                 const ticket = tickets.find(
                   (ticket) =>
                     ticket.customer_application_id === customer.applicationId
@@ -316,6 +346,12 @@ const Ticket = () => {
             )}
           </Grid>
         </Box>
+        <Pagination
+          count={Math.ceil(filteredApplications.length / ITEMS_PER_PAGE)}
+          page={currentPage}
+          onChange={handlePageChange}
+          sx={{ mt: 4 }}
+        />
       </Box>
     </>
   );

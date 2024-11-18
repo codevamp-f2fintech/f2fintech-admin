@@ -9,6 +9,8 @@ import {
   Typography,
   Box,
   InputAdornment,
+  useMediaQuery,
+  Pagination,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 
@@ -20,40 +22,50 @@ import { setCustomers } from "@/redux/features/customerSlice";
 import { useGetCustomers } from "@/hooks/customer";
 import { Utility } from "@/utils";
 
+const ITEMS_PER_PAGE = 6; // Number of items per page
+
 const Home: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [pageSize] = useState<number>(6);
+  const [pageSize] = useState<number>(ITEMS_PER_PAGE); // For backend pagination, if applicable
   const [totalPages, setTotalPages] = useState<number>(1);
+  const [currentPage, setCurrentPage] = useState<number>(1); // For frontend pagination
   const [paginationLoading, setPaginationLoading] = useState<boolean>(false);
 
   const dispatch: AppDispatch = useDispatch();
   const { customer } = useSelector((state: RootState) => state.customer);
   const { decodedToken } = Utility();
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1000px)");
 
-  const { data, error: getApplicationsError, swrLoading } = useGetCustomers(
-    [],
-    `get-loan-applications`,
-    currentPage,
-    pageSize
-  );
+  const {
+    data,
+    error: getApplicationsError,
+    swrLoading,
+  } = useGetCustomers([], `get-loan-applications`, currentPage, pageSize);
 
   // Function to update customer data after refetching
   const updateCustomerData = (fetchedData) => {
     dispatch(setCustomers(fetchedData));
     if (fetchedData) {
-      const pages = Math.ceil(fetchedData.totalCount / pageSize);
+      const pages = Math.ceil(fetchedData.totalCount / ITEMS_PER_PAGE);
       setTotalPages(pages > 0 ? pages : 1);
       setPaginationLoading(false);
     }
   };
 
+  // Filtering customers by search term
   const filteredCustomers = customer?.filter((val) =>
     val.Name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Get paginated applications
+  const paginatedApplications = filteredCustomers?.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // Handle API response
   useEffect(() => {
     if (data) {
       if (data.success) {
@@ -67,28 +79,13 @@ const Home: React.FC = () => {
     }
   }, [data, getApplicationsError]);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      console.log("SCROLL");
-      const scrollTop = document.documentElement.scrollTop;
-      const windowHeight = window.innerHeight;
-      const offsetHeight = document.documentElement.offsetHeight;
-      if (
-        windowHeight + scrollTop >= offsetHeight - 50 &&
-        currentPage < totalPages &&
-        !paginationLoading
-      ) {
-        console.log("SET CURRENT PAGE");
-        setPaginationLoading(true);
-        setCurrentPage((prevPage) => prevPage + 1);
-      }
-    };
-    window.addEventListener("scroll", handleScroll);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, [currentPage, totalPages, paginationLoading]);
+  // Handle page change for pagination
+  const handlePageChange = (
+    event: React.ChangeEvent<unknown>,
+    page: number
+  ) => {
+    setCurrentPage(page);
+  };
 
   return (
     <Box
@@ -102,10 +99,10 @@ const Home: React.FC = () => {
       <Box
         sx={{
           height: "10vh",
-          width: "80vw",
+          width: isMobile ? "90vw" : isTab ? "70vh" : "80vw",
           display: "flex",
           flexDirection: "row",
-          justifyContent: "space-between",
+          justifyContent: "space-evenly",
           alignItems: "center",
           padding: "0.1rem",
         }}
@@ -117,7 +114,7 @@ const Home: React.FC = () => {
             fontWeight: "bold",
             color: "black",
             whiteSpace: "nowrap",
-            fontSize: "1.7rem",
+            fontSize: isMobile ? "1rem" : isTab ? "1.7rem" : "2rem",
           }}
         >
           Total Applications: {filteredCustomers?.length || 0}
@@ -129,7 +126,8 @@ const Home: React.FC = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
           sx={{
             backgroundColor: "#f2f2f2",
-            marginLeft: "25vw",
+            marginLeft: isMobile ? "1vw" : isTab ? "" : "25vw",
+            width: isMobile ? "80vw" : isTab ? "23vw" : "15vw",
 
             borderRadius: "20px",
             "& .MuiInputLabel-root": {
@@ -147,7 +145,7 @@ const Home: React.FC = () => {
               <InputAdornment position="end">
                 <SearchIcon sx={{ color: "black", fontSize: "1.5rem" }} />
               </InputAdornment>
-            )
+            ),
           }}
           InputLabelProps={{
             style: {
@@ -159,7 +157,7 @@ const Home: React.FC = () => {
           <Button
             variant="contained"
             sx={{
-              width: "15vw",
+              width: isMobile ? "20vw" : isTab ? "20vw" : "15vw",
               borderRadius: "12px",
               backgroundColor: "#1565c0",
               color: "white",
@@ -167,7 +165,9 @@ const Home: React.FC = () => {
               fontWeight: "400",
             }}
           >
-            {decodedToken()?.role === 'admin' ? "Show Tickets" : "Show My Tickets"}
+            {decodedToken()?.role === "admin"
+              ? "Show Tickets"
+              : "Show My Tickets"}
           </Button>
         </Link>
       </Box>
@@ -182,27 +182,28 @@ const Home: React.FC = () => {
         }}
       >
         <Grid container spacing={2} paddingLeft={7}>
-          {!filteredCustomers?.length ?
-            null :
-            filteredCustomers.map((contact, index) => (
-              <ApplicationCard contact={contact} key={index} handleStartClick={undefined} />
-            ))}
+          {!paginatedApplications?.length ? (
+            <Typography>No Applications Found</Typography>
+          ) : (
+            paginatedApplications.map((contact, index) => (
+              <ApplicationCard
+                contact={contact}
+                key={index}
+                handleStartClick={undefined}
+              />
+            ))
+          )}
         </Grid>
-        {/* {(paginationLoading || loading) && (
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              padding: "16px 0",
-            }}
-          >
-            <Loader />
-          </Box>
-        )} */}
       </Box>
 
-      {swrLoading ? <Loader />
-        : null}
+      <Pagination
+        count={Math.ceil((filteredCustomers?.length || 0) / ITEMS_PER_PAGE)}
+        page={currentPage}
+        onChange={handlePageChange}
+        sx={{ mt: 4 }}
+      />
+
+      {swrLoading || paginationLoading ? <Loader /> : null}
     </Box>
   );
 };

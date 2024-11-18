@@ -1,4 +1,4 @@
-import { Box, Typography, Paper } from "@mui/material";
+import { Box, Typography, Paper, useMediaQuery } from "@mui/material";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { formatDistanceToNow } from "date-fns";
 
@@ -14,6 +14,8 @@ interface WorkLogListProps {
 
 const WorkLogList: React.FC<WorkLogListProps> = ({ ticketData }) => {
   const { decodedToken } = Utility();
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
   const capitalizeFirstLetter = (str: string) => {
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();

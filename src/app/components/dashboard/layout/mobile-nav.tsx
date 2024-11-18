@@ -4,14 +4,10 @@ import * as React from "react";
 import RouterLink from "next/link";
 import { usePathname } from "next/navigation";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import Drawer from "@mui/material/Drawer";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { ArrowSquareUpRight as ArrowSquareUpRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowSquareUpRight";
-import { CaretUpDown as CaretUpDownIcon } from "@phosphor-icons/react/dist/ssr/CaretUpDown";
-
 import type { NavItemConfig } from "@/types/nav";
 import { paths } from "@/paths";
 import { isNavItemActive } from "@/lib/auth/is-nav-item-active";
@@ -20,6 +16,7 @@ import { Logo } from "@/app/components/core/logo";
 import { navItems } from "./config";
 
 import { navIcons } from "./nav-icons";
+import { useMediaQuery } from "@mui/material";
 
 export interface MobileNavProps {
   onClose?: () => void;
@@ -32,6 +29,8 @@ export function MobileNav({
   onClose,
 }: MobileNavProps): React.JSX.Element {
   const pathname = usePathname();
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
   return (
     <Drawer
@@ -51,10 +50,13 @@ export function MobileNav({
           bgcolor: "var(--MobileNav-background)",
           color: "var(--MobileNav-color)",
           display: "flex",
+          background:
+            "linear-gradient(235deg, #FFFFFF 0%, #000F25 100%), linear-gradient(180deg, #6100FF 0%, #000000 100%), linear-gradient(235deg, #FFA3AC 0%, #FFA3AC 40%, #00043C calc(40% + 1px), #00043C 60%, #005D6C calc(60% + 1px), #005D6C 70%, #00C9B1 calc(70% + 1px), #00C9B1 100%), linear-gradient(125deg, #FFA3AC 0%, #FFA3AC 40%, #00043C calc(40% + 1px), #00043C 60%, #005D6C calc(60% + 1px), #005D6C 70%, #00C9B1 calc(70% + 1px), #00C9B1 100%)",
+          backgroundBlendMode: "soft-light, screen, darken, normal",
           flexDirection: "column",
           maxWidth: "100%",
           scrollbarWidth: "none",
-          width: "var(--MobileNav-width)",
+          width: isMobile ? "35vw" : isTab ? "30vw" : "",
           zIndex: "var(--MobileNav-zIndex)",
           "&::-webkit-scrollbar": { display: "none" },
         },
@@ -66,7 +68,12 @@ export function MobileNav({
         <Box
           component={RouterLink}
           href={paths.home}
-          sx={{ display: "inline-flex" }}
+          sx={{
+            display: isMobile ? "flex" : isTab ? "flex" : "",
+            alignItems: isMobile ? "center" : "",
+            justifyContent: isMobile ? "center" : "",
+            width: isMobile ? "23vw" : isTab ? "15vw" : "",
+          }}
         >
           <Logo color="light" height={32} width={122} />
         </Box>
@@ -75,21 +82,21 @@ export function MobileNav({
             alignItems: "center",
             backgroundColor: "var(--mui-palette-neutral-950)",
             border: "1px solid var(--mui-palette-neutral-700)",
-            borderRadius: "12px",
+            borderRadius: "20px",
             cursor: "pointer",
             display: "flex",
             p: "4px 12px",
           }}
         >
-          <Box sx={{ flex: "1 1 auto" }}>
+          {/* <Box sx={{ flex: "1 1 auto" }}>
             <Typography color="var(--mui-palette-neutral-400)" variant="body2">
               Workspace
             </Typography>
             <Typography color="inherit" variant="subtitle1">
               Devias
             </Typography>
-          </Box>
-          <CaretUpDownIcon />
+          </Box> */}
+          {/* <CaretUpDownIcon /> */}
         </Box>
       </Stack>
       <Divider sx={{ borderColor: "var(--mui-palette-neutral-700)" }} />
@@ -97,40 +104,6 @@ export function MobileNav({
         {renderNavItems({ pathname, items: navItems })}
       </Box>
       <Divider sx={{ borderColor: "var(--mui-palette-neutral-700)" }} />
-      <Stack spacing={2} sx={{ p: "12px" }}>
-        <div>
-          <Typography
-            color="var(--mui-palette-neutral-100)"
-            variant="subtitle2"
-          >
-            Need more features?
-          </Typography>
-          <Typography color="var(--mui-palette-neutral-400)" variant="body2">
-            Check out our Pro solution template.
-          </Typography>
-        </div>
-        <Box sx={{ display: "flex", justifyContent: "center" }}>
-          <Box
-            component="img"
-            alt="Pro version"
-            src="/assets/devias-kit-pro.png"
-            sx={{ height: "auto", width: "160px" }}
-          />
-        </Box>
-        <Button
-          component="a"
-          endIcon={
-            <ArrowSquareUpRightIcon fontSize="var(--icon-fontSize-md)" />
-          }
-          fullWidth
-          href="https://material-kit-pro-react.devias.io/"
-          sx={{ mt: 2 }}
-          target="_blank"
-          variant="contained"
-        >
-          Pro version
-        </Button>
-      </Stack>
     </Drawer>
   );
 }

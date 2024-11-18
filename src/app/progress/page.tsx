@@ -17,6 +17,7 @@ import {
   InputLabel,
   Select,
   FormControl,
+  useMediaQuery,
 } from "@mui/material";
 
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -61,6 +62,9 @@ const Progress: React.FC = () => {
   const [overage, setOverage] = useState(0); // Orange part (exceeding estimated time)
   const [newLoanStatus, setNewLoanStatus] = useState("");
   const [newEmployeeStatus, setNewEmployeeStatus] = useState("");
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+
   const {
     status: employeeStatus,
     loanStatus,
@@ -367,21 +371,22 @@ const Progress: React.FC = () => {
           <Container
             sx={{
               display: "flex",
-              justifyContent: "space-around",
+              justifyContent: "center",
               alignItems: "center",
+              width: isMobile ? "95vw" : isTab ? "92vw" : "76vw",
             }}
           >
             <Grid
               container
               spacing={3}
-              sx={{ mt: 0, display: "flex", alignItems: "center" }}
+              sx={{ mt: 0, display: "flex" }}
               padding={0}
             >
               <Grid item xs={12} md={8}>
                 <Paper
                   elevation={5}
                   sx={{
-                    padding: 4,
+                    padding: isMobile ? 3 : isTab ? 3 : 4,
                     background: `
       linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
     `,
@@ -395,7 +400,6 @@ const Progress: React.FC = () => {
                     justifyContent="space-between"
                     alignItems="center"
                     mb={1}
-                    sx={{}}
                   >
                     <Typography
                       variant="h5"
@@ -419,7 +423,7 @@ const Progress: React.FC = () => {
                     borderColor="white"
                     display="flex"
                     alignItems="center"
-                    justifyContent={"space-between"}
+                    justifyContent={"center"}
                     gap={2}
                     sx={{
                       borderRadius: "14px",
@@ -427,7 +431,11 @@ const Progress: React.FC = () => {
                   >
                     <Avatar
                       src={selectedCustomer.Image}
-                      sx={{ width: 80, height: 80 }}
+                      sx={{
+                        width: isMobile ? "2rem" : isTab ? "" : "5rem",
+                        height: isMobile ? "2rem" : isTab ? "" : "5rem",
+                        marginBottom: isMobile ? "40vh" : isTab ? "" : "",
+                      }}
                     />
 
                     <Box
@@ -525,7 +533,7 @@ const Progress: React.FC = () => {
                               component="span"
                               sx={{ color: "white", mr: 1 }}
                             >
-                              tenure:
+                              Tenure:
                             </Typography>
                             <Typography
                               component="span"
@@ -569,13 +577,13 @@ const Progress: React.FC = () => {
                       elevation={5}
                       sx={{
                         padding: 2,
-                        marginTop: "5vh",
+                        marginTop: isMobile ? "2vh" : isTab ? "2rem" : "5vh",
                         display: "flex",
                         flexDirection: "row",
                         alignItems: "center",
                         justifyContent: "space-between",
                         borderRadius: "10px",
-                        width: "41vw",
+                        width: isMobile ? "73vw" : isTab ? "52vw" : "43.5vw",
                         background: `
                           linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
                         `,
@@ -587,7 +595,11 @@ const Progress: React.FC = () => {
                           mb: 0,
                           mt: 0,
                           color: "white",
-                          fontSize: "1rem",
+                          fontSize: isMobile
+                            ? ".7rem"
+                            : isTab
+                            ? "1rem"
+                            : "1rem",
                         }}
                       >
                         Documents:
@@ -655,12 +667,13 @@ const Progress: React.FC = () => {
                       height: "7vh",
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "flex-start",
-                      borderRadius: "15px",
-                      width: "20vw",
+                      justifyContent: "space-between",
+                      borderRadius: "10px",
+                      width: isMobile ? "73vw" : isTab ? "52vw" : "43.5vw",
                       background: `
       linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
     `,
+                      pr: "7vw",
                     }}
                   >
                     <Typography
@@ -670,64 +683,61 @@ const Progress: React.FC = () => {
                         ml: 2,
                         mt: 0,
                         color: "white",
-                        fontSize: "1rem",
+                        fontSize: isMobile ? ".7rem" : isTab ? "1rem" : "1rem",
                       }}
                     >
                       Activity:
-                      <Typography
-                        component="span"
-                        sx={{
-                          backgroundColor:
-                            activeSection === "Comments"
-                              ? "lightblue"
-                              : "#e8eaf6",
-                          fontSize: "12px",
-                          borderRadius: "4px",
-                          marginLeft: "10px",
-                          padding: "6px",
-                          cursor: "pointer",
-                          color: "black",
-                        }}
-                        onClick={showComments}
-                      >
-                        Comments
-                      </Typography>
-                      <Typography
-                        component="span"
-                        sx={{
-                          backgroundColor:
-                            activeSection === "History"
-                              ? "lightblue"
-                              : "#e8eaf6",
-                          fontSize: "12px",
-                          borderRadius: "4px",
-                          marginLeft: "10px",
-                          padding: "6px",
-                          cursor: "pointer",
-                          color: "black",
-                        }}
-                        onClick={showHistory}
-                      >
-                        History
-                      </Typography>
-                      <Typography
-                        component="span"
-                        sx={{
-                          backgroundColor:
-                            activeSection === "WorkLog"
-                              ? "lightblue"
-                              : "#e8eaf6",
-                          fontSize: "12px",
-                          borderRadius: "4px",
-                          marginLeft: "10px",
-                          padding: "6px",
-                          cursor: "pointer",
-                          color: "black",
-                        }}
-                        onClick={showWorkLog}
-                      >
-                        Work Log
-                      </Typography>
+                    </Typography>
+
+                    <Typography
+                      component="span"
+                      sx={{
+                        backgroundColor:
+                          activeSection === "Comments"
+                            ? "lightblue"
+                            : "#e8eaf6",
+                        fontSize: isMobile ? ".7rem" : isTab ? ".9rem" : "12px",
+                        borderRadius: "4px",
+                        marginLeft: "10px",
+                        padding: ".5rem",
+                        cursor: "pointer",
+                        color: "black",
+                      }}
+                      onClick={showComments}
+                    >
+                      Comments
+                    </Typography>
+                    <Typography
+                      component="span"
+                      sx={{
+                        backgroundColor:
+                          activeSection === "History" ? "lightblue" : "#e8eaf6",
+                        fontSize: isMobile ? ".7rem" : isTab ? ".9rem" : "12px",
+                        borderRadius: "4px",
+                        marginLeft: "10px",
+                        padding: "6px",
+                        cursor: "pointer",
+                        color: "black",
+                      }}
+                      onClick={showHistory}
+                    >
+                      History
+                    </Typography>
+                    <Typography
+                      component="span"
+                      sx={{
+                        backgroundColor:
+                          activeSection === "WorkLog" ? "lightblue" : "#e8eaf6",
+                        fontSize: isMobile ? ".7rem" : isTab ? ".9rem" : "12px",
+                        borderRadius: "4px",
+                        marginLeft: "10px",
+                        padding: "6px",
+                        cursor: "pointer",
+                        color: "black",
+                      }}
+                      onClick={showWorkLog}
+                    >
+                      Work Log
                     </Typography>
                   </Box>
 
@@ -749,12 +759,12 @@ const Progress: React.FC = () => {
                 <Paper
                   elevation={4}
                   sx={{
-                    padding: 3,
-                    height: "72vh",
-                    width: "400px",
+                    padding: isMobile ? 2 : isTab ? 2 : 3,
+                    height: isMobile ? "60vh" : isTab ? "42vh" : "75vh",
+                    width: isMobile ? "85vw" : isTab ? "30vw" : "25vw",
                     borderRadius: "20px",
-                    position: "fixed",
-                    top: "20vh",
+                    position: isMobile ? "" : isTab ? "fixed" : "fixed",
+                    top: isTab ? "" : "20vh",
                     background: `
       linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
     `,
@@ -795,6 +805,7 @@ const Progress: React.FC = () => {
                         sx={{
                           background: "white",
                           borderRadius: "15px",
+                          width: isMobile ? "30vw" : "8vw",
                           "&:hover": {
                             transform: "scale(1.02)",
                             transition: "transform 0.3s ease",
@@ -807,7 +818,10 @@ const Progress: React.FC = () => {
                           variant="filled"
                           value={newLoanStatus}
                           onChange={handleChangeLoanStatus}
-                          sx={{ borderRadius: "15px", width: "8vw" }}
+                          sx={{
+                            borderRadius: "5px",
+                            width: isMobile ? "30vw" : "8vw",
+                          }}
                         >
                           <MenuItem value="submitted">Submitted</MenuItem>
                           <MenuItem value="under_review">Under Review</MenuItem>
@@ -871,7 +885,10 @@ const Progress: React.FC = () => {
                           variant="filled"
                           value={newEmployeeStatus}
                           onChange={handleChangeEmployeeStatus}
-                          sx={{ borderRadius: "15px", width: "8vw" }}
+                          sx={{
+                            borderRadius: "15px",
+                            width: isMobile ? "30vw" : "8vw",
+                          }}
                         >
                           <MenuItem value="to do">To Do</MenuItem>
                           <MenuItem value="in progress">In Progress</MenuItem>
@@ -888,9 +905,9 @@ const Progress: React.FC = () => {
                   <Box
                     sx={{
                       borderRadius: "20px",
-                      height: "7vh",
-                      mt: "1vw",
-                      width: "20.5vw",
+                      height: isMobile ? "5vh" : isTab ? "4vh" : "7vh",
+                      mt: isMobile ? "3vw" : isTab ? "2vw" : "1vw",
+                      width: isMobile ? "75vw" : isTab ? "26vw" : "20.5vw",
                     }}
                   >
                     {newEmployeeStatus === "forwarded" && (
@@ -942,7 +959,11 @@ const Progress: React.FC = () => {
                       <Typography
                         variant="body2"
                         sx={{
-                          fontSize: "14px",
+                          fontSize: isMobile
+                            ? ".8rem"
+                            : isTab
+                            ? ".9rem"
+                            : "14px",
                           fontWeight: "bold",
                           color: "white",
                           marginLeft: ".5rem",
@@ -994,7 +1015,7 @@ const Progress: React.FC = () => {
                       variant="body2"
                       fontWeight="bold"
                       sx={{
-                        fontSize: "14px",
+                        fontSize: isMobile ? ".8rem" : "14px",
                         fontWeight: "bold",
                         color: "white",
                         marginLeft: ".5rem",
@@ -1054,7 +1075,7 @@ const Progress: React.FC = () => {
                         marginTop: "3vh",
                         ml: ".5rem",
                         color: "white",
-                        fontSize: "14px",
+                        fontSize: isMobile ? ".8rem" : "14px",
                         fontWeight: "bold",
                       }}
                     >
@@ -1063,9 +1084,9 @@ const Progress: React.FC = () => {
 
                     <Box
                       display="flex"
-                      width="12vw"
                       mt={2}
                       sx={{
+                        width: isMobile ? "25vh" : isTab ? "20vw" : "25vh",
                         color: "white",
                         mr: ".5vw",
                         display: "flex",

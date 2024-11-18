@@ -73,6 +73,7 @@ async function fetchTotalTickets(
   }); // To Prevent caching
 
   if (!response.ok) {
+    console.log(response, "reas");
     throw new Error("Failed to fetch total Tickets");
   }
   const resData = await response.json();
@@ -129,6 +130,8 @@ export default async function Page(): Promise<React.JSX.Element> {
   const { decodedToken } = Utility();
   const userToken = cookieStore.get("token");
   const { id, role } = decodedToken(userToken?.value);
+  console.log("role=>", id, role);
+
   const [
     totalApplications,
     totalTickets,

@@ -8,6 +8,8 @@ import {
   Button,
   TextField,
   IconButton,
+  useMediaQuery,
+  Pagination,
 } from "@mui/material";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -23,6 +25,8 @@ import {
 } from "@/hooks/ticketActivities";
 import { Utility } from "@/utils";
 
+const ITEMS_PER_PAGE = 3;
+
 interface CommentsProps {
   storedTicketId: number;
   theme: any;
@@ -37,9 +41,12 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
     null
   );
   const { toast } = useSelector((state: RootState) => state.toast);
+  const [currentPage, setCurrentPage] = useState(1); // Current page for pagination
 
   const dispatch: AppDispatch = useDispatch();
   const { decodedToken, toastAndNavigate } = Utility();
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
   // Fetch comments data
   const { value: comments, refetch } = useGetTicketActivities(
@@ -203,6 +210,22 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   };
 
+  // Pagination Logic
+  const handlePageChange = (
+    event: React.ChangeEvent<unknown>,
+    page: number
+  ) => {
+    setCurrentPage(page);
+  };
+
+  const paginatedComments =
+    comments && comments.data
+      ? comments.data.slice(
+          (currentPage - 1) * ITEMS_PER_PAGE,
+          currentPage * ITEMS_PER_PAGE
+        )
+      : [];
+
   return (
     <Box mt={2} mb={2} sx={{ position: "relative" }}>
       <Box sx={{ position: "relative", mb: 2 }}>
@@ -269,8 +292,8 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
       </Box>
 
       <Box mt={3}>
-        {comments && comments.data ? (
-          comments.data.map((comment) => (
+        {paginatedComments.length > 0 ? (
+          paginatedComments.map((comment) => (
             <Box
               key={comment.id}
               mt={2}
@@ -291,7 +314,7 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
                   sx={{
                     display: "flex",
                     alignItems: "center",
-                    mb: 0.5,
+                    mb: isTab ? 0 : 0.5,
                   }}
                 >
                   <Typography fontWeight="bold" sx={{ marginRight: "8px" }}>
@@ -387,7 +410,7 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
                         alignItems: "center",
                         flexDirection: "space-between",
                         color: "#5e6c84",
-                        mt: "5vh",
+                        mt: isTab ? "2vh" : "5vh",
                       }}
                     >
                       <Button
@@ -435,6 +458,16 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
         ) : (
           <Typography>No comments available</Typography>
         )}
+        <Pagination
+          count={
+            comments && comments.data
+              ? Math.ceil(comments.data.length / ITEMS_PER_PAGE)
+              : 0
+          }
+          page={currentPage}
+          onChange={handlePageChange}
+          sx={{ mt: 2 }}
+        />
       </Box>
       <Toast
         alerting={toast.toastAlert}
