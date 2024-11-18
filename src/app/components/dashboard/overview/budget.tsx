@@ -5,15 +5,15 @@ import CardContent from "@mui/material/CardContent";
 import Stack from "@mui/material/Stack";
 import type { SxProps } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
-import { Users as UsersIcon } from "@phosphor-icons/react/dist/ssr/Users";
 
 export interface BudgetProps {
   name: string;
   sx?: SxProps;
   value: string;
+  Icon: string;
 }
 
-export function Budget({ name, sx, value }: BudgetProps): React.JSX.Element {
+export function Budget({ name, sx, value, Icon }: BudgetProps): React.JSX.Element {
   return (
     <Card sx={sx}>
       <CardContent>
@@ -37,7 +37,7 @@ export function Budget({ name, sx, value }: BudgetProps): React.JSX.Element {
                 width: "45px",
               }}
             >
-              <UsersIcon fontSize="1.3rem" />
+              {Icon && <Icon sx={{ fontSize: 20 }} />}
             </Avatar>
           </Stack>
         </Stack>

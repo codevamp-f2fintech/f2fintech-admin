@@ -41,11 +41,15 @@ const Ticket = () => {
   const searchParams = useSearchParams(); // To get the query parameters
   const { decodedToken, setLocalStorage, remLocalStorage } = Utility();
   const userRole = decodedToken()?.role;
+  const apiEndpoint = selectedUser
+    ? `get-all-tickets/${selectedUser.id}`   // If a user is selected in the dropdown, fetch their tickets
+    : userRole === 'admin'
+      ? `get-all-tickets`   // Admin sees all tickets when no user is selected
+      : userRole === 'agent'
+        ? `get-all-tickets/${decodedToken()?.id}`   // Agent sees their tickets
+        : `get-all-tickets`;
 
-  const { value: ticketData } = useGetTickets(
-    [],
-    `get-all-tickets/${selectedUser ? selectedUser.id : decodedToken()?.id}` // this is the selected user id or agent id
-  );
+  const { value: ticketData } = useGetTickets([], apiEndpoint);
   const { modifyTicket, error: updateError } = useModifyTicket("update-ticket");
   const { createTicketHistory } = useCreateTicketHistory(
     "create-ticket-history"

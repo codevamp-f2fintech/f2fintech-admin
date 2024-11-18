@@ -75,7 +75,7 @@ export const Utility = () => {
   const remLocalStorage = (key: string): void => {
     try {
       localStorage.removeItem(key);
-    } catch (err) {}
+    } catch (err) { }
   };
 
   /**
@@ -87,7 +87,7 @@ export const Utility = () => {
   const setLocalStorage = (key: string, value: any): void => {
     try {
       localStorage.setItem(key, JSON.stringify(value));
-    } catch (err) {}
+    } catch (err) { }
   };
 
   /**
@@ -173,26 +173,33 @@ export const Utility = () => {
    * @returns {any | null} - Decoded token payload, or null if token not found or invalid.
    */
   const decodedToken = (token = null): any | null => {
+    // Prioritize server-side provided token
     if (typeof document === "undefined") {
-      return {};
+      if (token) {
+        try {
+          return jwtDecode(token);
+        } catch (error) {
+          console.log("Error decoding token (server-side):", error);
+          return null;
+        }
+      }
+      return {}; // No token provided server-side
     }
+    // Client-side handling
     if (!token) {
       const cookies = getCookies();
       token = cookies?.token;
     }
-
     if (token) {
       try {
-        const decodedToken = jwtDecode(token);
-        return decodedToken;
+        return jwtDecode(token);
       } catch (error) {
-        console.log("Error decoding token:", error);
+        console.log("Error decoding token (client-side):", error);
         return null;
       }
-    } else {
-      console.log("No token found in cookies");
-      return null;
     }
+    console.log("No token found in cookies");
+    return null;
   };
 
   return {

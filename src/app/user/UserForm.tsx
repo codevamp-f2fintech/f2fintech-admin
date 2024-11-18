@@ -157,7 +157,7 @@ const UserForm = () => {
             email: "",
             gender: "",
             password: "",
-            role: "sales"
+            role: "agent"
           }}
           validationSchema={UserSchema}
           onSubmit={async (values, { setSubmitting, resetForm }) => {
@@ -318,7 +318,7 @@ const UserForm = () => {
                       <em>None</em>
                     </MenuItem>
                     <MenuItem value="admin">Admin</MenuItem>
-                    <MenuItem value="sales">Sales</MenuItem>
+                    <MenuItem value="agent">Agent</MenuItem>
                   </Field>
                 </Grid>
               </Grid>
