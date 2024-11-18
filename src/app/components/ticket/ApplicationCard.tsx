@@ -10,6 +10,7 @@ import {
   Box,
   Checkbox,
   Chip,
+  useMediaQuery,
 } from "@mui/material";
 import {
   MailRounded,
@@ -59,6 +60,8 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
   const [pageSize] = useState<number>(6);
   const { createTicket, error } = useCreateTicket("create-ticket", {});
   const { decodedToken } = Utility();
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1000px)");
 
   const { refetch } = useGetCustomers(
     [],
@@ -102,10 +105,10 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
 
     if (!isAlreadySelected) {
       try {
-        await createNewTicket(applicationId);   // Create new Ticket
+        await createNewTicket(applicationId); // Create new Ticket
         await modifyCustomerApplication(applicationId, {
           is_picked: 1,
-        });       // Mark the Card as picked
+        }); // Mark the Card as picked
 
         setSelectedContacts((prevSelectedContacts) => [
           ...prevSelectedContacts,
@@ -135,7 +138,7 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
           background: `
       linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
     `,
-          pt: 6,
+          pt: isMobile ? 3 : 5,
           mt: 5,
         }}
       >
@@ -194,7 +197,10 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
               text={`${contact.Tenure} months`}
             />
             {contact.Location && (
-              <InfoRow icon={<LocationOnRounded />} text={capitalizeFirstLetter(contact.Location)} />
+              <InfoRow
+                icon={<LocationOnRounded />}
+                text={capitalizeFirstLetter(contact.Location)}
+              />
             )}
           </Box>
           {!ticket && (
@@ -217,8 +223,7 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
                   "& .MuiChip-label": { color: "#6E44FF" },
                 }}
               />
-              {decodedToken()?.role === 'admin' ?
-                null :
+              {decodedToken()?.role === "admin" ? null : (
                 <Box sx={{ display: "flex", alignItems: "center" }}>
                   <Typography
                     variant="body2"
@@ -240,7 +245,7 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
                     }}
                   />
                 </Box>
-              }
+              )}
             </Box>
           )}
           {ticket && (

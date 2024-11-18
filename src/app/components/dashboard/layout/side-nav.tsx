@@ -3,6 +3,7 @@
 import * as React from "react";
 import RouterLink from "next/link";
 import { usePathname } from "next/navigation";
+
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
@@ -11,6 +12,7 @@ import IconButton from "@mui/material/IconButton";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import MenuIcon from "@mui/icons-material/Menu";
 import Tooltip from "@mui/material/Tooltip";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 import type { NavItemConfig } from "@/types/nav";
 import { paths } from "@/paths";
@@ -25,6 +27,8 @@ export function SideNav(): React.JSX.Element {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = React.useState(false); // Collapse state
   const { decodedToken } = Utility();
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1100px)");
 
   const userRole = decodedToken()?.role;
 
@@ -56,12 +60,12 @@ export function SideNav(): React.JSX.Element {
         color: "var(--SideNav-color)",
         display: { xs: "none", lg: "flex" },
         flexDirection: "column",
-        height: "100vh",
+        height: "100vh", // Using vh for height
         left: 0,
         position: "sticky",
         scrollbarWidth: "none",
         top: 0,
-        width: collapsed ? "5vw" : "var(--SideNav-width)", // Dynamic width
+        width: collapsed ? "5vw" : "15vw", // Adjusted width based on state
         zIndex: "var(--SideNav-zIndex)",
         transition: "width 0.3s",
         "&::-webkit-scrollbar": { display: "none" },
@@ -195,8 +199,8 @@ function NavItem({
             display: "flex",
             justifyContent: "center",
             flex: "0 0 auto",
-            height: "5vh",
-            width: "3vw",
+            height: "5vh", // Height in vh
+            width: "3vw", // Width in vw
             borderRadius: "50px",
             boxShadow:
               "rgba(0, 0, 0, 0) 0px -23px 25px 0px inset, rgba(0, 0, 0, 0.15) 0px -36px 30px 0px inset, rgba(0, 0, 0, 0.1) 0px -79px 40px 0px inset, rgba(0, 0, 0, 0.06) 0px 2px 1px, rgba(0, 0, 0, 0.09) 0px 4px 2px, rgba(0, 0, 0, 0.09) 0px 8px 4px, rgba(0, 0, 0, 0.09) 0px 16px 8px, rgba(0, 0, 0, 0.09) 0px 32px 16px",
@@ -220,12 +224,17 @@ function NavItem({
             </Tooltip>
           ) : null}
         </Box>
-        <Collapse in={!collapsed}>
+        <Collapse in={!collapsed} orientation="horizontal">
           <Box
+            component="span"
             sx={{
-              display: "inline",
-              flexGrow: 1,
-              minWidth: 0,
+              color: active ? "white" : "white",
+              fontFamily: "monospace",
+              fontSize: "1rem",
+              fontWeight: "600",
+              lineHeight: 2.5,
+              textTransform: "capitalize",
+              whiteSpace: "nowrap",
             }}
           >
             {title}

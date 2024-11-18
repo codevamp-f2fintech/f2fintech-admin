@@ -102,8 +102,8 @@ const TrackingForm: React.FC<FormComponentProps> = ({
   const dispatch = useDispatch();
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
-  const isMobile = useMediaQuery("(max-width:480px)");
-  const isTab = useMediaQuery("(max-width:920px)");
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
   const { toastAndNavigate, getLocalStorage } = Utility();
   const storedTicketId = getLocalStorage("ticketId");
@@ -203,10 +203,14 @@ const TrackingForm: React.FC<FormComponentProps> = ({
         onClose={handleDialogClose}
         aria-labelledby="responsive-dialog-title"
         sx={{
-          top: isMobile ? "33%" : isTab ? "25%" : "20%",
-          height: isMobile ? "49%" : isTab ? "39%" : "80vh",
+          top: isMobile ? "22%" : isTab ? "15%" : "10.5%",
+          height: isMobile ? "65vh" : isTab ? "60vh" : "87vh",
+          padding: "2rem",
+
           "& .MuiPaper-root": {
-            width: "100%",
+            width: isMobile ? "110vw" : isTab ? "90vw" : "100vw",
+            borderRadius: isMobile ? "20px" : isTab ? "20px" : "20px",
+
             backgroundImage:
               theme.palette.mode === "light"
                 ? `linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85))`
@@ -218,11 +222,12 @@ const TrackingForm: React.FC<FormComponentProps> = ({
         }}
       >
         <Typography
-          fontSize="19px"
+          fontSize="1.8rem"
           fontWeight="600"
-          display="inline-block"
+          display={isMobile ? "" : isTab ? "" : "inline-block"}
           textAlign="center"
-          marginTop="10px"
+          marginTop={isMobile ? "2vh" : isTab ? "5vh" : "10px"}
+          marginBottom={isMobile ? "1vh" : isTab ? "3vh" : ""}
         >
           Time tracking
         </Typography>
@@ -241,11 +246,15 @@ const TrackingForm: React.FC<FormComponentProps> = ({
             handleSubmit,
           }) => (
             <form onSubmit={handleSubmit}>
-              <Box padding="20px" width="32vw" mx="auto">
+              <Box
+                padding="1rem"
+                width={isMobile ? "90vw" : isTab ? "50vw" : "32vw"}
+                mx="auto"
+              >
                 <Box
                   sx={{
                     position: "relative",
-                    width: "28vw",
+                    width: isMobile ? "70vw" : isTab ? "50vw" : "28vw",
                     height: 8,
                   }}
                 >
@@ -257,6 +266,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
                       height: 8,
                       borderRadius: 2,
                       backgroundColor: "lightgray",
+                      width: isMobile ? "78vw" : isTab ? "45vw" : "30vw",
 
                       "& .MuiLinearProgress-bar": {
                         backgroundColor: "#36B37E",
@@ -300,7 +310,11 @@ const TrackingForm: React.FC<FormComponentProps> = ({
 
                 {/* Original estimate info */}
                 <Box display="flex" flexDirection="column" mt={2} ml={2}>
-                  <Typography variant="body2" color="textSecondary">
+                  <Typography
+                    variant="body2"
+                    color="textSecondary"
+                    fontSize={isMobile ? "" : isTab ? "1rem" : ""}
+                  >
                     {timeLoggingEstimate.timeSpent
                       ? `${timeLoggingEstimate.timeSpent} logged`
                       : values.time_spent
@@ -308,7 +322,11 @@ const TrackingForm: React.FC<FormComponentProps> = ({
                       : null}
                   </Typography>
                   <Box display="flex" flexDirection="row">
-                    <Typography variant="body2" color="textSecondary">
+                    <Typography
+                      variant="body2"
+                      color="textSecondary"
+                      fontSize={isMobile ? "" : isTab ? ".9rem" : ""}
+                    >
                       The original estimate for this issue was
                     </Typography>
                     <Typography variant="body2" color="primary" ml={1}>
@@ -376,7 +394,13 @@ const TrackingForm: React.FC<FormComponentProps> = ({
                 </Box>
               </Box>
               <Divider />
-              <Box display="flex" justifyContent="end" p="20px">
+              <Box
+                display="flex"
+                justifyContent={
+                  isMobile ? "center" : isTab ? "center" : "center"
+                }
+                p="20px"
+              >
                 <Button
                   color="error"
                   variant="outlined"

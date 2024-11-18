@@ -40,11 +40,23 @@ export function Traffic({
           <Stack
             direction="row"
             spacing={1}
-            sx={{ alignItems: "center", justifyContent: "center", flexWrap: "wrap", rowGap: 2, columnGap: 3 }}
+            sx={{
+              alignItems: "center",
+              justifyContent: "center",
+              flexWrap: "wrap",
+              rowGap: 2,
+              columnGap: 3,
+            }}
           >
             {chartSeries.map((item, index) => (
-              <Stack key={labels[index]} spacing={1} sx={{ alignItems: "center", minWidth: '80px' }}>
-                <Typography variant="body2" fontWeight="bold">{labels[index]}</Typography>
+              <Stack
+                key={labels[index]}
+                spacing={1}
+                sx={{ alignItems: "center", minWidth: "80px" }}
+              >
+                <Typography variant="body2" fontWeight="bold">
+                  {labels[index]}
+                </Typography>
                 <Typography color="text.secondary" variant="subtitle2">
                   {item}
                 </Typography>
