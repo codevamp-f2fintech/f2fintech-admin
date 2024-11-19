@@ -14,10 +14,11 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 
-import Loader from "../components/common/Loader";
 import ApplicationCard from "../components/ticket/ApplicationCard";
+import Loader from "../components/common/Loader";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
+import type { Customer } from '@/types/customer';
 import { setCustomers } from "@/redux/features/customerSlice";
 import { useGetCustomers } from "@/hooks/customer";
 import { Utility } from "@/utils";
@@ -26,9 +27,7 @@ const ITEMS_PER_PAGE = 6; // Number of items per page
 
 const Home: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
-
-  const [pageSize] = useState<number>(ITEMS_PER_PAGE); // For backend pagination, if applicable
-  const [totalPages, setTotalPages] = useState<number>(1);
+  const [limit] = useState<number>(ITEMS_PER_PAGE); // For backend pagination
   const [currentPage, setCurrentPage] = useState<number>(1); // For frontend pagination
   const [paginationLoading, setPaginationLoading] = useState<boolean>(false);
 
@@ -39,45 +38,34 @@ const Home: React.FC = () => {
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1000px)");
 
   const {
-    data,
+    value: data,
     error: getApplicationsError,
     swrLoading,
-  } = useGetCustomers([], `get-loan-applications`, currentPage, pageSize);
+  } = useGetCustomers({} as Customer, `get-loan-applications`, currentPage, limit);
 
   // Function to update customer data after refetching
-  const updateCustomerData = (fetchedData) => {
+  const updateCustomerData = (fetchedData: Customer) => {
     dispatch(setCustomers(fetchedData));
     if (fetchedData) {
-      const pages = Math.ceil(fetchedData.totalCount / ITEMS_PER_PAGE);
-      setTotalPages(pages > 0 ? pages : 1);
       setPaginationLoading(false);
     }
   };
-
   // Filtering customers by search term
-  const filteredCustomers = customer?.filter((val) =>
+  const filteredCustomers = customer?.results?.filter((val) =>
     val.Name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Get paginated applications
-  const paginatedApplications = filteredCustomers?.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
   );
 
   // Handle API response
   useEffect(() => {
     if (data) {
-      if (data.success) {
-        updateCustomerData(data.data);
-      } else {
-        updateCustomerData(data.data);
-        setPaginationLoading(false);
-      }
+      updateCustomerData(data);
     } else if (getApplicationsError) {
       setPaginationLoading(false);
+    } else {
+      updateCustomerData(data);
+      setPaginationLoading(false);
     }
-  }, [data, getApplicationsError]);
+  }, [data?.results, currentPage, getApplicationsError]);
 
   // Handle page change for pagination
   const handlePageChange = (
@@ -117,7 +105,7 @@ const Home: React.FC = () => {
             fontSize: isMobile ? "1rem" : isTab ? "1.7rem" : "2rem",
           }}
         >
-          Total Applications: {filteredCustomers?.length || 0}
+          New Applications: {customer?.total || 0}
         </Typography>
         <TextField
           label="Search by name..."
@@ -182,10 +170,10 @@ const Home: React.FC = () => {
         }}
       >
         <Grid container spacing={2} paddingLeft={7}>
-          {!paginatedApplications?.length ? (
+          {!filteredCustomers?.length ? (
             <Typography>No Applications Found</Typography>
           ) : (
-            paginatedApplications.map((contact, index) => (
+            filteredCustomers.map((contact, index) => (
               <ApplicationCard
                 contact={contact}
                 key={index}
@@ -197,7 +185,7 @@ const Home: React.FC = () => {
       </Box>
 
       <Pagination
-        count={Math.ceil((filteredCustomers?.length || 0) / ITEMS_PER_PAGE)}
+        count={Math.ceil(customer?.total / ITEMS_PER_PAGE)}
         page={currentPage}
         onChange={handlePageChange}
         sx={{ mt: 4 }}

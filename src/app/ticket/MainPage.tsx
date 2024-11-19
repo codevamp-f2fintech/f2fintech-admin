@@ -198,6 +198,7 @@ const Ticket = () => {
         ticket?.user_id === decodedToken()?.id &&
         ticket?.customer_application_id === applicationId
     );
+    console.log(ticketData?.data, 'data')
 
     if (selectedTicket) {
       const { id: ticketId } = selectedTicket;

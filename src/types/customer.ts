@@ -1,4 +1,4 @@
-export interface Customer {
+export interface CustomerData {
   Id: number;
   Name: string;
   Email: string;
@@ -12,4 +12,12 @@ export interface Customer {
   Image: string;
   Location: string;
   is_picked: number;
+}
+
+export interface Customer {
+  results: CustomerData[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }

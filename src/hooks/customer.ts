@@ -1,25 +1,27 @@
 import { useState } from "react";
 import axios from "axios";
 import useSWR, { mutate } from "swr";
+
 import { creator, fetcher, modifier } from "@/apis/apiClient";
-import { Customer } from "@/types/customer"; // Assuming CustomerData is defined in the types
+import { Customer, CustomerData } from "@/types/customer";
+
 /**
  * Hook for fetching customers with SWR (stale-while-revalidate) strategy.
  *
  * @param initialData - The initial data to be used before SWR fetches fresh data.
  * @param pathKey - The API path key used by SWR to fetch customer data.
  * @param page
- * @param pageSize
+ * @param limit
  * @returns An object containing the fetched customers, loading state, and error state.
  */
 export const useGetCustomers = (
-  initialData: Customer[],
+  initialData: Customer | null,
   pathKey: string,
   page: number = 1,
-  pageSize: number = 6
+  limit: number = 6
 ) => {
-  const { data: swrData, error } = useSWR<Customer[]>(
-    `${pathKey}?page=${page}&offset=${pageSize}`,
+  const { data: swrData, error } = useSWR<Customer | null>(
+    `${pathKey}?page=${page}&limit=${limit}`,
     fetcher,
     {
       fallbackData: initialData,
@@ -29,11 +31,23 @@ export const useGetCustomers = (
   );
   // Manually re-trigger re-fetch
   const refetch = async () => {
-    await mutate(`${pathKey}?page=${page}&offset=${pageSize}`);
+    await mutate(`${pathKey}?page=${page}&limit=${limit}`);
   };
 
-  return { data: swrData || [], swrLoading: !error && !swrData, error, refetch };
+  return {
+    value: swrData || {
+      results: [],
+      total: 0,
+      page: 1,
+      limit,
+      totalPages: 1,
+    },
+    swrLoading: !error && !swrData,
+    error,
+    refetch
+  };
 };
+
 /**
  * Hook for creating a new customer.
  *
@@ -43,7 +57,7 @@ export const useGetCustomers = (
 export const useCreateCustomer = (pathKey: string) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [createdCustomer, setCreatedCustomer] = useState<Customer | null>(null);
+  const [createdCustomer, setCreatedCustomer] = useState<CustomerData | null>(null);
 
   const createCustomer = async (ticketData: {
     applicationId: number;
@@ -74,15 +88,15 @@ export const useCreateCustomer = (pathKey: string) => {
 export const useModifyCustomer = (pathKey: string) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [updatedCustomer, setUpdatedCustomer] = useState<Customer | null>(null);
+  const [updatedCustomer, setUpdatedCustomer] = useState<CustomerData | null>(null);
 
-  const modifyCustomer = async (id: number, updatedCustomerData: Partial<Customer>) => {
+  const modifyCustomer = async (id: number, updatedCustomerData: Partial<CustomerData>) => {
     setLoading(true);
     setError(null);
     try {
       const apiPath = `${pathKey}/${id}`;
 
-      const customer = await modifier<Customer, Partial<Customer>>(
+      const customer = await modifier<CustomerData, Partial<CustomerData>>(
         apiPath,
         updatedCustomerData
       );

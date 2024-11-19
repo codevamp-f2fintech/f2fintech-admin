@@ -2,12 +2,12 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Customer } from "@/types/customer";
 
 interface CustomerState {
-  customer: Customer[];
+  customer: Customer | null;
   reduxLoading: boolean;
 }
 
 const initialState: CustomerState = {
-  customer: [],
+  customer: null,
   reduxLoading: true,
 };
 
@@ -15,11 +15,11 @@ export const customerSlice = createSlice({
   name: "customer",
   initialState,
   reducers: {
-    appendCustomers: (state, action: PayloadAction<Customer[]>) => {
+    appendCustomers: (state, action: PayloadAction<Customer>) => {
       state.customer = [...state.customer, ...action.payload];
       state.reduxLoading = false;
     },
-    setCustomers: (state, action: PayloadAction<Customer[]>) => {
+    setCustomers: (state, action: PayloadAction<Customer>) => {
       state.customer = action.payload;
       state.reduxLoading = false;
     },
