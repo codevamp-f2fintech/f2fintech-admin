@@ -126,6 +126,16 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
     }
   };
 
+  // Function to format tenure
+  function formatTenure(tenure: number) {
+    if (tenure <= 60) {
+      return `${tenure} months`;
+    } else {
+      const years = (tenure / 12).toFixed(1); // Convert to years with one decimal place if needed
+      return `${years} years`;
+    }
+  }
+
   return (
     <Grid item xs={12} sm={6} md={4} key={contact.Id}>
       <Card
@@ -194,7 +204,7 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
             <InfoRow icon={<PaidRounded />} text={contact.Amount} />
             <InfoRow
               icon={<AccessTimeRounded />}
-              text={`${contact.Tenure} months`}
+              text={formatTenure(contact.Tenure)} // Here you call formatTenure
             />
             {contact.Location && (
               <InfoRow
