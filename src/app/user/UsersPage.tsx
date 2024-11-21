@@ -49,7 +49,7 @@ const capitalizeFirstLetter = (str: string) => {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
 
-const ITEMS_PER_PAGE = 6; // Number of items per page
+const ITEMS_PER_PAGE = 80; // Number of items per page
 
 const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
   const [openDialog, setOpenDialog] = useState(false);
