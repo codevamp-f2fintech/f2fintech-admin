@@ -3,12 +3,12 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { User } from "@/types/user";
 
 interface userInitialState {
-  user: User[];
+  user: User | null;
   reduxLoading: boolean;
 }
 
 const initialState: userInitialState = {
-  user: [],
+  user: null,
   reduxLoading: false,
 };
 
@@ -16,7 +16,7 @@ export const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
-    setUsers: (state, action: PayloadAction<User[]>) => {
+    setUsers: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
       state.reduxLoading = false;
     },

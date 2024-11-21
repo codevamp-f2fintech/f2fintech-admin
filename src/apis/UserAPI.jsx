@@ -41,23 +41,17 @@ export const UserAPI = {
       method: "GET",
       signal: cancel
         ? cancelApiObject[this.getuserProfile.name].handleRequestCancellation()
-            .signal
+          .signal
         : undefined,
     });
   },
 
   updateUserProfile: async (newData) => {
-    try {
-      const response = await axiosInstance.request({
-        url: `update-user/:id`,
-        method: "POST",
-        data: newData,
-      });
-      return response.data; // Optionally return data if needed
-    } catch (error) {
-      // Handle errors here
-      throw error; // Rethrow or handle as needed
-    }
+    return await axiosInstance.request({
+      url: `update-user`,
+      method: "PATCH",
+      data: newData,
+    });
   },
 
   // upload document to S3 Bucket
@@ -71,7 +65,7 @@ export const UserAPI = {
       data: document,
       signal: cancel
         ? cancelApiObject[this.uploadDocument.name].handleRequestCancellation()
-            .signal
+          .signal
         : undefined,
     });
   },

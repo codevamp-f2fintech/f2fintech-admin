@@ -1,24 +1,49 @@
 import { useState } from 'react';
-import useSWR from 'swr';
+import useSWR, { mutate } from 'swr';
 
 import { creator, fetcher, modifier } from '@/apis/apiClient';
-import { User } from '@/types/user';
+import { User, UserData } from '@/types/user';
 
 /**
  * Hook for fetching users with SWR (stale-while-revalidate) strategy.
  * 
  * @param initialData - The initial data to be used before SWR fetches fresh data.
  * @param pathKey - The API path key used by SWR to fetch user data.
- * @returns An object containing the fetched users, loading state, and error state.
+ * @param page
+ * @param limit
+ * @returns An object containing the fetched users, loading state, error state and refetch function.
  */
-export const useGetUsers = (initialData: User[], pathKey: string) => {
-    const { data: swrData, error } = useSWR<User[]>(pathKey, fetcher, {
-        fallbackData: initialData,
-        refreshInterval: initialData ? 3600000 : 0, // 1 hour refresh if initialData exists
-        revalidateOnFocus: false,                  // Disable revalidation on window focus
-    });
+export const useGetUsers = (
+    initialData: User | null,
+    pathKey: string,
+    page: number = 1,
+    limit: number = 6
+) => {
+    const { data: swrData, error } = useSWR<User | null>(
+        `${pathKey}?page=${page}&limit=${limit}`,
+        fetcher,
+        {
+            fallbackData: initialData,
+            refreshInterval: initialData ? 3600000 : 0, // 1 hour refresh if initialData exists
+            revalidateOnFocus: false,                  // Disable revalidation on window focus
+        });
+    // Manually re-trigger re-fetch
+    const refetch = async () => {
+        return await mutate(`${pathKey}?page=${page}&limit=${limit}`);
+    };
 
-    return { data: swrData || [], swrLoading: !error && !swrData, error };
+    return {
+        value: swrData || {
+            results: [],
+            total: 0,
+            page: 1,
+            limit,
+            totalPages: 1,
+        },
+        swrLoading: !error && !swrData,
+        error,
+        refetch
+    };
 };
 
 /**
@@ -30,15 +55,15 @@ export const useGetUsers = (initialData: User[], pathKey: string) => {
 export const useCreateUser = (pathKey: string) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
-    const [createdUser, setCreatedUser] = useState<User | null>(null);
+    const [createdUser, setCreatedUser] = useState<UserData | null>(null);
 
-    const createUser = async (newUserData: User) => {
+    const createUser = async (newUserData: UserData) => {
         setLoading(true);
         setError(null);
 
         try {
-            const user = await creator<User, User>(pathKey, newUserData);
-            setCreatedUser(user);
+            const resp = await creator<UserData, UserData>(pathKey, newUserData);
+            setCreatedUser(resp);
         } catch (err) {
             setError(err as Error);
         } finally {
@@ -58,14 +83,14 @@ export const useCreateUser = (pathKey: string) => {
 export const useModifyUser = (pathKey: string) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
-    const [updatedUser, setUpdatedUser] = useState<User | null>(null);
+    const [updatedUser, setUpdatedUser] = useState<UserData | null>(null);
 
-    const modifyUser = async (updatedUserData: User) => {
+    const modifyUser = async (updatedUserData: UserData) => {
         setLoading(true);
         setError(null);
 
         try {
-            const user = await modifier<User, User>(pathKey, updatedUserData);
+            const user = await modifier<UserData, UserData>(pathKey, updatedUserData);
             setUpdatedUser(user);
         } catch (err) {
             setError(err as Error);

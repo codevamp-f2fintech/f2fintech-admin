@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import {
@@ -64,6 +65,8 @@ const Progress: React.FC = () => {
   const [overage, setOverage] = useState(0); // Orange part (exceeding estimated time)
   const [newLoanStatus, setNewLoanStatus] = useState("");
   const [newEmployeeStatus, setNewEmployeeStatus] = useState("");
+
+  const searchParams = useSearchParams(); // To get the query parameters
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
   const [limit] = useState<number>(ITEMS_PER_PAGE); // For backend pagination
@@ -83,9 +86,12 @@ const Progress: React.FC = () => {
     getSessionStorage,
     toastAndNavigate,
   } = Utility();
-  const original_estimate = getLocalStorage("ids")?.estimate;
-  const ids = getLocalStorage("ids");
-  const forwardedUserId = null;
+  const original_estimate = '1d';
+  const ids = {
+    customerId: searchParams.get("customerId") || null,
+    applicationId: searchParams.get("applicationId") || null,
+  };
+  const forwardedUserId = getSessionStorage("forwardedUserId");;
   const storedTicketId = ticketId?.split("-")[1];
 
   const [timeLoggingEstimate, setTimeLoggingEstimate] = useState({
@@ -94,7 +100,12 @@ const Progress: React.FC = () => {
     timeSpent: 0,
   });
 
-  const { data: userData } = useGetUsers([], `get-users`);
+  const { value: userData } = useGetUsers(
+    {},
+    'get-users',
+    1,
+    50
+  );
 
   const { value: ticketData } = useGetTickets(
     [],
@@ -118,17 +129,17 @@ const Progress: React.FC = () => {
   );
 
   useEffect(() => {
-    if (userData?.data) {
-      setAllUsers(userData.data);
+    if (userData?.results) {
+      setAllUsers(userData.results);
 
       if (forwardedUserId) {
-        const forwardedUser = userData.data.find(
-          (user) => user.id === parseInt(forwardedUserId, 10)
+        const forwardedUser = userData.results?.find(
+          (user) => user.id == forwardedUserId
         );
         setSelectedUser(forwardedUser || null);
       }
     }
-  }, [userData?.data, forwardedUserId]);
+  }, [userData?.results, forwardedUserId]);
 
   useEffect(() => {
     if (ids?.applicationId && ids?.customerId) {
@@ -139,15 +150,15 @@ const Progress: React.FC = () => {
         })
       );
       dispatch(fetchEmployeeStatus(ids?.applicationId));
-      console.log("kya hai status", loanStatus, documents, employeeStatus);
     }
     const selectedCustomer = applicationData?.data?.find(
-      (cust) => cust.Id === ids.customerId
+      (cust) => cust.Id == ids.customerId
     );
     if (selectedCustomer) {
       setSelectedCustomer(selectedCustomer);
     }
   }, [ids?.applicationId, ids?.customerId, applicationData?.data]);
+  console.log("kya hai status", loanStatus, documents, employeeStatus);
 
   useEffect(() => {
     if (loanStatus) {
@@ -603,8 +614,8 @@ const Progress: React.FC = () => {
                           fontSize: isMobile
                             ? ".7rem"
                             : isTab
-                            ? "1rem"
-                            : "1rem",
+                              ? "1rem"
+                              : "1rem",
                         }}
                       >
                         Documents:
@@ -967,8 +978,8 @@ const Progress: React.FC = () => {
                           fontSize: isMobile
                             ? ".8rem"
                             : isTab
-                            ? ".9rem"
-                            : "14px",
+                              ? ".9rem"
+                              : "14px",
                           fontWeight: "bold",
                           color: "white",
                           marginLeft: ".5rem",
