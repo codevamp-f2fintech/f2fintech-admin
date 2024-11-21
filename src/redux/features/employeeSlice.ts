@@ -40,7 +40,7 @@ interface FetchStatusAndDocumentsResponse {
 // Async thunk to fetch status and documents from the API dynamically
 export const fetchStatusAndDocuments = createAsyncThunk<
   FetchStatusAndDocumentsResponse,
-  { applicationId: number; customerId: number },
+  { applicationId: number | string; customerId: string | number },
   { rejectValue: string }
 >(
   "employee/fetchStatusAndDocuments",
