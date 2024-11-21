@@ -1,13 +1,20 @@
-export interface User {
-  username: any;
-  firstName: string;
-  lastName: string;
+export interface UserData {
   id: string;
+  username: string;
+  password: string;
   number: string;
-  status: string;
   email: string;
-  gender: string;
   designation: string;
-  avatar: string;
+  gender: string;
+  status: string;
+  role: string;
   created_at: string;
+}
+
+export interface User {
+  results: UserData[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }

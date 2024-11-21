@@ -38,7 +38,7 @@ interface FilterPanelProps {
   handleSortChange: (event: string | null) => void;
   setStartDate: React.Dispatch<React.SetStateAction<Dayjs | null>>;
   setEndDate: React.Dispatch<React.SetStateAction<Dayjs | null>>;
-  userData: { data: User[] };
+  userData: { data: User };
   userRole: string;
   setSelectedUser: React.Dispatch<React.SetStateAction<User | null>>;
   ticketCount: (status: string) => number;
@@ -265,7 +265,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             },
           }}
         >
-          {(userData?.data || []).map((user) => (
+          {(userData?.results || []).map((user) => (
             <MenuItem
               key={user.id}
               onClick={() => {

@@ -44,26 +44,22 @@ const Ticket = () => {
   const apiEndpoint = selectedUser
     ? `get-all-tickets/${selectedUser.id}` // If a user is selected in the dropdown, fetch their tickets
     : userRole === "admin"
-    ? `get-all-tickets` // Admin sees all tickets when no user is selected
-    : userRole === "agent"
-    ? `get-all-tickets/${decodedToken()?.id}` // Agent sees their tickets
-    : `get-all-tickets`;
+      ? `get-all-tickets` // Admin sees all tickets when no user is selected
+      : userRole === "agent"
+        ? `get-all-tickets/${decodedToken()?.id}` // Agent sees their tickets
+        : `get-all-tickets`;
 
   const { value: ticketData } = useGetTickets([], apiEndpoint);
   const { modifyTicket, error: updateError } = useModifyTicket("update-ticket");
   const { createTicketHistory } = useCreateTicketHistory(
     "create-ticket-history"
   );
-  const { data: userData } = useGetUsers([], `get-users`);
-
-  useEffect(() => {
-    const handleRouteChange = () => {
-      if (typeof window !== "undefined") {
-        remLocalStorage("ids");
-      }
-    };
-    handleRouteChange();
-  }, [router]);
+  const { value: userData } = useGetUsers(
+    {},
+    'get-users',
+    1,
+    100
+  );
 
   useEffect(() => {
     if (ticketData?.data) {
@@ -114,7 +110,6 @@ const Ticket = () => {
   useEffect(() => {
     const queryStatus = searchParams.get("status");
     if (queryStatus) {
-      console.log(queryStatus, "querystatus");
       setSortBy(queryStatus);
     }
   }, [searchParams]);
@@ -205,7 +200,6 @@ const Ticket = () => {
           ticket?.customer_application_id === applicationId
       );
     }
-    console.log(ticketData?.data, "data");
 
     if (selectedTicket) {
       const { id: ticketId } = selectedTicket;
@@ -222,8 +216,8 @@ const Ticket = () => {
         });
         modifyTicket(ticketId, { status: "in progress" });
       }
-      setLocalStorage("ids", { customerId, applicationId, estimate });
-      router.push(`/progress`);
+      setLocalStorage("ids", { estimate });
+      router.push(`/progress?customerId=${customerId}&applicationId=${applicationId}`);
     } else {
       console.error(
         "No ticket found for the given customerId and applicationId"
