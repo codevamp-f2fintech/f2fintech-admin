@@ -46,6 +46,8 @@ import { RootState } from "../../redux/store";
 import { Utility } from "@/utils";
 import History from "./History";
 
+const ITEMS_PER_PAGE = 12; // Number of items per page
+
 const capitalizeFirstLetter = (str: string) => {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
@@ -64,6 +66,7 @@ const Progress: React.FC = () => {
   const [newEmployeeStatus, setNewEmployeeStatus] = useState("");
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const [limit] = useState<number>(ITEMS_PER_PAGE); // For backend pagination
 
   const {
     status: employeeStatus,
@@ -82,7 +85,7 @@ const Progress: React.FC = () => {
   } = Utility();
   const original_estimate = getLocalStorage("ids")?.estimate;
   const ids = getLocalStorage("ids");
-  const forwardedUserId = getSessionStorage("forwardedUserId");
+  const forwardedUserId = null;
   const storedTicketId = ticketId?.split("-")[1];
 
   const [timeLoggingEstimate, setTimeLoggingEstimate] = useState({
@@ -374,6 +377,7 @@ const Progress: React.FC = () => {
               justifyContent: "center",
               alignItems: "center",
               width: isMobile ? "95vw" : isTab ? "92vw" : "76vw",
+              height: isMobile ? "" : isTab ? "80vh" : "",
             }}
           >
             <Grid
@@ -388,8 +392,8 @@ const Progress: React.FC = () => {
                   sx={{
                     padding: isMobile ? 3 : isTab ? 3 : 4,
                     background: `
-      linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
-    `,
+                      linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
+                    `,
                     borderRadius: "20px",
                     boxShadow:
                       "rgba(0, 0, 0, 0.17) 0px -23px 25px 0px inset, rgba(0, 0, 0, 0.15) 0px -36px 30px 0px inset, rgba(0, 0, 0, 0.1) 0px -79px 40px 0px inset, rgba(0, 0, 0, 0.06) 0px 2px 1px, rgba(0, 0, 0, 0.09) 0px 4px 2px, rgba(0, 0, 0, 0.09) 0px 8px 4px, rgba(0, 0, 0, 0.09) 0px 16px 8px, rgba(0, 0, 0, 0.09) 0px 32px 16px",
@@ -432,8 +436,8 @@ const Progress: React.FC = () => {
                     <Avatar
                       src={selectedCustomer.Image}
                       sx={{
-                        width: isMobile ? "2rem" : isTab ? "" : "5rem",
-                        height: isMobile ? "2rem" : isTab ? "" : "5rem",
+                        width: isMobile ? "2rem" : isTab ? "" : "4rem",
+                        height: isMobile ? "2rem" : isTab ? "" : "4rem",
                         marginBottom: isMobile ? "40vh" : isTab ? "" : "",
                       }}
                     />
@@ -444,6 +448,7 @@ const Progress: React.FC = () => {
                         p: 2,
                         borderRadius: 3,
                         bgcolor: "#212121",
+                        border: "2px solid white",
                         "&:hover": {
                           transform: "scale(1.02)",
                           transition: "transform 0.3s ease",
@@ -453,7 +458,7 @@ const Progress: React.FC = () => {
                       <Grid container spacing={2}>
                         {/* Name and Email */}
                         <Grid item xs={12} sm={6}>
-                          <Typography variant="h6" fontWeight="bold">
+                          <Box>
                             <Typography
                               component="span"
                               sx={{ color: "white", mr: 1 }}
@@ -466,7 +471,7 @@ const Progress: React.FC = () => {
                             >
                               {selectedCustomer.Name}
                             </Typography>
-                          </Typography>
+                          </Box>
                           <Typography variant="h6" fontWeight="bold">
                             <Typography
                               component="span"

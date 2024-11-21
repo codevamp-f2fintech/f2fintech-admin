@@ -20,7 +20,7 @@ import { useGetUsers } from "@/hooks/user";
 import { fetcher } from "@/apis/apiClient";
 import { Utility } from "@/utils";
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 12;
 
 const Ticket = () => {
   const [customerApplications, setCustomerApplications] = useState([]);
@@ -42,12 +42,12 @@ const Ticket = () => {
   const { decodedToken, setLocalStorage, remLocalStorage } = Utility();
   const userRole = decodedToken()?.role;
   const apiEndpoint = selectedUser
-    ? `get-all-tickets/${selectedUser.id}`   // If a user is selected in the dropdown, fetch their tickets
-    : userRole === 'admin'
-      ? `get-all-tickets`   // Admin sees all tickets when no user is selected
-      : userRole === 'agent'
-        ? `get-all-tickets/${decodedToken()?.id}`   // Agent sees their tickets
-        : `get-all-tickets`;
+    ? `get-all-tickets/${selectedUser.id}` // If a user is selected in the dropdown, fetch their tickets
+    : userRole === "admin"
+    ? `get-all-tickets` // Admin sees all tickets when no user is selected
+    : userRole === "agent"
+    ? `get-all-tickets/${decodedToken()?.id}` // Agent sees their tickets
+    : `get-all-tickets`;
 
   const { value: ticketData } = useGetTickets([], apiEndpoint);
   const { modifyTicket, error: updateError } = useModifyTicket("update-ticket");
@@ -193,12 +193,19 @@ const Ticket = () => {
     estimate,
     status
   ) => {
-    const selectedTicket = ticketData?.data?.find(
-      (ticket) =>
-        ticket?.user_id === decodedToken()?.id &&
-        ticket?.customer_application_id === applicationId
-    );
-    console.log(ticketData?.data, 'data')
+    let selectedTicket;
+    if (userRole === "admin") {
+      selectedTicket = ticketData?.data?.find(
+        (ticket) => ticket?.customer_application_id === applicationId
+      );
+    } else {
+      selectedTicket = ticketData?.data?.find(
+        (ticket) =>
+          ticket?.user_id === decodedToken()?.id &&
+          ticket?.customer_application_id === applicationId
+      );
+    }
+    console.log(ticketData?.data, "data");
 
     if (selectedTicket) {
       const { id: ticketId } = selectedTicket;

@@ -18,12 +18,12 @@ import ApplicationCard from "../components/ticket/ApplicationCard";
 import Loader from "../components/common/Loader";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
-import type { Customer } from '@/types/customer';
+import type { Customer } from "@/types/customer";
 import { setCustomers } from "@/redux/features/customerSlice";
 import { useGetCustomers } from "@/hooks/customer";
 import { Utility } from "@/utils";
 
-const ITEMS_PER_PAGE = 6; // Number of items per page
+const ITEMS_PER_PAGE = 12; // Number of items per page
 
 const Home: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -41,7 +41,12 @@ const Home: React.FC = () => {
     value: data,
     error: getApplicationsError,
     swrLoading,
-  } = useGetCustomers({} as Customer, `get-loan-applications`, currentPage, limit);
+  } = useGetCustomers(
+    {} as Customer,
+    `get-loan-applications`,
+    currentPage,
+    limit
+  );
 
   // Function to update customer data after refetching
   const updateCustomerData = (fetchedData: Customer) => {

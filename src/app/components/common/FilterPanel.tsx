@@ -21,7 +21,7 @@ import {
   ForwardRounded,
   ClearRounded,
   PauseCircleOutlineRounded,
-  CancelRounded
+  CancelRounded,
 } from "@mui/icons-material";
 import dayjs, { Dayjs } from "dayjs";
 
@@ -67,26 +67,26 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
   const getStatusColor = (status: string): string => {
     const colors: { [key: string]: string } = {
-      'to do': '#ff9800',
-      'in progress': '#2196f3',
-      'forwarded': '#9c27b0',
-      'done': '#4caf50',
-      'on hold': '#ff5722',    // Orange-red for 'on hold'
-      'close': '#d32f2f',
-      'all': '#757575'
+      "to do": "#ff9800",
+      "in progress": "#2196f3",
+      forwarded: "#9c27b0",
+      done: "#4caf50",
+      "on hold": "#ff5722", // Orange-red for 'on hold'
+      close: "#d32f2f",
+      all: "#757575",
     };
     return colors[status] || colors.all;
   };
 
   const getStatusIcon = (status: string): JSX.Element => {
     const icons: { [key: string]: JSX.Element } = {
-      'to do': <RadioButtonUncheckedRounded sx={{ fontSize: 20 }} />,
-      'in progress': <AccessTimeRounded sx={{ fontSize: 20 }} />,
-      'forwarded': <ForwardRounded sx={{ fontSize: 20 }} />,
-      'done': <CheckCircleRounded sx={{ fontSize: 20 }} />,
-      'on hold': <PauseCircleOutlineRounded sx={{ fontSize: 20 }} />,
-      'close': <CancelRounded sx={{ fontSize: 20 }} />,
-      'all': <FilterListRounded sx={{ fontSize: 20 }} />
+      "to do": <RadioButtonUncheckedRounded sx={{ fontSize: 20 }} />,
+      "in progress": <AccessTimeRounded sx={{ fontSize: 20 }} />,
+      forwarded: <ForwardRounded sx={{ fontSize: 20 }} />,
+      done: <CheckCircleRounded sx={{ fontSize: 20 }} />,
+      "on hold": <PauseCircleOutlineRounded sx={{ fontSize: 20 }} />,
+      close: <CancelRounded sx={{ fontSize: 20 }} />,
+      all: <FilterListRounded sx={{ fontSize: 20 }} />,
     };
     return icons[status] || icons.all;
   };
@@ -158,17 +158,18 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         <Tooltip title="Filter by Status">
           <Chip
             icon={getStatusIcon(sortBy)}
-            label={`${sortBy.charAt(0).toUpperCase() + sortBy.slice(1)
-              } (${ticketCount(sortBy)})`}
+            label={`${
+              sortBy.charAt(0).toUpperCase() + sortBy.slice(1)
+            } (${ticketCount(sortBy)})`}
             onClick={(e) => setAnchorEl(e.currentTarget)}
             sx={{
               backgroundColor: getStatusColor(sortBy),
-              color: '#fff',
-              '&:hover': { opacity: 0.9 },
+              color: "#fff",
+              "&:hover": { opacity: 0.9 },
               fontWeight: 500,
-              '& .MuiChip-icon': {
-                color: 'inherit'  // Make icon color match text color
-              }
+              "& .MuiChip-icon": {
+                color: "inherit", // Make icon color match text color
+              },
             }}
           />
         </Tooltip>
@@ -179,12 +180,20 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           PaperProps={{
             sx: {
               mt: 1,
-              boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+              boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
               borderRadius: 2,
-            }
+            },
           }}
         >
-          {['all', 'to do', 'in progress', 'on hold', 'forwarded', 'done', 'close'].map((status) => (
+          {[
+            "all",
+            "to do",
+            "in progress",
+            "on hold",
+            "forwarded",
+            "done",
+            "close",
+          ].map((status) => (
             <MenuItem
               key={status}
               onClick={() => {
@@ -195,17 +204,18 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 gap: 1,
                 minWidth: 180,
                 color: getStatusColor(status),
-                '&:hover': {
+                "&:hover": {
                   backgroundColor: `${getStatusColor(status)}10`,
                 },
-                '&.Mui-selected': {
+                "&.Mui-selected": {
                   backgroundColor: `${getStatusColor(status)}20`,
-                }
+                },
               }}
             >
               {getStatusIcon(status)}
-              {`${status.charAt(0).toUpperCase() + status.slice(1)
-                } (${ticketCount(status)})`}
+              {`${
+                status.charAt(0).toUpperCase() + status.slice(1)
+              } (${ticketCount(status)})`}
             </MenuItem>
           ))}
         </Menu>
@@ -219,10 +229,10 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             sx={{
               backgroundColor: startDate ? "#1976d2" : "#e0e0e0",
               color: startDate ? "#fff" : "inherit",
-              '&:hover': { opacity: 0.9 },
-              '& .MuiChip-icon': {
-                color: 'inherit'
-              }
+              "&:hover": { opacity: 0.9 },
+              "& .MuiChip-icon": {
+                color: "inherit",
+              },
             }}
           />
         </Tooltip>
@@ -237,10 +247,10 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
               sx={{
                 backgroundColor: selectedUser ? "#9c27b0" : "#e0e0e0",
                 color: selectedUser ? "#fff" : "inherit",
-                '&:hover': { opacity: 0.9 },
-                '& .MuiChip-icon': {
-                  color: 'inherit'
-                }
+                "&:hover": { opacity: 0.9 },
+                "& .MuiChip-icon": {
+                  color: "inherit",
+                },
               }}
             />
           </Tooltip>
@@ -281,13 +291,13 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 setSelectedUser(null);
               }}
               sx={{
-                color: '#f44336',
-                bgcolor: '#ffebee',
-                '&:hover': {
-                  bgcolor: '#ffcdd2',
-                  transform: 'scale(1.05)'
+                color: "#f44336",
+                bgcolor: "#ffebee",
+                "&:hover": {
+                  bgcolor: "#ffcdd2",
+                  transform: "scale(1.05)",
                 },
-                transition: 'all 0.2s ease'
+                transition: "all 0.2s ease",
               }}
             >
               <ClearRounded sx={{ fontSize: 20 }} />
