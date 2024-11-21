@@ -46,7 +46,7 @@ const Ticket = () => {
     : userRole === "admin"
       ? `get-all-tickets` // Admin sees all tickets when no user is selected
       : userRole === "agent"
-        ? `get-all-tickets/${decodedToken()?.id}` // Agent sees their tickets
+        ? `get-all-tickets/${decodedToken()?.id}?isAgent=true`  // Agent sees their tickets
         : `get-all-tickets`;
 
   const { value: ticketData } = useGetTickets([], apiEndpoint);

@@ -49,10 +49,6 @@ import History from "./History";
 
 const ITEMS_PER_PAGE = 12; // Number of items per page
 
-const capitalizeFirstLetter = (str: string) => {
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-};
-
 const Progress: React.FC = () => {
     const [openDialog, setOpenDialog] = useState(false);
     const [theme, colorMode] = useMode();
@@ -80,8 +76,14 @@ const Progress: React.FC = () => {
 
     const dispatch = useDispatch();
     const {
+        capitalizeFirstLetter,
+        convertHoursToDaysAndHours,
         decodedToken,
+        formatTenure,
+        formatDate,
+        formatAmount,
         getLocalStorage,
+        parseTimeSpent,
         setSessionStorage,
         getSessionStorage,
         toastAndNavigate,
@@ -210,50 +212,6 @@ const Progress: React.FC = () => {
         }
     }, [ticketData?.data, timeLoggingEstimate.originalEstimate]);
 
-    const parseTimeSpent = (timeSpent: string): number => {
-        const timeRegex = /^(\d+)([hdm])$/;
-        const match = timeSpent.match(timeRegex);
-
-        if (!match) return 0; // Return 0 if the format is invalid
-
-        const [, value, unit] = match;
-        const numericValue = parseInt(value, 10);
-
-        switch (unit) {
-            case "h": // hours
-                return numericValue;
-            case "d": // days (assuming 1 day = 8 working hours)
-                return numericValue * 8;
-            case "m": // minutes (convert to hours)
-                return numericValue / 60;
-            default:
-                return 0;
-        }
-    };
-
-    // Function to convert hours back into 'Xd Yh' format
-    const convertHoursToDaysAndHours = (totalHours: number): string => {
-        const totalMinutes = Math.round(totalHours * 60); // Convert total hours to total minutes
-        const days = Math.floor(totalMinutes / (8 * 60)); // 1 day = 8 hours = 480 minutes
-        const remainingMinutesAfterDays = totalMinutes % (8 * 60); // Remaining minutes after accounting for days
-        const hours = Math.floor(remainingMinutesAfterDays / 60); // Convert remaining minutes to hours
-        const minutes = remainingMinutesAfterDays % 60; // Get remaining minutes
-
-        let formattedTime = "";
-
-        if (days > 0) {
-            formattedTime += `${days}d`;
-        }
-        if (hours > 0 || days === 0) {
-            // Show hours if there are any, or if there are no days
-            formattedTime += `${days > 0 ? " " : ""}${hours}h`;
-        }
-        if (minutes > 0) {
-            formattedTime += `${days > 0 || hours > 0 ? " " : ""}${minutes}m`; // Add space if days or hours exist
-        }
-        return formattedTime || "0h";
-    };
-
     const handleInputChange = (event) => {
         const value = event.target.value;
         setTimeLoggingEstimate((prevState) => ({
@@ -349,33 +307,6 @@ const Progress: React.FC = () => {
 
     if (!selectedCustomer) {
         return <Loader />;
-    }
-
-    function formatTenure(tenure: number) {
-        if (tenure <= 60) {
-            return `${tenure} months`;
-        } else {
-            const years = (tenure / 12).toFixed(1); // convert to years with one decimal place if needed
-            return `${years} years`;
-        }
-    }
-
-    // Function to format the date
-    function formatDate(dateString) {
-        const date = new Date(dateString);
-        if (isNaN(date)) return "Invalid Date"; // Check if date is valid
-        return date.toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-        });
-    }
-
-    // Function to format the amount in INR
-    function formatAmount(amount) {
-        return `₹ ${new Intl.NumberFormat("en-IN", {
-            maximumFractionDigits: 2,
-        }).format(amount)}`;
     }
 
     return (
