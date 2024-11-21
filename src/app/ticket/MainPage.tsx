@@ -216,7 +216,6 @@ const Ticket = () => {
         });
         modifyTicket(ticketId, { status: "in progress" });
       }
-      setLocalStorage("ids", { estimate });
       router.push(`/progress?customerId=${customerId}&applicationId=${applicationId}`);
     } else {
       console.error(

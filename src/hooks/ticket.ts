@@ -21,11 +21,11 @@ export const useGetTickets = (initialData: Ticket[], pathKey: string) => {
   });
 
   // Manually re-trigger re-fetch
-  const refetch = async () => {
+  const refetcher = async () => {
     await mutate(pathKey);
   };
 
-  return { value: swrData || [], swrLoading: !error && !swrData, error, refetch };
+  return { value: swrData || [], swrLoading: !error && !swrData, error, refetcher };
 };
 
 /**
