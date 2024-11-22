@@ -1,20 +1,33 @@
 "use client";
 
 import * as React from "react";
-import Box from "@mui/material/Box";
-import Card from "@mui/material/Card";
-import CardHeader from "@mui/material/CardHeader";
-import Divider from "@mui/material/Divider";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  InputAdornment,
+  TextField,
+  Typography,
+  Box,
+  Pagination
+} from '@mui/material';
+import {
+  Person,
+  Email,
+  ConfirmationNumber,
+  Refresh,
+  CheckCircle,
+  Search,
+} from '@mui/icons-material';
+
 import dayjs from "dayjs";
 import { useGetUsers } from "@/hooks/user";
 import { useGetTickets } from "@/hooks/ticket";
-import Pagination from "@mui/material/Pagination";
-import TextField from "@mui/material/TextField";
 import type { SxProps } from "@mui/material/styles";
 
 const capitalizeFirstLetter = (str: string) => {
@@ -26,9 +39,11 @@ export interface LatestUsersProps {
 }
 
 export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
-  const { data: users, swrLoading: usersLoading } = useGetUsers(
-    [],
-    `get-users?_page=0&_limit=500000` // Fetch more users for pagination
+  const { value: users, swrLoading: usersLoading } = useGetUsers(
+    {},
+    'get-users',
+    1,
+    100
   );
   const { value: tickets, swrLoading: ticketsLoading } = useGetTickets(
     [],
@@ -64,7 +79,7 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
 
-  const filteredUsers = users?.data?.filter((user) =>
+  const filteredUsers = users?.results?.filter((user) =>
     user.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -83,52 +98,53 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
   };
 
   return (
-    <Card sx={sx}>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "1rem",
-        }}
-      >
-        <CardHeader title="Agent List" />
+    <Paper
+      elevation={3}
+      sx={{
+        p: 3,
+        bgcolor: '#fff',
+        background: 'linear-gradient(145deg, #ffffff 0%, #f8f9ff 100%)'
+      }}
+    >
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h5" component="h2" sx={{
+          fontWeight: 600,
+          color: '#2c3e50',
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px',
+        }}>
+          Agent List
+        </Typography>
 
         <TextField
-          label="Search by name"
-          variant="filled"
-          autoComplete="off"
-          value={searchQuery}
-          onChange={handleSearchChange}
-          sx={{
-            maxWidth: { xs: "90%", sm: "60%", md: "20%" },
-            bgcolor: "white",
-            borderRadius: "20px",
-            // width: "100%",
-            "& .MuiFormLabel-root": {
-              color: "black", // Label color
-            },
-            "& .MuiFormLabel-root.Mui-focused": {
-              color: "blue", // Label color when focused
-            },
-          }}
+          placeholder="Search by name"
+          size="small"
           InputProps={{
-            disableUnderline: true,
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search sx={{ color: 'text.secondary' }} />
+              </InputAdornment>
+            ),
+            sx: {
+              bgcolor: '#f8f9ff',
+              '&:hover': {
+                bgcolor: '#f0f2ff',
+              }
+            }
           }}
         />
       </Box>
 
-      <Divider />
-
-      <Box sx={{ overflowX: "auto" }}>
-        <Table sx={{ minWidth: 800 }}>
+      <TableContainer>
+        <Table>
           <TableHead>
-            <TableRow>
+            <TableRow sx={{ bgcolor: 'grey.50' }}>
+              <TableCell>Sr.</TableCell>
               <TableCell>Username</TableCell>
               <TableCell>Email</TableCell>
-              <TableCell>Open Tickets</TableCell>
-              <TableCell>In Progress</TableCell>
-              <TableCell>Done Tickets</TableCell>
+              <TableCell align="center">Open Tickets</TableCell>
+              <TableCell align="center">In Progress</TableCell>
+              <TableCell align="center">Done Tickets</TableCell>
               <TableCell sortDirection="desc">Date</TableCell>
             </TableRow>
           </TableHead>
@@ -140,20 +156,50 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
                 </TableCell>
               </TableRow>
             ) : (
-              currentUsers?.map((user) => {
-                const { open, inProgress, done } = getTicketCounts(user.id);
+              currentUsers?.map((agent, index) => {
+                const { open, inProgress, done } = getTicketCounts(agent.id);
 
                 return (
-                  <TableRow hover key={user.id}>
+                  <TableRow
+                    key={agent.id}
+                    sx={{
+                      '&:hover': { bgcolor: 'primary.50' },
+                      transition: 'background-color 0.2s'
+                    }}
+                  >
+                    <TableCell>{index + 1}</TableCell>
                     <TableCell>
-                      {capitalizeFirstLetter(user.username)}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Person sx={{ color: 'primary.main' }} />
+                        {capitalizeFirstLetter(agent.username)}
+                      </Box>
                     </TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>{open}</TableCell>
-                    <TableCell>{inProgress}</TableCell>
-                    <TableCell>{done}</TableCell>
                     <TableCell>
-                      {dayjs(user.created_at).format("MMM D, YYYY")}
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Email sx={{ color: 'text.secondary' }} />
+                        {agent.email}
+                      </Box>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                        <ConfirmationNumber sx={{ color: 'warning.main' }} />
+                        {open}
+                      </Box>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                        <Refresh sx={{ color: 'primary.main' }} />
+                        {inProgress}
+                      </Box>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                        <CheckCircle sx={{ color: 'success.main' }} />
+                        {done}
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      {dayjs(agent.created_at).format("MMM D, YYYY")}
                     </TableCell>
                   </TableRow>
                 );
@@ -161,8 +207,7 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
             )}
           </TableBody>
         </Table>
-      </Box>
-      <Divider />
+      </TableContainer>
 
       {filteredUsers?.length > 0 && (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 2, mb: 2 }}>
@@ -174,6 +219,6 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
           />
         </Box>
       )}
-    </Card>
+    </Paper>
   );
 }
