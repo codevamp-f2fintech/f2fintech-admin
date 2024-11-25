@@ -47,7 +47,7 @@ import { RootState } from "../../redux/store";
 import { Utility } from "@/utils";
 import History from "./History";
 
-const ITEMS_PER_PAGE = 12; // Number of items per page
+const ITEMS_PER_PAGE = 6; // Number of items per page
 
 const Progress: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);

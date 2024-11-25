@@ -19,8 +19,9 @@ import { useCreateTicketHistory } from "@/hooks/tickethistory";
 import { useGetUsers } from "@/hooks/user";
 import { fetcher } from "@/apis/apiClient";
 import { Utility } from "@/utils";
+import { Ticket } from "@/types/ticket";
 
-const ITEMS_PER_PAGE = 12;
+const ITEMS_PER_PAGE = 6;
 
 const Ticket = () => {
   const [customerApplications, setCustomerApplications] = useState([]);
@@ -49,7 +50,13 @@ const Ticket = () => {
     ? `get-all-tickets/${decodedToken()?.id}?isAgent=true&status=${sortBy}` // Agent sees their tickets
     : `get-all-tickets`;
 
-  const { value: ticketData } = useGetTickets([], apiEndpoint);
+  const { value: ticketData } = useGetTickets(
+    {} as Ticket,
+    apiEndpoint,
+    currentPage,
+    ITEMS_PER_PAGE
+  );
+
   const { modifyTicket, error: updateError } = useModifyTicket("update-ticket");
   const { createTicketHistory } = useCreateTicketHistory(
     "create-ticket-history"
@@ -57,11 +64,12 @@ const Ticket = () => {
   const { value: userData } = useGetUsers({}, "get-users", 1, 100);
 
   useEffect(() => {
-    if (ticketData?.data) {
-      // console.log("Fetched Ticket Data: ", ticketData.data);
+    console.log("Fetched Ticket Data: ", ticketData);
+    if (ticketData?.results) {
+      console.log("Fetched Ticket Data inside: ", ticketData.results);
 
       const fetchApplications = async () => {
-        const applicationIds = ticketData.data.map(
+        const applicationIds = ticketData.results.map(
           (ticket) => ticket.customer_application_id
         );
         // console.log("Application IDs: ", applicationIds);
@@ -71,7 +79,10 @@ const Ticket = () => {
               fetcher(`get-application-as-ticket/${id}`)
             )
           );
-          console.log("Fetched Ticket Data: >>", fetchedApplications);
+          console.log(
+            "Fetched Ticket Data: as applucatoins>>",
+            fetchedApplications
+          );
 
           const combinedData = fetchedApplications.flatMap((item) => {
             if (item && item.data) {
@@ -89,7 +100,7 @@ const Ticket = () => {
             console.log("No customer applications data available to set.");
           }
 
-          const ticketStatus = ticketData.data.map((ticket) => ({
+          const ticketStatus = ticketData.results.map((ticket) => ({
             status: ticket.status,
             customer_application_id: ticket.customer_application_id,
             original_estimate: ticket.original_estimate,
@@ -104,7 +115,7 @@ const Ticket = () => {
       };
       fetchApplications();
     }
-  }, [ticketData?.data, selectedUser]);
+  }, [ticketData?.results, selectedUser]);
 
   useEffect(() => {
     const queryStatus = searchParams.get("status");
