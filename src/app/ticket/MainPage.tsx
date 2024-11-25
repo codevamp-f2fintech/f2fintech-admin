@@ -44,35 +44,34 @@ const Ticket = () => {
   const apiEndpoint = selectedUser
     ? `get-all-tickets/${selectedUser.id}` // If a user is selected in the dropdown, fetch their tickets
     : userRole === "admin"
-      ? `get-all-tickets` // Admin sees all tickets when no user is selected
-      : userRole === "agent"
-        ? `get-all-tickets/${decodedToken()?.id}?isAgent=true`  // Agent sees their tickets
-        : `get-all-tickets`;
+    ? `get-all-tickets?status=${sortBy}` // Admin sees all tickets when no user is selected
+    : userRole === "agent"
+    ? `get-all-tickets/${decodedToken()?.id}?isAgent=true&status=${sortBy}` // Agent sees their tickets
+    : `get-all-tickets`;
 
   const { value: ticketData } = useGetTickets([], apiEndpoint);
   const { modifyTicket, error: updateError } = useModifyTicket("update-ticket");
   const { createTicketHistory } = useCreateTicketHistory(
     "create-ticket-history"
   );
-  const { value: userData } = useGetUsers(
-    {},
-    'get-users',
-    1,
-    100
-  );
+  const { value: userData } = useGetUsers({}, "get-users", 1, 100);
 
   useEffect(() => {
     if (ticketData?.data) {
+      // console.log("Fetched Ticket Data: ", ticketData.data);
+
       const fetchApplications = async () => {
         const applicationIds = ticketData.data.map(
           (ticket) => ticket.customer_application_id
         );
+        // console.log("Application IDs: ", applicationIds);
         try {
           const fetchedApplications = await Promise.all(
             applicationIds.map((id) =>
               fetcher(`get-application-as-ticket/${id}`)
             )
           );
+          console.log("Fetched Ticket Data: >>", fetchedApplications);
 
           const combinedData = fetchedApplications.flatMap((item) => {
             if (item && item.data) {
@@ -117,21 +116,33 @@ const Ticket = () => {
   // Initial filter to show only "to do" tickets by default
   useEffect(() => {
     if (customerApplications.length && tickets.length) {
+      console.log("tickets>>>", tickets, customerApplications);
+
+      // Filter applications based on customer ID and status
       const initialFilteredApplications = customerApplications.filter(
-        (customer) =>
-          tickets.some((ticket) => {
-            // If sortBy is not all, filter by the status provided in sortBy
+        (customer) => {
+          // Find tickets that match both customer_application_id and sortBy (if applicable)
+          const matchingTickets = tickets.filter((ticket) => {
             if (sortBy !== "all") {
+              // Match by both ID and status
               return (
                 ticket?.customer_application_id === customer?.applicationId &&
                 ticket?.status === sortBy
               );
+            } else {
+              return (
+                ticket?.customer_application_id === customer?.applicationId
+              );
             }
-            // If sortBy is all, show all tickets (no filtering by status)
-            return ticket?.customer_application_id === customer?.applicationId;
-          })
+            // If sortBy is "all", only match by ID
+          });
+
+          // Ensure only one ticket per applicationId passes through
+          return matchingTickets.length > 0;
+        }
       );
-      console.log(initialFilteredApplications, "initial");
+
+      console.log("initial>>>", initialFilteredApplications);
       setFilteredApplications(initialFilteredApplications);
     }
   }, [customerApplications, tickets, sortBy]);
@@ -216,7 +227,9 @@ const Ticket = () => {
         });
         modifyTicket(ticketId, { status: "in progress" });
       }
-      router.push(`/progress?customerId=${customerId}&applicationId=${applicationId}`);
+      router.push(
+        `/progress?customerId=${customerId}&applicationId=${applicationId}`
+      );
     } else {
       console.error(
         "No ticket found for the given customerId and applicationId"
@@ -259,6 +272,12 @@ const Ticket = () => {
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
+
+  // console.log(
+  //   "filtered application",
+  //   filteredApplications,
+  //   paginatedApplications
+  // );
 
   return (
     <>

@@ -150,6 +150,7 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
     `,
           pt: isMobile ? 3 : 5,
           mt: 5,
+          minHeight: "40vh",
         }}
       >
         <CardContent sx={{ pt: 0, pb: 3 }}>
@@ -182,7 +183,16 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
             <Typography
               variant="h5"
               component="div"
-              sx={{ mt: 4, color: "white", fontWeight: "bold" }}
+              sx={{
+                mt: 4,
+                color: "white",
+                fontWeight: "bold",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                maxWidth: "100%",
+                textAlign: "center",
+              }}
             >
               {contact.Name.toUpperCase()}
             </Typography>

@@ -11,7 +11,7 @@ import {
   AccessTimeRounded,
   ForwardRounded,
   PauseCircleOutlineRounded,
-  CancelRounded
+  CancelRounded,
 } from "@mui/icons-material";
 import dayjs from "dayjs";
 
@@ -72,6 +72,7 @@ async function fetchTotalTickets(
     cache: "no-store",
   }); // To Prevent caching
 
+  console.log("url>>>>", url);
   if (!response.ok) {
     console.log(response, "reas");
     throw new Error("Failed to fetch total Tickets");
@@ -154,10 +155,9 @@ export default async function Page(): Promise<React.JSX.Element> {
     getDoneTicketsByMonth(2024),
   ]);
 
-  const totalOnHoldTickets = role !== 'admin'
-    ? await fetchTotalTickets("on hold", id, role)
-    : null; // Fetch tickets on hold only for non-admin roles
-  const totalAgents = role === 'admin' ? await fetchAgentCount() : null;
+  const totalOnHoldTickets =
+    role !== "admin" ? await fetchTotalTickets("on hold", id, role) : null; // Fetch tickets on hold only for non-admin roles
+  const totalAgents = role === "admin" ? await fetchAgentCount() : null;
 
   const dashboardItems = [
     {
@@ -216,30 +216,37 @@ export default async function Page(): Promise<React.JSX.Element> {
       count: totalCompletedTickets,
       link: `/ticket?status=${decodeURIComponent("done")}`,
     },
-    ...(role === 'admin'
+    ...(role === "admin"
       ? [
-        {
-          icon: PersonRounded,
-          label: "Total Agents",
-          key: "totalAgents",
-          color: "#607d8b",
-          count: totalAgents,
-          link: "/user",
-        },
-      ]
+          {
+            icon: PersonRounded,
+            label: "Total Agents",
+            key: "totalAgents",
+            color: "#607d8b",
+            count: totalAgents,
+            link: "/user",
+          },
+        ]
       : [
-        {
-          icon: PauseCircleOutlineRounded,
-          label: "Tickets on Hold",
-          key: "onHold",
-          color: "#757575",
-          count: totalOnHoldTickets,
-          link: `/ticket?status=${decodeURIComponent("on hold")}`,
-        },
-      ]),
+          {
+            icon: PauseCircleOutlineRounded,
+            label: "Tickets on Hold",
+            key: "onHold",
+            color: "#757575",
+            count: totalOnHoldTickets,
+            link: `/ticket?status=${decodeURIComponent("on hold")}`,
+          },
+        ]),
   ];
-  console.log(role, 'role in dashbpard')
-  console.log(totalTickets, totalOpenTickets, totalInProgressTickets, totalForwardedTickets, totalCloseTickets, "tickets count");
+  console.log(role, "role in dashbpard");
+  console.log(
+    totalTickets,
+    totalOpenTickets,
+    totalInProgressTickets,
+    totalForwardedTickets,
+    totalCloseTickets,
+    "tickets count"
+  );
 
   return (
     <Grid container spacing={3}>
