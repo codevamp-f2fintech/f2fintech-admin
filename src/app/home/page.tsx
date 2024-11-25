@@ -23,7 +23,7 @@ import { setCustomers } from "@/redux/features/customerSlice";
 import { useGetCustomers } from "@/hooks/customer";
 import { Utility } from "@/utils";
 
-const ITEMS_PER_PAGE = 12; // Number of items per page
+const ITEMS_PER_PAGE = 6; // Number of items per page
 
 const Home: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");

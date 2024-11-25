@@ -19,8 +19,9 @@ import { useCreateTicketHistory } from "@/hooks/tickethistory";
 import { useGetUsers } from "@/hooks/user";
 import { fetcher } from "@/apis/apiClient";
 import { Utility } from "@/utils";
+import { Ticket } from "@/types/ticket";
 
-const ITEMS_PER_PAGE = 12;
+const ITEMS_PER_PAGE = 6;
 
 const Ticket = () => {
   const [customerApplications, setCustomerApplications] = useState([]);
@@ -49,7 +50,13 @@ const Ticket = () => {
     ? `get-all-tickets/${decodedToken()?.id}?isAgent=true&status=${sortBy}` // Agent sees their tickets
     : `get-all-tickets`;
 
-  const { value: ticketData } = useGetTickets([], apiEndpoint);
+  const { value: ticketData } = useGetTickets(
+    {} as Ticket,
+    apiEndpoint,
+    currentPage,
+    ITEMS_PER_PAGE
+  );
+
   const { modifyTicket, error: updateError } = useModifyTicket("update-ticket");
   const { createTicketHistory } = useCreateTicketHistory(
     "create-ticket-history"

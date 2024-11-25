@@ -2,7 +2,7 @@ import { useState } from "react";
 import useSWR, { mutate } from "swr";
 
 import { fetcher, creator, modifier } from "@/apis/apiClient";
-import { Ticket } from "@/types/ticket";
+import { Ticket, TicketData } from "@/types/ticket";
 
 /**
  * Hook for fetching tickets with SWR (stale-while-revalidate) strategy.
@@ -13,19 +13,39 @@ import { Ticket } from "@/types/ticket";
  * @param pageSize - Size of each page for pagination.
  * @returns An object containing the fetched tickets, loading state, and error state.
  */
-export const useGetTickets = (initialData: Ticket[], pathKey: string) => {
-  const { data: swrData, error } = useSWR<Ticket[]>(pathKey, fetcher, {
-    fallbackData: initialData,
-    refreshInterval: initialData ? 3600000 : 0, // 1-hour refresh if initialData exists
-    revalidateOnFocus: false, // Disable revalidation on window focus
-  });
+export const useGetTickets = (
+  initialData: Ticket | null,
+  pathKey: string,
+  page: number = 1,
+  limit: number = 6
+) => {
+  const { data: swrData, error } = useSWR<Ticket | null>(
+    `${pathKey}?page=${page}&limit=${limit}`,
+    fetcher,
+    {
+      fallbackData: initialData,
+      refreshInterval: initialData ? 3600000 : 0, // 1-hour refresh if initialData exists
+      revalidateOnFocus: false, // Disable revalidation on window focus
+    }
+  );
 
   // Manually re-trigger re-fetch
   const refetcher = async () => {
-    await mutate(pathKey);
+    await mutate(`${pathKey}?page=${page}&limit=${limit}`);
   };
 
-  return { value: swrData || [], swrLoading: !error && !swrData, error, refetcher };
+  return {
+    value: swrData || {
+      results: [],
+      total: 0,
+      page: 1,
+      limit,
+      totalPages: 1,
+    },
+    swrLoading: !error && !swrData,
+    error,
+    refetcher,
+  };
 };
 
 /**
@@ -37,7 +57,7 @@ export const useGetTickets = (initialData: Ticket[], pathKey: string) => {
 export const useCreateTicket = (pathKey: string, p0?: {}) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [createdTicket, setCreatedTicket] = useState<Ticket | null>(null);
+  const [createdTicket, setCreatedTicket] = useState<TicketData | null>(null);
 
   const createTicket = async (data: object) => {
     setLoading(true);
@@ -66,22 +86,23 @@ export const useCreateTicket = (pathKey: string, p0?: {}) => {
 export const useModifyTicket = (pathKey: string) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [modifiedTicket, setModifiedTicket] = useState<Ticket | null>(null);
+  const [modifiedTicket, setModifiedTicket] = useState<TicketData | null>(null);
 
   const modifyTicket = async (
     ticketId: number,
-    updatedTicketData: Partial<Ticket>
+    updatedTicketData: Partial<TicketData>
   ) => {
     setLoading(true);
     setError(null);
     try {
       // Construct the full API path using pathkey and ticketId
       const apiPath = `${pathKey}/${ticketId}`;
-      const ticket = await modifier<Ticket, Partial<Ticket>>(
+      const ticket = await modifier<TicketData, Partial<TicketData>>(
         apiPath,
         updatedTicketData
       );
       setModifiedTicket(ticket);
+      return ticket;
     } catch (err) {
       setError(err as Error);
     } finally {

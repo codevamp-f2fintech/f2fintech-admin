@@ -3,12 +3,12 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Ticket } from "@/types/ticket";
 
 interface ticketInitialState {
-  ticket: Ticket[];
+  ticket: Ticket | null;
   reduxLoading: boolean;
 }
 
 const initialState: ticketInitialState = {
-  ticket: [],
+  ticket: null,
   reduxLoading: false,
 };
 
@@ -16,7 +16,7 @@ export const ticketSlice = createSlice({
   name: "ticket",
   initialState,
   reducers: {
-    setTickets: (state, action: PayloadAction<Ticket[]>) => {
+    setTickets: (state, action: PayloadAction<Ticket>) => {
       state.ticket = action.payload;
       state.reduxLoading = false;
     },

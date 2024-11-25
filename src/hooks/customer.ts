@@ -18,7 +18,7 @@ export const useGetCustomers = (
   initialData: Customer | null,
   pathKey: string,
   page: number = 1,
-  limit: number = 9
+  limit: number = 6
 ) => {
   const { data: swrData, error } = useSWR<Customer | null>(
     `${pathKey}?page=${page}&limit=${limit}`,

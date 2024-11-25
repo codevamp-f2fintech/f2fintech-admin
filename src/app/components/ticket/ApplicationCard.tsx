@@ -22,6 +22,7 @@ import {
 import { useCreateTicket } from "@/hooks/ticket";
 import { Utility } from "@/utils";
 import { useGetCustomers, useModifyCustomer } from "@/hooks/customer";
+import { Customer } from "@/types/customer";
 
 const capitalizeFirstLetter = (str: string) => {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
@@ -57,17 +58,17 @@ function InfoRow({ icon, text }: { icon: React.ReactNode; text: string }) {
 const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
   const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [pageSize] = useState<number>(6);
+  const [limit] = useState<number>(6);
   const { createTicket, error } = useCreateTicket("create-ticket", {});
   const { decodedToken } = Utility();
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1000px)");
 
   const { refetch } = useGetCustomers(
-    [],
+    {} as Customer,
     `get-loan-applications`,
     currentPage,
-    pageSize
+    limit
   );
 
   // Hook for modifying loan application is_picked column
