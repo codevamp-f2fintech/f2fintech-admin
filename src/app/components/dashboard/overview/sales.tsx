@@ -26,17 +26,14 @@ export function Sales({ chartSeries, sx }: SalesProps): React.JSX.Element {
   return (
     <Card sx={sx}>
       <CardHeader
-        // action={
-        //   <Button
-        //     color="inherit"
-        //     size="small"
-        //     startIcon={
-        //       <ArrowClockwiseIcon fontSize="var(--icon-fontSize-md)" />
-        //     }
-        //   >
-        //     Sync
-        //   </Button>
-        // }
+        variant="h5"
+        component="h2"
+        sx={{
+          fontWeight: 900,
+          color: "#2c3e50",
+          textTransform: "uppercase",
+          letterSpacing: "0.5px",
+        }}
         title="Tickets Overview"
       />
       <CardContent>
@@ -49,15 +46,6 @@ export function Sales({ chartSeries, sx }: SalesProps): React.JSX.Element {
         />
       </CardContent>
       <Divider />
-      {/* <CardActions sx={{ justifyContent: "flex-end" }}>
-        <Button
-          color="inherit"
-          endIcon={<ArrowRightIcon fontSize="var(--icon-fontSize-md)" />}
-          size="small"
-        >
-          Overview
-        </Button>
-      </CardActions> */}
     </Card>
   );
 }

@@ -213,9 +213,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
               }}
             >
               {getStatusIcon(status)}
-              {`${
-                status.charAt(0).toUpperCase() + status.slice(1)
-              } (${ticketCount(status)})`}
+              {`${status.charAt(0).toUpperCase() + status.slice(1)} `}
             </MenuItem>
           ))}
         </Menu>

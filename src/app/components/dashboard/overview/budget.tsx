@@ -13,7 +13,12 @@ export interface BudgetProps {
   Icon: string;
 }
 
-export function Budget({ name, sx, value, Icon }: BudgetProps): React.JSX.Element {
+export function Budget({
+  name,
+  sx,
+  value,
+  Icon,
+}: BudgetProps): React.JSX.Element {
   return (
     <Card sx={sx}>
       <CardContent>

@@ -14,8 +14,8 @@ import {
   TextField,
   Typography,
   Box,
-  Pagination
-} from '@mui/material';
+  Pagination,
+} from "@mui/material";
 import {
   Person,
   Email,
@@ -23,7 +23,7 @@ import {
   Refresh,
   CheckCircle,
   Search,
-} from '@mui/icons-material';
+} from "@mui/icons-material";
 
 import dayjs from "dayjs";
 import { useGetUsers } from "@/hooks/user";
@@ -41,7 +41,7 @@ export interface LatestUsersProps {
 export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
   const { value: users, swrLoading: usersLoading } = useGetUsers(
     {},
-    'get-users',
+    "get-users",
     1,
     100
   );
@@ -55,14 +55,14 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
   const [searchQuery, setSearchQuery] = React.useState("");
 
   const getTicketCounts = (userId: string) => {
-    console.log("tickeect data>>", tickets, userId);
+    // console.log("tickeect data>>", tickets, userId);
     if (!tickets?.data) return { open: 0, inProgress: 0, done: 0 };
 
     const userTickets = tickets.data.filter(
       (ticket) => ticket.user_id === userId
     );
 
-    console.log("usert", userTickets);
+    // console.log("usert", userTickets);
     return {
       open: userTickets.filter(
         (ticket) => ticket.status.toLowerCase() === "open"
@@ -102,17 +102,28 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
       elevation={3}
       sx={{
         p: 3,
-        bgcolor: '#fff',
-        background: 'linear-gradient(145deg, #ffffff 0%, #f8f9ff 100%)'
+        bgcolor: "#fff",
+        background: "linear-gradient(145deg, #ffffff 0%, #f8f9ff 100%)",
       }}
     >
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5" component="h2" sx={{
-          fontWeight: 600,
-          color: '#2c3e50',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px',
-        }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 3,
+        }}
+      >
+        <Typography
+          variant="h5"
+          component="h2"
+          sx={{
+            fontWeight: 600,
+            color: "#2c3e50",
+            textTransform: "uppercase",
+            letterSpacing: "0.5px",
+          }}
+        >
           Agent List
         </Typography>
 
@@ -122,15 +133,15 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <Search sx={{ color: 'text.secondary' }} />
+                <Search sx={{ color: "text.secondary" }} />
               </InputAdornment>
             ),
             sx: {
-              bgcolor: '#f8f9ff',
-              '&:hover': {
-                bgcolor: '#f0f2ff',
-              }
-            }
+              bgcolor: "#f8f9ff",
+              "&:hover": {
+                bgcolor: "#f0f2ff",
+              },
+            },
           }}
         />
       </Box>
@@ -138,7 +149,7 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
       <TableContainer>
         <Table>
           <TableHead>
-            <TableRow sx={{ bgcolor: 'grey.50' }}>
+            <TableRow sx={{ bgcolor: "grey.50" }}>
               <TableCell>Sr.</TableCell>
               <TableCell>Username</TableCell>
               <TableCell>Email</TableCell>
@@ -163,38 +174,61 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
                   <TableRow
                     key={agent.id}
                     sx={{
-                      '&:hover': { bgcolor: 'primary.50' },
-                      transition: 'background-color 0.2s'
+                      "&:hover": { bgcolor: "primary.50" },
+                      transition: "background-color 0.2s",
                     }}
                   >
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Person sx={{ color: 'primary.main' }} />
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <Person sx={{ color: "primary.main" }} />
                         {capitalizeFirstLetter(agent.username)}
                       </Box>
                     </TableCell>
                     <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Email sx={{ color: 'text.secondary' }} />
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Email sx={{ color: "text.secondary" }} />
                         {agent.email}
                       </Box>
                     </TableCell>
                     <TableCell align="center">
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                        <ConfirmationNumber sx={{ color: 'warning.main' }} />
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 1,
+                        }}
+                      >
+                        <ConfirmationNumber sx={{ color: "warning.main" }} />
                         {open}
                       </Box>
                     </TableCell>
                     <TableCell align="center">
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                        <Refresh sx={{ color: 'primary.main' }} />
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 1,
+                        }}
+                      >
+                        <Refresh sx={{ color: "primary.main" }} />
                         {inProgress}
                       </Box>
                     </TableCell>
                     <TableCell align="center">
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                        <CheckCircle sx={{ color: 'success.main' }} />
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 1,
+                        }}
+                      >
+                        <CheckCircle sx={{ color: "success.main" }} />
                         {done}
                       </Box>
                     </TableCell>
