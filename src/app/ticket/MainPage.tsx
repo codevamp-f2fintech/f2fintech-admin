@@ -43,12 +43,17 @@ const Ticket = () => {
   const { decodedToken, setLocalStorage, remLocalStorage } = Utility();
   const userRole = decodedToken()?.role;
   const apiEndpoint = selectedUser
-    ? `get-all-tickets/${selectedUser.id}` // If a user is selected in the dropdown, fetch their tickets
+    ? `get-all-tickets/${selectedUser.id}` // If a user is selected, fetch their tickets
     : userRole === "admin"
-    ? `get-all-tickets?status=${sortBy}` // Admin sees all tickets when no user is selected
-    : userRole === "agent"
-    ? `get-all-tickets/${decodedToken()?.id}?isAgent=true&status=${sortBy}` // Agent sees their tickets
-    : `get-all-tickets`;
+      ? sortBy === "all"
+        ? `get-all-tickets` // Admin sees all tickets without status query when status is "all"
+        : `get-all-tickets?status=${sortBy}` // Admin sees all tickets with status query
+      : userRole === "agent"
+        ? sortBy === "all"
+          ? `get-all-tickets/${decodedToken()?.id}?isAgent=true` // Agent sees their tickets without status query when status is "all"
+          : `get-all-tickets/${decodedToken()?.id}?isAgent=true&status=${sortBy}` // Agent sees their tickets with status query
+        : `get-all-tickets`; // Default endpoint when no specific condition is met
+
 
   const { value: ticketData } = useGetTickets(
     {} as Ticket,
@@ -212,11 +217,11 @@ const Ticket = () => {
   ) => {
     let selectedTicket;
     if (userRole === "admin") {
-      selectedTicket = ticketData?.data?.find(
+      selectedTicket = ticketData?.results?.find(
         (ticket) => ticket?.customer_application_id === applicationId
       );
     } else {
-      selectedTicket = ticketData?.data?.find(
+      selectedTicket = ticketData?.results?.find(
         (ticket) =>
           ticket?.user_id === decodedToken()?.id &&
           ticket?.customer_application_id === applicationId
@@ -243,7 +248,7 @@ const Ticket = () => {
       );
     } else {
       console.error(
-        "No ticket found for the given customerId and applicationId"
+        "No ticket found for the given customerId and applicationId", customerId, applicationId
       );
     }
   };
