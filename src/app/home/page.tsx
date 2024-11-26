@@ -1,6 +1,7 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import {
   Grid,
@@ -27,7 +28,6 @@ const ITEMS_PER_PAGE = 6; // Number of items per page
 
 const Home: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [limit] = useState<number>(ITEMS_PER_PAGE); // For backend pagination
   const [currentPage, setCurrentPage] = useState<number>(1); // For frontend pagination
   const [paginationLoading, setPaginationLoading] = useState<boolean>(false);
 
@@ -45,20 +45,20 @@ const Home: React.FC = () => {
     {} as Customer,
     `get-loan-applications`,
     currentPage,
-    limit
+    ITEMS_PER_PAGE
   );
 
   // Function to update customer data after refetching
   const updateCustomerData = (fetchedData: Customer) => {
     dispatch(setCustomers(fetchedData));
-    if (fetchedData) {
-      setPaginationLoading(false);
-    }
+    setPaginationLoading(false);
   };
-  // Filtering customers by search term
-  const filteredCustomers = customer?.results?.filter((val) =>
-    val.Name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Memoize the filtered customer list to optimize re-renders
+  const filteredCustomers = useMemo(() => {
+    return customer?.results?.filter((val) =>
+      val.Name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [searchTerm, customer?.results]);
 
   // Handle API response
   useEffect(() => {
@@ -190,7 +190,7 @@ const Home: React.FC = () => {
       </Box>
 
       <Pagination
-        count={Math.ceil(customer?.total / ITEMS_PER_PAGE)}
+        count={Math.ceil((customer?.total || 0) / ITEMS_PER_PAGE)}
         page={currentPage}
         onChange={handlePageChange}
         sx={{ mt: 4 }}

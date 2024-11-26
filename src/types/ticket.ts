@@ -4,7 +4,9 @@ export interface TicketData {
   forwarded_to: number;
   status: string;
   due_date: Date;
+  created_at: Date;
 }
+
 export interface Ticket {
   results: TicketData[];
   total: number;

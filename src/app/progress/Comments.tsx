@@ -44,7 +44,7 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
   const [currentPage, setCurrentPage] = useState(1); // Current page for pagination
 
   const dispatch: AppDispatch = useDispatch();
-  const { decodedToken, toastAndNavigate } = Utility();
+  const { capitalizeFirstLetter, decodedToken, toastAndNavigate } = Utility();
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
@@ -206,10 +206,6 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
     setAttachmentPreview("");
   };
 
-  const capitalizeFirstLetter = (str: string) => {
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-  };
-
   // Pagination Logic
   const handlePageChange = (
     event: React.ChangeEvent<unknown>,
@@ -221,9 +217,9 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
   const paginatedComments =
     comments && comments.data
       ? comments.data.slice(
-          (currentPage - 1) * ITEMS_PER_PAGE,
-          currentPage * ITEMS_PER_PAGE
-        )
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+      )
       : [];
 
   return (

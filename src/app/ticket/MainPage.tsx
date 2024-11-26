@@ -19,41 +19,44 @@ import { useCreateTicketHistory } from "@/hooks/tickethistory";
 import { useGetUsers } from "@/hooks/user";
 import { fetcher } from "@/apis/apiClient";
 import { Utility } from "@/utils";
-import { Ticket } from "@/types/ticket";
+import type { Ticket } from "@/types/ticket";
+import { CustomerData } from "@/types/customer";
+import type { AppDispatch, RootState } from "@/redux/store";
+import { useDispatch, useSelector } from "react-redux";
+import { setTickets } from "@/redux/features/ticketSlice";
 
 const ITEMS_PER_PAGE = 6;
 
 const Ticket = () => {
-  const [customerApplications, setCustomerApplications] = useState([]);
   const [filteredApplications, setFilteredApplications] = useState([]);
-  const [tickets, setTickets] = useState([]);
   const [filter, setFilter] = useState("");
-  const [sortBy, setSortBy] = useState("to do");
   const [selectedUser, setSelectedUser] = useState(null);
-  const isMobile = useMediaQuery("(max-width:600px)");
-  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
-  const [currentPage, setCurrentPage] = useState(1); // For Pagination
-
-  // date states
+  const [sortBy, setSortBy] = useState("to do");
   const [startDate, setStartDate] = useState<Dayjs | null>(null);
   const [endDate, setEndDate] = useState<Dayjs | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const { tickets } = useSelector((state: RootState) => state.ticket);
 
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+
+  const dispatch: AppDispatch = useDispatch();
   const router = useRouter();
-  const searchParams = useSearchParams(); // To get the query parameters
+  const searchParams = useSearchParams();
   const { decodedToken, setLocalStorage, remLocalStorage } = Utility();
   const userRole = decodedToken()?.role;
+
   const apiEndpoint = selectedUser
-    ? `get-all-tickets/${selectedUser.id}` // If a user is selected, fetch their tickets
+    ? `get-all-tickets/${selectedUser.id}`
     : userRole === "admin"
       ? sortBy === "all"
-        ? `get-all-tickets` // Admin sees all tickets without status query when status is "all"
-        : `get-all-tickets?status=${sortBy}` // Admin sees all tickets with status query
+        ? `get-all-tickets`
+        : `get-all-tickets?status=${sortBy}`
       : userRole === "agent"
         ? sortBy === "all"
-          ? `get-all-tickets/${decodedToken()?.id}?isAgent=true` // Agent sees their tickets without status query when status is "all"
-          : `get-all-tickets/${decodedToken()?.id}?isAgent=true&status=${sortBy}` // Agent sees their tickets with status query
-        : `get-all-tickets`; // Default endpoint when no specific condition is met
-
+          ? `get-all-tickets/${decodedToken()?.id}?isAgent=true`
+          : `get-all-tickets/${decodedToken()?.id}?isAgent=true&status=${sortBy}`
+        : `get-all-tickets`;
 
   const { value: ticketData } = useGetTickets(
     {} as Ticket,
@@ -62,65 +65,9 @@ const Ticket = () => {
     ITEMS_PER_PAGE
   );
 
-  const { modifyTicket, error: updateError } = useModifyTicket("update-ticket");
-  const { createTicketHistory } = useCreateTicketHistory(
-    "create-ticket-history"
-  );
+  const { modifyTicket } = useModifyTicket("update-ticket");
+  const { createTicketHistory } = useCreateTicketHistory("create-ticket-history");
   const { value: userData } = useGetUsers({}, "get-users", 1, 100);
-
-  useEffect(() => {
-    console.log("Fetched Ticket Data: ", ticketData);
-    if (ticketData?.results) {
-      console.log("Fetched Ticket Data inside: ", ticketData.results);
-
-      const fetchApplications = async () => {
-        const applicationIds = ticketData.results.map(
-          (ticket) => ticket.customer_application_id
-        );
-        // console.log("Application IDs: ", applicationIds);
-        try {
-          const fetchedApplications = await Promise.all(
-            applicationIds.map((id) =>
-              fetcher(`get-application-as-ticket/${id}`)
-            )
-          );
-          console.log(
-            "Fetched Ticket Data: as applucatoins>>",
-            fetchedApplications
-          );
-
-          const combinedData = fetchedApplications.flatMap((item) => {
-            if (item && item.data) {
-              return item.data;
-            } else {
-              console.log("Invalid data format in fetched application:", item);
-              return [];
-            }
-          });
-
-          if (combinedData.length > 0) {
-            setCustomerApplications(combinedData);
-            console.log(combinedData, "combined applications");
-          } else {
-            console.log("No customer applications data available to set.");
-          }
-
-          const ticketStatus = ticketData.results.map((ticket) => ({
-            status: ticket.status,
-            customer_application_id: ticket.customer_application_id,
-            original_estimate: ticket.original_estimate,
-            due_date: ticket.due_date,
-            created_at: ticket.created_at,
-          }));
-          setTickets(ticketStatus);
-          console.log(tickets, "tickets");
-        } catch (err) {
-          console.log(err, "fetch application as ticket error");
-        }
-      };
-      fetchApplications();
-    }
-  }, [ticketData?.results, selectedUser]);
 
   useEffect(() => {
     const queryStatus = searchParams.get("status");
@@ -129,104 +76,35 @@ const Ticket = () => {
     }
   }, [searchParams]);
 
-  // Initial filter to show only "to do" tickets by default
   useEffect(() => {
-    if (customerApplications.length && tickets.length) {
-      console.log("tickets>>>", tickets, customerApplications);
-
-      // Filter applications based on customer ID and status
-      const initialFilteredApplications = customerApplications.filter(
-        (customer) => {
-          // Find tickets that match both customer_application_id and sortBy (if applicable)
-          const matchingTickets = tickets.filter((ticket) => {
-            if (sortBy !== "all") {
-              // Match by both ID and status
-              return (
-                ticket?.customer_application_id === customer?.applicationId &&
-                ticket?.status === sortBy
-              );
-            } else {
-              return (
-                ticket?.customer_application_id === customer?.applicationId
-              );
-            }
-            // If sortBy is "all", only match by ID
-          });
-
-          // Ensure only one ticket per applicationId passes through
-          return matchingTickets.length > 0;
-        }
-      );
-
-      console.log("initial>>>", initialFilteredApplications);
-      setFilteredApplications(initialFilteredApplications);
-    }
-  }, [customerApplications, tickets, sortBy]);
-
-  // Filter by search, date  and other criteria
-  useEffect(() => {
-    if (!filter && !startDate && !endDate && !sortBy) {
-      console.log("get all applications filter");
-      setFilteredApplications(customerApplications);
-      return;
-    } else if (filter || startDate || endDate) {
-      let filtered = customerApplications;
-      // Filter by Name, Amount, or Tenure
-      if (filter) {
-        const regex = new RegExp(filter, "i");
-        filtered = filtered.filter(
-          (app) =>
-            regex.test(app.Name) ||
-            regex.test(app.Amount.toString()) ||
-            app.Tenure.toString() === filter
-        );
-      }
-
-      // Filter by Date Range
-      if (startDate || endDate) {
-        const start = startDate ? new Date(startDate) : null;
-        const end = endDate ? new Date(endDate) : null;
-
-        filtered = filtered?.filter((app) => {
-          const createdAt = new Date(
-            tickets.find(
-              (ticket) => ticket?.customer_application_id === app?.applicationId
-            )?.created_at
+    if (ticketData?.results) {
+      dispatch(setTickets(ticketData));
+      const fetchApplications = async () => {
+        const applicationIds = ticketData.results.map(ticket => ticket.customer_application_id);
+        try {
+          const fetchedApplications = await Promise.all(
+            applicationIds.map(id => fetcher(`get-application-as-ticket/${id}`))
           );
-
-          if (start && end) {
-            return createdAt >= start && createdAt <= end;
-          } else if (start) {
-            return createdAt >= start;
-          } else if (end) {
-            return createdAt <= end;
-          }
-          return true;
-        });
-      }
-
-      setFilteredApplications(filtered);
+          const combinedData = fetchedApplications.flatMap(item => item?.data || []);
+          setFilteredApplications(combinedData);
+        } catch (err) {
+          console.error("Fetch error:", err);
+        }
+      };
+      fetchApplications();
     }
-  }, [filter, startDate, endDate, customerApplications, tickets]);
+  }, [ticketData?.results]);
 
-  const handleStartClick = async (
-    customerId,
-    applicationId,
-    estimate,
-    status
-  ) => {
-    let selectedTicket;
-    if (userRole === "admin") {
-      selectedTicket = ticketData?.results?.find(
-        (ticket) => ticket?.customer_application_id === applicationId
-      );
-    } else {
-      selectedTicket = ticketData?.results?.find(
-        (ticket) =>
-          ticket?.user_id === decodedToken()?.id &&
-          ticket?.customer_application_id === applicationId
-      );
+  useEffect(() => {
+    if (tickets?.results?.length) {
+      dispatch(setTickets(tickets));  // Update Redux store with the latest tickets when sortBy changes
     }
+  }, [sortBy, tickets?.results]);
+
+  const handleStartClick = async (customerId: string | number, applicationId: string | number, estimate: number, status: string) => {
+    const selectedTicket = ticketData?.results.find(ticket =>
+      ticket?.customer_application_id === applicationId
+    );
 
     if (selectedTicket) {
       const { id: ticketId } = selectedTicket;
@@ -237,159 +115,129 @@ const Ticket = () => {
       if (status !== "forwarded") {
         const loggedInUser = decodedToken()?.username;
         const historyMessage = `<b>${loggedInUser}</b> started work`;
-        await createTicketHistory({
-          ticket_id: ticketId,
-          action: historyMessage,
-        });
+        await createTicketHistory({ ticket_id: ticketId, action: historyMessage });
         modifyTicket(ticketId, { status: "in progress" });
       }
-      router.push(
-        `/progress?customerId=${customerId}&applicationId=${applicationId}`
-      );
+
+      router.push(`/progress?customerId=${customerId}&applicationId=${applicationId}`);
     } else {
-      console.error(
-        "No ticket found for the given customerId and applicationId", customerId, applicationId
-      );
+      console.error("Ticket not found:", customerId, applicationId);
     }
   };
 
   const handleSortChange = (value: string) => {
-    const selectedStatus = value.toLowerCase();
-    setSortBy(selectedStatus);
+    setSortBy(value.toLowerCase());
+  };
 
-    if (selectedStatus === "all") {
-      setFilteredApplications(customerApplications);
-    } else {
-      const filteredApplications = customerApplications.filter((customer) =>
-        tickets.some((status) => {
-          return (
-            status?.customer_application_id === customer?.applicationId &&
-            status?.status.toLowerCase() === selectedStatus
-          );
-        })
+  const filterTickets = () => {
+    let filtered = filteredApplications;
+
+    // Filter by search
+    if (filter) {
+      const regex = new RegExp(filter, "i");
+      filtered = filtered.filter(
+        (app: CustomerData) =>
+          regex.test(app.Name) || regex.test(app.Amount.toString()) || app.Tenure.toString() === filter
       );
-      setFilteredApplications(filteredApplications);
     }
+
+    // Filter by date range
+    if (startDate || endDate) {
+      const start = startDate ? new Date(startDate) : null;
+      const end = endDate ? new Date(endDate) : null;
+
+      filtered = filtered.filter(app => {
+        const selectedTicket = tickets?.results?.find(ticket => ticket.customer_application_id === app.applicationId);
+        const createdAt = new Date(selectedTicket?.created_at);
+
+        if (start && end) return createdAt >= start && createdAt <= end;
+        if (start) return createdAt >= start;
+        if (end) return createdAt <= end;
+        return true;
+      });
+    }
+    console.log(filtered, 'filtered apps')
+    return filtered;
   };
 
-  // Calculate the count of tickets for the selected status
   const ticketCount = (status: string): number => {
+    const ticketResults = tickets?.results || [];
+
     if (status === "all") {
-      return tickets.length;
+      return ticketResults.length;
     }
-    return tickets.filter((ticket) => ticket.status === status).length;
+    return ticketResults.filter((ticket) => ticket.status === status).length;
   };
 
-  const handlePageChange = (event, page) => {
-    setCurrentPage(page);
-  };
-
-  const paginatedApplications = filteredApplications.slice(
+  const paginatedApplications = filterTickets().slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
 
-  // console.log(
-  //   "filtered application",
-  //   filteredApplications,
-  //   paginatedApplications
-  // );
+  const handlePageChange = (
+    event: React.ChangeEvent<unknown>,
+    page: number
+  ) => {
+    setCurrentPage(page);
+  };
 
   return (
-    <>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        flexDirection: "column",
+      }}
+    >
+      <FilterPanel
+        searchLabel="Search Tickets"
+        sortBy={sortBy}
+        filter={filter}
+        setFilter={setFilter}
+        startDate={startDate}
+        setStartDate={setStartDate}
+        endDate={endDate}
+        setEndDate={setEndDate}
+        selectedUser={selectedUser}
+        setSelectedUser={setSelectedUser}
+        handleSortChange={handleSortChange}
+        userData={userData}
+        userRole={userRole}
+        ticketCount={ticketCount}
+      />
+
       <Box
         sx={{
+          minWidth: "80vw",
+          minHeight: "70vh",
           display: "flex",
-          alignItems: "center",
+          alignItems: isMobile ? "center" : isTab ? "" : "flex-start",
           justifyContent: "space-between",
-          flexDirection: "column",
+          paddingTop: "20px",
+          marginBottom: "0",
         }}
       >
-        <FilterPanel
-          searchLabel="Search Tickets"
-          sortBy={sortBy}
-          filter={filter}
-          setFilter={setFilter}
-          startDate={startDate}
-          setStartDate={setStartDate}
-          endDate={endDate}
-          setEndDate={setEndDate}
-          selectedUser={selectedUser}
-          setSelectedUser={setSelectedUser}
-          handleSortChange={handleSortChange}
-          userData={userData}
-          userRole={userRole}
-          ticketCount={ticketCount}
-        />
-
-        <Box
-          sx={{
-            minWidth: "80vw",
-            minHeight: "70vh",
-            display: "flex",
-            alignItems: isMobile ? "center" : isTab ? "" : "flex-start",
-            justifyContent: "space-between",
-            paddingTop: "20px",
-            marginBottom: "0",
-          }}
-        >
-          <Grid
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              flexDirection: "row",
-              justifyContent: "center",
-            }}
-            container
-            spacing={2}
-            paddingLeft={0}
-          >
-            {paginatedApplications.length > 0 ? (
-              paginatedApplications.map((customer, id) => {
-                const ticket = tickets.find(
-                  (ticket) =>
-                    ticket.customer_application_id === customer.applicationId
-                );
-                return (
-                  <ApplicationCard
-                    key={id}
-                    contact={customer}
-                    ticket={ticket}
-                    handleStartClick={handleStartClick}
-                  />
-                );
-              })
-            ) : (
-              <Typography
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: "100%",
-                  textAlign: "center",
-                  color: "text.secondary",
-                  mt: "20vh",
-                }}
-              >
-                {userRole === "admin" ? (
-                  "No Tickets Found"
-                ) : (
-                  <Link href="/home" passHref>
-                    No Tickets Found. Start Picking Some By Clicking Here!
-                  </Link>
-                )}
-              </Typography>
-            )}
-          </Grid>
-        </Box>
-        <Pagination
-          count={Math.ceil(filteredApplications.length / ITEMS_PER_PAGE)}
-          page={currentPage}
-          onChange={handlePageChange}
-          sx={{ mt: 4 }}
-        />
+        <Grid container spacing={2} sx={{ paddingLeft: 0, justifyContent: "center", alignItems: "center" }}>
+          {paginatedApplications.length > 0 ? (
+            paginatedApplications.map((application, id) => {
+              const ticket = tickets?.results?.find(ticket => ticket.customer_application_id === application.applicationId);
+              return <ApplicationCard key={id} contact={application} ticket={ticket} handleStartClick={handleStartClick} />;
+            })
+          ) : (
+            <Typography sx={{ width: "100%", textAlign: "center", mt: "20vh", color: "text.secondary" }}>
+              {userRole === "admin" ? "No Tickets Found" : <Link href="/home">No Tickets Found. Start Picking Some By Clicking Here!</Link>}
+            </Typography>
+          )}
+        </Grid>
       </Box>
-    </>
+      <Pagination
+        count={Math.ceil(filterTickets().length / ITEMS_PER_PAGE)}
+        page={currentPage}
+        onChange={handlePageChange}
+        sx={{ mt: 4 }}
+      />
+    </Box>
   );
 };
 

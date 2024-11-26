@@ -45,10 +45,6 @@ interface UsersPageProps {
   };
 }
 
-const capitalizeFirstLetter = (str: string) => {
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-};
-
 const ITEMS_PER_PAGE = 80; // Number of items per page
 
 const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
@@ -60,7 +56,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
   const { user, reduxLoading } = useSelector((state: RootState) => state.user);
 
   const dispatch: AppDispatch = useDispatch();
-  const { toastAndNavigate } = Utility();
+  const { capitalizeFirstLetter, toastAndNavigate } = Utility();
 
   useEffect(() => {
     if (initialData) {

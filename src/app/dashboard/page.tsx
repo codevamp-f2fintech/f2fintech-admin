@@ -67,14 +67,11 @@ async function fetchTotalTickets(
   if (status) {
     url += `/${encodeURIComponent(status)}`;
   }
-  // console.log(url, "ticket count url");
   const response = await fetch(url, {
     cache: "no-store",
   }); // To Prevent caching
 
-  console.log("url>>>>", url);
   if (!response.ok) {
-    console.log(response, "reas");
     throw new Error("Failed to fetch total Tickets");
   }
   const resData = await response.json();

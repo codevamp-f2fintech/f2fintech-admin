@@ -27,7 +27,7 @@ import { ThemeProvider } from "@mui/material/styles";
 
 import { useMode, ColorModeContext } from "../../../theme";
 import { useGetUsers } from "@/hooks/user";
-import { useGetTickets, useModifyTicket } from "@/hooks/ticket";
+import { useModifyTicket } from "@/hooks/ticket";
 import {
   useGetTicketHistory,
   useCreateTicketHistory,
@@ -46,6 +46,7 @@ import Toast from "../components/common/Toast";
 import { RootState } from "../../redux/store";
 import { Utility } from "@/utils";
 import History from "./History";
+import { useGetTicketLogs } from "@/hooks/ticketLogs";
 
 const ITEMS_PER_PAGE = 6; // Number of items per page
 
@@ -56,7 +57,7 @@ const Progress: React.FC = () => {
   const [activeSection, setActiveSection] = useState<string>("Comments");
   const [ticketId, setTicketId] = useState("");
   const [allUsers, setAllUsers] = useState([]);
-  const [selectedUser, setSelectedUser] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [progress, setProgress] = useState(0); // State to store progress percentage
   const [overage, setOverage] = useState(0); // Orange part (exceeding estimated time)
   const [newLoanStatus, setNewLoanStatus] = useState("");
@@ -104,11 +105,11 @@ const Progress: React.FC = () => {
 
   const { value: userData } = useGetUsers({}, "get-users", 1, 50);
 
-  const { value: ticketData } = useGetTickets(
+  const { value: ticketData } = useGetTicketLogs(
     [],
     `get-ticket-logs/${storedTicketId}`
   );
-  const { value: applicationData } = useGetTickets(
+  const { value: applicationData } = useGetTicketLogs(
     [],
     `get-application-as-ticket/${ids?.applicationId}`
   );
@@ -139,7 +140,7 @@ const Progress: React.FC = () => {
   }, [userData?.results, forwardedUserId]);
 
   useEffect(() => {
-    if (ids?.applicationId && ids?.customerId) {
+    if (ids?.applicationId && ids?.customerId && (!documents?.length || !loanStatus || !employeeStatus)) {
       dispatch(
         fetchStatusAndDocuments({
           applicationId: ids.applicationId,
@@ -155,7 +156,6 @@ const Progress: React.FC = () => {
       setSelectedCustomer(selectedCustomer);
     }
   }, [ids?.applicationId, ids?.customerId, applicationData?.data]);
-  console.log("kya hai status", employeeStatus);
 
   useEffect(() => {
     if (loanStatus) {
@@ -290,10 +290,6 @@ const Progress: React.FC = () => {
     } catch (error) {
       toastAndNavigate(dispatch, true, "error", "Error Forwarding User");
     }
-  };
-
-  const handleBack = () => {
-    window.history.back();
   };
 
   const showComments = () => setActiveSection("Comments");
@@ -468,8 +464,8 @@ const Progress: React.FC = () => {
                           fontSize: isMobile
                             ? ".7rem"
                             : isTab
-                            ? "1rem"
-                            : "1rem",
+                              ? "1rem"
+                              : "1rem",
                         }}
                       >
                         Documents:
@@ -784,7 +780,7 @@ const Progress: React.FC = () => {
                       <Autocomplete
                         options={allUsers || []}
                         getOptionLabel={(option) => option.username}
-                        value={selectedUser}
+                        value={selectedUser || null}
                         onChange={(event, value) =>
                           handleForwardAutocomplete(value)
                         }
@@ -832,8 +828,8 @@ const Progress: React.FC = () => {
                           fontSize: isMobile
                             ? ".8rem"
                             : isTab
-                            ? ".9rem"
-                            : "14px",
+                              ? ".9rem"
+                              : "14px",
                           fontWeight: "bold",
                           color: "white",
                           marginLeft: ".5rem",

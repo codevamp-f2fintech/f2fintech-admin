@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { Customer } from "@/types/customer";
+
 interface CustomerState {
   customer: Customer | null;
   reduxLoading: boolean;

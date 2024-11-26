@@ -2,6 +2,7 @@ import React from "react";
 import { Box, Divider, Typography } from "@mui/material";
 import { Bolt as BoltIcon } from "@mui/icons-material";
 import { format, formatDistanceToNow } from "date-fns";
+import { Utility } from "@/utils";
 
 interface HistoryProps {
   ticketHistory: Array<{
@@ -12,11 +13,8 @@ interface HistoryProps {
   }>;
 }
 
-const capitalizeFirstLetter = (str: string) => {
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-};
-
 const History: React.FC<HistoryProps> = ({ ticketHistory }) => {
+  const { capitalizeFirstLetter } = Utility();
   return (
     <Box>
       {ticketHistory.length ? (

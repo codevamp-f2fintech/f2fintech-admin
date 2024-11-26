@@ -19,8 +19,12 @@ export const useGetTickets = (
   page: number = 1,
   limit: number = 6
 ) => {
+  const fullPath = pathKey.includes('?')
+    ? `${pathKey}&page=${page}&limit=${limit}`
+    : `${pathKey}?page=${page}&limit=${limit}`;
+
   const { data: swrData, error } = useSWR<Ticket | null>(
-    `${pathKey}&page=${page}&limit=${limit}`,
+    fullPath,
     fetcher,
     {
       fallbackData: initialData,
@@ -31,7 +35,7 @@ export const useGetTickets = (
 
   // Manually re-trigger re-fetch
   const refetcher = async () => {
-    await mutate(`${pathKey}&page=${page}&limit=${limit}`);
+    await mutate(fullPath);
   };
 
   return {

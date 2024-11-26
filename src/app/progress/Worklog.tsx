@@ -13,13 +13,7 @@ interface WorkLogListProps {
 }
 
 const WorkLogList: React.FC<WorkLogListProps> = ({ ticketData }) => {
-  const { decodedToken } = Utility();
-  const isMobile = useMediaQuery("(max-width:600px)");
-  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
-
-  const capitalizeFirstLetter = (str: string) => {
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-  };
+  const { capitalizeFirstLetter, decodedToken } = Utility();
 
   return (
     <Box>

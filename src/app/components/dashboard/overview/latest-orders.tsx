@@ -29,10 +29,7 @@ import dayjs from "dayjs";
 import { useGetUsers } from "@/hooks/user";
 import { useGetTickets } from "@/hooks/ticket";
 import type { SxProps } from "@mui/material/styles";
-
-const capitalizeFirstLetter = (str: string) => {
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-};
+import { Utility } from "@/utils";
 
 export interface LatestUsersProps {
   sx?: SxProps;
@@ -45,7 +42,7 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
     1,
     100
   );
-  const { value: tickets, swrLoading: ticketsLoading } = useGetTickets(
+  const { value: tickets } = useGetTickets(
     [],
     `get-all-tickets`
   );
@@ -53,6 +50,8 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
   const [currentPage, setCurrentPage] = React.useState(1);
   const [usersPerPage] = React.useState(6);
   const [searchQuery, setSearchQuery] = React.useState("");
+
+  const { capitalizeFirstLetter } = Utility();
 
   const getTicketCounts = (userId: string) => {
     // console.log("tickeect data>>", tickets, userId);

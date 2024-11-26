@@ -24,10 +24,6 @@ import { Utility } from "@/utils";
 import { useGetCustomers, useModifyCustomer } from "@/hooks/customer";
 import { Customer } from "@/types/customer";
 
-const capitalizeFirstLetter = (str: string) => {
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-};
-
 function InfoRow({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -60,7 +56,7 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [limit] = useState<number>(6);
   const { createTicket, error } = useCreateTicket("create-ticket", {});
-  const { decodedToken } = Utility();
+  const { decodedToken, capitalizeFirstLetter } = Utility();
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1000px)");
 
