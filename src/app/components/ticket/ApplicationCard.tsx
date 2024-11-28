@@ -274,8 +274,7 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
                 handleStartClick(
                   contact.Id,
                   contact.applicationId,
-                  ticket.original_estimate,
-                  ticket.status
+                  ticket.original_estimate
                 )
               }
             >

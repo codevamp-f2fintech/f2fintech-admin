@@ -38,7 +38,7 @@ interface FilterPanelProps {
   handleSortChange: (event: string | null) => void;
   setStartDate: React.Dispatch<React.SetStateAction<Dayjs | null>>;
   setEndDate: React.Dispatch<React.SetStateAction<Dayjs | null>>;
-  userData: { data: User };
+  userData: { data: User | null };
   userRole: string;
   setSelectedUser: React.Dispatch<React.SetStateAction<User | null>>;
   ticketCount: (status: string) => number;
@@ -158,9 +158,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         <Tooltip title="Filter by Status">
           <Chip
             icon={getStatusIcon(sortBy)}
-            label={`${
-              sortBy.charAt(0).toUpperCase() + sortBy.slice(1)
-            } (${ticketCount(sortBy)})`}
+            label={`${sortBy.charAt(0).toUpperCase() + sortBy.slice(1)
+              } (${ticketCount(sortBy)})`}
             onClick={(e) => setAnchorEl(e.currentTarget)}
             sx={{
               backgroundColor: getStatusColor(sortBy),
@@ -263,7 +262,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             },
           }}
         >
-          {(userData?.results || []).map((user) => (
+          {(userData?.results || []).map((user: any) => (
             <MenuItem
               key={user.id}
               onClick={() => {

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
@@ -14,9 +15,7 @@ import { Dayjs } from "dayjs";
 
 import ApplicationCard from "../components/ticket/ApplicationCard";
 import FilterPanel from "../components/common/FilterPanel";
-import { useGetTickets, useModifyTicket } from "@/hooks/ticket";
-import { useCreateTicketHistory } from "@/hooks/tickethistory";
-import { useGetUsers } from "@/hooks/user";
+import { useGetTickets } from "@/hooks/ticket";
 import { fetcher } from "@/apis/apiClient";
 import { Utility } from "@/utils";
 import type { Ticket } from "@/types/ticket";
@@ -30,7 +29,7 @@ const ITEMS_PER_PAGE = 6;
 const Ticket = () => {
   const [filteredApplications, setFilteredApplications] = useState([]);
   const [filter, setFilter] = useState("");
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [sortBy, setSortBy] = useState("to do");
   const [startDate, setStartDate] = useState<Dayjs | null>(null);
   const [endDate, setEndDate] = useState<Dayjs | null>(null);
@@ -65,9 +64,21 @@ const Ticket = () => {
     ITEMS_PER_PAGE
   );
 
-  const { modifyTicket } = useModifyTicket("update-ticket");
-  const { createTicketHistory } = useCreateTicketHistory("create-ticket-history");
-  const { value: userData } = useGetUsers({}, "get-users", 1, 100);
+  const [userData, setUserData] = useState({});
+  useEffect(() => {
+    if (userRole === "admin") {
+      // Fetch user data only if user is admin
+      const fetchUsers = async () => {
+        try {
+          const response = await fetcher(`get-users?page=${1}&limit=${1000}`);
+          setUserData(response || []);
+        } catch (error) {
+          console.error("Error fetching users:", error);
+        }
+      };
+      fetchUsers();
+    }
+  }, [userRole]);
 
   useEffect(() => {
     const queryStatus = searchParams.get("status");
@@ -99,9 +110,9 @@ const Ticket = () => {
     if (tickets?.results?.length) {
       dispatch(setTickets(tickets));  // Update Redux store with the latest tickets when sortBy changes
     }
-  }, [sortBy, tickets?.results]);
+  }, [sortBy, selectedUser, tickets?.results]);
 
-  const handleStartClick = async (customerId: string | number, applicationId: string | number, estimate: number, status: string) => {
+  const handleStartClick = async (customerId: string | number, applicationId: string | number, estimate: number) => {
     const selectedTicket = ticketData?.results.find(ticket =>
       ticket?.customer_application_id === applicationId
     );
@@ -111,14 +122,6 @@ const Ticket = () => {
       const generatedTicketId = `F2FIN-${ticketId}`;
       remLocalStorage("ticketId");
       setLocalStorage("ticketId", generatedTicketId);
-
-      if (status !== "forwarded") {
-        const loggedInUser = decodedToken()?.username;
-        const historyMessage = `<b>${loggedInUser}</b> started work`;
-        await createTicketHistory({ ticket_id: ticketId, action: historyMessage });
-        modifyTicket(ticketId, { status: "in progress" });
-      }
-
       router.push(`/progress?customerId=${customerId}&applicationId=${applicationId}`);
     } else {
       console.error("Ticket not found:", customerId, applicationId);

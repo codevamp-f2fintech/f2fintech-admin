@@ -14,7 +14,6 @@ import {
   Paper,
   Avatar,
   MenuItem,
-  Autocomplete,
   InputLabel,
   Select,
   FormControl,
@@ -25,30 +24,27 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { ThemeProvider } from "@mui/material/styles";
 
+import Loader from "../components/common/Loader";
+import ProgressBar from "../components/common/ProgressBar";
+import Comments from "./Comments";
+import History from "./History";
+import WorkLogList from "./Worklog";
+import TrackingForm from "./trackingForm";
+import TicketDetail from "./TicketDetail";
+import TicketDocuments from "./TicketDocuments";
+import Toast from "../components/common/Toast";
+import UserAutocomplete from "../components/common/UserAutocomplete";
+
+import type { RootState } from "../../redux/store";
 import { useMode, ColorModeContext } from "../../../theme";
-import { useGetUsers } from "@/hooks/user";
 import { useModifyTicket } from "@/hooks/ticket";
-import {
-  useGetTicketHistory,
-  useCreateTicketHistory,
-} from "@/hooks/tickethistory";
+import { useGetTicketLogs } from "@/hooks/ticketLogs";
 import {
   fetchStatusAndDocuments,
   fetchEmployeeStatus,
 } from "../../redux/features/employeeSlice";
-
-import Loader from "../components/common/Loader";
-import ProgressBar from "../components/common/ProgressBar";
-import Comments from "./Comments";
-import WorkLogList from "./Worklog";
-import TrackingForm from "./trackingForm";
-import Toast from "../components/common/Toast";
-import { RootState } from "../../redux/store";
 import { Utility } from "@/utils";
-import History from "./History";
-import { useGetTicketLogs } from "@/hooks/ticketLogs";
-
-const ITEMS_PER_PAGE = 6; // Number of items per page
+import { useCreateTicketHistory, useGetTicketHistory } from "@/hooks/tickethistory";
 
 const Progress: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -56,7 +52,6 @@ const Progress: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
   const [activeSection, setActiveSection] = useState<string>("Comments");
   const [ticketId, setTicketId] = useState("");
-  const [allUsers, setAllUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [progress, setProgress] = useState(0); // State to store progress percentage
   const [overage, setOverage] = useState(0); // Orange part (exceeding estimated time)
@@ -66,7 +61,6 @@ const Progress: React.FC = () => {
   const searchParams = useSearchParams(); // To get the query parameters
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
-  const [limit] = useState<number>(ITEMS_PER_PAGE); // For backend pagination
 
   const {
     status: employeeStatus,
@@ -80,13 +74,8 @@ const Progress: React.FC = () => {
     capitalizeFirstLetter,
     convertHoursToDaysAndHours,
     decodedToken,
-    formatTenure,
-    formatDate,
-    formatAmount,
     getLocalStorage,
     parseTimeSpent,
-    setSessionStorage,
-    getSessionStorage,
     toastAndNavigate,
   } = Utility();
   const original_estimate = "1d";
@@ -94,7 +83,6 @@ const Progress: React.FC = () => {
     customerId: searchParams.get("customerId") || null,
     applicationId: searchParams.get("applicationId") || null,
   };
-  const forwardedUserId = getSessionStorage("forwardedUserId");
   const storedTicketId = ticketId?.split("-")[1];
 
   const [timeLoggingEstimate, setTimeLoggingEstimate] = useState({
@@ -103,12 +91,11 @@ const Progress: React.FC = () => {
     timeSpent: 0,
   });
 
-  const { value: userData } = useGetUsers({}, "get-users", 1, 50);
-
-  const { value: ticketData } = useGetTicketLogs(
+  const { value: workLog } = useGetTicketLogs(
     [],
     `get-ticket-logs/${storedTicketId}`
   );
+
   const { value: applicationData } = useGetTicketLogs(
     [],
     `get-application-as-ticket/${ids?.applicationId}`
@@ -127,17 +114,37 @@ const Progress: React.FC = () => {
   );
 
   useEffect(() => {
-    if (userData?.results) {
-      setAllUsers(userData.results);
+    if (workLog?.data) {
+      const totalHours = workLog.data.reduce((acc: number, ticket: any) => {
+        return acc + parseTimeSpent(ticket.time_spent);
+      }, 0);
 
-      if (forwardedUserId) {
-        const forwardedUser = userData.results?.find(
-          (user) => user.id == forwardedUserId
-        );
-        setSelectedUser(forwardedUser || null);
+      const finalTime = convertHoursToDaysAndHours(totalHours);
+      setTimeLoggingEstimate({
+        ...timeLoggingEstimate,
+        timeSpent: finalTime,
+      });
+      const originalEstimate = parseTimeSpent(
+        timeLoggingEstimate.originalEstimate
+      );
+
+      // Only recalculate progress if originalEstimate and totalHours are valid
+      if (originalEstimate > 0) {
+        const calculatedProgress = Math.min(
+          (totalHours / originalEstimate) * 100,
+          100
+        ); // max 100%
+        const calculatedOverage =
+          totalHours > originalEstimate
+            ? ((totalHours - originalEstimate) / originalEstimate) * 100
+            : 0;
+
+        setProgress(calculatedProgress); // Blue bar
+        setOverage(calculatedOverage); // Orange bar
       }
     }
-  }, [userData?.results, forwardedUserId]);
+  }, [workLog?.data, timeLoggingEstimate.originalEstimate]);
+
 
   useEffect(() => {
     if (ids?.applicationId && ids?.customerId && (!documents?.length || !loanStatus || !employeeStatus)) {
@@ -175,37 +182,6 @@ const Progress: React.FC = () => {
     }
   }, [ticketId]);
 
-  useEffect(() => {
-    if (ticketData?.data) {
-      const totalHours = ticketData.data.reduce((acc: number, ticket: any) => {
-        return acc + parseTimeSpent(ticket.time_spent);
-      }, 0);
-
-      const finalTime = convertHoursToDaysAndHours(totalHours);
-      setTimeLoggingEstimate({
-        ...timeLoggingEstimate,
-        timeSpent: finalTime,
-      });
-      const originalEstimate = parseTimeSpent(
-        timeLoggingEstimate.originalEstimate
-      );
-
-      // Only recalculate progress if originalEstimate and totalHours are valid
-      if (originalEstimate > 0) {
-        const calculatedProgress = Math.min(
-          (totalHours / originalEstimate) * 100,
-          100
-        ); // max 100%
-        const calculatedOverage =
-          totalHours > originalEstimate
-            ? ((totalHours - originalEstimate) / originalEstimate) * 100
-            : 0;
-
-        setProgress(calculatedProgress); // Blue bar
-        setOverage(calculatedOverage); // Orange bar
-      }
-    }
-  }, [ticketData?.data, timeLoggingEstimate.originalEstimate]);
 
   const handleInputChange = (event) => {
     const value = event.target.value;
@@ -274,7 +250,6 @@ const Progress: React.FC = () => {
 
   const handleForwardAutocomplete = async (value) => {
     setSelectedUser(value);
-    setSessionStorage("forwardedUserId", value.id);
     try {
       await modifyTicket(+storedTicketId, { forwarded_to: value.id });
 
@@ -332,199 +307,18 @@ const Progress: React.FC = () => {
                       "rgba(0, 0, 0, 0.17) 0px -23px 25px 0px inset, rgba(0, 0, 0, 0.15) 0px -36px 30px 0px inset, rgba(0, 0, 0, 0.1) 0px -79px 40px 0px inset, rgba(0, 0, 0, 0.06) 0px 2px 1px, rgba(0, 0, 0, 0.09) 0px 4px 2px, rgba(0, 0, 0, 0.09) 0px 8px 4px, rgba(0, 0, 0, 0.09) 0px 16px 8px, rgba(0, 0, 0, 0.09) 0px 32px 16px",
                   }}
                 >
-                  <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    mb={1}
-                  >
-                    <Typography
-                      variant="h5"
-                      sx={{
-                        color: "white",
-                        textDecoration: "none",
-                        fontSize: "1.5rem",
-                        fontFamily: "monospace",
-                        fontStyle: "revert-layer",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      Ticket ID: {ticketId}
-                    </Typography>
-                  </Box>
+                  <TicketDetail
+                    ticketId={ticketId}
+                    selectedCustomer={selectedCustomer}
+                    isMobile={isMobile}
+                    isTab={isTab}
+                  />
 
-                  <Box
-                    mt={2}
-                    p={2}
-                    border={1}
-                    borderColor="white"
-                    display="flex"
-                    alignItems="center"
-                    justifyContent={"center"}
-                    gap={2}
-                    sx={{
-                      borderRadius: "14px",
-                    }}
-                  >
-                    <Avatar
-                      src={selectedCustomer.Image}
-                      sx={{
-                        width: isMobile ? "2rem" : isTab ? "" : "4rem",
-                        height: isMobile ? "2rem" : isTab ? "" : "4rem",
-                        marginBottom: isMobile ? "40vh" : isTab ? "" : "",
-                      }}
-                    />
-
-                    <Box
-                      sx={{
-                        flex: 1,
-                        p: 3,
-                        borderRadius: 2,
-                        bgcolor: "#1e1e1e",
-                        border: "1px solid #fff",
-                        transition: "transform 0.3s ease",
-                        "&:hover": {
-                          transform: "scale(1.02)",
-                        },
-                      }}
-                    >
-                      <Grid container spacing={3}>
-                        {/* Name and Email */}
-                        <Grid item xs={12} sm={6}>
-                          <Typography sx={{ color: "white", mb: 1 }}>
-                            <strong>Name:</strong> {selectedCustomer.Name}
-                          </Typography>
-                          <Typography sx={{ color: "white", mb: 1 }}>
-                            <strong>Email:</strong> {selectedCustomer.Email}
-                          </Typography>
-                        </Grid>
-
-                        {/* Contact and Designation */}
-                        <Grid item xs={12} sm={6}>
-                          <Typography sx={{ color: "white", mb: 1 }}>
-                            <strong>Contact:</strong> +91{" "}
-                            {selectedCustomer.Contact}
-                          </Typography>
-                          <Typography sx={{ color: "white", mb: 1 }}>
-                            <strong>Designation:</strong>{" "}
-                            {selectedCustomer.Designation}
-                          </Typography>
-                        </Grid>
-
-                        {/* Location and Tenure */}
-                        <Grid item xs={12} sm={6}>
-                          <Typography sx={{ color: "white", mb: 1 }}>
-                            <strong>Location:</strong>{" "}
-                            {selectedCustomer.Location}
-                          </Typography>
-                          <Typography sx={{ color: "white", mb: 1 }}>
-                            <strong>Tenure:</strong>{" "}
-                            {formatTenure(selectedCustomer.Tenure)}
-                          </Typography>
-                        </Grid>
-
-                        {/* Amount and Application Date */}
-                        <Grid item xs={12} sm={6}>
-                          <Typography sx={{ color: "white", mb: 1 }}>
-                            <strong>Amount:</strong>{" "}
-                            {formatAmount(selectedCustomer.Amount)}
-                          </Typography>
-                          <Typography sx={{ color: "white" }}>
-                            <strong>Application Date:</strong>{" "}
-                            {formatDate(selectedCustomer.applicationDate)}
-                          </Typography>
-                        </Grid>
-                      </Grid>
-                    </Box>
-                  </Box>
-
-                  <Grid item xs={12} md={8}>
-                    <Paper
-                      elevation={5}
-                      sx={{
-                        padding: 2,
-                        marginTop: isMobile ? "2vh" : isTab ? "2rem" : "5vh",
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        borderRadius: "10px",
-                        width: isMobile ? "73vw" : isTab ? "52vw" : "43.5vw",
-                        background: `
-                          linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
-                        `,
-                      }}
-                    >
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          mb: 0,
-                          mt: 0,
-                          color: "white",
-                          fontSize: isMobile
-                            ? ".7rem"
-                            : isTab
-                              ? "1rem"
-                              : "1rem",
-                        }}
-                      >
-                        Documents:
-                      </Typography>
-                      {documents.length > 0 ? (
-                        <Box
-                          sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            width: "100%",
-                            gap: 1,
-                          }}
-                        >
-                          {documents.map((doc, index) => (
-                            <Box
-                              key={index}
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                padding: ".8rem",
-                                background: "white",
-                                borderRadius: "8px",
-                                boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-                                transition: "transform 0.2s ease",
-                                width: "30vw",
-                                marginLeft: "1.5rem",
-                                "&:hover": {
-                                  transform: "scale(1.02)",
-                                  transition: "transform 0.3s ease",
-                                },
-                              }}
-                            >
-                              <Typography
-                                variant="body1"
-                                sx={{ color: "black", flexGrow: 1 }}
-                              >
-                                {doc.type}
-                              </Typography>
-                              <a
-                                href={doc.document_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                  textDecoration: "none",
-                                  color: "black",
-                                  fontWeight: "bold",
-                                }}
-                              >
-                                Open
-                              </a>
-                            </Box>
-                          ))}
-                        </Box>
-                      ) : (
-                        <Typography>No documents available.</Typography>
-                      )}
-                    </Paper>
-                  </Grid>
+                  <TicketDocuments
+                    isMobile={isMobile}
+                    isTab={isTab}
+                    documents={documents}
+                  />
 
                   <Box
                     mt={4}
@@ -617,7 +411,7 @@ const Progress: React.FC = () => {
                   )}
 
                   {activeSection === "WorkLog" && (
-                    <WorkLogList ticketData={ticketData?.data} />
+                    <WorkLogList workLog={workLog} />
                   )}
                 </Paper>
               </Grid>
@@ -768,52 +562,14 @@ const Progress: React.FC = () => {
                   </Box>
 
                   {/* Conditionally render the dropdown if the status is forwarded */}
-                  <Box
-                    sx={{
-                      borderRadius: "20px",
-                      height: isMobile ? "5vh" : isTab ? "4vh" : "7vh",
-                      mt: isMobile ? "3vw" : isTab ? "2vw" : "1vw",
-                      width: isMobile ? "75vw" : isTab ? "26vw" : "20.5vw",
-                    }}
-                  >
-                    {newEmployeeStatus === "forwarded" && (
-                      <Autocomplete
-                        options={allUsers || []}
-                        getOptionLabel={(option) => option.username}
-                        value={selectedUser || null}
-                        onChange={(event, value) =>
-                          handleForwardAutocomplete(value)
-                        }
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            label="Select User"
-                            variant="outlined"
-                            type="text"
-                            sx={{
-                              borderRadius: "20px",
-                              "& .MuiOutlinedInput-root": {
-                                color: "black",
-                                backgroundColor: "#eeeeee",
-                                "& fieldset": {
-                                  borderColor: "lightblue",
-                                },
-                                "&:hover fieldset": {
-                                  borderColor: "white",
-                                },
-                                "&.Mui-focused fieldset": {
-                                  borderColor: "white",
-                                },
-                              },
-                              "& .MuiInputLabel-root": {
-                                color: "black",
-                              },
-                            }}
-                          />
-                        )}
-                      />
-                    )}
-                  </Box>
+                  <UserAutocomplete
+                    isMobile={isMobile}
+                    isTab={isTab}
+                    newEmployeeStatus={newEmployeeStatus}
+                    selectedUser={selectedUser}
+                    setSelectedUser={setSelectedUser}
+                    handleForwardAutocomplete={handleForwardAutocomplete}
+                  />
                   <Divider sx={{ my: 2 }} />
                   <Box
                     display="flex"

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import axios from "axios";
 import useSWR, { mutate } from "swr";
+import axios from "axios";
 
 import { fetcher, modifier } from "@/apis/apiClient";
 import { Customer, CustomerData } from "@/types/customer";
@@ -10,18 +10,20 @@ import { Customer, CustomerData } from "@/types/customer";
  *
  * @param initialData - The initial data to be used before SWR fetches fresh data.
  * @param pathKey - The API path key used by SWR to fetch customer data.
- * @param page
- * @param limit
+ * @param page - The page number for pagination.
+ * @param limit - The limit for pagination.
+ * @param shouldFetch - Determines whether the hook should fetch data.
  * @returns An object containing the fetched customers, loading state, and error state.
  */
 export const useGetCustomers = (
   initialData: Customer | null,
   pathKey: string,
   page: number = 1,
-  limit: number = 6
+  limit: number = 6,
+  shouldFetch: boolean = true    // Add shouldFetch to control fetching
 ) => {
-  const { data: swrData, error } = useSWR<Customer | null>(
-    `${pathKey}?page=${page}&limit=${limit}`,
+  const { data: swrData, error, isValidating } = useSWR<Customer | null>(
+    shouldFetch ? `${pathKey}?page=${page}&limit=${limit}` : null, // Use null to pause fetching
     fetcher,
     {
       fallbackData: initialData,
@@ -29,9 +31,12 @@ export const useGetCustomers = (
       revalidateOnFocus: false, // Disable revalidation on window focus
     }
   );
+
   // Manually re-trigger re-fetch
   const refetch = async () => {
-    await mutate(`${pathKey}?page=${page}&limit=${limit}`);
+    if (shouldFetch) {
+      await mutate(`${pathKey}?page=${page}&limit=${limit}`);
+    }
   };
 
   return {
@@ -42,7 +47,7 @@ export const useGetCustomers = (
       limit,
       totalPages: 1,
     },
-    swrLoading: !error && !swrData,
+    swrLoading: !error && !swrData && isValidating,
     error,
     refetch,
   };

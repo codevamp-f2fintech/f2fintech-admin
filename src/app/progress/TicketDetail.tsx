@@ -1,0 +1,124 @@
+import { Avatar, Box, Grid, Typography } from "@mui/material";
+
+import { Utility } from "@/utils";
+
+const TicketDetail = ({
+  ticketId,
+  selectedCustomer,
+  isMobile,
+  isTab
+}) => {
+  const { formatTenure, formatDate, formatAmount } = Utility();
+
+  return (
+    <>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={1}
+      >
+        <Typography
+          variant="h5"
+          sx={{
+            color: "white",
+            textDecoration: "none",
+            fontSize: "1.5rem",
+            fontFamily: "monospace",
+            fontStyle: "revert-layer",
+            fontWeight: "bold",
+          }}
+        >
+          Ticket ID: {ticketId}
+        </Typography>
+      </Box>
+
+      <Box
+        mt={2}
+        p={2}
+        border={1}
+        borderColor="white"
+        display="flex"
+        alignItems="center"
+        justifyContent={"center"}
+        gap={2}
+        sx={{
+          borderRadius: "14px",
+        }}
+      >
+        <Avatar
+          src={selectedCustomer.Image}
+          sx={{
+            width: isMobile ? "2rem" : isTab ? "" : "4rem",
+            height: isMobile ? "2rem" : isTab ? "" : "4rem",
+            marginBottom: isMobile ? "40vh" : isTab ? "" : "",
+          }}
+        />
+
+        <Box
+          sx={{
+            flex: 1,
+            p: 3,
+            borderRadius: 2,
+            bgcolor: "#1e1e1e",
+            border: "1px solid #fff",
+            transition: "transform 0.3s ease",
+            "&:hover": {
+              transform: "scale(1.02)",
+            },
+          }}
+        >
+          <Grid container spacing={3}>
+            {/* Name and Email */}
+            <Grid item xs={12} sm={6}>
+              <Typography sx={{ color: "white", mb: 1 }}>
+                <strong>Name:</strong> {selectedCustomer.Name}
+              </Typography>
+              <Typography sx={{ color: "white", mb: 1 }}>
+                <strong>Email:</strong> {selectedCustomer.Email}
+              </Typography>
+            </Grid>
+
+            {/* Contact and Designation */}
+            <Grid item xs={12} sm={6}>
+              <Typography sx={{ color: "white", mb: 1 }}>
+                <strong>Contact:</strong> +91{" "}
+                {selectedCustomer.Contact}
+              </Typography>
+              <Typography sx={{ color: "white", mb: 1 }}>
+                <strong>Designation:</strong>{" "}
+                {selectedCustomer.Designation}
+              </Typography>
+            </Grid>
+
+            {/* Location and Tenure */}
+            <Grid item xs={12} sm={6}>
+              <Typography sx={{ color: "white", mb: 1 }}>
+                <strong>Location:</strong>{" "}
+                {selectedCustomer.Location}
+              </Typography>
+              <Typography sx={{ color: "white", mb: 1 }}>
+                <strong>Tenure:</strong>{" "}
+                {formatTenure(selectedCustomer.Tenure)}
+              </Typography>
+            </Grid>
+
+            {/* Amount and Application Date */}
+            <Grid item xs={12} sm={6}>
+              <Typography sx={{ color: "white", mb: 1 }}>
+                <strong>Amount:</strong>{" "}
+                {formatAmount(selectedCustomer.Amount)}
+              </Typography>
+              <Typography sx={{ color: "white" }}>
+                <strong>Application Date:</strong>{" "}
+                {formatDate(selectedCustomer.applicationDate)}
+              </Typography>
+            </Grid>
+          </Grid>
+        </Box>
+      </Box>
+    </>
+  )
+}
+
+export default TicketDetail;

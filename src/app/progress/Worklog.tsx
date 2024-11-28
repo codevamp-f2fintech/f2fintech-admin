@@ -1,24 +1,20 @@
-import { Box, Typography, Paper, useMediaQuery } from "@mui/material";
+import { Box, Typography, Paper } from "@mui/material";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { formatDistanceToNow } from "date-fns";
 
 import { Utility } from "@/utils";
 
 interface WorkLogListProps {
-  ticketData: Array<{
-    time_spent: string;
-    work_description: string;
-    created_at: string;
-  }>;
+  workLog: any;
 }
 
-const WorkLogList: React.FC<WorkLogListProps> = ({ ticketData }) => {
+const WorkLogList: React.FC<WorkLogListProps> = ({ workLog }) => {
   const { capitalizeFirstLetter, decodedToken } = Utility();
 
   return (
     <Box>
-      {ticketData.length ? (
-        ticketData.map((log, index) => (
+      {workLog?.data?.length ? (
+        workLog.data.map((log, index) => (
           <Paper
             key={index}
             elevation={3}
