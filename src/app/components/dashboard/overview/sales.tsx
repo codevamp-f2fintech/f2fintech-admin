@@ -14,6 +14,7 @@ import { ArrowRight as ArrowRightIcon } from "@phosphor-icons/react/dist/ssr/Arr
 import type { ApexOptions } from "apexcharts";
 
 import { Chart } from "@/app/components/core/chart";
+import { Box, Typography } from "@mui/material";
 
 export interface SalesProps {
   chartSeries: { name: string; data: number[] }[];
@@ -25,17 +26,29 @@ export function Sales({ chartSeries, sx }: SalesProps): React.JSX.Element {
 
   return (
     <Card sx={sx}>
-      <CardHeader
-        variant="h5"
-        component="h2"
+      <Box
         sx={{
-          fontWeight: 900,
-          color: "#2c3e50",
-          textTransform: "uppercase",
-          letterSpacing: "0.5px",
+          display: "flex",
+          justifyContent: "flex-start",
+          alignItems: "center",
+          height: "12vh",
         }}
-        title="Tickets Overview"
-      />
+      >
+        <Typography
+          variant="h5"
+          component="h2"
+          sx={{
+            fontWeight: 600,
+            color: "#1a237e",
+            textTransform: "uppercase",
+            letterSpacing: "0.5px",
+            ml: "2vw",
+          }}
+        >
+          Tickets Overview
+        </Typography>
+      </Box>
+      <Divider />
       <CardContent>
         <Chart
           height={350}

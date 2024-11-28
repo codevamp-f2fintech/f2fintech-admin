@@ -9,12 +9,13 @@ import {
   TableHead,
   TableRow,
   Paper,
-  IconButton,
   InputAdornment,
   TextField,
   Typography,
   Box,
-  Pagination,
+  Divider,
+  CardActions,
+  Button,
 } from "@mui/material";
 import {
   Person,
@@ -30,6 +31,8 @@ import { useGetUsers } from "@/hooks/user";
 import { useGetTickets } from "@/hooks/ticket";
 import type { SxProps } from "@mui/material/styles";
 import { Utility } from "@/utils";
+import { ArrowRightIcon } from "@mui/x-date-pickers";
+import { useRouter } from "next/navigation";
 
 export interface LatestUsersProps {
   sx?: SxProps;
@@ -40,28 +43,20 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
     {},
     "get-users",
     1,
-    100
+    1000
   );
-  const { value: tickets } = useGetTickets(
-    [],
-    `get-all-tickets`
-  );
-
-  const [currentPage, setCurrentPage] = React.useState(1);
-  const [usersPerPage] = React.useState(6);
+  const { value: tickets } = useGetTickets([], `get-all-tickets`);
   const [searchQuery, setSearchQuery] = React.useState("");
-
   const { capitalizeFirstLetter } = Utility();
+  const router = useRouter();
 
   const getTicketCounts = (userId: string) => {
-    // console.log("tickeect data>>", tickets, userId);
     if (!tickets?.data) return { open: 0, inProgress: 0, done: 0 };
 
     const userTickets = tickets.data.filter(
       (ticket) => ticket.user_id === userId
     );
 
-    // console.log("usert", userTickets);
     return {
       open: userTickets.filter(
         (ticket) => ticket.status.toLowerCase() === "open"
@@ -75,42 +70,38 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
     };
   };
 
-  const indexOfLastUser = currentPage * usersPerPage;
-  const indexOfFirstUser = indexOfLastUser - usersPerPage;
+  const filteredUsers = users?.results
+    ?.filter((user) =>
+      user.username.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .slice(0, 6); // Take only the 6 latest users
 
-  const filteredUsers = users?.results?.filter((user) =>
-    user.username.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   setSearchQuery(event.target.value);
+  // };
 
-  const currentUsers = filteredUsers?.slice(indexOfFirstUser, indexOfLastUser);
-
-  const handlePageChange = (
-    event: React.ChangeEvent<unknown>,
-    value: number
-  ) => {
-    setCurrentPage(value);
-  };
-
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
-    setCurrentPage(1);
+  const handleViewAllClick = () => {
+    router.push("/user");
   };
 
   return (
     <Paper
       elevation={3}
       sx={{
-        p: 3,
         bgcolor: "#fff",
         background: "linear-gradient(145deg, #ffffff 0%, #f8f9ff 100%)",
+        width: "49.3vw",
+        ml: "4vw",
+        height: "100vh",
       }}
     >
       <Box
         sx={{
           display: "flex",
-          justifyContent: "space-between",
+          justifyContent: "flex-start",
           alignItems: "center",
           mb: 3,
+          height: "9vh",
         }}
       >
         <Typography
@@ -118,39 +109,24 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
           component="h2"
           sx={{
             fontWeight: 600,
-            color: "#2c3e50",
+            color: "#1a237e",
             textTransform: "uppercase",
             letterSpacing: "0.5px",
+            ml: "1vw",
+            mt: "4vh",
           }}
         >
           Agent List
         </Typography>
-
-        <TextField
-          placeholder="Search by name"
-          size="small"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search sx={{ color: "text.secondary" }} />
-              </InputAdornment>
-            ),
-            sx: {
-              bgcolor: "#f8f9ff",
-              "&:hover": {
-                bgcolor: "#f0f2ff",
-              },
-            },
-          }}
-        />
       </Box>
+      <Divider />
 
       <TableContainer>
         <Table>
-          <TableHead>
+          <TableHead sx={{ height: "12vh" }}>
             <TableRow sx={{ bgcolor: "grey.50" }}>
               <TableCell>Sr.</TableCell>
-              <TableCell>Username</TableCell>
+              <TableCell>User Name</TableCell>
               <TableCell>Email</TableCell>
               <TableCell align="center">Open Tickets</TableCell>
               <TableCell align="center">In Progress</TableCell>
@@ -166,7 +142,7 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
                 </TableCell>
               </TableRow>
             ) : (
-              currentUsers?.map((agent, index) => {
+              filteredUsers.map((agent, index) => {
                 const { open, inProgress, done } = getTicketCounts(agent.id);
 
                 return (
@@ -180,7 +156,11 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>
                       <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                        }}
                       >
                         <Person sx={{ color: "primary.main" }} />
                         {capitalizeFirstLetter(agent.username)}
@@ -241,17 +221,25 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
           </TableBody>
         </Table>
       </TableContainer>
-
-      {filteredUsers?.length > 0 && (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 2, mb: 2 }}>
-          <Pagination
-            count={Math.ceil(filteredUsers.length / usersPerPage)}
-            page={currentPage}
-            onChange={handlePageChange}
-            color="primary"
-          />
-        </Box>
-      )}
+      {/* <Divider /> */}
+      <CardActions sx={{ justifyContent: "flex-end", mt: "3vh" }}>
+        <Button
+          color="inherit"
+          endIcon={<ArrowRightIcon />}
+          size="small"
+          variant="text"
+          onClick={handleViewAllClick}
+          sx={{
+            width: "8vw",
+            fontSize: ".9rem",
+            mr: "1vw",
+            background:
+              "linear-gradient(125deg, #ECFCFF 0%, #ECFCFF 40%, #B2FCFF calc(40% + 1px), #B2FCFF 60%, #5EDFFF calc(60% + 1px), #5EDFFF 72%, #3E64FF calc(72% + 1px), #3E64FF 100%)",
+          }}
+        >
+          View all
+        </Button>
+      </CardActions>
     </Paper>
   );
 }
