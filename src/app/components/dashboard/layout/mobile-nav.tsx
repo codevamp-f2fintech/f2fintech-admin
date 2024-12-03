@@ -84,7 +84,7 @@ export function MobileNav({
       </Stack>
       <Divider sx={{ borderColor: "var(--mui-palette-neutral-700)" }} />
       <Box component="nav" sx={{ flex: "1 1 auto", p: "12px" }}>
-        {renderNavItems({ pathname, items: navItems })}
+        {renderNavItems({ pathname, items: navItems, userRole })}
       </Box>
       <Divider sx={{ borderColor: "var(--mui-palette-neutral-700)" }} />
     </Drawer>
@@ -98,24 +98,19 @@ function renderNavItems({
 }: {
   items?: NavItemConfig[];
   pathname: string;
-  collapsed: boolean;
   userRole: string;
 }): React.JSX.Element {
-  const children = items.reduce(
-    (acc: React.ReactNode[], curr: NavItemConfig): React.ReactNode[] => {
-      const { key, ...item } = curr;
+  const children = items.reduce<React.ReactNode[]>((acc, curr) => {
+    const { key, ...item } = curr;
 
-      // Apply filtering logic for "Users" and non-admin users
-      if (item.title === "Users" && userRole !== "admin") {
-        return acc;
-      }
+    // Conditionally exclude "Users" for non-admin roles
+    if (item.title === "Users" && userRole !== "admin") {
+      return acc; // Skip if not admin
+    }
 
-      acc.push(<NavItem key={key} pathname={pathname} {...item} />);
-
-      return acc;
-    },
-    []
-  );
+    acc.push(<NavItem key={key} pathname={pathname} {...item} />);
+    return acc;
+  }, []);
 
   return (
     <Stack component="ul" spacing={1} sx={{ listStyle: "none", m: 0, p: 0 }}>

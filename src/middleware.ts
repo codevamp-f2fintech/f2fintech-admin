@@ -27,6 +27,13 @@ export async function middleware(request: NextRequest) {
         );
         const { payload } = await jwtVerify(token, jwtSecret);
         const role = payload.role;
+
+        // Check if the route is restricted for agents
+        if (role !== "agent" && request.nextUrl.pathname.startsWith("/user")) {
+          // Redirect agents trying to access /user or its subroutes
+          return NextResponse.redirect(new URL("/unauthorized", request.url));
+        }
+
         // Check if role is admin or agent
         if (role !== "admin" && role !== "agent") {
           return NextResponse.redirect(new URL("/unauthorized", request.url));

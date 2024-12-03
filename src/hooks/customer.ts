@@ -20,20 +20,26 @@ export const useGetCustomers = (
   pathKey: string,
   page: number = 1,
   limit: number = 6,
-  shouldFetch: boolean = true    // Add shouldFetch to control fetching
+  shouldFetch: boolean = true // Add shouldFetch to control fetching
 ) => {
-  const { data: swrData, error, isValidating } = useSWR<Customer | null>(
+  console.log("calling api", page);
+  const {
+    data: swrData,
+    error,
+    isValidating,
+  } = useSWR<Customer | null>(
     shouldFetch ? `${pathKey}?page=${page}&limit=${limit}` : null, // Use null to pause fetching
     fetcher,
     {
       fallbackData: initialData,
-      refreshInterval: initialData ? 3600000 : 0, // 1 hour refresh if initialData exists
+      refreshInterval: 0, // 1 hour refresh if initialData exists
       revalidateOnFocus: false, // Disable revalidation on window focus
     }
   );
 
   // Manually re-trigger re-fetch
   const refetch = async () => {
+    console.log("refetching>>>", page);
     if (shouldFetch) {
       await mutate(`${pathKey}?page=${page}&limit=${limit}`);
     }
