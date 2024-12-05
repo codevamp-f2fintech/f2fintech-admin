@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
@@ -24,8 +23,6 @@ import type { AppDispatch, RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import { setTickets } from "@/redux/features/ticketSlice";
 
-const ITEMS_PER_PAGE = 6;
-
 const Ticket = () => {
   const [filteredApplications, setFilteredApplications] = useState([]);
   const [filter, setFilter] = useState("");
@@ -33,7 +30,6 @@ const Ticket = () => {
   const [sortBy, setSortBy] = useState("to do");
   const [startDate, setStartDate] = useState<Dayjs | null>(null);
   const [endDate, setEndDate] = useState<Dayjs | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const { tickets } = useSelector((state: RootState) => state.ticket);
 
   const isMobile = useMediaQuery("(max-width:600px)");
@@ -48,20 +44,20 @@ const Ticket = () => {
   const apiEndpoint = selectedUser
     ? `get-all-tickets/${selectedUser.id}`
     : userRole === "admin"
-      ? sortBy === "all"
-        ? `get-all-tickets`
-        : `get-all-tickets?status=${sortBy}`
-      : userRole === "agent"
-        ? sortBy === "all"
-          ? `get-all-tickets/${decodedToken()?.id}?isAgent=true`
-          : `get-all-tickets/${decodedToken()?.id}?isAgent=true&status=${sortBy}`
-        : `get-all-tickets`;
+    ? sortBy === "all"
+      ? `get-all-tickets`
+      : `get-all-tickets?status=${sortBy}`
+    : userRole === "agent"
+    ? sortBy === "all"
+      ? `get-all-tickets/${decodedToken()?.id}?isAgent=true`
+      : `get-all-tickets/${decodedToken()?.id}?isAgent=true&status=${sortBy}`
+    : `get-all-tickets`;
 
   const { value: ticketData } = useGetTickets(
     {} as Ticket,
     apiEndpoint,
-    currentPage,
-    ITEMS_PER_PAGE
+    1,
+    100
   );
 
   const [userData, setUserData] = useState({});
@@ -91,13 +87,20 @@ const Ticket = () => {
     if (ticketData?.results) {
       dispatch(setTickets(ticketData));
       const fetchApplications = async () => {
-        const applicationIds = ticketData.results.map(ticket => ticket.customer_application_id);
+        const applicationIds = ticketData.results.map(
+          (ticket) => ticket.customer_application_id
+        );
         try {
           const fetchedApplications = await Promise.all(
-            applicationIds.map(id => fetcher(`get-application-as-ticket/${id}`))
+            applicationIds.map((id) =>
+              fetcher(`get-application-as-ticket/${id}`)
+            )
           );
-          const combinedData = fetchedApplications.flatMap(item => item?.data || []);
+          const combinedData = fetchedApplications.flatMap(
+            (item) => item?.data || []
+          );
           setFilteredApplications(combinedData);
+          console.log("Applications Fetched:", combinedData);
         } catch (err) {
           console.error("Fetch error:", err);
         }
@@ -108,13 +111,17 @@ const Ticket = () => {
 
   useEffect(() => {
     if (tickets?.results?.length) {
-      dispatch(setTickets(tickets));  // Update Redux store with the latest tickets when sortBy changes
+      dispatch(setTickets(tickets)); // Update Redux store with the latest tickets when sortBy changes
     }
   }, [sortBy, selectedUser, tickets?.results]);
 
-  const handleStartClick = async (customerId: string | number, applicationId: string | number, estimate: number) => {
-    const selectedTicket = ticketData?.results.find(ticket =>
-      ticket?.customer_application_id === applicationId
+  const handleStartClick = async (
+    customerId: string | number,
+    applicationId: string | number,
+    estimate: number
+  ) => {
+    const selectedTicket = ticketData?.results.find(
+      (ticket) => ticket?.customer_application_id === applicationId
     );
 
     if (selectedTicket) {
@@ -122,7 +129,9 @@ const Ticket = () => {
       const generatedTicketId = `F2FIN-${ticketId}`;
       remLocalStorage("ticketId");
       setLocalStorage("ticketId", generatedTicketId);
-      router.push(`/progress?customerId=${customerId}&applicationId=${applicationId}`);
+      router.push(
+        `/progress?customerId=${customerId}&applicationId=${applicationId}`
+      );
     } else {
       console.error("Ticket not found:", customerId, applicationId);
     }
@@ -140,7 +149,9 @@ const Ticket = () => {
       const regex = new RegExp(filter, "i");
       filtered = filtered.filter(
         (app: CustomerData) =>
-          regex.test(app.Name) || regex.test(app.Amount.toString()) || app.Tenure.toString() === filter
+          regex.test(app.Name) ||
+          regex.test(app.Amount.toString()) ||
+          app.Tenure.toString() === filter
       );
     }
 
@@ -149,8 +160,10 @@ const Ticket = () => {
       const start = startDate ? new Date(startDate) : null;
       const end = endDate ? new Date(endDate) : null;
 
-      filtered = filtered.filter(app => {
-        const selectedTicket = tickets?.results?.find(ticket => ticket.customer_application_id === app.applicationId);
+      filtered = filtered.filter((app) => {
+        const selectedTicket = tickets?.results?.find(
+          (ticket) => ticket.customer_application_id === app.applicationId
+        );
         const createdAt = new Date(selectedTicket?.created_at);
 
         if (start && end) return createdAt >= start && createdAt <= end;
@@ -159,23 +172,15 @@ const Ticket = () => {
         return true;
       });
     }
-    console.log(filtered, 'filtered apps')
+    console.log(filtered, "filtered apps");
     return filtered;
   };
 
-  const ticketCount = (status: string): number => {
-    const ticketResults = tickets?.results || [];
-
-    if (status === "all") {
-      return ticketResults.length;
-    }
-    return ticketResults.filter((ticket) => ticket.status === status).length;
+  const ticketCount = (): number | undefined => {
+    return tickets?.total;
   };
 
-  const paginatedApplications = filterTickets().slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  const paginatedApplications = filterTickets().slice();
 
   const handlePageChange = (
     event: React.ChangeEvent<unknown>,
@@ -221,25 +226,50 @@ const Ticket = () => {
           marginBottom: "0",
         }}
       >
-        <Grid container spacing={2} sx={{ paddingLeft: 0, justifyContent: "center", alignItems: "center" }}>
+        <Grid
+          container
+          spacing={2}
+          sx={{
+            paddingLeft: 0,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           {paginatedApplications.length > 0 ? (
             paginatedApplications.map((application, id) => {
-              const ticket = tickets?.results?.find(ticket => ticket.customer_application_id === application.applicationId);
-              return <ApplicationCard key={id} contact={application} ticket={ticket} handleStartClick={handleStartClick} />;
+              const ticket = tickets?.results?.find(
+                (ticket) =>
+                  ticket.customer_application_id === application.applicationId
+              );
+              return (
+                <ApplicationCard
+                  key={id}
+                  contact={application}
+                  ticket={ticket}
+                  handleStartClick={handleStartClick}
+                />
+              );
             })
           ) : (
-            <Typography sx={{ width: "100%", textAlign: "center", mt: "20vh", color: "text.secondary" }}>
-              {userRole === "admin" ? "No Tickets Found" : <Link href="/home">No Tickets Found. Start Picking Some By Clicking Here!</Link>}
+            <Typography
+              sx={{
+                width: "100%",
+                textAlign: "center",
+                mt: "20vh",
+                color: "text.secondary",
+              }}
+            >
+              {userRole === "admin" ? (
+                "No Tickets Found"
+              ) : (
+                <Link href="/home">
+                  No Tickets Found. Start Picking Some By Clicking Here!
+                </Link>
+              )}
             </Typography>
           )}
         </Grid>
       </Box>
-      <Pagination
-        count={Math.ceil(filterTickets().length / ITEMS_PER_PAGE)}
-        page={currentPage}
-        onChange={handlePageChange}
-        sx={{ mt: 4 }}
-      />
     </Box>
   );
 };

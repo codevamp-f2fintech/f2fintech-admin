@@ -3,6 +3,7 @@
 import * as React from "react";
 import RouterLink from "next/link";
 import { usePathname } from "next/navigation";
+
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import Drawer from "@mui/material/Drawer";
@@ -17,6 +18,7 @@ import { navItems } from "./config";
 
 import { navIcons } from "./nav-icons";
 import { useMediaQuery } from "@mui/material";
+import { Utility } from "@/utils"; // Assuming Utility provides userRole
 
 export interface MobileNavProps {
   onClose?: () => void;
@@ -31,6 +33,8 @@ export function MobileNav({
   const pathname = usePathname();
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const { decodedToken } = Utility();
+  const userRole = decodedToken()?.role;
 
   return (
     <Drawer
@@ -77,31 +81,10 @@ export function MobileNav({
         >
           <Logo color="light" height={32} width={122} />
         </Box>
-        <Box
-          sx={{
-            alignItems: "center",
-            backgroundColor: "var(--mui-palette-neutral-950)",
-            border: "1px solid var(--mui-palette-neutral-700)",
-            borderRadius: "20px",
-            cursor: "pointer",
-            display: "flex",
-            p: "4px 12px",
-          }}
-        >
-          {/* <Box sx={{ flex: "1 1 auto" }}>
-            <Typography color="var(--mui-palette-neutral-400)" variant="body2">
-              Workspace
-            </Typography>
-            <Typography color="inherit" variant="subtitle1">
-              Devias
-            </Typography>
-          </Box> */}
-          {/* <CaretUpDownIcon /> */}
-        </Box>
       </Stack>
       <Divider sx={{ borderColor: "var(--mui-palette-neutral-700)" }} />
       <Box component="nav" sx={{ flex: "1 1 auto", p: "12px" }}>
-        {renderNavItems({ pathname, items: navItems })}
+        {renderNavItems({ pathname, items: navItems, userRole })}
       </Box>
       <Divider sx={{ borderColor: "var(--mui-palette-neutral-700)" }} />
     </Drawer>
@@ -111,20 +94,23 @@ export function MobileNav({
 function renderNavItems({
   items = [],
   pathname,
+  userRole,
 }: {
   items?: NavItemConfig[];
   pathname: string;
+  userRole: string;
 }): React.JSX.Element {
-  const children = items.reduce(
-    (acc: React.ReactNode[], curr: NavItemConfig): React.ReactNode[] => {
-      const { key, ...item } = curr;
+  const children = items.reduce<React.ReactNode[]>((acc, curr) => {
+    const { key, ...item } = curr;
 
-      acc.push(<NavItem key={key} pathname={pathname} {...item} />);
+    // Conditionally exclude "Users" for non-admin roles
+    if (item.title === "Users" && userRole !== "admin") {
+      return acc; // Skip if not admin
+    }
 
-      return acc;
-    },
-    []
-  );
+    acc.push(<NavItem key={key} pathname={pathname} {...item} />);
+    return acc;
+  }, []);
 
   return (
     <Stack component="ul" spacing={1} sx={{ listStyle: "none", m: 0, p: 0 }}>
@@ -213,10 +199,10 @@ function NavItem({
           <Typography
             component="span"
             sx={{
-              color: "inherit",
-              fontSize: "0.875rem",
+              color: "white",
+              fontSize: "1rem",
               fontWeight: 500,
-              lineHeight: "28px",
+              lineHeight: "1.2rem",
             }}
           >
             {title}

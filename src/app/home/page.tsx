@@ -1,20 +1,7 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
-
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
-import {
-  Grid,
-  Button,
-  TextField,
-  Typography,
-  Box,
-  InputAdornment,
-  useMediaQuery,
-  Pagination,
-} from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-
+import { Grid, Button, TextField, Typography, Box } from "@mui/material";
 import ApplicationCard from "../components/ticket/ApplicationCard";
 import Loader from "../components/common/Loader";
 import { useDispatch, useSelector } from "react-redux";
@@ -24,19 +11,16 @@ import { setCustomers } from "@/redux/features/customerSlice";
 import { useGetCustomers } from "@/hooks/customer";
 import { Utility } from "@/utils";
 
-const ITEMS_PER_PAGE = 6; // Number of items per page
+const ITEMS_PER_PAGE = 6;
 
 const Home: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState<number>(1); // For frontend pagination
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const [paginationLoading, setPaginationLoading] = useState<boolean>(false);
-
+  const [hasMoreData, setHasMoreData] = useState<boolean>(true);
   const dispatch: AppDispatch = useDispatch();
   const { customer } = useSelector((state: RootState) => state.customer);
   const { decodedToken } = Utility();
-  const isMobile = useMediaQuery("(max-width:600px)");
-  const isTab = useMediaQuery("(min-width:601px) and (max-width:1000px)");
-
   const {
     value: data,
     error: getApplicationsError,
@@ -47,38 +31,57 @@ const Home: React.FC = () => {
     currentPage,
     ITEMS_PER_PAGE
   );
-
-  // Function to update customer data after refetching
-  const updateCustomerData = (fetchedData: Customer) => {
-    dispatch(setCustomers(fetchedData));
-    setPaginationLoading(false);
-  };
-  // Memoize the filtered customer list to optimize re-renders
+  // Separate effect for data updates to isolate dispatching logic
+  useEffect(() => {
+    const updateCustomers = () => {
+      if (data && data.results && data.results.length > 0) {
+        // Combine existing results with new results if on a page after first
+        const updatedResults =
+          currentPage > 1
+            ? [...(customer?.results || []), ...data.results]
+            : data.results;
+        const updatedCustomerData = {
+          ...data,
+          results: updatedResults,
+        };
+        dispatch(setCustomers(updatedCustomerData));
+        // Update hasMoreData flag
+        setHasMoreData(data.results.length === ITEMS_PER_PAGE);
+        setPaginationLoading(false);
+      } else if (data && data.results.length === 0) {
+        // No more data found
+        setHasMoreData(false);
+        setPaginationLoading(false);
+      } else if (getApplicationsError) {
+        setPaginationLoading(false);
+        setHasMoreData(false);
+      }
+    };
+    // Use setTimeout to break potential sync update cycles
+    const timeoutId = setTimeout(updateCustomers, 0);
+    return () => clearTimeout(timeoutId);
+  }, [data, getApplicationsError, dispatch, currentPage]);
+  // Pagination scroll handler
+  const handleScroll = useCallback(() => {
+    if (
+      window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 &&
+      !swrLoading &&
+      !paginationLoading &&
+      hasMoreData
+    ) {
+      setPaginationLoading(true);
+      setCurrentPage((prevPage) => prevPage + 1);
+    }
+  }, [swrLoading, paginationLoading, hasMoreData]);
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
   const filteredCustomers = useMemo(() => {
     return customer?.results?.filter((val) =>
       val.Name.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [searchTerm, customer?.results]);
-
-  // Handle API response
-  useEffect(() => {
-    if (data) {
-      updateCustomerData(data);
-    } else if (getApplicationsError) {
-      setPaginationLoading(false);
-    } else {
-      updateCustomerData(data);
-      setPaginationLoading(false);
-    }
-  }, [data?.results, currentPage, getApplicationsError]);
-
-  // Handle page change for pagination
-  const handlePageChange = (
-    event: React.ChangeEvent<unknown>,
-    page: number
-  ) => {
-    setCurrentPage(page);
-  };
 
   return (
     <Box
@@ -89,116 +92,76 @@ const Home: React.FC = () => {
         flexDirection: "column",
       }}
     >
-      <Box
-        sx={{
-          height: "10vh",
-          width: isMobile ? "90vw" : isTab ? "70vh" : "80vw",
-          display: "flex",
-          flexDirection: "row",
-          justifyContent: "space-evenly",
-          alignItems: "center",
-          padding: "0.1rem",
-        }}
-      >
-        <Typography
-          variant="h6"
-          component="div"
+      <Box sx={{ display: "flex", flexDirection: "row", width: "100%" }}>
+        <Box
           sx={{
-            fontWeight: "bold",
-            color: "black",
-            whiteSpace: "nowrap",
-            fontSize: isMobile ? "1rem" : isTab ? "1.7rem" : "2rem",
+            height: "10vh",
+            width: "30vw",
+            display: "flex",
+            alignItems: "center",
           }}
         >
-          New Applications: {customer?.total || 0}
-        </Typography>
-        <TextField
-          label="Search by name..."
-          size="small"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          sx={{
-            backgroundColor: "#f2f2f2",
-            marginLeft: isMobile ? "1vw" : isTab ? "" : "25vw",
-            width: isMobile ? "80vw" : isTab ? "23vw" : "15vw",
-
-            borderRadius: "20px",
-            "& .MuiInputLabel-root": {
-              color: "black",
-            },
-            "& .MuiInputBase-root": {
-              borderRadius: "20px",
-            },
-            "& .MuiFilledInput-root": {
-              backgroundColor: "white",
-            },
-          }}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <SearchIcon sx={{ color: "black", fontSize: "1.5rem" }} />
-              </InputAdornment>
-            ),
-          }}
-          InputLabelProps={{
-            style: {
-              color: "black", // Label color
-            },
-          }}
-        />
-        <Link href="/ticket" passHref>
-          <Button
-            variant="contained"
-            sx={{
-              width: isMobile ? "20vw" : isTab ? "20vw" : "15vw",
-              borderRadius: "12px",
-              backgroundColor: "#1565c0",
-              color: "white",
-              fontSize: ".9rem",
-              fontWeight: "400",
-            }}
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{ fontWeight: "bold", fontSize: "1.8rem" }}
           >
-            {decodedToken()?.role === "admin"
-              ? "Show Tickets"
-              : "Show My Tickets"}
-          </Button>
-        </Link>
+            New Applications: {customer?.total || 0}
+          </Typography>
+        </Box>
+        <Box
+          sx={{
+            height: "10vh",
+            width: "30vw",
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-evenly",
+            alignItems: "center",
+            ml: "19vw",
+          }}
+        >
+          <TextField
+            label="Search by name..."
+            size="small"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            sx={{ width: "12vw" }}
+          />
+          <Link href="/ticket" passHref>
+            <Button variant="contained">
+              {decodedToken()?.role === "admin"
+                ? "Show Tickets"
+                : "Show My Tickets"}
+            </Button>
+          </Link>
+        </Box>
       </Box>
-
-      <Box
-        sx={{
-          minWidth: "80vw",
-          minHeight: "90vh",
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-        }}
-      >
-        <Grid container spacing={2} paddingLeft={7}>
+      <Box sx={{ minWidth: "80vw", minHeight: "90vh" }}>
+        <Grid container spacing={2}>
           {!filteredCustomers?.length ? (
             <Typography>No Applications Found</Typography>
           ) : (
             filteredCustomers.map((contact, index) => (
               <ApplicationCard
                 contact={contact}
-                key={index}
+                key={contact.Id || index}
                 handleStartClick={undefined}
               />
             ))
           )}
         </Grid>
+        {!hasMoreData && filteredCustomers?.length > 0 && (
+          <Typography
+            variant="body2"
+            align="center"
+            sx={{ mt: 2, color: "text.secondary" }}
+          >
+            No more applications to load
+          </Typography>
+        )}
       </Box>
-
-      <Pagination
-        count={Math.ceil((customer?.total || 0) / ITEMS_PER_PAGE)}
-        page={currentPage}
-        onChange={handlePageChange}
-        sx={{ mt: 4 }}
-      />
-
-      {swrLoading || paginationLoading ? <Loader /> : null}
+      {(swrLoading || paginationLoading) && <Loader />}
     </Box>
   );
 };
-
 export default Home;

@@ -60,12 +60,12 @@ export function SideNav(): React.JSX.Element {
         color: "var(--SideNav-color)",
         display: { xs: "none", lg: "flex" },
         flexDirection: "column",
-        height: "100vh", // Using vh for height
+        height: "100vh",
         left: 0,
         position: "sticky",
         scrollbarWidth: "none",
         top: 0,
-        width: collapsed ? "5vw" : "15vw", // Adjusted width based on state
+        width: collapsed ? "5vw" : "15vw",
         zIndex: "var(--SideNav-zIndex)",
         transition: "width 0.3s",
         "&::-webkit-scrollbar": { display: "none" },
