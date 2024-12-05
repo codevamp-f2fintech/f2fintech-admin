@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
@@ -24,8 +23,6 @@ import type { AppDispatch, RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import { setTickets } from "@/redux/features/ticketSlice";
 
-const ITEMS_PER_PAGE = 6;
-
 const Ticket = () => {
   const [filteredApplications, setFilteredApplications] = useState([]);
   const [filter, setFilter] = useState("");
@@ -33,7 +30,6 @@ const Ticket = () => {
   const [sortBy, setSortBy] = useState("to do");
   const [startDate, setStartDate] = useState<Dayjs | null>(null);
   const [endDate, setEndDate] = useState<Dayjs | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const { tickets } = useSelector((state: RootState) => state.ticket);
 
   const isMobile = useMediaQuery("(max-width:600px)");
@@ -60,8 +56,8 @@ const Ticket = () => {
   const { value: ticketData } = useGetTickets(
     {} as Ticket,
     apiEndpoint,
-    currentPage,
-    ITEMS_PER_PAGE
+    1,
+    100
   );
 
   const [userData, setUserData] = useState({});
@@ -180,19 +176,11 @@ const Ticket = () => {
     return filtered;
   };
 
-  const ticketCount = (status: string): number => {
-    const ticketResults = tickets?.results || [];
-
-    if (status === "all") {
-      return ticketResults.length;
-    }
-    return ticketResults.filter((ticket) => ticket.status === status).length;
+  const ticketCount = (): number | undefined => {
+    return tickets?.total;
   };
 
-  const paginatedApplications = filterTickets().slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  const paginatedApplications = filterTickets().slice();
 
   const handlePageChange = (
     event: React.ChangeEvent<unknown>,
@@ -282,12 +270,6 @@ const Ticket = () => {
           )}
         </Grid>
       </Box>
-      <Pagination
-        count={Math.ceil(filterTickets().length / ITEMS_PER_PAGE)}
-        page={currentPage}
-        onChange={handlePageChange}
-        sx={{ mt: 4 }}
-      />
     </Box>
   );
 };

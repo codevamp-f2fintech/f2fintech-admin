@@ -34,6 +34,7 @@ export const useGetCustomers = (
       fallbackData: initialData,
       refreshInterval: 0, // 1 hour refresh if initialData exists
       revalidateOnFocus: false, // Disable revalidation on window focus
+      dedupingInterval: 1000,
     }
   );
 
