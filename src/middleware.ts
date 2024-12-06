@@ -4,11 +4,16 @@ import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
+import router from "next/router";
+
 // Adjust the path according to your project structure
 
 export async function middleware(request: NextRequest) {
   const cookieStore = cookies();
   const token = cookieStore.get("token")?.value;
+  const unauthorised = () => {
+    router.push("/unauthorised"); // Redirect to home page
+  };
 
   // Redirect to the login page if not authenticated
   // localhost:3002/img/f2Fintechlogo.png
@@ -31,12 +36,12 @@ export async function middleware(request: NextRequest) {
         // Check if the route is restricted for agents
         if (role === "agent" && request.nextUrl.pathname.startsWith("/user")) {
           // Redirect agents trying to access /user or its subroutes
-          return NextResponse.redirect(new URL("/unauthorized", request.url));
+          return NextResponse.redirect(new URL("/unauthorised", request.url));
         }
 
         // Check if role is admin or agent
         if (role !== "admin" && role !== "agent") {
-          return NextResponse.redirect(new URL("/unauthorized", request.url));
+          return NextResponse.redirect(new URL("/unauthorised", request.url));
         }
       } catch (error) {
         return NextResponse.redirect(new URL("/login", request.url));

@@ -57,10 +57,12 @@ const Home: React.FC = () => {
         setHasMoreData(false);
       }
     };
+
     // Use setTimeout to break potential sync update cycles
     const timeoutId = setTimeout(updateCustomers, 0);
     return () => clearTimeout(timeoutId);
   }, [data, getApplicationsError, dispatch, currentPage]);
+
   // Pagination scroll handler
   const handleScroll = useCallback(() => {
     if (
@@ -73,6 +75,7 @@ const Home: React.FC = () => {
       setCurrentPage((prevPage) => prevPage + 1);
     }
   }, [swrLoading, paginationLoading, hasMoreData]);
+
   useEffect(() => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
