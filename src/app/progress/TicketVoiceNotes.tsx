@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import axios from "axios";
 import {
   Box,
   Grid,
@@ -9,18 +10,22 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AudioFileIcon from "@mui/icons-material/Audiotrack";
+
 import Toast from "../components/common/Toast";
 import { Utility } from "@/utils";
 import { useDispatch, useSelector } from "react-redux";
-import axios from "axios";
+import { Upload } from "@mui/icons-material";
+import { RootState } from "@/redux/store";
 
 const TicketVoiceNotes = ({ isMobile, isTab, notes, setFieldValue }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 3;
   const [selectedAudioFile, setSelectedAudioFile] = useState();
+  const [uploaded, setUploaded] = useState(false);
   const inputRef = useRef(null);
+  const dispatch = useDispatch();
   const { toast } = useSelector((state: RootState) => state.toast);
-  const { decodedToken, toastAndNavigate } = Utility();
+  const { toastAndNavigate } = Utility();
 
   const totalPages = Math.ceil(notes ? notes?.length / itemsPerPage : 0);
 
@@ -28,9 +33,8 @@ const TicketVoiceNotes = ({ isMobile, isTab, notes, setFieldValue }) => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const displayedNotes = notes?.slice(startIndex, startIndex + itemsPerPage);
 
-  const handleAttachmentAudioDelete = (index) => {
-    const updatedFiles = selectedAudioFile.filter((_, i) => i !== index);
-    setSelectedAudioFile(updatedFiles);
+  const handleAttachmentAudioDelete = () => {
+    setSelectedAudioFile(null);
     // setFieldValue("data", updatedFiles);
     if (inputRef.current) {
       inputRef.current.value = ""; // Reset the value of the input element
@@ -50,7 +54,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, notes, setFieldValue }) => {
           formData.append("folder", `voice-note/${selectedAudioFile.name}`);
 
           const uploadResponse = await axios.post(
-            `${process.env.NNEXT_PUBLIC_WEB_URL}/upload-to-s3`,
+            `${process.env.NEXT_PUBLIC_WEB_URL}/upload-to-s3`,
             formData,
             {
               headers: {
@@ -59,27 +63,22 @@ const TicketVoiceNotes = ({ isMobile, isTab, notes, setFieldValue }) => {
             }
           );
           attachmentUrl = uploadResponse.data.data;
+          setUploaded(true);
+          toastAndNavigate(dispatch, true, "info", "Uploaded Successfully");
         } catch (err) {
           console.log("Error uploading attachment:", err);
           toastAndNavigate(
             dispatch,
             true,
             "error",
-            "Error uploading attachment"
+            "Error uploading voice note"
           );
         }
       }
     } catch (error) {
-      toastAndNavigate(dispatch, true, "error", "Error Creating Comment");
-      console.log("Error creating the comment:", error);
+      console.log("Error uploading voice note:", error);
     }
   }, [selectedAudioFile, toastAndNavigate]);
-
-  useEffect(() => {
-    if (selectedAudioFile) {
-      handleVoiceNoteUpload();
-    }
-  }, [selectedAudioFile]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -111,7 +110,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, notes, setFieldValue }) => {
             fontSize: isMobile ? ".7rem" : isTab ? "1rem" : "1rem",
           }}
         >
-          Voice Notes:
+          Voice Note:
         </Typography>
 
         {/* Display existing notes */}
@@ -207,16 +206,17 @@ const TicketVoiceNotes = ({ isMobile, isTab, notes, setFieldValue }) => {
             >
               <Typography>{selectedAudioFile.name}</Typography>
               <IconButton
-                onClick={() => handleAttachmentAudioDelete(0)}
+                onClick={() => handleAttachmentAudioDelete()}
                 sx={{ ml: 2 }}
               >
                 <DeleteIcon />
               </IconButton>
+              {!uploaded && <Upload onClick={handleVoiceNoteUpload} />}
               {/* Audio Player for Each Selected File */}
-              <audio controls sx={{ width: "100%" }}>
+              <audio controls style={{ width: "100%" }}>
                 <source
                   src={URL.createObjectURL(selectedAudioFile)}
-                  type="audio/mp3"
+                  type={selectedAudioFile.type || "audio/*"}
                 />
                 Your browser does not support the audio element.
               </audio>
