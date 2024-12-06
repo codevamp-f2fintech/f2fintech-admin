@@ -63,7 +63,7 @@ const TicketDocuments = ({ isMobile, isTab, documents }) => {
                   borderRadius: "8px",
                   boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
                   transition: "transform 0.2s ease",
-                  width: "30vw",
+                  width: isMobile ? "50vw" : isTab ? "43vw" : "38.5vw",
                   marginLeft: "1.5rem",
                   "&:hover": {
                     transform: "scale(1.02)",
@@ -102,16 +102,34 @@ const TicketDocuments = ({ isMobile, isTab, documents }) => {
               display: "flex",
               justifyContent: "space-between",
               marginTop: 2,
-              width: "100%",
+              width: isMobile ? "48vw" : isTab ? "44vw" : "38vw",
+              mr: isMobile ? "2vw" : "",
             }}
           >
             <Button
               variant="contained"
               color="primary"
+              sx={{
+                mr: ".5rem",
+                height: isMobile ? "3vh" : isTab ? "3vh" : "",
+                width: isMobile ? "1vw" : isTab ? "" : "5vw",
+              }}
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((prev) => prev - 1)}
             >
               Previous
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              sx={{
+                height: isMobile ? "3vh" : isTab ? "3vh" : "",
+                width: "5vw",
+              }}
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((prev) => prev + 1)}
+            >
+              Next
             </Button>
             <Typography
               variant="body2"
@@ -119,18 +137,12 @@ const TicketDocuments = ({ isMobile, isTab, documents }) => {
                 color: "white",
                 textAlign: "center",
                 flexGrow: 1,
+                mt: isMobile ? "" : isTab ? "1rem" : ".5rem",
+                mr: isMobile ? "" : isTab ? "20vw" : "20vw",
               }}
             >
               Page {currentPage} of {totalPages}
             </Typography>
-            <Button
-              variant="contained"
-              color="primary"
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((prev) => prev + 1)}
-            >
-              Next
-            </Button>
           </Box>
         )}
       </Paper>

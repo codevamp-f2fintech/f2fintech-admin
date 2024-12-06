@@ -83,7 +83,7 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
           formData.append("folder", `comment/${attachment.name}`);
 
           const uploadResponse = await axios.post(
-            `${process.env.NEXT_PUBLIC_API_URL}/upload-to-s3`,
+            `${process.env.NEXT_PUBLIC_WEB_URL}/upload-to-s3`,
             formData,
             {
               headers: {
@@ -217,9 +217,9 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
   const paginatedComments =
     comments && comments.data
       ? comments.data.slice(
-        (currentPage - 1) * ITEMS_PER_PAGE,
-        currentPage * ITEMS_PER_PAGE
-      )
+          (currentPage - 1) * ITEMS_PER_PAGE,
+          currentPage * ITEMS_PER_PAGE
+        )
       : [];
 
   return (

@@ -44,7 +44,11 @@ import {
   fetchEmployeeStatus,
 } from "../../redux/features/employeeSlice";
 import { Utility } from "@/utils";
-import { useCreateTicketHistory, useGetTicketHistory } from "@/hooks/tickethistory";
+import {
+  useCreateTicketHistory,
+  useGetTicketHistory,
+} from "@/hooks/tickethistory";
+import TicketVoiceNotes from "./TicketVoiceNotes";
 
 const Progress: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -66,6 +70,7 @@ const Progress: React.FC = () => {
     status: employeeStatus,
     loanStatus,
     documents,
+    notes,
   } = useSelector((state: RootState) => state.employee);
   const { toast } = useSelector((state: RootState) => state.toast);
 
@@ -145,9 +150,12 @@ const Progress: React.FC = () => {
     }
   }, [workLog?.data, timeLoggingEstimate.originalEstimate]);
 
-
   useEffect(() => {
-    if (ids?.applicationId && ids?.customerId && (!documents?.length || !loanStatus || !employeeStatus)) {
+    if (
+      ids?.applicationId &&
+      ids?.customerId &&
+      (!documents?.length || !loanStatus || !employeeStatus)
+    ) {
       dispatch(
         fetchStatusAndDocuments({
           applicationId: ids.applicationId,
@@ -181,7 +189,6 @@ const Progress: React.FC = () => {
       setTicketId(storedTicketId);
     }
   }, [ticketId]);
-
 
   const handleInputChange = (event) => {
     const value = event.target.value;
@@ -282,10 +289,10 @@ const Progress: React.FC = () => {
           <Container
             sx={{
               display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
+              justifyContent: isMobile ? "" : isTab ? "" : "center",
+              alignItems: isMobile ? "" : isTab ? "" : "center",
               width: isMobile ? "95vw" : isTab ? "92vw" : "76vw",
-              height: isMobile ? "" : isTab ? "80vh" : "",
+              height: isMobile ? "" : isTab ? "100vh" : "",
             }}
           >
             <Grid
@@ -319,7 +326,11 @@ const Progress: React.FC = () => {
                     isTab={isTab}
                     documents={documents}
                   />
-
+                  <TicketVoiceNotes
+                    isMobile={isMobile}
+                    isTab={isTab}
+                    notes={notes}
+                  />
                   <Box
                     mt={4}
                     mb={4}
@@ -584,8 +595,8 @@ const Progress: React.FC = () => {
                           fontSize: isMobile
                             ? ".8rem"
                             : isTab
-                              ? ".9rem"
-                              : "14px",
+                            ? ".9rem"
+                            : "14px",
                           fontWeight: "bold",
                           color: "white",
                           marginLeft: ".5rem",
