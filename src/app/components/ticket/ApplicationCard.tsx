@@ -250,7 +250,7 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
                 flexDirection: "column",
                 gap: 1.5,
                 bgcolor: "rgba(255,255,255,0.9)",
-                borderRadius: 2,
+                borderRadius: "10px 10px 0px 0px",
                 p: 2,
                 boxShadow: "inset 0 2px 4px rgba(0,0,0,0.1)",
                 minHeight: isMobile ? "35vh" : isTab ? "20vh" : "40vh",
@@ -357,11 +357,16 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
             </Box>
           )}
           {ticket && (
-            <Box sx={{ display: "flex" }}>
+            <Box
+              sx={{
+                display: "flex",
+                borderRadius: "0px 0px 20px 20px",
+              }}
+            >
               <Button
                 variant="contained"
                 color="primary"
-                sx={{ width: "100%", borderRadius: 0 }}
+                sx={{ width: "100%", borderRadius: "0px 0px 0px 10px" }}
                 onClick={() =>
                   handleStartClick(
                     contact.Id,
@@ -375,7 +380,7 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
               <Button
                 variant="contained"
                 color="primary"
-                sx={{ width: "100%", borderRadius: 0 }}
+                sx={{ width: "100%", borderRadius: "0px 0px 10px 0px" }}
                 onClick={toggleHistory}
               >
                 {showHistory ? "Close History" : "Show History"}
