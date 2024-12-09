@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Grid,
   Button,
@@ -23,6 +23,7 @@ import { useCreateTicket } from "@/hooks/ticket";
 import { Utility } from "@/utils";
 import { useGetCustomers, useModifyCustomer } from "@/hooks/customer";
 import { Customer } from "@/types/customer";
+import { fetcher } from "@/apis/apiClient";
 
 function InfoRow({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
@@ -55,10 +56,11 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
   const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [limit] = useState<number>(6);
-  const { createTicket, error } = useCreateTicket("create-ticket", {});
+  const [showHistory, setShowHistory] = useState<boolean>(false); // New state variable
+  const [historyData, setHistoryData] = useState<any[]>([]);
   const { decodedToken, capitalizeFirstLetter } = Utility();
   const isMobile = useMediaQuery("(max-width:600px)");
-  const isTab = useMediaQuery("(min-width:601px) and (max-width:1000px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
   const { refetch } = useGetCustomers(
     {} as Customer,
@@ -67,10 +69,25 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
     limit
   );
 
+  const { createTicket, error } = useCreateTicket("create-ticket", {});
   // Hook for modifying loan application is_picked column
   const { modifyCustomer: modifyCustomerApplication } = useModifyCustomer(
     "update-loan-application"
   );
+
+  useEffect(() => {
+    if (showHistory && ticket) {
+      const fetchHistoryData = async () => {
+        try {
+          const { data } = await fetcher(`get-ticket-histories/${ticket.id}`);
+          setHistoryData(data);
+        } catch (error) {
+          console.error("Error fetching history data:", error);
+        }
+      };
+      fetchHistoryData();
+    }
+  }, [showHistory, ticket]);
 
   // Function to calculate the number of days ago
   const calculateDaysAgo = (date: string) => {
@@ -79,6 +96,11 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
     const diffTime = Math.abs(today.getTime() - addedDate.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
+  };
+
+  const cleanActionText = (text) => {
+    // Remove <b> tags and <br> tags
+    return text.replace(/<\/?b>/g, "").replace(/<br\s*\/?>/g, " ");
   };
 
   // Function to create new ticket
@@ -133,6 +155,33 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
     }
   }
 
+  const toggleHistory = () => {
+    setShowHistory((prev) => !prev);
+  };
+
+  const cleanActionTextWithBoldName = (text) => {
+    // Remove <b> tags and <br> tags
+    const cleanedText = text.replace(/<\/?b>/g, "").replace(/<br\s*\/?>/g, " ");
+
+    // Capitalize the first letter of the first word
+    const capitalizedText =
+      cleanedText.charAt(0).toUpperCase() + cleanedText.slice(1);
+
+    // Extract the name from the action and make it bold
+    const nameMatch = capitalizedText.match(/(\S+\s\S+)(?=\schanged\sstatus)/); // Assuming the name is before 'changed status'
+    if (nameMatch) {
+      const name = nameMatch[0];
+      const restOfText = capitalizedText.replace(name, "");
+      return (
+        <>
+          <b>{name}</b> {restOfText}
+        </>
+      );
+    }
+
+    return capitalizedText; // Return the text with the first letter capitalized
+  };
+
   return (
     <Grid item xs={12} sm={6} md={4} key={contact.Id}>
       <Card
@@ -147,7 +196,6 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
     `,
           pt: isMobile ? 3 : 5,
           mt: 5,
-          minHeight: "40vh",
         }}
       >
         <CardContent sx={{ pt: 0, pb: 3 }}>
@@ -195,31 +243,74 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
             </Typography>
           </Box>
 
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 1.5,
-              bgcolor: "rgba(255,255,255,0.9)",
-              borderRadius: 2,
-              p: 2,
-              boxShadow: "inset 0 2px 4px rgba(0,0,0,0.1)",
-            }}
-          >
-            <InfoRow icon={<MailRounded />} text={contact.Email} />
-            <InfoRow icon={<PhoneRounded />} text={contact.Contact} />
-            <InfoRow icon={<PaidRounded />} text={contact.Amount} />
-            <InfoRow
-              icon={<AccessTimeRounded />}
-              text={formatTenure(contact.Tenure)} // Here you call formatTenure
-            />
-            {contact.Location && (
+          {!showHistory ? (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 1.5,
+                bgcolor: "rgba(255,255,255,0.9)",
+                borderRadius: "10px 10px 0px 0px",
+                p: 2,
+                boxShadow: "inset 0 2px 4px rgba(0,0,0,0.1)",
+                minHeight: isMobile ? "35vh" : isTab ? "20vh" : "40vh",
+              }}
+            >
+              <InfoRow icon={<MailRounded />} text={contact.Email} />
+              <InfoRow icon={<PhoneRounded />} text={contact.Contact} />
+              <InfoRow icon={<PaidRounded />} text={contact.Amount} />
               <InfoRow
-                icon={<LocationOnRounded />}
-                text={capitalizeFirstLetter(contact.Location)}
+                icon={<AccessTimeRounded />}
+                text={formatTenure(contact.Tenure)}
               />
-            )}
-          </Box>
+              {contact.Location && (
+                <InfoRow
+                  icon={<LocationOnRounded />}
+                  text={capitalizeFirstLetter(contact.Location)}
+                />
+              )}
+            </Box>
+          ) : (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 1.5,
+                bgcolor: "rgba(255,255,255,0.9)",
+                borderRadius: 2,
+                p: 2,
+                boxShadow: "inset 0 2px 4px rgba(0,0,0,0.1)",
+                minHeight: isMobile ? "35vh" : isTab ? "20vh" : "40vh",
+                overflowY: "scroll",
+                maxHeight: "40vh",
+              }}
+            >
+              {historyData.length > 0 ? (
+                historyData.map((history, index) => (
+                  <Box
+                    key={index}
+                    sx={{ display: "flex", flexDirection: "column", mb: 2 }}
+                  >
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "black", fontStyle: "normal", mb: 1 }}
+                    >
+                      {cleanActionTextWithBoldName(history.action)}
+                      {/* Cleaned action text */}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: "blue" }}>
+                      <strong>Days ago:</strong>{" "}
+                      {calculateDaysAgo(history.created_at)} days ago
+                    </Typography>
+                  </Box>
+                ))
+              ) : (
+                <Typography variant="body2" sx={{ color: "#333" }}>
+                  No history data available.
+                </Typography>
+              )}
+            </Box>
+          )}
           {!ticket && (
             <Box
               sx={{
@@ -266,11 +357,16 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
             </Box>
           )}
           {ticket && (
-            <Box sx={{ display: "flex" }}>
+            <Box
+              sx={{
+                display: "flex",
+                borderRadius: "0px 0px 20px 20px",
+              }}
+            >
               <Button
                 variant="contained"
                 color="primary"
-                sx={{ width: "100%", borderRadius: 0 }}
+                sx={{ width: "100%", borderRadius: "0px 0px 0px 10px" }}
                 onClick={() =>
                   handleStartClick(
                     contact.Id,
@@ -281,20 +377,14 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
               >
                 Visit Ticket
               </Button>
-              {/* <Button
+              <Button
                 variant="contained"
                 color="primary"
-                sx={{ width: "100%", borderRadius: 0 }}
-                onClick={() =>
-                  handleStartClick(
-                    contact.Id,
-                    contact.applicationId,
-                    ticket.original_estimate
-                  )
-                }
+                sx={{ width: "100%", borderRadius: "0px 0px 10px 0px" }}
+                onClick={toggleHistory}
               >
-                History
-              </Button> */}
+                {showHistory ? "Close History" : "Show History"}
+              </Button>
             </Box>
           )}
         </CardContent>
