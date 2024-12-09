@@ -3,13 +3,7 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import {
-  Box,
-  Grid,
-  Pagination,
-  Typography,
-  useMediaQuery,
-} from "@mui/material";
+import { Box, Grid, Typography, useMediaQuery } from "@mui/material";
 import { Dayjs } from "dayjs";
 
 import ApplicationCard from "../components/ticket/ApplicationCard";
@@ -56,8 +50,8 @@ const Ticket = () => {
   const { value: ticketData } = useGetTickets(
     {} as Ticket,
     apiEndpoint,
-    1,
-    100
+    1, // We don't need pagination
+    1000 // Fetch all tickets (or any large number)
   );
 
   const [userData, setUserData] = useState({});
@@ -100,7 +94,6 @@ const Ticket = () => {
             (item) => item?.data || []
           );
           setFilteredApplications(combinedData);
-          console.log("Applications Fetched:", combinedData);
         } catch (err) {
           console.error("Fetch error:", err);
         }
@@ -176,17 +169,13 @@ const Ticket = () => {
     return filtered;
   };
 
-  const ticketCount = (): number | undefined => {
-    return tickets?.total;
-  };
+  const ticketCount = (status: string): number => {
+    const ticketResults = tickets?.results || [];
 
-  const paginatedApplications = filterTickets().slice();
-
-  const handlePageChange = (
-    event: React.ChangeEvent<unknown>,
-    page: number
-  ) => {
-    setCurrentPage(page);
+    if (status === "all") {
+      return ticketResults.length;
+    }
+    return ticketResults.filter((ticket) => ticket.status === status).length;
   };
 
   return (
@@ -235,8 +224,8 @@ const Ticket = () => {
             alignItems: "center",
           }}
         >
-          {paginatedApplications.length > 0 ? (
-            paginatedApplications.map((application, id) => {
+          {filterTickets().length > 0 ? (
+            filterTickets().map((application, id) => {
               const ticket = tickets?.results?.find(
                 (ticket) =>
                   ticket.customer_application_id === application.applicationId

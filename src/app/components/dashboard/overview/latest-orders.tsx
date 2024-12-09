@@ -16,6 +16,7 @@ import {
   Divider,
   CardActions,
   Button,
+  useMediaQuery,
 } from "@mui/material";
 import {
   Person,
@@ -49,6 +50,8 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
   const [searchQuery, setSearchQuery] = React.useState("");
   const { capitalizeFirstLetter } = Utility();
   const router = useRouter();
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
   const getTicketCounts = (userId: string) => {
     if (!tickets?.data) return { open: 0, inProgress: 0, done: 0 };
@@ -90,9 +93,9 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
       sx={{
         bgcolor: "#fff",
         background: "linear-gradient(145deg, #ffffff 0%, #f8f9ff 100%)",
-        width: "49.3vw",
-        ml: "4vw",
-        height: "100vh",
+        width: isMobile ? "100%" : isTab ? "95vw" : "49.3vw",
+        ml: isMobile ? "" : isTab ? "" : "4vw",
+        height: isMobile ? "92vh" : isTab ? "42vh" : "100vh",
       }}
     >
       <Box
@@ -100,8 +103,8 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
           display: "flex",
           justifyContent: "flex-start",
           alignItems: "center",
-          mb: 3,
-          height: "9vh",
+          mb: isMobile ? "" : isTab ? "" : 3,
+          height: isMobile ? "5vh" : isTab ? "5vh" : "9vh",
         }}
       >
         <Typography
@@ -112,8 +115,8 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
             color: "#1a237e",
             textTransform: "uppercase",
             letterSpacing: "0.5px",
-            ml: "1vw",
-            mt: "4vh",
+            ml: isMobile ? "3vw" : "1vw",
+            mt: isTab ? "" : "4vh",
           }}
         >
           Agent List
@@ -123,7 +126,7 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
 
       <TableContainer>
         <Table>
-          <TableHead sx={{ height: "12vh" }}>
+          <TableHead sx={{ height: isMobile ? "5vh" : isTab ? "5vh" : "12vh" }}>
             <TableRow sx={{ bgcolor: "grey.50" }}>
               <TableCell>Sr.</TableCell>
               <TableCell>User Name</TableCell>
@@ -230,7 +233,7 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
           variant="text"
           onClick={handleViewAllClick}
           sx={{
-            width: "8vw",
+            width: isMobile ? "30vw" : isTab ? "15vw" : "8vw",
             fontSize: ".9rem",
             mr: "1vw",
             background:

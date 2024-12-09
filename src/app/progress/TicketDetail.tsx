@@ -2,12 +2,7 @@ import { Avatar, Box, Grid, Typography } from "@mui/material";
 
 import { Utility } from "@/utils";
 
-const TicketDetail = ({
-  ticketId,
-  selectedCustomer,
-  isMobile,
-  isTab
-}) => {
+const TicketDetail = ({ ticketId, selectedCustomer, isMobile, isTab }) => {
   const { formatTenure, formatDate, formatAmount } = Utility();
 
   return (
@@ -74,7 +69,14 @@ const TicketDetail = ({
               <Typography sx={{ color: "white", mb: 1 }}>
                 <strong>Name:</strong> {selectedCustomer.Name}
               </Typography>
-              <Typography sx={{ color: "white", mb: 1 }}>
+              <Typography
+                sx={{
+                  color: "white",
+                  mb: 1,
+                  wordWrap: "break-word",
+                  whiteSpace: "normal",
+                }}
+              >
                 <strong>Email:</strong> {selectedCustomer.Email}
               </Typography>
             </Grid>
@@ -82,32 +84,27 @@ const TicketDetail = ({
             {/* Contact and Designation */}
             <Grid item xs={12} sm={6}>
               <Typography sx={{ color: "white", mb: 1 }}>
-                <strong>Contact:</strong> +91{" "}
-                {selectedCustomer.Contact}
+                <strong>Contact:</strong> +91 {selectedCustomer.Contact}
               </Typography>
               <Typography sx={{ color: "white", mb: 1 }}>
-                <strong>Designation:</strong>{" "}
-                {selectedCustomer.Designation}
+                <strong>Designation:</strong> {selectedCustomer.Designation}
               </Typography>
             </Grid>
 
             {/* Location and Tenure */}
             <Grid item xs={12} sm={6}>
               <Typography sx={{ color: "white", mb: 1 }}>
-                <strong>Location:</strong>{" "}
-                {selectedCustomer.Location}
+                <strong>Location:</strong> {selectedCustomer.Location}
               </Typography>
               <Typography sx={{ color: "white", mb: 1 }}>
-                <strong>Tenure:</strong>{" "}
-                {formatTenure(selectedCustomer.Tenure)}
+                <strong>Tenure:</strong> {formatTenure(selectedCustomer.Tenure)}
               </Typography>
             </Grid>
 
             {/* Amount and Application Date */}
             <Grid item xs={12} sm={6}>
               <Typography sx={{ color: "white", mb: 1 }}>
-                <strong>Amount:</strong>{" "}
-                {formatAmount(selectedCustomer.Amount)}
+                <strong>Amount:</strong> {formatAmount(selectedCustomer.Amount)}
               </Typography>
               <Typography sx={{ color: "white" }}>
                 <strong>Application Date:</strong>{" "}
@@ -118,7 +115,7 @@ const TicketDetail = ({
         </Box>
       </Box>
     </>
-  )
-}
+  );
+};
 
 export default TicketDetail;

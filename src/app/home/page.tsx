@@ -1,7 +1,14 @@
 "use client";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
-import { Grid, Button, TextField, Typography, Box } from "@mui/material";
+import {
+  Grid,
+  Button,
+  TextField,
+  Typography,
+  Box,
+  useMediaQuery,
+} from "@mui/material";
 import ApplicationCard from "../components/ticket/ApplicationCard";
 import Loader from "../components/common/Loader";
 import { useDispatch, useSelector } from "react-redux";
@@ -21,6 +28,8 @@ const Home: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const { customer } = useSelector((state: RootState) => state.customer);
   const { decodedToken } = Utility();
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
   const {
     value: data,
     error: getApplicationsError,
@@ -80,6 +89,7 @@ const Home: React.FC = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
+
   const filteredCustomers = useMemo(() => {
     return customer?.results?.filter((val) =>
       val.Name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -95,11 +105,17 @@ const Home: React.FC = () => {
         flexDirection: "column",
       }}
     >
-      <Box sx={{ display: "flex", flexDirection: "row", width: "100%" }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "row",
+          width: "100%",
+        }}
+      >
         <Box
           sx={{
             height: "10vh",
-            width: "30vw",
+            width: isMobile ? "40vw" : isTab ? "40vw" : "30vw",
             display: "flex",
             alignItems: "center",
           }}
@@ -107,7 +123,10 @@ const Home: React.FC = () => {
           <Typography
             variant="h6"
             component="div"
-            sx={{ fontWeight: "bold", fontSize: "1.8rem" }}
+            sx={{
+              fontWeight: "bold",
+              fontSize: isMobile ? ".8rem" : isTab ? "1.9rem" : "1.8rem",
+            }}
           >
             New Applications: {customer?.total || 0}
           </Typography>
@@ -115,12 +134,12 @@ const Home: React.FC = () => {
         <Box
           sx={{
             height: "10vh",
-            width: "30vw",
+            width: isMobile ? "51vw" : isTab ? "40vw" : "30vw",
             display: "flex",
             flexDirection: "row",
             justifyContent: "space-evenly",
             alignItems: "center",
-            ml: "19vw",
+            ml: isMobile ? "" : isTab ? "10vw" : "18vw",
           }}
         >
           <TextField
@@ -128,10 +147,19 @@ const Home: React.FC = () => {
             size="small"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            sx={{ width: "12vw" }}
+            sx={{
+              width: isMobile ? "24vw" : isTab ? "18vw" : "12vw",
+              fontSize: isMobile ? ".5rem" : isTab ? "1rem" : "",
+            }}
           />
           <Link href="/ticket" passHref>
-            <Button variant="contained">
+            <Button
+              sx={{
+                width: isMobile ? "20vw" : isTab ? "18vw" : "12vw",
+                fontSize: isMobile ? ".5rem" : isTab ? "1rem" : "",
+              }}
+              variant="contained"
+            >
               {decodedToken()?.role === "admin"
                 ? "Show Tickets"
                 : "Show My Tickets"}
