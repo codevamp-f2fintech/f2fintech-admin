@@ -441,70 +441,6 @@ const Progress: React.FC = () => {
     `,
                   }}
                 >
-                  <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    sx={{
-                      padding: 2,
-                      border: "1px solid white",
-                      borderRadius: "15px",
-                      fontSize: "1rem",
-                      background: `
-      linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
-    `,
-                      "&:hover": {
-                        transform: "scale(1.02)",
-                        transition: "transform 0.3s ease",
-                      },
-                    }}
-                  >
-                    <Typography
-                      variant="subtitle1"
-                      color="text.primary"
-                      sx={{
-                        color: "white",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      Loan Status:
-                    </Typography>
-
-                    <Grid item xs={6} md={5} mt={0}>
-                      <FormControl
-                        variant="filled"
-                        sx={{
-                          background: "white",
-                          borderRadius: "15px",
-                          width: isMobile ? "30vw" : "8vw",
-                          "&:hover": {
-                            transform: "scale(1.02)",
-                            transition: "transform 0.3s ease",
-                          },
-                        }}
-                      >
-                        <InputLabel>Loan Status</InputLabel>
-                        <Select
-                          label="Loan Status"
-                          variant="filled"
-                          value={newLoanStatus}
-                          onChange={handleChangeLoanStatus}
-                          sx={{
-                            borderRadius: "5px",
-                            width: isMobile ? "30vw" : "8vw",
-                          }}
-                        >
-                          <MenuItem value="submitted">Submitted</MenuItem>
-                          <MenuItem value="under_review">Under Review</MenuItem>
-                          <MenuItem value="approved">Approved</MenuItem>
-                          <MenuItem value="hold">Hold</MenuItem>
-                          <MenuItem value="disbursed">Disbursed</MenuItem>
-                          <MenuItem value="rejected">Rejected</MenuItem>
-                        </Select>
-                      </FormControl>
-                    </Grid>
-                  </Box>
-
                   {/* Employee Status FormControl */}
                   <Box
                     display="flex"
@@ -515,7 +451,7 @@ const Progress: React.FC = () => {
                       border: "1px solid white",
                       borderRadius: "15px",
                       fontSize: "1rem",
-                      mt: "1rem",
+
                       background: `
       linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
     `,
@@ -571,7 +507,6 @@ const Progress: React.FC = () => {
                       </FormControl>
                     </Grid>
                   </Box>
-
                   {/* Conditionally render the dropdown if the status is forwarded */}
                   <UserAutocomplete
                     isMobile={isMobile}
@@ -582,6 +517,72 @@ const Progress: React.FC = () => {
                     handleForwardAutocomplete={handleForwardAutocomplete}
                   />
                   <Divider sx={{ my: 2 }} />
+
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    sx={{
+                      padding: 2,
+                      border: "1px solid white",
+                      borderRadius: "15px",
+                      fontSize: "1rem",
+                      mt: "1rem",
+                      background: `
+      linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
+    `,
+                      "&:hover": {
+                        transform: "scale(1.02)",
+                        transition: "transform 0.3s ease",
+                      },
+                    }}
+                  >
+                    <Typography
+                      variant="subtitle1"
+                      color="text.primary"
+                      sx={{
+                        color: "white",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Loan Status:
+                    </Typography>
+
+                    <Grid item xs={6} md={5} mt={0}>
+                      <FormControl
+                        variant="filled"
+                        sx={{
+                          background: "white",
+                          borderRadius: "15px",
+                          width: isMobile ? "30vw" : "8vw",
+                          "&:hover": {
+                            transform: "scale(1.02)",
+                            transition: "transform 0.3s ease",
+                          },
+                        }}
+                      >
+                        <InputLabel>Loan Status</InputLabel>
+                        <Select
+                          label="Loan Status"
+                          variant="filled"
+                          value={newLoanStatus}
+                          onChange={handleChangeLoanStatus}
+                          sx={{
+                            borderRadius: "5px",
+                            width: isMobile ? "30vw" : "8vw",
+                          }}
+                        >
+                          <MenuItem value="submitted">Submitted</MenuItem>
+                          <MenuItem value="under_review">Under Review</MenuItem>
+                          <MenuItem value="approved">Approved</MenuItem>
+                          <MenuItem value="hold">Hold</MenuItem>
+                          <MenuItem value="disbursed">Disbursed</MenuItem>
+                          <MenuItem value="rejected">Rejected</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                  </Box>
+
                   <Box
                     display="flex"
                     justifyContent="space-between"

@@ -266,20 +266,36 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
             </Box>
           )}
           {ticket && (
-            <Button
-              variant="contained"
-              color="primary"
-              sx={{ width: "100%", borderRadius: 0 }}
-              onClick={() =>
-                handleStartClick(
-                  contact.Id,
-                  contact.applicationId,
-                  ticket.original_estimate
-                )
-              }
-            >
-              Visit Ticket
-            </Button>
+            <Box sx={{ display: "flex" }}>
+              <Button
+                variant="contained"
+                color="primary"
+                sx={{ width: "100%", borderRadius: 0 }}
+                onClick={() =>
+                  handleStartClick(
+                    contact.Id,
+                    contact.applicationId,
+                    ticket.original_estimate
+                  )
+                }
+              >
+                Visit Ticket
+              </Button>
+              {/* <Button
+                variant="contained"
+                color="primary"
+                sx={{ width: "100%", borderRadius: 0 }}
+                onClick={() =>
+                  handleStartClick(
+                    contact.Id,
+                    contact.applicationId,
+                    ticket.original_estimate
+                  )
+                }
+              >
+                History
+              </Button> */}
+            </Box>
           )}
         </CardContent>
       </Card>

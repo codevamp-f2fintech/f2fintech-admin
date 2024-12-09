@@ -11,7 +11,7 @@ import Typography from "@mui/material/Typography";
 import type { ApexOptions } from "apexcharts";
 
 import { Chart } from "@/app/components/core/chart";
-import { Box, Divider } from "@mui/material";
+import { Box, Divider, useMediaQuery } from "@mui/material";
 
 export interface TrafficProps {
   chartSeries: number[];
@@ -25,16 +25,23 @@ export function Traffic({
   sx,
 }: TrafficProps): React.JSX.Element {
   const chartOptions = useChartOptions(labels);
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
   return (
-    <Card sx={sx}>
+    <Card
+      sx={{
+        width: "100%",
+        height: isMobile ? "75vh" : isTab ? "48vh" : "85vh",
+      }}
+    >
       {/* <CardHeader title="Tickets" /> */}
       <Box
         sx={{
           display: "flex",
           justifyContent: "flex-start",
           alignItems: "center",
-          height: "12vh",
+          height: isMobile ? "8vh" : isTab ? "5vh" : "12vh",
         }}
       >
         <Typography
@@ -52,7 +59,7 @@ export function Traffic({
         </Typography>
       </Box>
       <Divider />
-      <CardContent>
+      <CardContent sx={{ mt: "5vh" }}>
         <Stack spacing={2}>
           <Chart
             height={300}

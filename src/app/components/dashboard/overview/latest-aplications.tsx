@@ -22,6 +22,7 @@ import {
   TableHead,
   TableRow,
   Typography,
+  useMediaQuery,
 } from "@mui/material";
 import { Person } from "@mui/icons-material";
 import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
@@ -44,6 +45,8 @@ export function LatestApplications({
   const [paginationLoading, setPaginationLoading] = useState<boolean>(false);
   const [applications, setApplications] = useState<Customer>([]);
   const router = useRouter();
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
   const {
     value: data,
@@ -71,13 +74,19 @@ export function LatestApplications({
   };
 
   return (
-    <Card sx={{ width: "30vw", height: "100vh", p: 1 }}>
+    <Card
+      sx={{
+        width: isMobile ? "100%" : isTab ? "100%" : "30vw",
+        height: isMobile ? "77vh" : isTab ? "48vh" : "100vh",
+        p: 1,
+      }}
+    >
       <Box
         sx={{
           display: "flex",
           alignItems: "center",
           justifyContent: "flex-start",
-          height: "11vh",
+          height: isMobile ? "8vh" : isTab ? "5vh" : "11vh",
         }}
       >
         <Typography
@@ -98,7 +107,7 @@ export function LatestApplications({
       {/* {applications?.length && ( */}
       <TableContainer>
         <Table>
-          <TableHead sx={{ height: "12vh" }}>
+          <TableHead sx={{ height: isMobile ? "8vh" : isTab ? "5vh" : "12vh" }}>
             <TableRow sx={{ bgcolor: "grey.50" }}>
               <TableCell align="center">Sr.</TableCell>
               <TableCell align="center">Name</TableCell>
@@ -126,37 +135,42 @@ export function LatestApplications({
                     transition: "background-color 0.2s",
                   }}
                 >
-                  <TableCell>{index + 1}</TableCell>
+                  <TableCell sx={{ width: isMobile ? "2vw" : isTab ? "" : "" }}>
+                    {index + 1}
+                  </TableCell>
                   <TableCell>
                     <Box
                       sx={{
                         display: "flex",
                         alignItems: "center",
                         gap: 1,
-                        width: "6vw",
+                        width: isMobile ? "30vw" : "6vw",
+                        overflow: isMobile ? "hidden" : "", // Prevents content from overflowing
                       }}
                     >
                       <Person sx={{ color: "primary.main" }} />
                       {application.Name}
                     </Box>
                   </TableCell>
-
-                  <TableCell>
+                  <TableCell
+                    sx={{
+                      width: isMobile ? "40vw" : "",
+                      overflow: isMobile ? "hidden" : "",
+                    }}
+                  >
                     <Box
                       sx={{
                         display: "flex",
                         alignItems: "center",
                         gap: 1,
                         width: "8vw",
-                        // border: "2px solid",
                       }}
                     >
                       <CurrencyRupeeIcon sx={{ color: "primary.main" }} />
                       {application.Amount}
                     </Box>
                   </TableCell>
-
-                  <TableCell>
+                  <TableCell sx={{ overflow: isMobile ? "hidden" : "" }}>
                     {dayjs(application.applicationDate).format("MMM D, YYYY")}
                   </TableCell>
                 </TableRow>
@@ -165,8 +179,9 @@ export function LatestApplications({
           </TableBody>
         </Table>
       </TableContainer>
-      {/* <Divider /> */}
-      <CardActions sx={{ justifyContent: "flex-end", mt: "3vh" }}>
+      <CardActions
+        sx={{ justifyContent: "flex-end", mt: isTab ? "1vh" : "3vh" }}
+      >
         <Button
           color="inherit"
           endIcon={<ArrowRightIcon />}
@@ -174,7 +189,7 @@ export function LatestApplications({
           variant="text"
           onClick={handleViewAllClick}
           sx={{
-            width: "8vw",
+            width: isMobile ? "30vw" : isTab ? "15vw" : "8vw",
             fontSize: ".9rem",
             mr: ".6vw",
             background:

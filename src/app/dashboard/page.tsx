@@ -22,6 +22,7 @@ import { LatestApplications } from "@/app/components/dashboard/overview/latest-a
 import { Sales } from "@/app/components/dashboard/overview/sales";
 import { Traffic } from "@/app/components/dashboard/overview/traffic";
 import { Utility } from "@/utils";
+import { useMediaQuery } from "@mui/material";
 
 export const metadata = {
   title: `Overview | Dashboard | ${config.site.name}`,
@@ -128,6 +129,7 @@ export default async function Page(): Promise<React.JSX.Element> {
   const { decodedToken } = Utility();
   const userToken = cookieStore.get("token");
   const { id, role } = decodedToken(userToken?.value);
+
   console.log("role=>", id, role);
 
   const [
