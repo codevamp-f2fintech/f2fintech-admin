@@ -41,10 +41,8 @@ export const useGetTickets = (
   return {
     value: swrData || {
       results: [],
-      total: 0,
-      page: 1,
-      limit,
-      totalPages: 1,
+      count: 0,
+      pages: 0,
     },
     swrLoading: !error && !swrData,
     error,

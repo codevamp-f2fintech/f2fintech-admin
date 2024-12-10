@@ -17,7 +17,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Upload } from "@mui/icons-material";
 import { RootState } from "@/redux/store";
 
-const TicketVoiceNotes = ({ isMobile, isTab, notes, setFieldValue }) => {
+const TicketVoiceNotes = ({ isMobile, isTab, notes }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 3;
   const [selectedAudioFile, setSelectedAudioFile] = useState();

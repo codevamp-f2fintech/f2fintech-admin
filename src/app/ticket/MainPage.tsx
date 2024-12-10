@@ -38,14 +38,14 @@ const Ticket = () => {
   const apiEndpoint = selectedUser
     ? `get-all-tickets/${selectedUser.id}`
     : userRole === "admin"
-    ? sortBy === "all"
-      ? `get-all-tickets`
-      : `get-all-tickets?status=${sortBy}`
-    : userRole === "agent"
-    ? sortBy === "all"
-      ? `get-all-tickets/${decodedToken()?.id}?isAgent=true`
-      : `get-all-tickets/${decodedToken()?.id}?isAgent=true&status=${sortBy}`
-    : `get-all-tickets`;
+      ? sortBy === "all"
+        ? `get-all-tickets`
+        : `get-all-tickets?status=${sortBy}`
+      : userRole === "agent"
+        ? sortBy === "all"
+          ? `get-all-tickets/${decodedToken()?.id}?isAgent=true`
+          : `get-all-tickets/${decodedToken()?.id}?isAgent=true&status=${sortBy}`
+        : `get-all-tickets`;
 
   const { value: ticketData } = useGetTickets(
     {} as Ticket,
@@ -80,25 +80,7 @@ const Ticket = () => {
   useEffect(() => {
     if (ticketData?.results) {
       dispatch(setTickets(ticketData));
-      const fetchApplications = async () => {
-        const applicationIds = ticketData.results.map(
-          (ticket) => ticket.customer_application_id
-        );
-        try {
-          const fetchedApplications = await Promise.all(
-            applicationIds.map((id) =>
-              fetcher(`get-application-as-ticket/${id}`)
-            )
-          );
-          const combinedData = fetchedApplications.flatMap(
-            (item) => item?.data || []
-          );
-          setFilteredApplications(combinedData);
-        } catch (err) {
-          console.error("Fetch error:", err);
-        }
-      };
-      fetchApplications();
+      setFilteredApplications(ticketData?.results);
     }
   }, [ticketData?.results]);
 
@@ -111,24 +93,16 @@ const Ticket = () => {
   const handleStartClick = async (
     customerId: string | number,
     applicationId: string | number,
-    estimate: number
+    ticketId: string | number
   ) => {
-    const selectedTicket = ticketData?.results.find(
-      (ticket) => ticket?.customer_application_id === applicationId
+    const generatedTicketId = `F2FIN-${ticketId}`;
+    remLocalStorage("ticketId");
+    setLocalStorage("ticketId", generatedTicketId);
+    router.push(
+      `/progress?customerId=${customerId}&applicationId=${applicationId}`
     );
-
-    if (selectedTicket) {
-      const { id: ticketId } = selectedTicket;
-      const generatedTicketId = `F2FIN-${ticketId}`;
-      remLocalStorage("ticketId");
-      setLocalStorage("ticketId", generatedTicketId);
-      router.push(
-        `/progress?customerId=${customerId}&applicationId=${applicationId}`
-      );
-    } else {
-      console.error("Ticket not found:", customerId, applicationId);
-    }
-  };
+    console.error("Ticket not found:", customerId, applicationId);
+  }
 
   const handleSortChange = (value: string) => {
     setSortBy(value.toLowerCase());
@@ -175,7 +149,7 @@ const Ticket = () => {
     if (status === "all") {
       return ticketResults.length;
     }
-    return ticketResults.filter((ticket) => ticket.status === status).length;
+    return ticketResults.filter((ticket) => ticket.ticketStatus === status).length;
   };
 
   return (
@@ -225,17 +199,13 @@ const Ticket = () => {
           }}
         >
           {filterTickets().length > 0 ? (
-            filterTickets().map((application, id) => {
-              const ticket = tickets?.results?.find(
-                (ticket) =>
-                  ticket.customer_application_id === application.applicationId
-              );
+            filterTickets().map((application, index) => {
               return (
                 <ApplicationCard
-                  key={id}
+                  key={index}
                   contact={application}
-                  ticket={ticket}
                   handleStartClick={handleStartClick}
+                  ticket={application}
                 />
               );
             })

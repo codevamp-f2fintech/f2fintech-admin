@@ -34,6 +34,7 @@ const Home: React.FC = () => {
     value: data,
     error: getApplicationsError,
     swrLoading,
+    refetch
   } = useGetCustomers(
     {} as Customer,
     `get-loan-applications`,
@@ -172,11 +173,11 @@ const Home: React.FC = () => {
           {!filteredCustomers?.length ? (
             <Typography>No Applications Found</Typography>
           ) : (
-            filteredCustomers.map((contact, index) => (
+            filteredCustomers.map((customer) => (
               <ApplicationCard
-                contact={contact}
-                key={contact.Id || index}
-                handleStartClick={undefined}
+                key={customer.Id}
+                contact={customer}
+                refetch={refetch}
               />
             ))
           )}
@@ -195,4 +196,5 @@ const Home: React.FC = () => {
     </Box>
   );
 };
+
 export default Home;

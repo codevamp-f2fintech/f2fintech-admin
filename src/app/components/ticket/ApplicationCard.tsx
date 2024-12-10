@@ -21,8 +21,7 @@ import {
 } from "@mui/icons-material";
 import { useCreateTicket } from "@/hooks/ticket";
 import { Utility } from "@/utils";
-import { useGetCustomers, useModifyCustomer } from "@/hooks/customer";
-import { Customer } from "@/types/customer";
+import { useModifyCustomer } from "@/hooks/customer";
 import { fetcher } from "@/apis/apiClient";
 
 function InfoRow({ icon, text }: { icon: React.ReactNode; text: string }) {
@@ -52,22 +51,15 @@ function InfoRow({ icon, text }: { icon: React.ReactNode; text: string }) {
   );
 }
 
-const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
+const ApplicationCard = ({ contact, handleStartClick = null, ticket = false, refetch = null }) => {
   const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [limit] = useState<number>(6);
-  const [showHistory, setShowHistory] = useState<boolean>(false); // New state variable
+  const [showHistory, setShowHistory] = useState<boolean>(false);
   const [historyData, setHistoryData] = useState<any[]>([]);
   const { decodedToken, capitalizeFirstLetter } = Utility();
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
-
-  const { refetch } = useGetCustomers(
-    {} as Customer,
-    `get-loan-applications`,
-    currentPage,
-    limit
-  );
 
   const { createTicket, error } = useCreateTicket("create-ticket", {});
   // Hook for modifying loan application is_picked column
@@ -96,11 +88,6 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
     const diffTime = Math.abs(today.getTime() - addedDate.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
-  };
-
-  const cleanActionText = (text) => {
-    // Remove <b> tags and <br> tags
-    return text.replace(/<\/?b>/g, "").replace(/<br\s*\/?>/g, " ");
   };
 
   // Function to create new ticket
@@ -133,7 +120,9 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
           ...prevSelectedContacts,
           contactId,
         ]);
-        await refetch();
+        if (refetch) {
+          await refetch();
+        }
       } catch (error) {
         console.log("Error in checkbox change:", error);
       }
@@ -311,7 +300,37 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
               )}
             </Box>
           )}
-          {!ticket && (
+          {ticket && Object.keys(ticket).length > 0 ? (
+            <Box
+              sx={{
+                display: "flex",
+                borderRadius: "0px 0px 20px 20px",
+              }}
+            >
+              <Button
+                variant="contained"
+                color="primary"
+                sx={{ width: "100%", borderRadius: "0px 0px 0px 10px" }}
+                onClick={() =>
+                  handleStartClick(
+                    contact.Id,
+                    contact.customer_application_id,
+                    ticket.ticketId
+                  )
+                }
+              >
+                Visit Ticket
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                sx={{ width: "100%", borderRadius: "0px 0px 10px 0px" }}
+                onClick={toggleHistory}
+              >
+                {showHistory ? "Close History" : "Show History"}
+              </Button>
+            </Box>
+          ) : (
             <Box
               sx={{
                 display: "flex",
@@ -321,9 +340,7 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
               }}
             >
               <Chip
-                label={`${calculateDaysAgo(contact.applicationDate)}
-                        days
-                        ago`}
+                label={`${calculateDaysAgo(contact.applicationDate)} days ago`}
                 size="small"
                 sx={{
                   bgcolor: "rgba(255,255,255,0.9)",
@@ -354,37 +371,6 @@ const ApplicationCard = ({ contact, ticket = false, handleStartClick }) => {
                   />
                 </Box>
               )}
-            </Box>
-          )}
-          {ticket && (
-            <Box
-              sx={{
-                display: "flex",
-                borderRadius: "0px 0px 20px 20px",
-              }}
-            >
-              <Button
-                variant="contained"
-                color="primary"
-                sx={{ width: "100%", borderRadius: "0px 0px 0px 10px" }}
-                onClick={() =>
-                  handleStartClick(
-                    contact.Id,
-                    contact.applicationId,
-                    ticket.original_estimate
-                  )
-                }
-              >
-                Visit Ticket
-              </Button>
-              <Button
-                variant="contained"
-                color="primary"
-                sx={{ width: "100%", borderRadius: "0px 0px 10px 0px" }}
-                onClick={toggleHistory}
-              >
-                {showHistory ? "Close History" : "Show History"}
-              </Button>
             </Box>
           )}
         </CardContent>

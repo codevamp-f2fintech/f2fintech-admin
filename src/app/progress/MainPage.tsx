@@ -213,7 +213,7 @@ const Progress: React.FC = () => {
         }
       );
       const loggedInUser = decodedToken()?.username;
-      const historyMessage = `<b>${loggedInUser}</b> changed status from ${oldStatus} to ${newStatus}`;
+      const historyMessage = `${loggedInUser} changed status from ${oldStatus} to ${newStatus}`;
 
       await createTicketHistory({
         ticket_id: storedTicketId,
@@ -240,7 +240,7 @@ const Progress: React.FC = () => {
       await modifyTicket(+storedTicketId, updateData);
 
       const loggedInUser = decodedToken()?.username;
-      const historyMessage = `<b>${loggedInUser}</b> changed status from ${oldStatus} to ${newStatus}`;
+      const historyMessage = `${loggedInUser} changed status from ${oldStatus} to ${newStatus}`;
       await createTicketHistory({
         ticket_id: storedTicketId,
         action: historyMessage,
@@ -261,7 +261,7 @@ const Progress: React.FC = () => {
       await modifyTicket(+storedTicketId, { forwarded_to: value.id });
 
       const loggedInUser = decodedToken()?.username;
-      const historyMessage = `<b>${loggedInUser}</b> forwarded the ticket to <b>${value.username}</b>`;
+      const historyMessage = `${loggedInUser} forwarded the ticket to ${value.username}`;
       await createTicketHistory({
         ticket_id: storedTicketId,
         action: historyMessage,
