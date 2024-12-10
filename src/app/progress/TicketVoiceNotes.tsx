@@ -29,6 +29,7 @@ const TicketVoiceNotes = ({
   const itemsPerPage = 3;
   const [selectedAudioFile, setSelectedAudioFile] = useState();
   const [uploaded, setUploaded] = useState(false);
+  const [voiceNote, setVoiceNote] = useState(voiceNoteUrl);
   const inputRef = useRef(null);
   const dispatch = useDispatch();
   const { toast } = useSelector((state: RootState) => state.toast);
@@ -45,6 +46,7 @@ const TicketVoiceNotes = ({
     await modifyTicket(+storedTicketId, {
       voice_note_url: null,
     });
+    setVoiceNote("");
     if (inputRef.current) {
       inputRef.current.value = ""; // Clear the file input value
     }
@@ -206,7 +208,7 @@ const TicketVoiceNotes = ({
         )}
 
         {/* Display selected audio files */}
-        {(voiceNoteUrl || selectedAudioFile) && (
+        {(voiceNote || selectedAudioFile) && (
           <Box sx={{ width: "100%", maxWidth: "40vw", mt: 2 }}>
             <Box
               key={0}
@@ -240,12 +242,12 @@ const TicketVoiceNotes = ({
                       }
                     />
                   </>
-                ) : voiceNoteUrl ? (
+                ) : voiceNote ? (
                   <>
                     {/* Add multiple sources for different file types */}
-                    <source src={voiceNoteUrl} type="audio/mpeg" />
-                    <source src={voiceNoteUrl} type="audio/ogg" />
-                    <source src={voiceNoteUrl} type="audio/wav" />
+                    <source src={voiceNote} type="audio/mpeg" />
+                    <source src={voiceNote} type="audio/ogg" />
+                    <source src={voiceNote} type="audio/wav" />
                   </>
                 ) : (
                   <p>Your browser does not support the audio element.</p>
