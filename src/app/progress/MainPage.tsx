@@ -70,6 +70,7 @@ const Progress: React.FC = () => {
     status: employeeStatus,
     loanStatus,
     documents,
+    voiceNoteUrl,
     notes,
   } = useSelector((state: RootState) => state.employee);
   const { toast } = useSelector((state: RootState) => state.toast);
@@ -330,6 +331,8 @@ const Progress: React.FC = () => {
                     isMobile={isMobile}
                     isTab={isTab}
                     notes={notes}
+                    storedTicketId={storedTicketId}
+                    voiceNoteUrl={voiceNoteUrl}
                   />
                   <Box
                     mt={4}

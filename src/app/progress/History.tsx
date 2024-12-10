@@ -16,9 +16,19 @@ interface HistoryProps {
 const History: React.FC<HistoryProps> = ({ ticketHistory }) => {
   const { capitalizeFirstLetter } = Utility();
   return (
-    <Box>
+    <Box
+      sx={{
+        height: "30vh",
+        overflowY: "auto",
+        padding: "10px",
+        borderRadius: "8px",
+        "&::-webkit-scrollbar": {
+          display: "none", // This hides the scrollbar
+        },
+      }}
+    >
       {ticketHistory.length ? (
-        ticketHistory.map((history, index) => {
+        ticketHistory.map((history) => {
           const dateObj = new Date(history.created_at);
           const capitalizedAction = capitalizeFirstLetter(
             history.action.replace(/<\/?[^>]+(>|$)/g, "")
@@ -38,7 +48,6 @@ const History: React.FC<HistoryProps> = ({ ticketHistory }) => {
                 <Typography
                   variant="body1"
                   sx={{
-                    height: "10vh",
                     width: "32vw",
                     color: "white",
                   }}
@@ -50,7 +59,6 @@ const History: React.FC<HistoryProps> = ({ ticketHistory }) => {
                   color="textSecondary"
                   sx={{
                     ml: "3vw",
-                    height: "10vh",
                     color: "cyan",
                   }}
                 >
@@ -62,7 +70,14 @@ const History: React.FC<HistoryProps> = ({ ticketHistory }) => {
           );
         })
       ) : (
-        <Typography variant="body2" mt={2} sx={{ padding: "0 10px" }}>
+        <Typography
+          variant="body2"
+          mt={2}
+          sx={{
+            textAlign: "center",
+            color: "white",
+          }}
+        >
           No history
         </Typography>
       )}

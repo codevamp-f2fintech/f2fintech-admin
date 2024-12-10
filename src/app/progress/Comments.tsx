@@ -222,6 +222,10 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
         )
       : [];
 
+  const capitalizeFirstWord = (text: string) => {
+    return text.replace(/^\w/, (c) => c.toUpperCase());
+  };
+
   return (
     <Box mt={2} mb={2} sx={{ position: "relative" }}>
       <Box sx={{ position: "relative", mb: 2 }}>
@@ -297,6 +301,7 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
               sx={{
                 display: "flex",
                 alignItems: "flex-start",
+                height: "auto", // Allow dynamic height for the overall box
               }}
             >
               {/* User Avatar */}
@@ -368,10 +373,15 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
                     </Box>
                   </Box>
                 ) : (
-                  <Box>
+                  <Box
+                    sx={{
+                      maxHeight: 150, // Fixed max height for the comment box
+                      overflowY: "auto", // Allow vertical scroll when content overflows
+                    }}
+                  >
                     {/* Comment Text */}
                     <Typography variant="body1" sx={{ mb: 1, color: "white" }}>
-                      {capitalizeFirstLetter(comment.comment)}
+                      {capitalizeFirstWord(comment.comment)}
                     </Typography>
                     {/* Attachment Preview (if present) */}
                     {comment.attachment && (

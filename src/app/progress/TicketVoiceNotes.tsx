@@ -16,8 +16,15 @@ import { Utility } from "@/utils";
 import { useDispatch, useSelector } from "react-redux";
 import { Upload } from "@mui/icons-material";
 import { RootState } from "@/redux/store";
+import { useModifyTicket } from "@/hooks/ticket";
 
-const TicketVoiceNotes = ({ isMobile, isTab, notes }) => {
+const TicketVoiceNotes = ({
+  isMobile,
+  isTab,
+  notes,
+  storedTicketId,
+  voiceNoteUrl,
+}) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 3;
   const [selectedAudioFile, setSelectedAudioFile] = useState();
@@ -26,6 +33,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, notes }) => {
   const dispatch = useDispatch();
   const { toast } = useSelector((state: RootState) => state.toast);
   const { toastAndNavigate } = Utility();
+  const { modifyTicket } = useModifyTicket("update-ticket");
 
   const totalPages = Math.ceil(notes ? notes?.length / itemsPerPage : 0);
 
@@ -33,11 +41,12 @@ const TicketVoiceNotes = ({ isMobile, isTab, notes }) => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const displayedNotes = notes?.slice(startIndex, startIndex + itemsPerPage);
 
-  const handleAttachmentAudioDelete = () => {
-    setSelectedAudioFile(null);
-    // setFieldValue("data", updatedFiles);
+  const handleAttachmentAudioDelete = async () => {
+    await modifyTicket(+storedTicketId, {
+      voice_note_url: null,
+    });
     if (inputRef.current) {
-      inputRef.current.value = ""; // Reset the value of the input element
+      inputRef.current.value = ""; // Clear the file input value
     }
   };
 
@@ -63,6 +72,10 @@ const TicketVoiceNotes = ({ isMobile, isTab, notes }) => {
             }
           );
           attachmentUrl = uploadResponse.data.data;
+          // update ticket api update-ticket/:ticketId
+          const updatedData = { voice_note_url: attachmentUrl };
+
+          await modifyTicket(+storedTicketId, updatedData);
           setUploaded(true);
           toastAndNavigate(dispatch, true, "info", "Uploaded Successfully");
         } catch (err) {
@@ -85,7 +98,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, notes }) => {
     setSelectedAudioFile(file);
   };
 
-  console.log("AudioFile>>", selectedAudioFile, selectedAudioFile?.name);
+  console.log("AudioFile>>", notes, voiceNoteUrl);
   return (
     <Grid item xs={12} md={8}>
       <Paper
@@ -193,7 +206,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, notes }) => {
         )}
 
         {/* Display selected audio files */}
-        {selectedAudioFile && (
+        {(voiceNoteUrl || selectedAudioFile) && (
           <Box sx={{ width: "100%", maxWidth: "40vw", mt: 2 }}>
             <Box
               key={0}
@@ -204,74 +217,41 @@ const TicketVoiceNotes = ({ isMobile, isTab, notes }) => {
                 mb: 1,
               }}
             >
-              <Typography>{selectedAudioFile.name}</Typography>
-              <IconButton
-                onClick={() => handleAttachmentAudioDelete()}
-                sx={{ ml: 2 }}
-              >
+              <Typography>{selectedAudioFile?.name}</Typography>
+              <IconButton onClick={handleAttachmentAudioDelete} sx={{ ml: 2 }}>
                 <DeleteIcon />
               </IconButton>
-              {!uploaded && <Upload onClick={handleVoiceNoteUpload} />}
+              {selectedAudioFile && !uploaded && (
+                <Upload onClick={handleVoiceNoteUpload} />
+              )}
               {/* Audio Player for Each Selected File */}
               <audio controls style={{ width: "100%" }}>
-                <source
-                  src={URL.createObjectURL(selectedAudioFile)}
-                  type={selectedAudioFile.type || "audio/*"}
-                />
-                Your browser does not support the audio element.
+                {selectedAudioFile ? (
+                  <>
+                    {/* Check the MIME type of the selected file */}
+                    <source
+                      src={URL.createObjectURL(selectedAudioFile)}
+                      type={
+                        selectedAudioFile.type === "audio/mpeg"
+                          ? "audio/mpeg"
+                          : selectedAudioFile.type === "audio/ogg"
+                          ? "audio/ogg"
+                          : "audio/wav" // Default to WAV if MIME type is unknown
+                      }
+                    />
+                  </>
+                ) : voiceNoteUrl ? (
+                  <>
+                    {/* Add multiple sources for different file types */}
+                    <source src={voiceNoteUrl} type="audio/mpeg" />
+                    <source src={voiceNoteUrl} type="audio/ogg" />
+                    <source src={voiceNoteUrl} type="audio/wav" />
+                  </>
+                ) : (
+                  <p>Your browser does not support the audio element.</p>
+                )}
               </audio>
             </Box>
-          </Box>
-        )}
-
-        {/* Pagination Controls */}
-        {notes?.length > itemsPerPage && (
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginTop: 2,
-              width: isMobile ? "48vw" : isTab ? "44vw" : "38vw",
-              mr: isMobile ? "2vw" : "",
-            }}
-          >
-            <Button
-              variant="contained"
-              color="primary"
-              sx={{
-                mr: ".5rem",
-                height: isMobile ? "3vh" : isTab ? "3vh" : "",
-                width: isMobile ? "1vw" : isTab ? "" : "5vw",
-              }}
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((prev) => prev - 1)}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              sx={{
-                height: isMobile ? "3vh" : isTab ? "3vh" : "",
-                width: "5vw",
-              }}
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((prev) => prev + 1)}
-            >
-              Next
-            </Button>
-            <Typography
-              variant="body2"
-              sx={{
-                color: "white",
-                textAlign: "center",
-                flexGrow: 1,
-                mt: isMobile ? "" : isTab ? "1rem" : ".5rem",
-                mr: isMobile ? "" : isTab ? "20vw" : "20vw",
-              }}
-            >
-              Page {currentPage} of {totalPages}
-            </Typography>
           </Box>
         )}
       </Paper>
