@@ -12,7 +12,17 @@ const WorkLogList: React.FC<WorkLogListProps> = ({ workLog }) => {
   const { capitalizeFirstLetter, decodedToken } = Utility();
 
   return (
-    <Box>
+    <Box
+      sx={{
+        height: "30vh",
+        overflowY: "auto",
+        padding: "10px",
+        borderRadius: "8px",
+        "&::-webkit-scrollbar": {
+          display: "none", // This hides the scrollbar
+        },
+      }}
+    >
       {workLog?.data?.length ? (
         workLog.data.map((log, index) => (
           <Paper

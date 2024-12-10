@@ -4,6 +4,7 @@ import axios from "axios";
 // Define the type for your employee state, including documents
 interface EmployeeState {
   status: string;
+  voiceNoteUrl: string;
   loanStatus: string;
   documents: Array<{
     document_url: string;
@@ -21,7 +22,7 @@ export const fetchEmployeeStatus = createAsyncThunk<string, number>(
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/get-by-application-id/${applicationId}`
     );
-    return response.data.data.status;
+    return response.data.data;
   }
 );
 
@@ -88,7 +89,8 @@ const employeeSlice = createSlice({
       .addCase(
         fetchEmployeeStatus.fulfilled,
         (state, action: PayloadAction<string>) => {
-          state.status = action.payload;
+          state.status = action.payload.status;
+          state.voiceNoteUrl = action.payload.voice_note_url;
           state.loading = false;
         }
       )
