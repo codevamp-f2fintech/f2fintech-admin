@@ -51,7 +51,12 @@ function InfoRow({ icon, text }: { icon: React.ReactNode; text: string }) {
   );
 }
 
-const ApplicationCard = ({ contact, handleStartClick = null, ticket = false, refetch = null }) => {
+const ApplicationCard = ({
+  contact,
+  handleStartClick = null,
+  ticket = false,
+  refetch = null,
+}) => {
   const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [limit] = useState<number>(6);
@@ -71,7 +76,9 @@ const ApplicationCard = ({ contact, handleStartClick = null, ticket = false, ref
     if (showHistory && ticket) {
       const fetchHistoryData = async () => {
         try {
-          const { data } = await fetcher(`get-ticket-histories/${ticket.id}`);
+          const { data } = await fetcher(
+            `get-ticket-histories/${ticket.ticketId}`
+          );
           setHistoryData(data);
         } catch (error) {
           console.error("Error fetching history data:", error);
@@ -218,17 +225,20 @@ const ApplicationCard = ({ contact, handleStartClick = null, ticket = false, ref
               variant="h5"
               component="div"
               sx={{
-                mt: 4,
+                mt: 3,
                 color: "white",
                 fontWeight: "bold",
-                whiteSpace: "nowrap",
+                whiteSpace: "normal",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 maxWidth: "100%",
                 textAlign: "center",
+                fontSize: "1.3rem",
+                height: isMobile ? "7vh" : isTab ? "4vh" : "8vh",
+                width: isMobile ? "80vw" : isTab ? "25vw" : "20vw",
               }}
             >
-              {contact.Name.toUpperCase()}
+              {contact.Name?.toUpperCase()}
             </Typography>
           </Box>
 

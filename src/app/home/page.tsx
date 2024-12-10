@@ -182,17 +182,8 @@ const Home: React.FC = () => {
             ))
           )}
         </Grid>
-        {!hasMoreData && filteredCustomers?.length > 0 && (
-          <Typography
-            variant="body2"
-            align="center"
-            sx={{ mt: 2, color: "text.secondary" }}
-          >
-            No more applications to load
-          </Typography>
-        )}
+        {(swrLoading || paginationLoading) && <Loader />}
       </Box>
-      {(swrLoading || paginationLoading) && <Loader />}
     </Box>
   );
 };
