@@ -12,16 +12,24 @@ import {
 } from "@mui/material";
 import {
   SearchRounded,
-  FilterListRounded,
   CalendarMonthRounded,
   PersonRounded,
-  CheckCircleRounded,
+  ClearRounded,
   RadioButtonUncheckedRounded,
   AccessTimeRounded,
   ForwardRounded,
-  ClearRounded,
+  CheckCircleRounded,
   PauseCircleOutlineRounded,
-  CancelRounded,
+  ForwardToInboxRounded,
+  FilterListRounded,
+  AssignmentRounded,
+  LoginRounded,
+  PendingActionsRounded,
+  ThumbUpRounded,
+  SendRounded,
+  AccountBalanceRounded,
+  ReportRounded,
+  VisibilityRounded,
 } from "@mui/icons-material";
 import dayjs, { Dayjs } from "dayjs";
 
@@ -67,25 +75,33 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
   const getStatusColor = (status: string): string => {
     const colors: { [key: string]: string } = {
-      "to do": "#ff9800",
-      "in progress": "#2196f3",
-      forwarded: "#9c27b0",
-      done: "#4caf50",
-      "on hold": "#ff5722", // Orange-red for 'on hold'
-      close: "#d32f2f",
-      all: "#757575",
+      "under credit review": "#ff9800", // Orange
+      "to be login": "#2196f3", // Blue
+      "pendency in file": "#f44336", // Red
+      "to be approved": "#4caf50", // Green
+      "to be disbursed": "#9c27b0", // Purple
+      "file send to banker": "#3f51b5", // Indigo
+      "tvr done": "#00bcd4", // Cyan
+      "cam report done": "#8bc34a", // Light Green
+      relook: "#ff5722", // Orange-Red
+      forwarded: "#ffc107", // Amber for Forwarded
+      all: "#757575", // Grey
     };
     return colors[status] || colors.all;
   };
 
   const getStatusIcon = (status: string): JSX.Element => {
     const icons: { [key: string]: JSX.Element } = {
-      "to do": <RadioButtonUncheckedRounded sx={{ fontSize: 20 }} />,
-      "in progress": <AccessTimeRounded sx={{ fontSize: 20 }} />,
-      forwarded: <ForwardRounded sx={{ fontSize: 20 }} />,
-      done: <CheckCircleRounded sx={{ fontSize: 20 }} />,
-      "on hold": <PauseCircleOutlineRounded sx={{ fontSize: 20 }} />,
-      close: <CancelRounded sx={{ fontSize: 20 }} />,
+      "under credit review": <AssignmentRounded sx={{ fontSize: 20 }} />,
+      "to be login": <LoginRounded sx={{ fontSize: 20 }} />,
+      "pendency in file": <PendingActionsRounded sx={{ fontSize: 20 }} />,
+      "to be approved": <ThumbUpRounded sx={{ fontSize: 20 }} />,
+      "to be disbursed": <ForwardRounded sx={{ fontSize: 20 }} />,
+      "file send to banker": <SendRounded sx={{ fontSize: 20 }} />,
+      "tvr done": <AccountBalanceRounded sx={{ fontSize: 20 }} />,
+      "cam report done": <ReportRounded sx={{ fontSize: 20 }} />,
+      relook: <VisibilityRounded sx={{ fontSize: 20 }} />,
+      forwarded: <ForwardToInboxRounded sx={{ fontSize: 20 }} />,
       all: <FilterListRounded sx={{ fontSize: 20 }} />,
     };
     return icons[status] || icons.all;
@@ -186,12 +202,16 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         >
           {[
             "all",
-            "to do",
-            "in progress",
-            "on hold",
             "forwarded",
-            "done",
-            "close",
+            'under credit review',
+            'to be login',
+            'pendency in file',
+            'to be approved',
+            'to be disbursed',
+            'file send to banker',
+            'tvr done',
+            'cam report done',
+            'relook'
           ].map((status) => (
             <MenuItem
               key={status}

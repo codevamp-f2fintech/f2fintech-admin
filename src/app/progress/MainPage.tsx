@@ -18,8 +18,9 @@ import {
   Select,
   FormControl,
   useMediaQuery,
+  Button,
 } from "@mui/material";
-
+import { ArrowForwardRounded } from "@mui/icons-material";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { ThemeProvider } from "@mui/material/styles";
@@ -32,6 +33,7 @@ import WorkLogList from "./Worklog";
 import TrackingForm from "./trackingForm";
 import TicketDetail from "./TicketDetail";
 import TicketDocuments from "./TicketDocuments";
+import TicketVoiceNotes from "./TicketVoiceNotes";
 import Toast from "../components/common/Toast";
 import UserAutocomplete from "../components/common/UserAutocomplete";
 
@@ -43,12 +45,24 @@ import {
   fetchStatusAndDocuments,
   fetchEmployeeStatus,
 } from "../../redux/features/employeeSlice";
+import { useGetUsers } from "@/hooks/user";
 import { Utility } from "@/utils";
 import {
   useCreateTicketHistory,
   useGetTicketHistory,
 } from "@/hooks/tickethistory";
-import TicketVoiceNotes from "./TicketVoiceNotes";
+
+const employeeStatusObj = [
+  { value: "under credit review", label: "Under Credit Review" },
+  { value: "to be login", label: "To Be Login" },
+  { value: "pendency in file", label: "Pendency in File" },
+  { value: "to be approved", label: "To Be Approved" },
+  { value: "to be disbursed", label: "To Be Disbursed" },
+  { value: "file send to banker", label: "File Send to Banker" },
+  { value: "tvr done", label: "TVR Done" },
+  { value: "cam report done", label: "CAM Report Done" },
+  { value: "relook", label: "Relook" }
+];
 
 const Progress: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -118,6 +132,8 @@ const Progress: React.FC = () => {
   const { createTicketHistory } = useCreateTicketHistory(
     "create-ticket-history"
   );
+
+  const { value: userData } = useGetUsers({}, "get-users", 1, 100);
 
   useEffect(() => {
     if (workLog?.data) {
@@ -416,7 +432,7 @@ const Progress: React.FC = () => {
                   </Box>
 
                   {activeSection === "Comments" && (
-                    <Comments storedTicketId={storedTicketId} theme={theme} />
+                    <Comments storedTicketId={storedTicketId} theme={theme} userData={userData} />
                   )}
 
                   {/* History Section */}
@@ -500,16 +516,30 @@ const Progress: React.FC = () => {
                             width: isMobile ? "30vw" : "8vw",
                           }}
                         >
-                          <MenuItem value="to do">To Do</MenuItem>
-                          <MenuItem value="in progress">In Progress</MenuItem>
-                          <MenuItem value="on hold">On Hold</MenuItem>
-                          <MenuItem value="forwarded">Forwarded</MenuItem>
-                          <MenuItem value="close">Close</MenuItem>
-                          <MenuItem value="done">Done</MenuItem>
+                          {employeeStatusObj.map((status) => (
+                            <MenuItem key={status.value} value={status.value}>
+                              {status.label}
+                            </MenuItem>
+                          ))}
                         </Select>
                       </FormControl>
                     </Grid>
                   </Box>
+
+                  <Grid item xs={6} md={5} mt={0}>
+                    <Button
+                      color="info"
+                      endIcon={<ArrowForwardRounded />}
+                      size="small"
+                      variant="contained"
+                      onClick={() => setNewEmployeeStatus('forwarded')}
+                      sx={{
+                        margin: '20px 0 0 5px'
+                      }}
+                    >
+                      Forward
+                    </Button>
+                  </Grid>
                   {/* Conditionally render the dropdown if the status is forwarded */}
                   <UserAutocomplete
                     isMobile={isMobile}
@@ -518,6 +548,7 @@ const Progress: React.FC = () => {
                     selectedUser={selectedUser}
                     setSelectedUser={setSelectedUser}
                     handleForwardAutocomplete={handleForwardAutocomplete}
+                    userData={userData}
                   />
                   <Divider sx={{ my: 2 }} />
 
@@ -599,8 +630,8 @@ const Progress: React.FC = () => {
                           fontSize: isMobile
                             ? ".8rem"
                             : isTab
-                            ? ".9rem"
-                            : "14px",
+                              ? ".9rem"
+                              : "14px",
                           fontWeight: "bold",
                           color: "white",
                           marginLeft: ".5rem",

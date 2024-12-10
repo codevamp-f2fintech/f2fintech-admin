@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Autocomplete, Box, TextField } from "@mui/material";
 
-import { useGetUsers } from "@/hooks/user";
 import { fetcher } from "@/apis/apiClient";
 import { Utility } from "@/utils";
 import { UserData } from "@/types/user";
@@ -11,6 +10,7 @@ interface UserAutocompleteProps {
   isTab: boolean;
   newEmployeeStatus: string;
   selectedUser: UserData | null;
+  userData: object;
   setSelectedUser: (user: UserData | null) => void;
   handleForwardAutocomplete: (value: UserData | null) => void;
 }
@@ -22,12 +22,12 @@ const UserAutocomplete: React.FC<UserAutocompleteProps> = ({
   selectedUser,
   setSelectedUser,
   handleForwardAutocomplete,
+  userData
 }) => {
   const [allUsers, setAllUsers] = useState<UserData[]>([]);
   const { getLocalStorage } = Utility();
   const ticketId = getLocalStorage("ticketId")?.split("-")[1];
 
-  const { value: userData } = useGetUsers({}, "get-users", 1, 100);
 
   useEffect(() => {
     if (userData?.results) {

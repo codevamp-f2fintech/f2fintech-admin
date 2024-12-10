@@ -21,7 +21,7 @@ const Ticket = () => {
   const [filteredApplications, setFilteredApplications] = useState([]);
   const [filter, setFilter] = useState("");
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
-  const [sortBy, setSortBy] = useState("to do");
+  const [sortBy, setSortBy] = useState("all");
   const [startDate, setStartDate] = useState<Dayjs | null>(null);
   const [endDate, setEndDate] = useState<Dayjs | null>(null);
   const { tickets } = useSelector((state: RootState) => state.ticket);
@@ -146,8 +146,8 @@ const Ticket = () => {
   const ticketCount = (status: string): number => {
     const ticketResults = tickets?.results || [];
 
-    if (status === "all") {
-      return ticketResults.length;
+    if (status === "all" || status === 'forwarded') {
+      return filterTickets()?.length;
     }
     return ticketResults.filter((ticket) => ticket.ticketStatus === status).length;
   };

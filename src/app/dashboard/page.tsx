@@ -4,7 +4,6 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Grid from "@mui/material/Unstable_Grid2";
 import {
-  FilterListRounded,
   PersonRounded,
   CheckCircleRounded,
   RadioButtonUncheckedRounded,
@@ -12,6 +11,15 @@ import {
   ForwardRounded,
   PauseCircleOutlineRounded,
   CancelRounded,
+  FilterListRounded,
+  AssignmentRounded,
+  LoginRounded,
+  PendingActionsRounded,
+  ThumbUpRounded,
+  SendRounded,
+  AccountBalanceRounded,
+  ReportRounded,
+  VisibilityRounded,
 } from "@mui/icons-material";
 import dayjs from "dayjs";
 
@@ -145,17 +153,17 @@ export default async function Page(): Promise<React.JSX.Element> {
   ] = await Promise.all([
     fetchTotalApplications(),
     fetchTotalTickets(null, id, role),
-    fetchTotalTickets("to do", id, role),
-    fetchTotalTickets("in progress", id, role),
-    fetchTotalTickets("forwarded", id, role),
-    fetchTotalTickets("close", id, role),
-    fetchTotalTickets("done", id, role),
+    fetchTotalTickets('under credit review', id, role),
+    fetchTotalTickets('to be login', id, role),
+    fetchTotalTickets('pendency in file', id, role),
+    fetchTotalTickets('to be approved', id, role),
+    fetchTotalTickets('to be disbursed', id, role),
     getTotalTicketsByMonth(2024),
     getDoneTicketsByMonth(2024),
   ]);
 
   const totalOnHoldTickets =
-    role !== "admin" ? await fetchTotalTickets("on hold", id, role) : null; // Fetch tickets on hold only for non-admin roles
+    role !== "admin" ? await fetchTotalTickets("file send to banker", id, role) : null; // Fetch tickets for non-admin roles
   const totalAgents = role === "admin" ? await fetchAgentCount() : null;
 
   const dashboardItems = [
@@ -176,9 +184,9 @@ export default async function Page(): Promise<React.JSX.Element> {
       link: `/ticket?status=${decodeURIComponent("all")}`,
     },
     {
-      icon: RadioButtonUncheckedRounded,
-      label: "Open Tickets",
-      key: "openTickets",
+      icon: AssignmentRounded,
+      label: "Under Credit Review",
+      key: "underCreditReview",
       color: "#ff9800",
       count: totalOpenTickets,
       link: `/ticket?status=${decodeURIComponent("to do")}`,
@@ -217,25 +225,25 @@ export default async function Page(): Promise<React.JSX.Element> {
     },
     ...(role === "admin"
       ? [
-          {
-            icon: PersonRounded,
-            label: "Total Agents",
-            key: "totalAgents",
-            color: "#607d8b",
-            count: totalAgents,
-            link: "/user",
-          },
-        ]
+        {
+          icon: PersonRounded,
+          label: "Total Agents",
+          key: "totalAgents",
+          color: "#607d8b",
+          count: totalAgents,
+          link: "/user",
+        },
+      ]
       : [
-          {
-            icon: PauseCircleOutlineRounded,
-            label: "Tickets on Hold",
-            key: "onHold",
-            color: "#757575",
-            count: totalOnHoldTickets,
-            link: `/ticket?status=${decodeURIComponent("on hold")}`,
-          },
-        ]),
+        {
+          icon: PauseCircleOutlineRounded,
+          label: "Tickets on Hold",
+          key: "onHold",
+          color: "#757575",
+          count: totalOnHoldTickets,
+          link: `/ticket?status=${decodeURIComponent("on hold")}`,
+        },
+      ]),
   ];
   console.log(role, "role in dashbpard");
   console.log(

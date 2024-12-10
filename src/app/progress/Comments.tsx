@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import axios from "axios";
 import React, { useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -30,9 +31,10 @@ const ITEMS_PER_PAGE = 3;
 interface CommentsProps {
   storedTicketId: number;
   theme: any;
+  userData: object;
 }
 
-const Comments = ({ storedTicketId, theme }: CommentsProps) => {
+const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
   const [newComment, setNewComment] = useState<string>("");
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editedComment, setEditedComment] = useState<string>("");
@@ -105,6 +107,7 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
 
       const newCommentData = {
         ticket_id: storedTicketId,
+        user_id: decodedToken()?.id,
         comment: newComment,
         attachment: attachmentUrl,
       };
@@ -124,10 +127,7 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
     attachment,
     newComment,
     storedTicketId,
-    createTicketActivity,
-    refetch,
-    dispatch,
-    toastAndNavigate,
+    refetch
   ]);
 
   // Delete comment handler, memoized
@@ -217,9 +217,9 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
   const paginatedComments =
     comments && comments.data
       ? comments.data.slice(
-          (currentPage - 1) * ITEMS_PER_PAGE,
-          currentPage * ITEMS_PER_PAGE
-        )
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+      )
       : [];
 
   const capitalizeFirstWord = (text: string) => {
@@ -293,174 +293,172 @@ const Comments = ({ storedTicketId, theme }: CommentsProps) => {
 
       <Box mt={3}>
         {paginatedComments.length > 0 ? (
-          paginatedComments.map((comment) => (
-            <Box
-              key={comment.id}
-              mt={2}
-              p={2}
-              sx={{
-                display: "flex",
-                alignItems: "flex-start",
-                height: "auto", // Allow dynamic height for the overall box
-              }}
-            >
-              {/* User Avatar */}
-              <Avatar sx={{ bgcolor: "#1976d2", mr: 2 }}>
-                {decodedToken()?.username?.charAt(0).toUpperCase()}
-              </Avatar>
+          paginatedComments.map((comment) => {
+            const commentedBy = userData?.results.find(user => user.id == comment.user_id);
+            return (
+              <Box
+                key={comment.id}
+                mt={2}
+                p={2}
+                sx={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  height: "auto"
+                }}
+              >
+                {/* User Avatar */}
+                <Avatar sx={{ bgcolor: "#1976d2", mr: 2 }}>
+                  {commentedBy?.username?.charAt(0).toUpperCase()}
+                </Avatar>
 
-              <Box sx={{ flexGrow: 1 }}>
-                {/* Comment Header: User Name, Date */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    mb: isTab ? 0 : 0.5,
-                  }}
-                >
-                  <Typography fontWeight="bold" sx={{ marginRight: "8px" }}>
-                    {capitalizeFirstLetter(decodedToken()?.username)}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color="cornsilk"
-                    sx={{ ml: "20vw" }}
-                  >
-                    {formatDistanceToNow(new Date(comment.created_at))} ago
-                  </Typography>
-                </Box>
-
-                {/* Comment Content / Edit Mode */}
-                {editingCommentId === comment.id ? (
-                  <Box>
-                    <TextField
-                      sx={{
-                        bgcolor: "white",
-                        borderRadius: "10px",
-                        "& .MuiFilledInput-root": {
-                          "&:before, &:after": {
-                            display: "none", // Removes the underline
-                          },
-                        },
-                      }}
-                      fullWidth
-                      multiline
-                      value={editedComment}
-                      onChange={(e) =>
-                        setEditedComment(capitalizeFirstLetter(e.target.value))
-                      }
-                      rows={3}
-                      variant="filled"
-                    />
-                    <Box mt={1}>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        sx={{ color: "white", bgcolor: "green" }}
-                        onClick={() =>
-                          handleSaveEditComment(comment.id, comment.ticket_id)
-                        }
-                      >
-                        Save
-                      </Button>
-                      <Button
-                        variant="contained"
-                        sx={{ ml: 2, color: "white", bgcolor: "red" }}
-                        onClick={handleCancelEdit}
-                      >
-                        Cancel
-                      </Button>
-                    </Box>
-                  </Box>
-                ) : (
+                <Box sx={{ flexGrow: 1 }}>
+                  {/* Comment Header: User Name, Date */}
                   <Box
                     sx={{
-                      maxHeight: 150, // Fixed max height for the comment box
-                      overflowY: "auto", // Allow vertical scroll when content overflows
+                      display: "flex",
+                      alignItems: "center",
+                      mb: isTab ? 0 : 0.5,
                     }}
                   >
-                    {/* Comment Text */}
-                    <Typography variant="body1" sx={{ mb: 1, color: "white" }}>
-                      {capitalizeFirstWord(comment.comment)}
+                    <Typography fontWeight="bold" sx={{ marginRight: "8px" }}>
+                      {capitalizeFirstLetter(commentedBy?.username)}
                     </Typography>
-                    {/* Attachment Preview (if present) */}
-                    {comment.attachment && (
+                    <Typography
+                      variant="body2"
+                      color="cornsilk"
+                      sx={{ ml: "20vw" }}
+                    >
+                      {formatDistanceToNow(new Date(comment.created_at))} ago
+                    </Typography>
+                  </Box>
+
+                  {/* Comment Content / Edit Mode */}
+                  {editingCommentId === comment.id ? (
+                    <Box>
+                      <TextField
+                        sx={{
+                          bgcolor: "white",
+                          borderRadius: "10px",
+                          "& .MuiFilledInput-root": {
+                            "&:before, &:after": {
+                              display: "none", // Removes the underline
+                            },
+                          },
+                        }}
+                        fullWidth
+                        multiline
+                        value={editedComment}
+                        onChange={(e) =>
+                          setEditedComment(capitalizeFirstLetter(e.target.value))
+                        }
+                        rows={3}
+                        variant="filled"
+                      />
+                      <Box mt={1}>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          sx={{ color: "white", bgcolor: "green" }}
+                          onClick={() =>
+                            handleSaveEditComment(comment.id, comment.ticket_id)
+                          }
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          variant="contained"
+                          sx={{ ml: 2, color: "white", bgcolor: "red" }}
+                          onClick={handleCancelEdit}
+                        >
+                          Cancel
+                        </Button>
+                      </Box>
+                    </Box>
+                  ) : (
+                    <Box>
+                      {/* Comment Text */}
+                      <Typography variant="body1" sx={{ mb: 1, color: "white" }}>
+                        {capitalizeFirstLetter(comment.comment)}
+                      </Typography>
+                      {/* Attachment Preview (if present) */}
+                      {comment.attachment && (
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            mb: 1,
+                          }}
+                        >
+                          <Typography sx={{ color: "white" }}>
+                            <a
+                              href={comment.attachment}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                color: "cyan",
+                                textDecoration: "underline",
+                              }}
+                            >
+                              *View Attachment
+                            </a>
+                          </Typography>
+                        </Box>
+                      )}
+
+                      {/* Action Buttons: Edit, Delete */}
                       <Box
                         sx={{
+                          width: "20%",
                           display: "flex",
                           alignItems: "center",
-                          mb: 1,
+                          flexDirection: "space-between",
+                          color: "#5e6c84",
+                          mt: isTab ? "2vh" : "5vh",
                         }}
                       >
-                        <Typography sx={{ color: "white" }}>
-                          <a
-                            href={comment.attachment}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                              color: "cyan",
-                              textDecoration: "underline",
-                            }}
-                          >
-                            *View Attachment
-                          </a>
-                        </Typography>
+                        <Button
+                          size="small"
+                          sx={{
+                            textTransform: "none",
+                            fontSize: "0.85rem",
+                            bgcolor: "gray",
+                            color: "white",
+                            "&:hover": {
+                              bgcolor: "darkgray",
+                              color: "black",
+                            },
+                          }}
+                          onClick={() =>
+                            handleEditComment(comment.id, comment.comment)
+                          }
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          size="small"
+                          sx={{
+                            textTransform: "none",
+                            fontSize: "0.85rem",
+                            color: "white",
+                            padding: "4px",
+                            bgcolor: "gray",
+                            ml: "2vw",
+                            "&:hover": {
+                              bgcolor: "darkgray",
+                              color: "black",
+                            },
+                          }}
+                          onClick={() => handleDeleteComment(comment.id)}
+                        >
+                          Delete
+                        </Button>
                       </Box>
-                    )}
-
-                    {/* Action Buttons: Edit, Delete */}
-                    <Box
-                      sx={{
-                        width: "20%",
-                        display: "flex",
-                        alignItems: "center",
-                        flexDirection: "space-between",
-                        color: "#5e6c84",
-                        mt: isTab ? "2vh" : "5vh",
-                      }}
-                    >
-                      <Button
-                        size="small"
-                        sx={{
-                          textTransform: "none",
-                          fontSize: "0.85rem",
-                          bgcolor: "gray",
-                          color: "white",
-                          "&:hover": {
-                            bgcolor: "darkgray",
-                            color: "black",
-                          },
-                        }}
-                        onClick={() =>
-                          handleEditComment(comment.id, comment.comment)
-                        }
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        size="small"
-                        sx={{
-                          textTransform: "none",
-                          fontSize: "0.85rem",
-                          color: "white",
-                          padding: "4px",
-                          bgcolor: "gray",
-                          ml: "2vw",
-                          "&:hover": {
-                            bgcolor: "darkgray",
-                            color: "black",
-                          },
-                        }}
-                        onClick={() => handleDeleteComment(comment.id)}
-                      >
-                        Delete
-                      </Button>
                     </Box>
-                  </Box>
-                )}
+                  )}
+                </Box>
               </Box>
-            </Box>
-          ))
+            )
+          })
         ) : (
           <Typography>No comments available</Typography>
         )}
