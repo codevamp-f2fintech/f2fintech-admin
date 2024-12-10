@@ -183,7 +183,7 @@ const Ticket = () => {
           minWidth: "80vw",
           minHeight: "70vh",
           display: "flex",
-          alignItems: isMobile ? "center" : isTab ? "" : "flex-start",
+          alignItems: isMobile ? "center" : isTab ? "center" : "flex-start",
           justifyContent: "space-between",
           paddingTop: "20px",
           marginBottom: "0",
@@ -193,9 +193,10 @@ const Ticket = () => {
           container
           spacing={2}
           sx={{
-            paddingLeft: 0,
             justifyContent: "center",
             alignItems: "center",
+            display: "flex",
+            flexDirection: isMobile ? "column" : isTab ? "" : "",
           }}
         >
           {filterTickets().length > 0 ? (

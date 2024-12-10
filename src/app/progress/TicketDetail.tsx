@@ -39,16 +39,18 @@ const TicketDetail = ({ ticketId, selectedCustomer, isMobile, isTab }) => {
         gap={2}
         sx={{
           borderRadius: "14px",
+          flexDirection: isMobile ? "column" : isTab ? "" : "",
         }}
       >
-        <Avatar
-          src={selectedCustomer.Image}
-          sx={{
-            width: isMobile ? "2rem" : isTab ? "" : "4rem",
-            height: isMobile ? "2rem" : isTab ? "" : "4rem",
-            marginBottom: isMobile ? "40vh" : isTab ? "" : "",
-          }}
-        />
+        <Box sx={{}}>
+          <Avatar
+            src={selectedCustomer.Image}
+            sx={{
+              width: isMobile ? "2rem" : isTab ? "6vw" : "4rem",
+              height: isMobile ? "2rem" : isTab ? "4vh" : "4rem",
+            }}
+          />
+        </Box>
 
         <Box
           sx={{
@@ -56,7 +58,6 @@ const TicketDetail = ({ ticketId, selectedCustomer, isMobile, isTab }) => {
             p: 3,
             borderRadius: 2,
             bgcolor: "#1e1e1e",
-            border: "1px solid #fff",
             transition: "transform 0.3s ease",
             "&:hover": {
               transform: "scale(1.02)",

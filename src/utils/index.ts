@@ -31,16 +31,18 @@ export const Utility = () => {
   /**
    * Function to capitalize 1st letter of a string
    * @param str - The string whose 1st letter is to be capitalized
-   * @returns 
+   * @returns
    */
   const capitalizeFirstLetter = (str: string) => {
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    if (str) {
+      return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    }
   };
 
   /**
-   * 
-   * @param timeSpent 
-   * @returns 
+   *
+   * @param timeSpent
+   * @returns
    */
   const parseTimeSpent = (timeSpent: string): number => {
     const timeRegex = /^(\d+)([hdm])$/;
@@ -93,7 +95,7 @@ export const Utility = () => {
       const years = (tenure / 12).toFixed(1); // convert to years with one decimal place if needed
       return `${years} years`;
     }
-  }
+  };
 
   // Function to format the date
   const formatDate = (dateString) => {
@@ -104,16 +106,14 @@ export const Utility = () => {
       month: "2-digit",
       day: "2-digit",
     });
-  }
-
+  };
 
   // Function to format the amount in INR
   const formatAmount = (amount) => {
     return `₹ ${new Intl.NumberFormat("en-IN", {
       maximumFractionDigits: 2,
     }).format(amount)}`;
-  }
-
+  };
 
   /**
    * Utility to store value in sessionStorage.
@@ -162,7 +162,7 @@ export const Utility = () => {
   const remLocalStorage = (key: string): void => {
     try {
       localStorage.removeItem(key);
-    } catch (err) { }
+    } catch (err) {}
   };
 
   /**
@@ -174,7 +174,7 @@ export const Utility = () => {
   const setLocalStorage = (key: string, value: any): void => {
     try {
       localStorage.setItem(key, JSON.stringify(value));
-    } catch (err) { }
+    } catch (err) {}
   };
 
   /**
