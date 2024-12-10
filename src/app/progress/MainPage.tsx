@@ -250,11 +250,7 @@ const Progress: React.FC = () => {
     setNewEmployeeStatus(newStatus);
 
     try {
-      const updateData =
-        newStatus !== "forwarded"
-          ? { status: newStatus }
-          : { status: newStatus, forwarded_to: null };
-      await modifyTicket(+storedTicketId, updateData);
+      await modifyTicket(+storedTicketId, { status: newStatus });
 
       const loggedInUser = decodedToken()?.username;
       const historyMessage = `${loggedInUser} changed status from ${oldStatus} to ${newStatus}`;
@@ -262,10 +258,7 @@ const Progress: React.FC = () => {
         ticket_id: storedTicketId,
         action: historyMessage,
       });
-
-      if (newStatus !== "forwarded") {
-        toastAndNavigate(dispatch, true, "info", "Status Changed Successfully");
-      }
+      toastAndNavigate(dispatch, true, "info", "Status Changed Successfully");
       await refetch();
     } catch (error) {
       toastAndNavigate(dispatch, true, "error", "Error Changing Status");
@@ -275,7 +268,10 @@ const Progress: React.FC = () => {
   const handleForwardAutocomplete = async (value) => {
     setSelectedUser(value);
     try {
-      await modifyTicket(+storedTicketId, { forwarded_to: value.id });
+      await modifyTicket(+storedTicketId, {
+        forwarded_to: value.id,
+        is_forwarded: 1
+      });
 
       const loggedInUser = decodedToken()?.username;
       const historyMessage = `${loggedInUser} forwarded the ticket to ${value.username}`;
