@@ -222,10 +222,6 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
       )
       : [];
 
-  const capitalizeFirstWord = (text: string) => {
-    return text.replace(/^\w/, (c) => c.toUpperCase());
-  };
-
   return (
     <Box mt={2} mb={2} sx={{ position: "relative" }}>
       <Box sx={{ position: "relative", mb: 2 }}>
@@ -293,7 +289,7 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
 
       <Box mt={3}>
         {paginatedComments.length > 0 ? (
-          paginatedComments.map((comment) => {
+          paginatedComments.map(comment => {
             const commentedBy = userData?.results.find(user => user.id == comment.user_id);
             return (
               <Box

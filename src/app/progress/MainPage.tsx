@@ -437,7 +437,7 @@ const Progress: React.FC = () => {
                   )}
 
                   {activeSection === "WorkLog" && (
-                    <WorkLogList workLog={workLog} />
+                    <WorkLogList workLog={workLog} userData={userData} />
                   )}
                 </Paper>
               </Grid>

@@ -105,7 +105,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
-  const { toastAndNavigate, getLocalStorage } = Utility();
+  const { decodedToken, toastAndNavigate, getLocalStorage } = Utility();
   const storedTicketId = getLocalStorage("ticketId");
 
   const { createTicket } = useCreateTicket("create-ticket-log", {});
@@ -157,6 +157,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
       setLoading(true);
       const data = {
         ticket_id: parseInt(storedTicketId.split("-")[1]),
+        user_id: decodedToken()?.id,
         ...values,
       };
       if (data) {
@@ -318,8 +319,8 @@ const TrackingForm: React.FC<FormComponentProps> = ({
                     {timeLoggingEstimate.timeSpent
                       ? `${timeLoggingEstimate.timeSpent} logged`
                       : values.time_spent
-                      ? `${values.time_spent} logged`
-                      : null}
+                        ? `${values.time_spent} logged`
+                        : null}
                   </Typography>
                   <Box display="flex" flexDirection="row">
                     <Typography
