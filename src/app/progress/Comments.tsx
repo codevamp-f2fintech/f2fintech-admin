@@ -2,6 +2,7 @@
 import axios from "axios";
 import React, { useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
+
 import {
   Avatar,
   Box,
@@ -14,17 +15,17 @@ import {
 } from "@mui/material";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { formatDistanceToNow } from "date-fns";
-
-import Toast from "../components/common/Toast";
 import type { AppDispatch, RootState } from "@/redux/store";
+import { Utility } from "@/utils";
+
+import { formatDistanceToNow } from "date-fns";
+import Toast from "../components/common/Toast";
 import {
   useGetTicketActivities,
   useDeleteTicketActivity,
   useCreateTicketActivity,
   useModifyTicketActivity,
 } from "@/hooks/ticketActivities";
-import { Utility } from "@/utils";
 
 const ITEMS_PER_PAGE = 3;
 
@@ -44,6 +45,7 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
   );
   const { toast } = useSelector((state: RootState) => state.toast);
   const [currentPage, setCurrentPage] = useState(1); // Current page for pagination
+  const [showAttachment, setShowAttachment] = useState({});
 
   const dispatch: AppDispatch = useDispatch();
   const { capitalizeFirstLetter, decodedToken, toastAndNavigate } = Utility();
@@ -123,12 +125,7 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
       toastAndNavigate(dispatch, true, "error", "Error Creating Comment");
       console.log("Error creating the comment:", error);
     }
-  }, [
-    attachment,
-    newComment,
-    storedTicketId,
-    refetch
-  ]);
+  }, [attachment, newComment, storedTicketId, refetch]);
 
   // Delete comment handler, memoized
   const handleDeleteComment = useCallback(
@@ -217,14 +214,26 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
   const paginatedComments =
     comments && comments.data
       ? comments.data.slice(
-        (currentPage - 1) * ITEMS_PER_PAGE,
-        currentPage * ITEMS_PER_PAGE
-      )
+          (currentPage - 1) * ITEMS_PER_PAGE,
+          currentPage * ITEMS_PER_PAGE
+        )
       : [];
+
+  const toggleAttachment = (commentId) => {
+    setShowAttachment((prev) => ({
+      ...prev,
+      [commentId]: !prev[commentId],
+    }));
+  };
 
   return (
     <Box mt={2} mb={2} sx={{ position: "relative" }}>
-      <Box sx={{ position: "relative", mb: 2 }}>
+      <Box
+        sx={{
+          position: "relative",
+          mb: 2,
+        }}
+      >
         <TextField
           fullWidth
           placeholder="Add a comment..."
@@ -236,6 +245,9 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
             mt: 1,
             bgcolor: "#ffffff",
             borderRadius: 2,
+            "&::-webkit-scrollbar": {
+              display: "none", // This hides the scrollbar
+            },
           }}
         />
         <IconButton
@@ -289,8 +301,10 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
 
       <Box mt={3}>
         {paginatedComments.length > 0 ? (
-          paginatedComments.map(comment => {
-            const commentedBy = userData?.results.find(user => user.id == comment.user_id);
+          paginatedComments.map((comment) => {
+            const commentedBy = userData?.results.find(
+              (user) => user.id == comment.user_id
+            );
             return (
               <Box
                 key={comment.id}
@@ -299,7 +313,7 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
                 sx={{
                   display: "flex",
                   alignItems: "flex-start",
-                  height: "auto"
+                  height: "auto",
                 }}
               >
                 {/* User Avatar */}
@@ -337,7 +351,7 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
                           borderRadius: "10px",
                           "& .MuiFilledInput-root": {
                             "&:before, &:after": {
-                              display: "none", // Removes the underline
+                              display: "none",
                             },
                           },
                         }}
@@ -345,7 +359,9 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
                         multiline
                         value={editedComment}
                         onChange={(e) =>
-                          setEditedComment(capitalizeFirstLetter(e.target.value))
+                          setEditedComment(
+                            capitalizeFirstLetter(e.target.value)
+                          )
                         }
                         rows={3}
                         variant="filled"
@@ -371,45 +387,154 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
                       </Box>
                     </Box>
                   ) : (
-                    <Box>
-                      {/* Comment Text */}
-                      <Typography variant="body1" sx={{ mb: 1, color: "white" }}>
-                        {capitalizeFirstLetter(comment.comment)}
-                      </Typography>
-                      {/* Attachment Preview (if present) */}
-                      {comment.attachment && (
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            mb: 1,
-                          }}
-                        >
-                          <Typography sx={{ color: "white" }}>
-                            <a
-                              href={comment.attachment}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{
-                                color: "cyan",
-                                textDecoration: "underline",
-                              }}
-                            >
-                              *View Attachment
-                            </a>
-                          </Typography>
-                        </Box>
-                      )}
-
-                      {/* Action Buttons: Edit, Delete */}
+                    <>
                       <Box
                         sx={{
-                          width: "20%",
+                          height: "12vh",
+                          overflowY: "auto",
+                          "&::-webkit-scrollbar": {
+                            display: "none",
+                          },
+                        }}
+                      >
+                        {/* Comment Text */}
+                        <Typography
+                          variant="body1"
+                          sx={{ mb: 1, color: "white" }}
+                        >
+                          {capitalizeFirstLetter(comment.comment)}
+                        </Typography>
+                        {/* Attachment Preview (if present) */}
+                        {comment.attachment && (
+                          <Box>
+                            {/* Button to toggle the attachment visibility */}
+                            <Button
+                              onClick={() => toggleAttachment(comment.id)}
+                              variant="contained"
+                              sx={{
+                                textTransform: "none",
+                                fontSize: "0.85rem",
+                                bgcolor: "gray",
+                                color: "white",
+                                "&:hover": {
+                                  bgcolor: "darkgray",
+                                  color: "black",
+                                },
+                              }}
+                            >
+                              {showAttachment[comment.id]
+                                ? "Hide Attachment"
+                                : "View Attachment"}
+                            </Button>
+
+                            {/* Conditional rendering of the attachment */}
+                            {showAttachment[comment.id] && (
+                              <Box
+                                sx={{
+                                  position: "fixed",
+                                  top: "50%",
+                                  left: "50%",
+                                  transform: "translate(-50%, -50%)",
+                                  zIndex: 1000,
+                                  backgroundColor: "white",
+                                  borderRadius: "8px",
+                                  boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+                                  padding: 2,
+                                  textAlign: "center",
+                                  height: isMobile
+                                    ? "40vh"
+                                    : isTab
+                                    ? "40vh"
+                                    : "100%",
+                                  width: isMobile
+                                    ? "80vw"
+                                    : isTab
+                                    ? "60vw"
+                                    : "100%",
+                                }}
+                              >
+                                <Box>
+                                  <img
+                                    src={comment.attachment}
+                                    alt="Attachment Preview"
+                                    style={{
+                                      height: isMobile
+                                        ? "33vh"
+                                        : isTab
+                                        ? "35vh"
+                                        : "90vh",
+                                      width: isMobile
+                                        ? "72vw"
+                                        : isTab
+                                        ? "55vw"
+                                        : "80vw",
+                                      borderRadius: "8px",
+                                      marginLeft: "15vw",
+                                    }}
+                                  />
+                                </Box>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    width: "20vw",
+                                    marginLeft: "45vw",
+                                  }}
+                                >
+                                  {/* Close button */}
+                                  <Button
+                                    onClick={() => toggleAttachment(comment.id)}
+                                    variant="contained"
+                                    size="small"
+                                    sx={{
+                                      textTransform: "none",
+                                      fontSize: "0.85rem",
+                                      color: "white",
+                                      bgcolor: "red",
+                                      mr: "1vw",
+                                      "&:hover": {
+                                        bgcolor: "darkgray",
+                                        color: "black",
+                                      },
+                                    }}
+                                  >
+                                    Close
+                                  </Button>
+                                  {/* Delete button */}
+                                  <Button
+                                    size="small"
+                                    sx={{
+                                      textTransform: "none",
+                                      fontSize: "0.85rem",
+                                      color: "white",
+                                      bgcolor: "red",
+                                      "&:hover": {
+                                        bgcolor: "darkgray",
+                                        color: "black",
+                                      },
+                                    }}
+                                    onClick={() =>
+                                      handleDeleteComment(comment.id)
+                                    }
+                                  >
+                                    Delete
+                                  </Button>
+                                </Box>
+                              </Box>
+                            )}
+                          </Box>
+                        )}
+
+                        {/* Action Buttons: Edit, Delete */}
+                      </Box>
+                      <Box
+                        sx={{
+                          width: "25%",
+                          mt: isTab ? "2vh" : "1vh",
                           display: "flex",
                           alignItems: "center",
-                          flexDirection: "space-between",
-                          color: "#5e6c84",
-                          mt: isTab ? "2vh" : "5vh",
+                          justifyContent: "space-between",
                         }}
                       >
                         <Button
@@ -436,9 +561,8 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
                             textTransform: "none",
                             fontSize: "0.85rem",
                             color: "white",
-                            padding: "4px",
                             bgcolor: "gray",
-                            ml: "2vw",
+                            ml: "1vw",
                             "&:hover": {
                               bgcolor: "darkgray",
                               color: "black",
@@ -449,11 +573,11 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
                           Delete
                         </Button>
                       </Box>
-                    </Box>
+                    </>
                   )}
                 </Box>
               </Box>
-            )
+            );
           })
         ) : (
           <Typography>No comments available</Typography>

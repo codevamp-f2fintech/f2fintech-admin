@@ -15,11 +15,7 @@ import {
   CalendarMonthRounded,
   PersonRounded,
   ClearRounded,
-  RadioButtonUncheckedRounded,
-  AccessTimeRounded,
   ForwardRounded,
-  CheckCircleRounded,
-  PauseCircleOutlineRounded,
   ForwardToInboxRounded,
   FilterListRounded,
   AssignmentRounded,
@@ -75,14 +71,14 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
   const getStatusColor = (status: string): string => {
     const colors: { [key: string]: string } = {
-      "under credit review": "#ff9800", // Orange
+      "under credit review": "#ff9800", // Orange ----
+      "cam report done": "#8bc34a", // Light Green   ----
+      "pendency in file": "#f44336", // Red   ----
+      "to be approved": "#4caf50", // Green   ----
+      "tvr done": "#00bcd4", // Cyan   ----
       "to be login": "#2196f3", // Blue
-      "pendency in file": "#f44336", // Red
-      "to be approved": "#4caf50", // Green
       "to be disbursed": "#9c27b0", // Purple
       "file send to banker": "#3f51b5", // Indigo
-      "tvr done": "#00bcd4", // Cyan
-      "cam report done": "#8bc34a", // Light Green
       relook: "#ff5722", // Orange-Red
       forwarded: "#ffc107", // Amber for Forwarded
       all: "#757575", // Grey
@@ -174,8 +170,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         <Tooltip title="Filter by Status">
           <Chip
             icon={getStatusIcon(sortBy)}
-            label={`${sortBy.charAt(0).toUpperCase() + sortBy.slice(1)
-              } (${ticketCount(sortBy)})`}
+            label={`${
+              sortBy.charAt(0).toUpperCase() + sortBy.slice(1)
+            } (${ticketCount(sortBy)})`}
             onClick={(e) => setAnchorEl(e.currentTarget)}
             sx={{
               backgroundColor: getStatusColor(sortBy),
@@ -203,15 +200,15 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           {[
             "all",
             "forwarded",
-            'under credit review',
-            'to be login',
-            'pendency in file',
-            'to be approved',
-            'to be disbursed',
-            'file send to banker',
-            'tvr done',
-            'cam report done',
-            'relook'
+            "under credit review",
+            "to be login",
+            "pendency in file",
+            "to be approved",
+            "to be disbursed",
+            "file send to banker",
+            "tvr done",
+            "cam report done",
+            "relook",
           ].map((status) => (
             <MenuItem
               key={status}

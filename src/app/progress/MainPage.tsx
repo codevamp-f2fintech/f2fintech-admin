@@ -61,7 +61,7 @@ const employeeStatusObj = [
   { value: "file send to banker", label: "File Send to Banker" },
   { value: "tvr done", label: "TVR Done" },
   { value: "cam report done", label: "CAM Report Done" },
-  { value: "relook", label: "Relook" }
+  { value: "relook", label: "Relook" },
 ];
 
 const Progress: React.FC = () => {
@@ -270,7 +270,7 @@ const Progress: React.FC = () => {
     try {
       await modifyTicket(+storedTicketId, {
         forwarded_to: value.id,
-        is_forwarded: 1
+        is_forwarded: 1,
       });
 
       const loggedInUser = decodedToken()?.username;
@@ -305,7 +305,6 @@ const Progress: React.FC = () => {
               justifyContent: isMobile ? "" : isTab ? "" : "center",
               alignItems: isMobile ? "" : isTab ? "" : "center",
               width: isMobile ? "95vw" : isTab ? "92vw" : "76vw",
-              height: isMobile ? "" : isTab ? "100vh" : "",
             }}
           >
             <Grid
@@ -428,7 +427,11 @@ const Progress: React.FC = () => {
                   </Box>
 
                   {activeSection === "Comments" && (
-                    <Comments storedTicketId={storedTicketId} theme={theme} userData={userData} />
+                    <Comments
+                      storedTicketId={storedTicketId}
+                      theme={theme}
+                      userData={userData}
+                    />
                   )}
 
                   {/* History Section */}
@@ -446,7 +449,7 @@ const Progress: React.FC = () => {
                   elevation={4}
                   sx={{
                     padding: isMobile ? 2 : isTab ? 2 : 3,
-                    height: isMobile ? "60vh" : isTab ? "42vh" : "75vh",
+                    height: isMobile ? "64vh" : isTab ? "40vh" : "78vh",
                     width: isMobile ? "85vw" : isTab ? "30vw" : "25vw",
                     borderRadius: "20px",
                     position: isMobile ? "" : isTab ? "fixed" : "fixed",
@@ -499,6 +502,16 @@ const Progress: React.FC = () => {
                         sx={{
                           background: "white",
                           borderRadius: "15px",
+                          "& .MuiFilledInput-underline:before": {
+                            borderBottom: "none", // Removes the underline in normal state
+                          },
+                          "& .MuiFilledInput-underline:after": {
+                            borderBottom: "none", // Removes the underline in focused state
+                          },
+
+                          "& .MuiFilledInput-underline:hover:before": {
+                            borderBottom: "none !important", // Remove underline on hover
+                          },
                         }}
                       >
                         <InputLabel>Employee Status</InputLabel>
@@ -528,24 +541,26 @@ const Progress: React.FC = () => {
                       endIcon={<ArrowForwardRounded />}
                       size="small"
                       variant="contained"
-                      onClick={() => setNewEmployeeStatus('forwarded')}
+                      onClick={() => setNewEmployeeStatus("forwarded")}
                       sx={{
-                        margin: '20px 0 0 5px'
+                        margin: "20px 0 0 5px",
                       }}
                     >
                       Forward
                     </Button>
                   </Grid>
                   {/* Conditionally render the dropdown if the status is forwarded */}
-                  <UserAutocomplete
-                    isMobile={isMobile}
-                    isTab={isTab}
-                    newEmployeeStatus={newEmployeeStatus}
-                    selectedUser={selectedUser}
-                    setSelectedUser={setSelectedUser}
-                    handleForwardAutocomplete={handleForwardAutocomplete}
-                    userData={userData}
-                  />
+                  {newEmployeeStatus === "forwarded" && (
+                    <UserAutocomplete
+                      isMobile={isMobile}
+                      isTab={isTab}
+                      newEmployeeStatus={newEmployeeStatus}
+                      selectedUser={selectedUser}
+                      setSelectedUser={setSelectedUser}
+                      handleForwardAutocomplete={handleForwardAutocomplete}
+                      userData={userData}
+                    />
+                  )}
                   <Divider sx={{ my: 2 }} />
 
                   <Box
@@ -561,6 +576,7 @@ const Progress: React.FC = () => {
                       background: `
       linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
     `,
+
                       "&:hover": {
                         transform: "scale(1.02)",
                         transition: "transform 0.3s ease",
@@ -584,10 +600,16 @@ const Progress: React.FC = () => {
                         sx={{
                           background: "white",
                           borderRadius: "15px",
-                          width: isMobile ? "30vw" : "8vw",
-                          "&:hover": {
-                            transform: "scale(1.02)",
-                            transition: "transform 0.3s ease",
+
+                          "& .MuiFilledInput-underline:before": {
+                            borderBottom: "none", // Removes the underline in normal state
+                          },
+                          "& .MuiFilledInput-underline:after": {
+                            borderBottom: "none", // Removes the underline in focused state
+                          },
+
+                          "& .MuiFilledInput-underline:hover:before": {
+                            borderBottom: "none !important", // Remove underline on hover
                           },
                         }}
                       >
@@ -626,8 +648,8 @@ const Progress: React.FC = () => {
                           fontSize: isMobile
                             ? ".8rem"
                             : isTab
-                              ? ".9rem"
-                              : "14px",
+                            ? ".9rem"
+                            : "14px",
                           fontWeight: "bold",
                           color: "white",
                           marginLeft: ".5rem",

@@ -209,7 +209,15 @@ const TicketVoiceNotes = ({
 
         {/* Display selected audio files */}
         {(voiceNote || selectedAudioFile) && (
-          <Box sx={{ width: "100%", maxWidth: "40vw", mt: 2 }}>
+          <Box
+            sx={{
+              width: "100%",
+              mt: 2,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <Box
               key={0}
               sx={{
@@ -217,6 +225,7 @@ const TicketVoiceNotes = ({
                 justifyContent: "space-between",
                 alignItems: "center",
                 mb: 1,
+                width: isMobile ? "100vw" : isTab ? "90vw" : "30vw",
               }}
             >
               <Typography>{selectedAudioFile?.name}</Typography>

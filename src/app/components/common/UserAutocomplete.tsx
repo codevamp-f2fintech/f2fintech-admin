@@ -22,12 +22,11 @@ const UserAutocomplete: React.FC<UserAutocompleteProps> = ({
   selectedUser,
   setSelectedUser,
   handleForwardAutocomplete,
-  userData
+  userData,
 }) => {
   const [allUsers, setAllUsers] = useState<UserData[]>([]);
   const { getLocalStorage } = Utility();
   const ticketId = getLocalStorage("ticketId")?.split("-")[1];
-
 
   useEffect(() => {
     if (userData?.results) {
@@ -54,6 +53,7 @@ const UserAutocomplete: React.FC<UserAutocompleteProps> = ({
         height: isMobile ? "5vh" : isTab ? "4vh" : "7vh",
         mt: isMobile ? "3vw" : isTab ? "2vw" : "1vw",
         width: isMobile ? "75vw" : isTab ? "26vw" : "22vw",
+        // border: "2px solid",
       }}
     >
       {newEmployeeStatus === "forwarded" && (
@@ -71,11 +71,9 @@ const UserAutocomplete: React.FC<UserAutocompleteProps> = ({
               sx={{
                 borderRadius: "20px",
                 "& .MuiOutlinedInput-root": {
-                  color: "black",
-                  backgroundColor: "#eeeeee",
-                  "& fieldset": {
-                    borderColor: "lightblue",
-                  },
+                  color: "white",
+                  backgroundColor: "black",
+
                   "&:hover fieldset": {
                     borderColor: "white",
                   },
@@ -84,7 +82,10 @@ const UserAutocomplete: React.FC<UserAutocompleteProps> = ({
                   },
                 },
                 "& .MuiInputLabel-root": {
-                  color: "black",
+                  color: "white",
+                },
+                "& .MuiSvgIcon-root": {
+                  color: "white", // Change this to your desired color
                 },
               }}
             />

@@ -3,7 +3,14 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import { Box, Grid, Typography, useMediaQuery } from "@mui/material";
+import {
+  Box,
+  CircularProgress,
+  Grid,
+  Typography,
+  useMediaQuery,
+  Pagination,
+} from "@mui/material";
 import { Dayjs } from "dayjs";
 
 import ApplicationCard from "../components/ticket/ApplicationCard";
@@ -24,7 +31,11 @@ const Ticket = () => {
   const [sortBy, setSortBy] = useState("all");
   const [startDate, setStartDate] = useState<Dayjs | null>(null);
   const [endDate, setEndDate] = useState<Dayjs | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const { tickets } = useSelector((state: RootState) => state.ticket);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const itemsPerPage = 12; // Number of application cards per page
 
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
@@ -38,20 +49,20 @@ const Ticket = () => {
   const apiEndpoint = selectedUser
     ? `get-all-tickets/${selectedUser.id}`
     : userRole === "admin"
-      ? sortBy === "all"
-        ? `get-all-tickets`
-        : `get-all-tickets?status=${sortBy}`
-      : userRole === "agent"
-        ? sortBy === "all"
-          ? `get-all-tickets/${decodedToken()?.id}?isAgent=true`
-          : `get-all-tickets/${decodedToken()?.id}?isAgent=true&status=${sortBy}`
-        : `get-all-tickets`;
+    ? sortBy === "all"
+      ? `get-all-tickets`
+      : `get-all-tickets?status=${sortBy}`
+    : userRole === "agent"
+    ? sortBy === "all"
+      ? `get-all-tickets/${decodedToken()?.id}?isAgent=true`
+      : `get-all-tickets/${decodedToken()?.id}?isAgent=true&status=${sortBy}`
+    : `get-all-tickets`;
 
   const { value: ticketData } = useGetTickets(
     {} as Ticket,
     apiEndpoint,
-    1, // We don't need pagination
-    1000 // Fetch all tickets (or any large number)
+    1,
+    1000
   );
 
   const [userData, setUserData] = useState({});
@@ -86,7 +97,7 @@ const Ticket = () => {
 
   useEffect(() => {
     if (tickets?.results?.length) {
-      dispatch(setTickets(tickets)); // Update Redux store with the latest tickets when sortBy changes
+      dispatch(setTickets(tickets));
     }
   }, [sortBy, selectedUser, tickets?.results]);
 
@@ -102,7 +113,7 @@ const Ticket = () => {
       `/progress?customerId=${customerId}&applicationId=${applicationId}`
     );
     console.error("Ticket not found:", customerId, applicationId);
-  }
+  };
 
   const handleSortChange = (value: string) => {
     setSortBy(value.toLowerCase());
@@ -139,17 +150,31 @@ const Ticket = () => {
         return true;
       });
     }
-    console.log(filtered, "filtered apps");
     return filtered;
   };
 
   const ticketCount = (status: string): number => {
     const ticketResults = tickets?.results || [];
 
-    if (status === "all" || status === 'forwarded') {
+    if (status === "all" || status === "forwarded") {
       return filterTickets()?.length;
     }
-    return ticketResults.filter((ticket) => ticket.ticketStatus === status).length;
+    return ticketResults.filter((ticket) => ticket.ticketStatus === status)
+      .length;
+  };
+
+  // Pagination logic
+  const filteredTickets = filterTickets();
+  const totalPages = Math.ceil(filteredTickets.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentTickets = filteredTickets.slice(startIndex, endIndex);
+
+  const handlePageChange = (
+    event: React.ChangeEvent<unknown>,
+    value: number
+  ) => {
+    setCurrentPage(value);
   };
 
   return (
@@ -199,17 +224,15 @@ const Ticket = () => {
             flexDirection: isMobile ? "column" : isTab ? "" : "",
           }}
         >
-          {filterTickets().length > 0 ? (
-            filterTickets().map((application, index) => {
-              return (
-                <ApplicationCard
-                  key={index}
-                  contact={application}
-                  handleStartClick={handleStartClick}
-                  ticket={application}
-                />
-              );
-            })
+          {currentTickets.length > 0 ? (
+            currentTickets.map((application, index) => (
+              <ApplicationCard
+                key={index}
+                contact={application}
+                handleStartClick={handleStartClick}
+                ticket={application}
+              />
+            ))
           ) : (
             <Typography
               sx={{
@@ -230,6 +253,31 @@ const Ticket = () => {
           )}
         </Grid>
       </Box>
+
+      {filteredTickets.length > itemsPerPage && (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            mt: 2,
+            mb: 2,
+          }}
+        >
+          <Pagination
+            count={totalPages}
+            page={currentPage}
+            onChange={handlePageChange}
+            color="primary"
+            shape="rounded"
+          />
+        </Box>
+      )}
+
+      {isLoading && (
+        <Box display="flex" justifyContent="center" mt={2}>
+          <CircularProgress />
+        </Box>
+      )}
     </Box>
   );
 };

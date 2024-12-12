@@ -39,7 +39,7 @@ export function Sales({ chartSeries, sx }: SalesProps): React.JSX.Element {
             color: "#1a237e",
             textTransform: "uppercase",
             letterSpacing: "0.5px",
-            ml: "2vw",
+            ml: "1vw",
           }}
         >
           Tickets Overview
