@@ -77,8 +77,7 @@ export function LatestApplications({
     <Card
       sx={{
         width: isMobile ? "100%" : isTab ? "100%" : "30vw",
-        height: isMobile ? "77vh" : isTab ? "48vh" : "100vh",
-        p: 1,
+        maxHeight: isMobile ? "77vh" : isTab ? "48vh" : "105vh",
       }}
     >
       <Box
@@ -86,7 +85,8 @@ export function LatestApplications({
           display: "flex",
           alignItems: "center",
           justifyContent: "flex-start",
-          height: isMobile ? "8vh" : isTab ? "5vh" : "11vh",
+          mb: isMobile ? "" : isTab ? "" : 3,
+          height: isMobile ? "8vh" : isTab ? "5vh" : "9vh",
         }}
       >
         <Typography
@@ -98,6 +98,7 @@ export function LatestApplications({
             textTransform: "uppercase",
             letterSpacing: "0.5px",
             ml: "1vw",
+            mt: isTab ? "" : "4vh",
           }}
         >
           Latest Applications

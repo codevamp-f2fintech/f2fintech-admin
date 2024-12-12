@@ -34,7 +34,7 @@ const Home: React.FC = () => {
     value: data,
     error: getApplicationsError,
     swrLoading,
-    refetch
+    refetch,
   } = useGetCustomers(
     {} as Customer,
     `get-loan-applications`,

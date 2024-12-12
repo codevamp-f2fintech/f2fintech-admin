@@ -95,14 +95,14 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
         background: "linear-gradient(145deg, #ffffff 0%, #f8f9ff 100%)",
         width: isMobile ? "100%" : isTab ? "95vw" : "49.3vw",
         ml: isMobile ? "" : isTab ? "" : "4vw",
-        height: isMobile ? "92vh" : isTab ? "42vh" : "100vh",
+        maxHeight: isMobile ? "92vh" : isTab ? "42vh" : "105vh",
       }}
     >
       <Box
         sx={{
           display: "flex",
-          justifyContent: "flex-start",
           alignItems: "center",
+          justifyContent: "flex-start",
           mb: isMobile ? "" : isTab ? "" : 3,
           height: isMobile ? "5vh" : isTab ? "5vh" : "9vh",
         }}

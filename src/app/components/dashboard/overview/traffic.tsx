@@ -32,7 +32,7 @@ export function Traffic({
     <Card
       sx={{
         width: "100%",
-        height: isMobile ? "75vh" : isTab ? "48vh" : "85vh",
+        maxHeight: isMobile ? "75vh" : isTab ? "48vh" : "85vh",
       }}
     >
       {/* <CardHeader title="Tickets" /> */}
@@ -52,7 +52,7 @@ export function Traffic({
             color: "#1a237e",
             textTransform: "uppercase",
             letterSpacing: "0.5px",
-            ml: "2vw",
+            ml: "1vw",
           }}
         >
           Tickets
@@ -105,14 +105,7 @@ function useChartOptions(labels: string[]): ApexOptions {
 
   return {
     chart: { background: "transparent" },
-    colors: [
-      theme.palette.primary.main,
-      theme.palette.warning.main,
-      "#26C6DA",
-      theme.palette.secondary.main,
-      theme.palette.error.main,
-      theme.palette.success.main,
-    ],
+    colors: ["#009688", "#ff9800", "#f44336", "#4caf50", "#00bcd4", "#8bc34a"],
     dataLabels: { enabled: false },
     labels,
     legend: { show: false },
