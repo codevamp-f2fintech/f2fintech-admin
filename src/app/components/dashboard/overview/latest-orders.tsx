@@ -95,7 +95,7 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
         background: "linear-gradient(145deg, #ffffff 0%, #f8f9ff 100%)",
         width: isMobile ? "100%" : isTab ? "95vw" : "49.3vw",
         ml: isMobile ? "" : isTab ? "" : "4vw",
-        height: isMobile ? "92vh" : isTab ? "50vh" : "127vh",
+        maxHeight: isMobile ? "92vh" : isTab ? "50vh" : "130vh",
       }}
     >
       <Box
@@ -127,7 +127,7 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
       <TableContainer sx={{ width: "100%" }}>
         <Table
           sx={{
-            height: isMobile ? "" : isTab ? "20vh" : "50vh",
+            minHeight: isMobile ? "" : isTab ? "20vh" : "103vh",
           }}
         >
           <TableHead

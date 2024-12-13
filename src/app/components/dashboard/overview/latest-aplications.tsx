@@ -111,7 +111,7 @@ export function LatestApplications({
       <TableContainer>
         <Table
           sx={{
-            height: isMobile ? "57vh" : isTab ? "30vh" : "103vh",
+            minHeight: isMobile ? "57vh" : isTab ? "30vh" : "103vh",
           }}
         >
           <TableHead sx={{ height: isMobile ? "8vh" : isTab ? "5vh" : "12vh" }}>
