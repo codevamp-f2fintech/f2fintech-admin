@@ -625,11 +625,16 @@ const Progress: React.FC = () => {
                           }}
                         >
                           <MenuItem value="submitted">Submitted</MenuItem>
-                          <MenuItem value="under_review">Under Review</MenuItem>
+                          <MenuItem value="under credit review">
+                            Under Credit Review
+                          </MenuItem>
+                          <MenuItem value="relook">Relook</MenuItem>
+                          <MenuItem value="login">Login</MenuItem>
+                          <MenuItem value="carry forward">
+                            Carry Forward
+                          </MenuItem>
+                          <MenuItem value="drop">Drop</MenuItem>
                           <MenuItem value="approved">Approved</MenuItem>
-                          <MenuItem value="hold">Hold</MenuItem>
-                          <MenuItem value="disbursed">Disbursed</MenuItem>
-                          <MenuItem value="rejected">Rejected</MenuItem>
                         </Select>
                       </FormControl>
                     </Grid>
