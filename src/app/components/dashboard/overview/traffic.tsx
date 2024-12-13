@@ -32,7 +32,7 @@ export function Traffic({
     <Card
       sx={{
         width: "100%",
-        maxHeight: isMobile ? "75vh" : isTab ? "48vh" : "85vh",
+        height: isMobile ? "75vh" : isTab ? "50vh" : "100vh",
       }}
     >
       {/* <CardHeader title="Tickets" /> */}
@@ -59,10 +59,10 @@ export function Traffic({
         </Typography>
       </Box>
       <Divider />
-      <CardContent sx={{ mt: "5vh" }}>
-        <Stack spacing={2}>
+      <CardContent sx={{ height: "89vh" }}>
+        <Stack>
           <Chart
-            height={300}
+            height={260}
             options={chartOptions}
             series={chartSeries}
             type="donut"
@@ -70,25 +70,43 @@ export function Traffic({
           />
           <Stack
             direction="row"
-            spacing={1}
             sx={{
               alignItems: "center",
               justifyContent: "center",
               flexWrap: "wrap",
-              rowGap: 2,
-              columnGap: 3,
+              marginTop: "2vh",
             }}
           >
             {chartSeries.map((item, index) => (
               <Stack
                 key={labels[index]}
-                spacing={1}
-                sx={{ alignItems: "center", minWidth: "80px" }}
+                sx={{
+                  alignItems: "center",
+                  width: "100px",
+                  height: "80px",
+                }}
               >
-                <Typography variant="body2" fontWeight="bold">
+                <Typography
+                  variant="body2"
+                  fontWeight="bold"
+                  sx={{
+                    width: "100%",
+                    textAlign: "center",
+                    height: "10vh",
+                  }}
+                >
                   {labels[index]}
                 </Typography>
-                <Typography color="text.secondary" variant="subtitle2">
+                <Typography
+                  color="text.secondary"
+                  variant="subtitle2"
+                  sx={{
+                    width: "100%",
+                    textAlign: "center",
+                    height: "5vh",
+                    marginBottom: "2vh",
+                  }}
+                >
                   {item}
                 </Typography>
               </Stack>

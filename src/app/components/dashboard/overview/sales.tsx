@@ -22,7 +22,7 @@ export function Sales({ chartSeries, sx }: SalesProps): React.JSX.Element {
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
   return (
-    <Card sx={{ height: isTab ? "45vh" : isMobile ? "75vh" : "85vh" }}>
+    <Card sx={{ height: isTab ? "45vh" : isMobile ? "75vh" : "100vh" }}>
       <Box
         sx={{
           display: "flex",
@@ -46,7 +46,7 @@ export function Sales({ chartSeries, sx }: SalesProps): React.JSX.Element {
         </Typography>
       </Box>
       <Divider />
-      <CardContent sx={{ mt: "12vh" }}>
+      <CardContent sx={{ mt: isTab ? "8vh" : "14vh" }}>
         <Chart
           height={350}
           options={chartOptions}
