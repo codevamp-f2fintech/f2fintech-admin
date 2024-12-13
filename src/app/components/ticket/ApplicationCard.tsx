@@ -282,6 +282,9 @@ const ApplicationCard = ({
                 minHeight: isMobile ? "35vh" : isTab ? "20vh" : "40vh",
                 overflowY: "scroll",
                 maxHeight: "40vh",
+                "&::-webkit-scrollbar": {
+                  display: "none", // This hides the scrollbar
+                },
               }}
             >
               {historyData.length > 0 ? (

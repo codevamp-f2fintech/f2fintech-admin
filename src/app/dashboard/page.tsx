@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 
 import {
   PersonRounded,
-  PauseCircleOutlineRounded,
+  VisibilityRounded,
   FilterListRounded,
   AssignmentRounded,
   PendingActionsRounded,
@@ -137,11 +137,15 @@ export default async function Page(): Promise<React.JSX.Element> {
   const [
     totalApplications,
     totalTickets,
-    totalOpenTickets,
-    totalInProgressTickets,
-    totalForwardedTickets,
-    totalCloseTickets,
-    totalCompletedTickets,
+    totalUnderCreditReview,
+    totalToBeLogin,
+    totalPendencyInFile,
+    totalToBeApproved,
+    totalToBeDisbursed,
+    totalFileSendToBanker,
+    totalTvrDone,
+    totalCamReportDone,
+    totalRelook,
     totalTicketsByMonth,
     doneTicketsByMonth,
   ] = await Promise.all([
@@ -152,14 +156,14 @@ export default async function Page(): Promise<React.JSX.Element> {
     fetchTotalTickets("pendency in file", id, role),
     fetchTotalTickets("to be approved", id, role),
     fetchTotalTickets("to be disbursed", id, role),
+    fetchTotalTickets("file send to banker", id, role),
+    fetchTotalTickets("tvr done", id, role),
+    fetchTotalTickets("cam report done", id, role),
+    fetchTotalTickets("relook", id, role),
     getTotalTicketsByMonth(2024),
     getDoneTicketsByMonth(2024),
   ]);
 
-  const totalOnHoldTickets =
-    role !== "admin"
-      ? await fetchTotalTickets("file send to banker", id, role)
-      : null; // Fetch tickets for non-admin roles
   const totalAgents = role === "admin" ? await fetchAgentCount() : null;
 
   const dashboardItems = [
@@ -184,66 +188,73 @@ export default async function Page(): Promise<React.JSX.Element> {
       label: "Under Credit Review",
       key: "underCreditReview",
       color: "#ff9800",
-      count: totalOpenTickets,
-      link: `/ticket?status=${decodeURIComponent("Under credit review")}`,
-    },
-    {
-      icon: PendingActionsRounded,
-      label: "Pendency in file",
-      key: "pendencyInFile",
-      color: "#f44336",
-      count: totalInProgressTickets,
-      link: `/ticket?status=${decodeURIComponent("Pendency in file")}`,
-    },
-    {
-      icon: ThumbUpRounded,
-      label: "To be approved",
-      key: "toBeApproved",
-      color: "#4caf50",
-      count: totalForwardedTickets,
-      link: `/ticket?status=${decodeURIComponent("To be approved")}`,
-    },
-    {
-      icon: AccountBalanceRounded,
-      label: "Tvr done",
-      key: "tvrDone",
-      color: "#00bcd4",
-      count: totalCloseTickets,
-      link: `/ticket?status=${decodeURIComponent("Tvr done")}`,
-    },
-    {
-      icon: ReportRounded,
-      label: "Cam report done",
-      key: "camReportDone",
-      color: "#8bc34a",
-      count: totalCompletedTickets,
-      link: `/ticket?status=${decodeURIComponent("Cam report done")}`,
+      count: totalUnderCreditReview,
+      link: `/ticket?status=${decodeURIComponent("under credit review")}`,
     },
     {
       icon: LoginRounded,
-      label: "To be login",
-      key: "toBeApproved",
+      label: "To be Login",
+      key: "toBeLogin",
       color: "#2196f3",
-      count: "",
-      link: `/ticket?status=${decodeURIComponent("To be login")}`,
+      count: totalToBeLogin,
+      link: `/ticket?status=${decodeURIComponent("to be login")}`,
+    },
+    {
+      icon: PendingActionsRounded,
+      label: "Pendency in File",
+      key: "pendencyInFile",
+      color: "#f44336",
+      count: totalPendencyInFile,
+      link: `/ticket?status=${decodeURIComponent("pendency in file")}`,
+    },
+    {
+      icon: ThumbUpRounded,
+      label: "To be Approved",
+      key: "toBeApproved",
+      color: "#4caf50",
+      count: totalToBeApproved,
+      link: `/ticket?status=${decodeURIComponent("to be approved")}`,
+    },
+    {
+      icon: AccountBalanceRounded,
+      label: "Tvr Done",
+      key: "tvrDone",
+      color: "#00bcd4",
+      count: totalTvrDone,
+      link: `/ticket?status=${decodeURIComponent("tvr done")}`,
+    },
+    {
+      icon: ReportRounded,
+      label: "Cam Report Done",
+      key: "camReportDone",
+      color: "#8bc34a",
+      count: totalCamReportDone,
+      link: `/ticket?status=${decodeURIComponent("cam report done")}`,
     },
     {
       icon: ForwardRounded,
-      label: "To be disbursed",
+      label: "To be Disbursed",
       key: "toBeDisbursed",
       color: "#9c27b0",
-      count: "",
-      link: `/ticket?status=${decodeURIComponent("To be disbursed")}`,
+      count: totalToBeDisbursed,
+      link: `/ticket?status=${decodeURIComponent("to be disbursed")}`,
     },
     {
       icon: SendRounded,
-      label: "File send to banker",
+      label: "File Sent to Banker",
       key: "fileSendToBanker",
       color: "#3f51b5",
-      count: "",
-      link: `/ticket?status=${decodeURIComponent("File send to banker")}`,
+      count: totalFileSendToBanker,
+      link: `/ticket?status=${decodeURIComponent("file send to banker")}`,
     },
-
+    {
+      icon: VisibilityRounded,
+      label: "Relook",
+      key: "relook",
+      color: "#ff5722",
+      count: totalRelook,
+      link: `/ticket?status=${decodeURIComponent("relook")}`,
+    },
     ...(role === "admin"
       ? [
           {
@@ -255,24 +266,19 @@ export default async function Page(): Promise<React.JSX.Element> {
             link: "/user",
           },
         ]
-      : [
-          {
-            icon: PauseCircleOutlineRounded,
-            label: "Tickets on Hold",
-            key: "onHold",
-            color: "#757575",
-            count: totalOnHoldTickets,
-            link: `/ticket?status=${decodeURIComponent("on hold")}`,
-          },
-        ]),
+      : []),
   ];
   console.log(role, "role in dashbpard");
   console.log(
     totalTickets,
-    totalOpenTickets,
-    totalInProgressTickets,
-    totalForwardedTickets,
-    totalCloseTickets,
+    totalUnderCreditReview,
+    totalToBeLogin,
+    totalPendencyInFile,
+    totalToBeApproved,
+    totalToBeDisbursed,
+    totalTvrDone,
+    totalCamReportDone,
+    totalRelook,
     "tickets count"
   );
 
@@ -322,11 +328,14 @@ export default async function Page(): Promise<React.JSX.Element> {
         <Traffic
           chartSeries={[
             totalTickets,
-            totalOpenTickets,
-            totalInProgressTickets,
-            totalForwardedTickets,
-            totalCloseTickets,
-            totalCompletedTickets,
+            totalUnderCreditReview,
+            totalPendencyInFile,
+            totalToBeApproved,
+            totalTvrDone,
+            totalCamReportDone,
+            totalToBeLogin,
+            totalToBeDisbursed,
+            totalFileSendToBanker,
           ]}
           labels={[
             "Total Tickets",

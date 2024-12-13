@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import {
   Button,
   CardActions,
+  Paper,
   Table,
   TableBody,
   TableCell,
@@ -74,10 +75,11 @@ export function LatestApplications({
   };
 
   return (
-    <Card
+    <Paper
+      elevation={3}
       sx={{
         width: isMobile ? "100%" : isTab ? "100%" : "30vw",
-        maxHeight: isMobile ? "77vh" : isTab ? "48vh" : "105vh",
+        maxHeight: isMobile ? "85vh" : isTab ? "50vh" : "130vh",
       }}
     >
       <Box
@@ -107,7 +109,11 @@ export function LatestApplications({
       <Divider />
       {/* {applications?.length && ( */}
       <TableContainer>
-        <Table>
+        <Table
+          sx={{
+            height: isMobile ? "57vh" : isTab ? "30vh" : "103vh",
+          }}
+        >
           <TableHead sx={{ height: isMobile ? "8vh" : isTab ? "5vh" : "12vh" }}>
             <TableRow sx={{ bgcolor: "grey.50" }}>
               <TableCell align="center">Sr.</TableCell>
@@ -171,7 +177,12 @@ export function LatestApplications({
                       {application.Amount}
                     </Box>
                   </TableCell>
-                  <TableCell sx={{ overflow: isMobile ? "hidden" : "" }}>
+                  <TableCell
+                    sx={{
+                      overflow: isMobile ? "hidden" : "",
+                      width: isMobile ? "" : isTab ? "" : "",
+                    }}
+                  >
                     {dayjs(application.applicationDate).format("MMM D, YYYY")}
                   </TableCell>
                 </TableRow>
@@ -200,6 +211,6 @@ export function LatestApplications({
           View all
         </Button>
       </CardActions>
-    </Card>
+    </Paper>
   );
 }

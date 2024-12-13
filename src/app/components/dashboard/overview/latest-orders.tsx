@@ -95,7 +95,7 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
         background: "linear-gradient(145deg, #ffffff 0%, #f8f9ff 100%)",
         width: isMobile ? "100%" : isTab ? "95vw" : "49.3vw",
         ml: isMobile ? "" : isTab ? "" : "4vw",
-        maxHeight: isMobile ? "92vh" : isTab ? "42vh" : "105vh",
+        height: isMobile ? "92vh" : isTab ? "50vh" : "127vh",
       }}
     >
       <Box
@@ -124,9 +124,17 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
       </Box>
       <Divider />
 
-      <TableContainer>
-        <Table>
-          <TableHead sx={{ height: isMobile ? "5vh" : isTab ? "5vh" : "12vh" }}>
+      <TableContainer sx={{ width: "100%" }}>
+        <Table
+          sx={{
+            height: isMobile ? "" : isTab ? "20vh" : "50vh",
+          }}
+        >
+          <TableHead
+            sx={{
+              height: isMobile ? "5vh" : isTab ? "5vh" : "12vh",
+            }}
+          >
             <TableRow sx={{ bgcolor: "grey.50" }}>
               <TableCell>Sr.</TableCell>
               <TableCell>User Name</TableCell>
@@ -152,17 +160,23 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
                   <TableRow
                     key={agent.id}
                     sx={{
+                      height: "2vh",
                       "&:hover": { bgcolor: "primary.50" },
                       transition: "background-color 0.2s",
                     }}
                   >
-                    <TableCell>{index + 1}</TableCell>
+                    <TableCell
+                      sx={{ width: isMobile ? "2vw" : isTab ? "" : "" }}
+                    >
+                      {index + 1}
+                    </TableCell>
                     <TableCell>
                       <Box
                         sx={{
                           display: "flex",
                           alignItems: "center",
                           gap: 1,
+                          width: isMobile ? "30vw" : "6vw",
                         }}
                       >
                         <Person sx={{ color: "primary.main" }} />
