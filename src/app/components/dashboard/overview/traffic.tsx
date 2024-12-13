@@ -32,7 +32,7 @@ export function Traffic({
     <Card
       sx={{
         width: "100%",
-        height: isMobile ? "75vh" : isTab ? "50vh" : "100vh",
+        height: isMobile ? "75vh" : isTab ? "50vh" : "90vh",
       }}
     >
       {/* <CardHeader title="Tickets" /> */}
