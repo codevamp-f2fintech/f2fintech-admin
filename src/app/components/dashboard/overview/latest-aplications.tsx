@@ -1,16 +1,15 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-
-import Box from "@mui/material/Box";
-import Card from "@mui/material/Card";
-import Divider from "@mui/material/Divider";
+import { useRouter } from "next/navigation";
 import type { SxProps } from "@mui/material/styles";
+import Box from "@mui/material/Box";
+import Divider from "@mui/material/Divider";
 import dayjs from "dayjs";
+
+import Loader from "../../common/Loader";
 import { useGetCustomers } from "@/hooks/customer";
 import { Customer } from "@/types/customer";
-import Loader from "../../common/Loader";
-import { useRouter } from "next/navigation";
 
 import {
   Button,

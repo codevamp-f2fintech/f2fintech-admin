@@ -62,13 +62,13 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
 
     return {
       open: userTickets.filter(
-        (ticket) => ticket.status.toLowerCase() === "open"
+        (ticket) => ticket.status.toLowerCase() === "relook"
       ).length,
       inProgress: userTickets.filter(
-        (ticket) => ticket.status.toLowerCase() === "in progress"
+        (ticket) => ticket.status.toLowerCase() === "to be login"
       ).length,
       done: userTickets.filter(
-        (ticket) => ticket.status.toLowerCase() === "done"
+        (ticket) => ticket.status.toLowerCase() === "to be disbursed"
       ).length,
     };
   };

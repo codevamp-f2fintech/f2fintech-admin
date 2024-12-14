@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
+
 import * as React from "react";
 import { useState } from "react";
 import {
@@ -15,26 +16,27 @@ import {
   InputAdornment,
 } from "@mui/material";
 import {
-  LockOutlined,
   Visibility,
   VisibilityOff,
   Email,
   Lock,
 } from "@mui/icons-material";
 import { ThemeProvider, useTheme, Theme } from "@mui/material/styles";
-import { UserAPI } from "@/apis/UserAPI";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
+
+import Toast from "../components/common/Toast";
+import { UserAPI } from "@/apis/UserAPI";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { Utility } from "@/utils";
-import Toast from "../components/common/Toast";
-// Validation schema using Yup
+
 const LoginSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Required"),
-  password: Yup.string().min(6, "Password too short").required("Required"),
+  password: Yup.string().min(8, "Password too short").required("Required"),
 });
+
 const Login = (): JSX.Element => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const theme: Theme = useTheme();
@@ -42,39 +44,37 @@ const Login = (): JSX.Element => {
   const dispatch: AppDispatch = useDispatch();
   const { toast } = useSelector((state: RootState) => state.toast);
   const { decodedToken, toastAndNavigate } = Utility();
-  // Handler for toggling password visibility
+
   const handleClickShowPassword = (): void => {
     setShowPassword((prev) => !prev);
   };
-  // Prevent default action for mouse down event on the password visibility toggle button
+
   const handleMouseDownPassword = (
     event: React.MouseEvent<HTMLButtonElement>
   ) => {
     event.preventDefault();
   };
-  // Handler for form submission using Formik
+
   const handleLogin = async (values: { email: string; password: string }) => {
     try {
-      const response = await UserAPI.login(values); // Call the UserAPI login method
-      if (response?.data?.data.token) {
-        // Save the token in a cookie manually
-        document.cookie = `token=${
-          response.data.data.token.access_token
-        }; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
-        toastAndNavigate(dispatch, true, "success", "Signin Success");
+      const { data: response } = await UserAPI.login(values);
+      if (response.statusCode === 200) {
+        document.cookie = `token=${response.data.access_token
+          }; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
+        toastAndNavigate(dispatch, true, "success", response.data.message || "Login Successful");
 
-        const role = decodedToken(response.data.data.token.access_token)?.role;
+        const role = decodedToken(response.data.access_token)?.role;
         if (role === "admin") {
           router.push("/dashboard");
         } else if (role === "agent") {
           router.push("/home");
         }
       }
-    } catch (error) {
-      toastAndNavigate(dispatch, true, "error", "Error Signin");
-      console.log(error, "signin error");
+    } catch (error: any) {
+      toastAndNavigate(dispatch, true, "error", error.response.data.message ? error.response.data.message : "Error Loging In. Try Again");
     }
   };
+
   return (
     <ThemeProvider theme={theme}>
       <Grid
@@ -152,7 +152,7 @@ const Login = (): JSX.Element => {
               component="h1"
               variant="h5"
             >
-              Sign In
+              Log In
             </Typography>
             <Formik
               initialValues={{ email: "", password: "" }}
@@ -246,7 +246,7 @@ const Login = (): JSX.Element => {
                     }}
                     disabled={!dirty || isSubmitting}
                   >
-                    {isSubmitting ? "Signing in..." : "Sign In"}
+                    {isSubmitting ? "Loging in..." : "Log In"}
                   </Button>
                 </Form>
               )}

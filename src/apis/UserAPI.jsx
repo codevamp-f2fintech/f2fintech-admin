@@ -37,7 +37,7 @@ export const UserAPI = {
 
   getUserProfile: async (userId, cancel = false) => {
     return await axiosInstance.request({
-      url: `get-by-id/${userId}`,
+      url: `get-user-by-id/${userId}`,
       method: "GET",
       signal: cancel
         ? cancelApiObject[this.getuserProfile.name].handleRequestCancellation()

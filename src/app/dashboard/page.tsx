@@ -241,7 +241,7 @@ export default async function Page(): Promise<React.JSX.Element> {
     },
     {
       icon: SendRounded,
-      label: "File Sent to Banker",
+      label: "File Send to Banker",
       key: "fileSendToBanker",
       color: "#3f51b5",
       count: totalFileSendToBanker,
