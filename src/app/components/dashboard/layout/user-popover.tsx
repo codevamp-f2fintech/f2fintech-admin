@@ -34,7 +34,6 @@ export function UserPopover({
       try {
         const { data: response } = await UserAPI.getUserProfile(userId);
         setUserProfile(response.data)
-        console.log(response, "response");
         if (response.statusCode === 200) {
           const nameLength = response.data.username?.length || 0;
           const emailLength = response.data.email?.length || 0;

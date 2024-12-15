@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
 import {
   Grid,
@@ -19,12 +20,13 @@ import {
   AccessTimeRounded,
   LocationOnRounded,
 } from "@mui/icons-material";
+
 import { useCreateTicket } from "@/hooks/ticket";
 import { Utility } from "@/utils";
-import { useModifyCustomer } from "@/hooks/customer";
+import { useModifyCustomerApplication } from "@/hooks/customerApplication";
 import { fetcher } from "@/apis/apiClient";
 
-function InfoRow({ icon, text }: { icon: React.ReactNode; text: string }) {
+function InfoRow({ icon, text }: { icon: React.ReactNode; text: string | undefined }) {
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
       <Box
@@ -52,7 +54,7 @@ function InfoRow({ icon, text }: { icon: React.ReactNode; text: string }) {
 }
 
 const ApplicationCard = ({
-  contact,
+  customerApplication,
   handleStartClick = null,
   ticket = false,
   refetch = null,
@@ -68,7 +70,7 @@ const ApplicationCard = ({
 
   const { createTicket, error } = useCreateTicket("create-ticket", {});
   // Hook for modifying loan application is_picked column
-  const { modifyCustomer: modifyCustomerApplication } = useModifyCustomer(
+  const { modifyCustomerApplication: modifyiedCustomerApplication } = useModifyCustomerApplication(
     "update-loan-application"
   );
 
@@ -119,7 +121,7 @@ const ApplicationCard = ({
     if (!isAlreadySelected) {
       try {
         await createNewTicket(applicationId); // Create new Ticket
-        await modifyCustomerApplication(applicationId, {
+        await modifyiedCustomerApplication(applicationId, {
           is_picked: 1,
         }); // Mark the Card as picked
 
@@ -179,7 +181,7 @@ const ApplicationCard = ({
   };
 
   return (
-    <Grid item xs={12} sm={6} md={4} key={contact.Id}>
+    <Grid item xs={12} sm={6} md={4} key={customerApplication.customerId}>
       <Card
         sx={{
           maxWidth: 345,
@@ -204,8 +206,8 @@ const ApplicationCard = ({
             }}
           >
             <Avatar
-              alt={capitalizeFirstLetter(contact.Name)}
-              src={contact.Image}
+              alt={capitalizeFirstLetter(customerApplication.customerName)}
+              src={customerApplication.customerProfileImage}
               sx={{
                 width: 80,
                 height: 80,
@@ -238,7 +240,7 @@ const ApplicationCard = ({
                 width: isMobile ? "80vw" : isTab ? "25vw" : "20vw",
               }}
             >
-              {contact.Name?.toUpperCase()}
+              {customerApplication.customerName?.toUpperCase()}
             </Typography>
           </Box>
 
@@ -255,17 +257,17 @@ const ApplicationCard = ({
                 minHeight: isMobile ? "35vh" : isTab ? "20vh" : "40vh",
               }}
             >
-              <InfoRow icon={<MailRounded />} text={contact.Email} />
-              <InfoRow icon={<PhoneRounded />} text={contact.Contact} />
-              <InfoRow icon={<PaidRounded />} text={contact.Amount} />
+              <InfoRow icon={<MailRounded />} text={customerApplication.customerEmail} />
+              <InfoRow icon={<PhoneRounded />} text={customerApplication.customerContact} />
+              <InfoRow icon={<PaidRounded />} text={customerApplication.applicationAmount} />
               <InfoRow
                 icon={<AccessTimeRounded />}
-                text={formatTenure(contact.Tenure)}
+                text={formatTenure(customerApplication.applicationTenure)}
               />
-              {contact.Location && (
+              {customerApplication.customerLocation && (
                 <InfoRow
                   icon={<LocationOnRounded />}
-                  text={capitalizeFirstLetter(contact.Location)}
+                  text={capitalizeFirstLetter(customerApplication.customerLocation)}
                 />
               )}
             </Box>
@@ -326,8 +328,8 @@ const ApplicationCard = ({
                 sx={{ width: "100%", borderRadius: "0px 0px 0px 10px" }}
                 onClick={() =>
                   handleStartClick(
-                    contact.Id,
-                    contact.customer_application_id,
+                    customerApplication.customerId,
+                    customerApplication.applicationId,
                     ticket.ticketId
                   )
                 }
@@ -353,7 +355,7 @@ const ApplicationCard = ({
               }}
             >
               <Chip
-                label={`${calculateDaysAgo(contact.applicationDate)} days ago`}
+                label={`${calculateDaysAgo(customerApplication.applicationDate)} days ago`}
                 size="small"
                 sx={{
                   bgcolor: "rgba(255,255,255,0.9)",
@@ -370,9 +372,9 @@ const ApplicationCard = ({
                     Pick
                   </Typography>
                   <Checkbox
-                    checked={selectedContacts.includes(contact.Id)}
+                    checked={selectedContacts.includes(customerApplication.customerId)}
                     onChange={() =>
-                      handleCheckboxChange(contact.Id, contact.applicationId)
+                      handleCheckboxChange(customerApplication.customerId, customerApplication.applicationId)
                     }
                     size="small"
                     sx={{

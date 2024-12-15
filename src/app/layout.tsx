@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import ReduxProvider from "@/redux/provider";
 import { Container, Box, GlobalStyles, CssBaseline } from "@mui/material";
+
+import ReduxProvider from "@/redux/provider";
 import { SideNav } from "./components/dashboard/layout/side-nav";
 import { AppBarNav } from "./components/dashboard/layout/appbar-nav";
 
@@ -58,7 +59,6 @@ const RootLayout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
                       "linear-gradient(125deg, #ECFCFF 0%, #ECFCFF 40%, #B2FCFF calc(40% + 1px), #B2FCFF 60%, #5EDFFF calc(60% + 1px), #5EDFFF 72%, #3E64FF calc(72% + 1px), #3E64FF 100%)",
                   }}
                 >
-                  {/* <MainNav /> */}
                   <main>
                     <Container maxWidth="xl" sx={{ py: "5vh" }}>
                       {children}

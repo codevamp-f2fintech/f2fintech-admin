@@ -8,8 +8,8 @@ import Divider from "@mui/material/Divider";
 import dayjs from "dayjs";
 
 import Loader from "../../common/Loader";
-import { useGetCustomers } from "@/hooks/customer";
-import { Customer } from "@/types/customer";
+import { useGetCustomers } from "@/hooks/customerApplication";
+import { Customer } from "@/types/customerApplication";
 
 import {
   Button,

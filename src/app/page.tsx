@@ -1,5 +1,4 @@
-import Home from "./home/page"; // Import Home component
-import Login from "./login/page"; // Import Login component
+import Home from "./home/page";
 
 const App = () => {
   return (

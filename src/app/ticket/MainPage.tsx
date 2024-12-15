@@ -49,14 +49,14 @@ const Ticket = () => {
   const apiEndpoint = selectedUser
     ? `get-all-tickets/${selectedUser.id}`
     : userRole === "admin"
-    ? sortBy === "all"
-      ? `get-all-tickets`
-      : `get-all-tickets?status=${sortBy}`
-    : userRole === "agent"
-    ? sortBy === "all"
-      ? `get-all-tickets/${decodedToken()?.id}?isAgent=true`
-      : `get-all-tickets/${decodedToken()?.id}?isAgent=true&status=${sortBy}`
-    : `get-all-tickets`;
+      ? sortBy === "all"
+        ? `get-all-tickets`
+        : `get-all-tickets?status=${sortBy}`
+      : userRole === "agent"
+        ? sortBy === "all"
+          ? `get-all-tickets/${decodedToken()?.id}?isAgent=true`
+          : `get-all-tickets/${decodedToken()?.id}?isAgent=true&status=${sortBy}`
+        : `get-all-tickets`;
 
   const { value: ticketData } = useGetTickets(
     {} as Ticket,
@@ -225,12 +225,11 @@ const Ticket = () => {
           }}
         >
           {currentTickets.length > 0 ? (
-            currentTickets.map((application, index) => (
+            currentTickets.map((ticket, index) => (
               <ApplicationCard
                 key={index}
-                contact={application}
                 handleStartClick={handleStartClick}
-                ticket={application}
+                ticket={ticket}
               />
             ))
           ) : (
