@@ -8,8 +8,8 @@ import Divider from "@mui/material/Divider";
 import dayjs from "dayjs";
 
 import Loader from "../../common/Loader";
-import { useGetCustomers } from "@/hooks/customerApplication";
-import { Customer } from "@/types/customerApplication";
+import { useGetCustomerApplications } from "@/hooks/customerApplication";
+import { CustomerApplicationData } from "@/types/customerApplication";
 
 import {
   Button,
@@ -43,7 +43,7 @@ export function LatestApplications({
   sx,
 }: LatestApplicationsProps): React.JSX.Element {
   const [paginationLoading, setPaginationLoading] = useState<boolean>(false);
-  const [applications, setApplications] = useState<Customer>([]);
+  const [applications, setApplications] = useState<CustomerApplicationData>([]);
   const router = useRouter();
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
@@ -52,22 +52,18 @@ export function LatestApplications({
     value: data,
     error: getApplicationsError,
     swrLoading,
-  } = useGetCustomers({} as Customer, `get-loan-applications`, 1, 6);
+  } = useGetCustomerApplications(`get-customer-loan-applications`, 1, 6);
 
   // Handle API response
   useEffect(() => {
-    if (data?.results) {
+    if (data?.results.length > 0) {
       setApplications(data?.results);
-      // setPaginationLoading(false);
-    } else if (getApplicationsError) {
-      // setPaginationLoading(false);
     } else {
       setApplications([]);
-      // setPaginationLoading(false);
     }
   }, [data?.results, getApplicationsError]);
 
-  // console.log("applications>>>", applications);
+  console.log("applications>>>", applications);
 
   const handleViewAllClick = () => {
     router.push("/");
@@ -135,7 +131,7 @@ export function LatestApplications({
             ) : (
               applications.map((application, index) => (
                 <TableRow
-                  key={application.id}
+                  key={application.applicationId}
                   sx={{
                     "&:hover": { bgcolor: "primary.50" },
                     transition: "background-color 0.2s",
@@ -155,7 +151,7 @@ export function LatestApplications({
                       }}
                     >
                       <Person sx={{ color: "primary.main" }} />
-                      {application.Name}
+                      {application.customerName}
                     </Box>
                   </TableCell>
                   <TableCell
@@ -173,7 +169,7 @@ export function LatestApplications({
                       }}
                     >
                       <CurrencyRupeeIcon sx={{ color: "primary.main" }} />
-                      {application.Amount}
+                      {application.applicationAmount}
                     </Box>
                   </TableCell>
                   <TableCell

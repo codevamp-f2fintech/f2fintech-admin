@@ -6,7 +6,7 @@ import { User } from "@/types/user";
 
 const url = `${process.env.NEXT_PUBLIC_API_URL}/get-users`;
 const PAGE = 1;
-const LIMIT = 5;
+const LIMIT = 10;
 
 // Metadata to show in head tag.
 export const metadata: Metadata = {
@@ -21,16 +21,15 @@ const UserList = async () => {
     const response = await fetch(`${url}?page=${PAGE}&limit=${LIMIT}`, {
       method: "GET",
       headers: {
-        "x-access-token": token || '', // Get token from cookies
-        "Content-Type": "application/json", // Set the content type if needed
+        "x-access-token": token || '',
+        "Content-Type": "application/json",
       },
       cache: "no-store",
     });
-
     if (!response.ok) {
-      console.error(`Failed to fetch users: ${response.statusText}`);
-      throw new Error(`Failed to fetch users: ${response.status}`);
+      console.log(`Failed to fetch users: ${response.statusText}`);
     }
+
     const resjson = await response.json();
     const data: User = resjson;
     return <UsersPage initialData={data} />;

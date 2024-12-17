@@ -34,6 +34,7 @@ import type { SxProps } from "@mui/material/styles";
 import { Utility } from "@/utils";
 import { ArrowRightIcon } from "@mui/x-date-pickers";
 import { useRouter } from "next/navigation";
+import { User } from "@/types/user";
 
 export interface LatestUsersProps {
   sx?: SxProps;
@@ -41,10 +42,10 @@ export interface LatestUsersProps {
 
 export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
   const { value: users, swrLoading: usersLoading } = useGetUsers(
-    {},
+    {} as User,
     "get-users",
     1,
-    1000
+    6
   );
   const { value: tickets } = useGetTickets([], `get-all-tickets`);
   const [searchQuery, setSearchQuery] = React.useState("");

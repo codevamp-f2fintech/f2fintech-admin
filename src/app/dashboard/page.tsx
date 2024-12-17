@@ -18,7 +18,6 @@ import {
 } from "@mui/icons-material";
 import Grid from "@mui/material/Unstable_Grid2";
 
-import { config } from "@/app/config";
 import { Budget } from "@/app/components/dashboard/overview/budget";
 import { LatestOrders } from "@/app/components/dashboard/overview/latest-orders";
 import { LatestApplications } from "@/app/components/dashboard/overview/latest-aplications";
@@ -27,7 +26,7 @@ import { Traffic } from "@/app/components/dashboard/overview/traffic";
 import { Utility } from "@/utils";
 
 export const metadata = {
-  title: `Overview | Dashboard | ${config.site.name}`,
+  title: `F2 Fintech Admin Portal`,
 } satisfies Metadata;
 
 interface Ticket {
