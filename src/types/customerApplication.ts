@@ -18,4 +18,5 @@ export interface CustomerApplication {
   results: CustomerApplicationData[];
   count: number;
   pages: number;
+  errorMessage?: string;
 }

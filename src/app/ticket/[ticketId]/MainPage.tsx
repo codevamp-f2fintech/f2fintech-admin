@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import {
@@ -25,8 +25,8 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { ThemeProvider } from "@mui/material/styles";
 
-import Loader from "../components/common/Loader";
-import ProgressBar from "../components/common/ProgressBar";
+import Loader from "../../components/common/Loader";
+import ProgressBar from "../../components/common/ProgressBar";
 import Comments from "./Comments";
 import History from "./History";
 import WorkLogList from "./Worklog";
@@ -34,23 +34,17 @@ import TrackingForm from "./trackingForm";
 import TicketDetail from "./TicketDetail";
 import TicketDocuments from "./TicketDocuments";
 import TicketVoiceNotes from "./TicketVoiceNotes";
-import Toast from "../components/common/Toast";
-import UserAutocomplete from "../components/common/UserAutocomplete";
+import Toast from "../../components/common/Toast";
+import UserAutocomplete from "../../components/common/UserAutocomplete";
 
-import type { RootState } from "../../redux/store";
-import { useMode, ColorModeContext } from "../../../theme";
+import type { AppDispatch, RootState } from "@/redux/store";
+import { useMode, ColorModeContext } from "../../../../theme";
 import { useModifyTicket } from "@/hooks/ticket";
-import { useGetTicketLogs } from "@/hooks/ticketLogs";
-import {
-  fetchStatusAndDocuments,
-  fetchEmployeeStatus,
-} from "../../redux/features/employeeSlice";
 import { useGetUsers } from "@/hooks/user";
 import { Utility } from "@/utils";
-import {
-  useCreateTicketHistory,
-  useGetTicketHistory,
-} from "@/hooks/tickethistory";
+
+import { User } from "@/types/user";
+import { fetcher } from "@/apis/apiClient";
 
 const employeeStatusObj = [
   { value: "under credit review", label: "Under Credit Review" },
@@ -64,46 +58,103 @@ const employeeStatusObj = [
   { value: "relook", label: "Relook" },
 ];
 
+interface TicketDetail {
+  ticketId: number | string;
+  employeeStatus: string;
+  voiceNoteUrl: string;
+  forwardedTo: number | string;
+  originalEstimate: string;
+  applicationAmount: string | number;
+  applicationTenure: number | string;
+  applicationDate: Date | string;
+  applicationId: number | string;
+  customerId: number | string;
+  customerName: string;
+  customerEmail: string;
+  customerContact: string;
+  customerDocuments: string[];
+  customerDesignation: string;
+  customerLocation: string;
+  loanStatus: string;
+  ticketActivities: {
+    id: number;
+    userId: number;
+    comment: string;
+    createdAt: Date;
+  }[];
+  ticketLogs: {
+    id: number;
+    userId: number;
+    timeSpent: string;
+    workDescription: string;
+    createdAt: Date;
+  }[];
+}
+
+interface TicketDetailResponse {
+  statusCode: string | number;
+  message: string | "Ticket with Details retrieved successfully",
+  data: {
+    ticketId: number | string;
+    employeeStatus: string;
+    voiceNoteUrl: string;
+    forwardedTo: number | string;
+    originalEstimate: string;
+    applicationAmount: string | number;
+    applicationTenure: number | string;
+    applicationDate: Date | string;
+    applicationId: number | string;
+    customerId: number | string;
+    customerName: string;
+    customerEmail: string;
+    customerContact: string;
+    customerDocuments: string[];
+    customerDesignation: string;
+    customerLocation: string;
+    loanStatus: string;
+    ticketActivities: {
+      id: number;
+      userId: number;
+      comment: string;
+      createdAt: Date;
+    }[];
+    ticketLogs: {
+      id: number;
+      userId: number;
+      timeSpent: string;
+      workDescription: string;
+      createdAt: Date;
+    }[];
+  }
+}
+
 const Progress: React.FC = () => {
-  const [openDialog, setOpenDialog] = useState(false);
-  const [theme, colorMode] = useMode();
-  const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
+  const [ticketDetailData, setTicketDetailData] = useState<TicketDetail>();
+  const [loading, setLoading] = useState<boolean>(false);
+  const [openDialog, setOpenDialog] = useState<boolean>(false);
   const [activeSection, setActiveSection] = useState<string>("Comments");
-  const [ticketId, setTicketId] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
+  const [theme, colorMode] = useMode();
+
   const [progress, setProgress] = useState(0); // State to store progress percentage
   const [overage, setOverage] = useState(0); // Orange part (exceeding estimated time)
   const [newLoanStatus, setNewLoanStatus] = useState("");
   const [newEmployeeStatus, setNewEmployeeStatus] = useState("");
-
-  const searchParams = useSearchParams(); // To get the query parameters
-  const isMobile = useMediaQuery("(max-width:600px)");
-  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
-
-  const {
-    status: employeeStatus,
-    loanStatus,
-    documents,
-    voiceNoteUrl,
-    notes,
-  } = useSelector((state: RootState) => state.employee);
   const { toast } = useSelector((state: RootState) => state.toast);
 
-  const dispatch = useDispatch();
+  const dispatch: AppDispatch = useDispatch();
+  const params = useParams();    // To get the route parameters
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const ticketId = params?.ticketId;
   const {
     capitalizeFirstLetter,
     convertHoursToDaysAndHours,
     decodedToken,
-    getLocalStorage,
     parseTimeSpent,
     toastAndNavigate,
   } = Utility();
   const original_estimate = "1d";
-  const ids = {
-    customerId: searchParams.get("customerId") || null,
-    applicationId: searchParams.get("applicationId") || null,
-  };
-  const storedTicketId = ticketId?.split("-")[1];
 
   const [timeLoggingEstimate, setTimeLoggingEstimate] = useState({
     isHovered: false,
@@ -111,34 +162,35 @@ const Progress: React.FC = () => {
     timeSpent: 0,
   });
 
-  const { value: workLog } = useGetTicketLogs(
-    [],
-    `get-ticket-logs/${storedTicketId}`
-  );
-
-  const { value: applicationData } = useGetTicketLogs(
-    [],
-    `get-application-as-ticket/${ids?.applicationId}`
-  );
   const { modifyTicket } = useModifyTicket("update-ticket");
-
-  // Fetch ticket history data
-  const { value: ticketHistory, refetch } = useGetTicketHistory(
-    [],
-    `get-ticket-histories/${storedTicketId}`
-  );
-
-  // Hook for creating new ticket history
-  const { createTicketHistory } = useCreateTicketHistory(
-    "create-ticket-history"
-  );
-
-  const { value: userData } = useGetUsers({}, "get-users", 1, 100);
+  const { value: userData } = useGetUsers({} as User, "get-users", 1, 100);
 
   useEffect(() => {
-    if (workLog?.data) {
-      const totalHours = workLog.data.reduce((acc: number, ticket: any) => {
-        return acc + parseTimeSpent(ticket.time_spent);
+    if (ticketId) {
+      setLoading(true);
+      const fetchTicketDetails = async () => {
+        try {
+          const response: TicketDetailResponse = await fetcher(`get-ticket-with-detail/${ticketId}`);
+          if (response.statusCode === 200) {
+            setTicketDetailData(response.data);
+            setNewLoanStatus(response.data.loanStatus);
+            setNewEmployeeStatus(response.data.employeeStatus);
+            setLoading(false);
+            console.log(response.data, 'this is response....sabme phaila do')
+          }
+        } catch (error) {
+          setLoading(false);
+          console.log("Error fetching users:", error);
+        }
+      };
+      fetchTicketDetails();
+    }
+  }, [ticketId]);
+
+  useEffect(() => {
+    if (ticketDetailData) {
+      const totalHours = ticketDetailData.ticketLogs.reduce((acc: number, ticket: any) => {
+        return acc + parseTimeSpent(ticket.timeSpent);
       }, 0);
 
       const finalTime = convertHoursToDaysAndHours(totalHours);
@@ -165,47 +217,7 @@ const Progress: React.FC = () => {
         setOverage(calculatedOverage); // Orange bar
       }
     }
-  }, [workLog?.data, timeLoggingEstimate.originalEstimate]);
-
-  useEffect(() => {
-    if (
-      ids?.applicationId &&
-      ids?.customerId &&
-      (!documents?.length || !loanStatus || !employeeStatus)
-    ) {
-      dispatch(
-        fetchStatusAndDocuments({
-          applicationId: ids.applicationId,
-          customerId: ids.customerId,
-        })
-      );
-      dispatch(fetchEmployeeStatus(ids?.applicationId));
-    }
-    const selectedCustomer = applicationData?.data?.find(
-      (cust) => cust.Id == ids.customerId
-    );
-    if (selectedCustomer) {
-      setSelectedCustomer(selectedCustomer);
-    }
-  }, [ids?.applicationId, ids?.customerId, applicationData?.data]);
-
-  useEffect(() => {
-    if (loanStatus) {
-      console.log("mai hoon", loanStatus);
-      setNewLoanStatus(loanStatus);
-    }
-
-    if (employeeStatus) {
-      setNewEmployeeStatus(employeeStatus);
-    }
-  }, [loanStatus, employeeStatus]);
-
-  useEffect(() => {
-    const storedTicketId = getLocalStorage("ticketId");
-    if (storedTicketId && !ticketId) {
-      setTicketId(storedTicketId);
-    }
-  }, [ticketId]);
+  }, [ticketDetailData?.ticketLogs, timeLoggingEstimate.originalEstimate]);
 
   const handleInputChange = (event) => {
     const value = event.target.value;
@@ -291,10 +303,6 @@ const Progress: React.FC = () => {
   const showHistory = () => setActiveSection("History");
   const showWorkLog = () => setActiveSection("WorkLog");
 
-  if (!selectedCustomer) {
-    return <Loader />;
-  }
-
   return (
     <ThemeProvider theme={theme}>
       <ColorModeContext.Provider value={colorMode}>
@@ -327,8 +335,7 @@ const Progress: React.FC = () => {
                   }}
                 >
                   <TicketDetail
-                    ticketId={ticketId}
-                    selectedCustomer={selectedCustomer}
+                    ticketDetailData={ticketDetailData}
                     isMobile={isMobile}
                     isTab={isTab}
                   />
@@ -336,14 +343,12 @@ const Progress: React.FC = () => {
                   <TicketDocuments
                     isMobile={isMobile}
                     isTab={isTab}
-                    documents={documents}
+                    documents={ticketDetailData?.customerDocuments ?? []}
                   />
                   <TicketVoiceNotes
                     isMobile={isMobile}
                     isTab={isTab}
-                    notes={notes}
-                    storedTicketId={storedTicketId}
-                    voiceNoteUrl={voiceNoteUrl}
+                    ticketDetailData={ticketDetailData}
                   />
                   <Box
                     mt={4}
@@ -428,7 +433,7 @@ const Progress: React.FC = () => {
 
                   {activeSection === "Comments" && (
                     <Comments
-                      storedTicketId={storedTicketId}
+                      storedTicketId={ticketDetailData?.ticketId}
                       theme={theme}
                       userData={userData}
                     />
@@ -436,11 +441,11 @@ const Progress: React.FC = () => {
 
                   {/* History Section */}
                   {activeSection === "History" && (
-                    <History ticketHistory={ticketHistory?.data} />
+                    <History />
                   )}
 
                   {activeSection === "WorkLog" && (
-                    <WorkLogList workLog={workLog} userData={userData} />
+                    <WorkLogList workLog={ticketDetailData?.ticketLogs} userData={userData} />
                   )}
                 </Paper>
               </Grid>
@@ -559,6 +564,7 @@ const Progress: React.FC = () => {
                       setSelectedUser={setSelectedUser}
                       handleForwardAutocomplete={handleForwardAutocomplete}
                       userData={userData}
+                      ticketId={ticketDetailData?.ticketId}
                     />
                   )}
                   <Divider sx={{ my: 2 }} />
@@ -653,8 +659,8 @@ const Progress: React.FC = () => {
                           fontSize: isMobile
                             ? ".8rem"
                             : isTab
-                            ? ".9rem"
-                            : "14px",
+                              ? ".9rem"
+                              : "14px",
                           fontWeight: "bold",
                           color: "white",
                           marginLeft: ".5rem",
@@ -679,7 +685,7 @@ const Progress: React.FC = () => {
                           color: theme.palette.primary.main,
                         }}
                         alt={capitalizeFirstLetter(decodedToken()?.username)}
-                        src={selectedCustomer.Image}
+                        src={capitalizeFirstLetter(decodedToken()?.username)}
                       />
                     </Box>
                   </Box>
@@ -813,6 +819,7 @@ const Progress: React.FC = () => {
           severity={toast.toastSeverity}
           message={toast.toastMessage}
         />
+        {loading && <Loader />}
       </ColorModeContext.Provider>
     </ThemeProvider>
   );

@@ -24,9 +24,9 @@ const WorkLogList: React.FC<WorkLogListProps> = ({ userData, workLog }) => {
         },
       }}
     >
-      {workLog?.data?.length ? (
-        workLog.data.map(log => {
-          const loggedBy = userData?.results.find(user => user.id == log.user_id);
+      {workLog?.length ? (
+        workLog.map(log => {
+          const loggedBy = userData?.results.find(user => user.id == log.userId);
           return (
             <Paper
               key={log.id}
@@ -57,7 +57,7 @@ const WorkLogList: React.FC<WorkLogListProps> = ({ userData, workLog }) => {
                     mr: "20VW",
                   }}
                 >
-                  logged <b>{log.time_spent}</b>
+                  logged <b>{log.timeSpent}</b>
                 </Typography>
                 <Typography
                   sx={{
@@ -65,7 +65,7 @@ const WorkLogList: React.FC<WorkLogListProps> = ({ userData, workLog }) => {
                     fontSize: ".8rem",
                   }}
                 >
-                  {formatDistanceToNow(new Date(log.created_at))} ago
+                  {formatDistanceToNow(new Date(log.createdAt))} ago
                 </Typography>
               </Box>
 
@@ -80,7 +80,7 @@ const WorkLogList: React.FC<WorkLogListProps> = ({ userData, workLog }) => {
                   fontSize: "0.9rem",
                 }}
               >
-                {capitalizeFirstLetter(log.work_description)}
+                {capitalizeFirstLetter(log.workDescription)}
               </Typography>
             </Paper>
           )

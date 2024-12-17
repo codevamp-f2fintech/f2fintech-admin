@@ -39,6 +39,15 @@ export const Utility = () => {
     }
   };
 
+  // Function to calculate the number of days ago
+  const calculateDaysAgo = (date: string) => {
+    const today = new Date();
+    const addedDate = new Date(date);
+    const diffTime = Math.abs(today.getTime() - addedDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
   /**
    *
    * @param timeSpent
@@ -162,7 +171,7 @@ export const Utility = () => {
   const remLocalStorage = (key: string): void => {
     try {
       localStorage.removeItem(key);
-    } catch (err) {}
+    } catch (err) { }
   };
 
   /**
@@ -174,7 +183,7 @@ export const Utility = () => {
   const setLocalStorage = (key: string, value: any): void => {
     try {
       localStorage.setItem(key, JSON.stringify(value));
-    } catch (err) {}
+    } catch (err) { }
   };
 
   /**
@@ -291,6 +300,7 @@ export const Utility = () => {
 
   return {
     capitalizeFirstLetter,
+    calculateDaysAgo,
     convertHoursToDaysAndHours,
     decodedToken,
     fetchData,

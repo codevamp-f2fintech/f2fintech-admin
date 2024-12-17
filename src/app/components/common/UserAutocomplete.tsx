@@ -13,6 +13,7 @@ interface UserAutocompleteProps {
   userData: object;
   setSelectedUser: (user: UserData | null) => void;
   handleForwardAutocomplete: (value: UserData | null) => void;
+  ticketId: string | number;
 }
 
 const UserAutocomplete: React.FC<UserAutocompleteProps> = ({
@@ -23,10 +24,10 @@ const UserAutocomplete: React.FC<UserAutocompleteProps> = ({
   setSelectedUser,
   handleForwardAutocomplete,
   userData,
+  ticketId
 }) => {
   const [allUsers, setAllUsers] = useState<UserData[]>([]);
   const { getLocalStorage } = Utility();
-  const ticketId = getLocalStorage("ticketId")?.split("-")[1];
 
   useEffect(() => {
     if (userData?.results) {

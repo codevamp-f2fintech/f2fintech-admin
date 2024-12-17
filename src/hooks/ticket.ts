@@ -1,50 +1,64 @@
+import { Dayjs } from "dayjs";
 import { useState } from "react";
 import useSWR, { mutate } from "swr";
 
 import { fetcher, creator, modifier } from "@/apis/apiClient";
-import { Ticket, TicketData } from "@/types/ticket";
+import { Ticket, JoinedTicketData } from "@/types/ticket";
 
 /**
  * Hook for fetching tickets with SWR (stale-while-revalidate) strategy.
  *
- * @param initialData - The initial data to be used before SWR fetches fresh data.
  * @param pathKey - The API path key used by SWR to fetch ticket data.
  * @param page - Current page number for pagination.
- * @param pageSize - Size of each page for pagination.
+ * @param limit - Size of each page for pagination.
  * @returns An object containing the fetched tickets, loading state, and error state.
  */
 export const useGetTickets = (
-  initialData: Ticket | null,
   pathKey: string,
   page: number = 1,
-  limit: number = 6
+  limit: number = 6,
+  filter: string = "",
+  startDate: Dayjs | null = null,
+  endDate: Dayjs | null = null
 ) => {
-  const fullPath = pathKey.includes('?')
-    ? `${pathKey}&page=${page}&limit=${limit}`
-    : `${pathKey}?page=${page}&limit=${limit}`;
+  const params = new URLSearchParams();
+  if (filter) params.set("filter", filter);
+  if (startDate) params.set("startDate", startDate.toDate().toISOString());  // Convert to Date and then toISOString
+  if (endDate) params.set("endDate", endDate.toDate().toISOString());
 
-  const { data: swrData, error } = useSWR<Ticket | null>(
+  const fullPath = pathKey.includes('?')
+    ? `${pathKey}&page=${page}&limit=${limit}&${params.toString()}`
+    : `${pathKey}?page=${page}&limit=${limit}&${params.toString()}`;
+
+  const {
+    data: swrData,
+    error,
+    isValidating
+  } = useSWR<{
+    statusCode: number;
+    message: string;
+    data: Ticket;
+  }>(
     fullPath,
     fetcher,
     {
-      fallbackData: initialData,
-      refreshInterval: initialData ? 3600000 : 0, // 1-hour refresh if initialData exists
-      revalidateOnFocus: false, // Disable revalidation on window focus
+      refreshInterval: 3600000,
+      revalidateOnFocus: false,
+      dedupingInterval: 1000
     }
   );
 
-  // Manually re-trigger re-fetch
   const refetcher = async () => {
     await mutate(fullPath);
   };
 
   return {
-    value: swrData || {
+    value: swrData?.data || {
       results: [],
       count: 0,
       pages: 0,
     },
-    swrLoading: !error && !swrData,
+    swrLoading: !error && !swrData && isValidating,
     error,
     refetcher,
   };
@@ -56,17 +70,15 @@ export const useGetTickets = (
  * @param pathKey - The API path key used to create a new ticket.
  * @returns An object containing the created ticket, loading state, error state, and the createTicket function.
  */
-export const useCreateTicket = (pathKey: string, p0?: {}) => {
+export const useCreateTicket = (pathKey: string) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [createdTicket, setCreatedTicket] = useState<TicketData | null>(null);
 
-  const createTicket = async (data: object) => {
+  const createTicket = async (dataObj: object) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await creator(pathKey, data);
-      setCreatedTicket(response);
+      const response = await creator(pathKey, dataObj);
       return response;
     } catch (err) {
       setError(err as Error);
@@ -76,7 +88,7 @@ export const useCreateTicket = (pathKey: string, p0?: {}) => {
     }
   };
 
-  return { createdTicket, loading, error, createTicket };
+  return { loading, error, createTicket };
 };
 
 /**
@@ -88,22 +100,19 @@ export const useCreateTicket = (pathKey: string, p0?: {}) => {
 export const useModifyTicket = (pathKey: string) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [modifiedTicket, setModifiedTicket] = useState<TicketData | null>(null);
 
   const modifyTicket = async (
     ticketId: number,
-    updatedTicketData: Partial<TicketData>
+    updatedTicketData: Partial<JoinedTicketData>
   ) => {
     setLoading(true);
     setError(null);
     try {
-      // Construct the full API path using pathkey and ticketId
       const apiPath = `${pathKey}/${ticketId}`;
-      const ticket = await modifier<TicketData, Partial<TicketData>>(
+      const ticket = await modifier<JoinedTicketData, Partial<JoinedTicketData>>(
         apiPath,
         updatedTicketData
       );
-      setModifiedTicket(ticket);
       return ticket;
     } catch (err) {
       setError(err as Error);
@@ -112,5 +121,5 @@ export const useModifyTicket = (pathKey: string) => {
     }
   };
 
-  return { modifiedTicket, loading, error, modifyTicket };
+  return { loading, error, modifyTicket };
 };

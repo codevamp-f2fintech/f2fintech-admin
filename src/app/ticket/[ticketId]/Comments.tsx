@@ -19,7 +19,7 @@ import type { AppDispatch, RootState } from "@/redux/store";
 import { Utility } from "@/utils";
 
 import { formatDistanceToNow } from "date-fns";
-import Toast from "../components/common/Toast";
+import Toast from "../../components/common/Toast";
 import {
   useGetTicketActivities,
   useDeleteTicketActivity,
@@ -225,6 +225,7 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
       [commentId]: !prev[commentId],
     }));
   };
+  console.log(storedTicketId, comments.data, userData, 'comemnts')
 
   return (
     <Box mt={2} mb={2} sx={{ position: "relative" }}>

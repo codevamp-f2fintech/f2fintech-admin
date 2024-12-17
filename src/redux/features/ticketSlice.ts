@@ -3,12 +3,12 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Ticket } from "@/types/ticket";
 
 interface ticketInitialState {
-  tickets: Ticket | null;
+  ticket: Ticket | null;
   reduxLoading: boolean;
 }
 
 const initialState: ticketInitialState = {
-  tickets: null,
+  ticket: null,
   reduxLoading: false,
 };
 
@@ -17,8 +17,16 @@ export const ticketSlice = createSlice({
   initialState,
   reducers: {
     setTickets: (state, action: PayloadAction<Ticket>) => {
-      state.tickets = action.payload;
-      state.reduxLoading = false;
+      state.ticket = {
+        ...action.payload,
+        results: [
+          ...(state.ticket?.results || []),
+          ...action.payload.results,
+        ],
+      };
+    },
+    resetTickets: (state) => {
+      state.ticket = { results: [], count: 0, pages: 0 };
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.reduxLoading = action.payload;
@@ -26,7 +34,7 @@ export const ticketSlice = createSlice({
   },
 });
 
-export const { setTickets, setLoading } = ticketSlice.actions;
+export const { setTickets, resetTickets, setLoading } = ticketSlice.actions;
 
 // Export the reducer to be used in the store configuration
 export default ticketSlice.reducer;

@@ -11,7 +11,7 @@ import {
   useMediaQuery,
 } from "@mui/material";
 
-import ApplicationCard from "../components/ticket/ApplicationCard";
+import ApplicationCard from "../components/common/ApplicationCard";
 import Loader from "../components/common/Loader";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
@@ -19,7 +19,7 @@ import { setCustomerApplications, resetCustomerApplications } from "@/redux/feat
 import { useGetCustomerApplications } from "@/hooks/customerApplication";
 import { Utility } from "@/utils";
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 2;
 
 const Home: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -75,15 +75,11 @@ const Home: React.FC = () => {
     );
   }, [searchTerm, customerApplication]);
 
-  // Reset data on unmount
   useEffect(() => {
     return () => {
       (dispatch(resetCustomerApplications()) as unknown) as void;
     };
   }, [dispatch]);
-
-  console.log(data, 'api data')
-  console.log(customerApplication, 'redux data')
 
   return (
     <Box

@@ -19,28 +19,29 @@ export const useGetUsers = (
     page: number = 1,
     limit: number = 6
 ) => {
-    const { data: swrData, error } = useSWR<User | null>(
+    const { data: swrData, error, isValidating } = useSWR<{
+        statusCode: number;
+        message: string;
+        data: User | null;
+    }>(
         `${pathKey}?page=${page}&limit=${limit}`,
         fetcher,
         {
             fallbackData: initialData,
             refreshInterval: initialData ? 3600000 : 0, // 1 hour refresh if initialData exists
-            revalidateOnFocus: false,                  // Disable revalidation on window focus
+            revalidateOnFocus: false,
         });
-    // Manually re-trigger re-fetch
     const refetch = async () => {
         return await mutate(`${pathKey}?page=${page}&limit=${limit}`);
     };
 
     return {
-        value: swrData || {
+        value: swrData?.data || {
             results: [],
-            total: 0,
-            page: 1,
-            limit,
-            totalPages: 1,
+            count: 0,
+            pages: 0,
         },
-        swrLoading: !error && !swrData,
+        swrLoading: !error && !swrData && isValidating,
         error,
         refetch
     };

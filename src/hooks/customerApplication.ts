@@ -7,7 +7,6 @@ import { CustomerApplication, CustomerApplicationData } from "@/types/customerAp
 /**
  * Hook for fetching customerApplications with SWR (stale-while-revalidate) strategy.
  *
- * @param initialData - The initial data to be used before SWR fetches fresh data.
  * @param pathKey - The API path key used by SWR to fetch customer data.
  * @param page - The page number for pagination.
  * @param limit - The limit for pagination.
@@ -31,7 +30,7 @@ export const useGetCustomerApplications = (
     url,
     fetcher,
     {
-      refreshInterval: 0,
+      refreshInterval: 3600000,
       revalidateOnFocus: false,
       dedupingInterval: 1000,
     }
