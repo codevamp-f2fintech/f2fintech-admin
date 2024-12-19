@@ -39,6 +39,10 @@ import UserAutocomplete from "../../components/common/UserAutocomplete";
 
 import type { AppDispatch, RootState } from "@/redux/store";
 import { useMode, ColorModeContext } from "../../../../theme";
+import {
+  useCreateTicketHistory,
+  useGetTicketHistory,
+} from "@/hooks/tickethistory";
 import { useModifyTicket } from "@/hooks/ticket";
 import { useGetUsers } from "@/hooks/user";
 import { Utility } from "@/utils";
@@ -162,6 +166,17 @@ const Progress: React.FC = () => {
     timeSpent: 0,
   });
 
+  // // Fetch ticket history data
+  const { value: ticketHistory, refetch } = useGetTicketHistory(
+    [],
+    `get-ticket-histories/${ticketId}`
+  );
+
+  // Hook for creating new ticket history
+  const { createTicketHistory } = useCreateTicketHistory(
+    "create-ticket-history"
+  );
+
   const { modifyTicket } = useModifyTicket("update-ticket");
   const { value: userData } = useGetUsers({} as User, "get-users", 1, 100);
 
@@ -231,6 +246,7 @@ const Progress: React.FC = () => {
       originalEstimate: value,
     }));
   };
+  console.log(ticketHistory, 'details data')
 
   const handleChangeLoanStatus = async (event) => {
     const oldStatus = newLoanStatus; // Capture the old status before changing
@@ -242,7 +258,7 @@ const Progress: React.FC = () => {
         `https://web.f2fintech.in/api/v1/update-loan-tracking`,
         {
           //external server API
-          customer_application_id: ids?.applicationId,
+          customer_application_id: ticketDetailData?.applicationId,
           status: newStatus,
         }
       );
@@ -250,7 +266,7 @@ const Progress: React.FC = () => {
       const historyMessage = `${loggedInUser} changed status from ${oldStatus} to ${newStatus}`;
 
       await createTicketHistory({
-        ticket_id: storedTicketId,
+        ticket_id: ticketId,
         action: historyMessage,
       });
 
@@ -267,12 +283,12 @@ const Progress: React.FC = () => {
     setNewEmployeeStatus(newStatus);
 
     try {
-      await modifyTicket(+storedTicketId, { status: newStatus });
+      await modifyTicket(+ticketId, { status: newStatus });
 
       const loggedInUser = decodedToken()?.username;
       const historyMessage = `${loggedInUser} changed status from ${oldStatus} to ${newStatus}`;
       await createTicketHistory({
-        ticket_id: storedTicketId,
+        ticket_id: ticketId,
         action: historyMessage,
       });
       toastAndNavigate(dispatch, true, "info", "Status Changed Successfully");
@@ -285,7 +301,7 @@ const Progress: React.FC = () => {
   const handleForwardAutocomplete = async (value) => {
     setSelectedUser(value);
     try {
-      await modifyTicket(+storedTicketId, {
+      await modifyTicket(+ticketId, {
         forwarded_to: value.id,
         is_forwarded: 1,
       });
@@ -293,7 +309,7 @@ const Progress: React.FC = () => {
       const loggedInUser = decodedToken()?.username;
       const historyMessage = `${loggedInUser} forwarded the ticket to ${value.username}`;
       await createTicketHistory({
-        ticket_id: storedTicketId,
+        ticket_id: ticketId,
         action: historyMessage,
       });
 
@@ -389,8 +405,8 @@ const Progress: React.FC = () => {
                           fontSize: isMobile
                             ? ".7rem"
                             : isTab
-                            ? "1rem"
-                            : "1.1rem",
+                              ? "1rem"
+                              : "1.1rem",
                         }}
                       >
                         Activity:
@@ -416,8 +432,8 @@ const Progress: React.FC = () => {
                           fontSize: isMobile
                             ? ".7rem"
                             : isTab
-                            ? ".9rem"
-                            : "12px",
+                              ? ".9rem"
+                              : "12px",
                           borderRadius: "4px",
                           marginLeft: "10px",
                           padding: ".4rem",
@@ -437,8 +453,8 @@ const Progress: React.FC = () => {
                           fontSize: isMobile
                             ? ".7rem"
                             : isTab
-                            ? ".9rem"
-                            : "12px",
+                              ? ".9rem"
+                              : "12px",
                           borderRadius: "4px",
                           marginLeft: "10px",
                           padding: "6px",
@@ -459,8 +475,8 @@ const Progress: React.FC = () => {
                           fontSize: isMobile
                             ? ".7rem"
                             : isTab
-                            ? ".9rem"
-                            : "12px",
+                              ? ".9rem"
+                              : "12px",
                           borderRadius: "4px",
                           marginLeft: "10px",
                           padding: "6px",
@@ -482,7 +498,7 @@ const Progress: React.FC = () => {
                   )}
 
                   {/* History Section */}
-                  {activeSection === "History" && <History />}
+                  {activeSection === "History" && <History ticketHistory={ticketHistory?.data} />}
 
                   {activeSection === "WorkLog" && (
                     <WorkLogList
@@ -703,8 +719,8 @@ const Progress: React.FC = () => {
                           fontSize: isMobile
                             ? ".8rem"
                             : isTab
-                            ? ".9rem"
-                            : "14px",
+                              ? ".9rem"
+                              : "14px",
                           fontWeight: "bold",
                           color: "white",
                           marginLeft: ".5rem",
