@@ -50,7 +50,6 @@ const Home: React.FC = () => {
   // Fetch and update state with new data
   useEffect(() => {
     if (data.results.length > 0) {
-      console.log(data, currentPage, "homepage if condition");
       dispatch(setCustomerApplications(data));
       setHasMoreData(data.results.length === ITEMS_PER_PAGE);
     } else {
@@ -64,9 +63,9 @@ const Home: React.FC = () => {
       const nearBottom =
         window.innerHeight + window.scrollY >= document.body.offsetHeight - 400; // 400px threshold
       if (nearBottom && !swrLoading && hasMoreData) {
-        setCurrentPage((prevPage) => prevPage + 1); // Increment page only once
+        setCurrentPage((prevPage) => prevPage + 1);
       }
-    }, 500), // Debounce delay: 500ms
+    }, 500),
     [swrLoading, hasMoreData]
   );
 
@@ -77,11 +76,11 @@ const Home: React.FC = () => {
 
   // Filtered results based on search term
   const filteredCustomers = useMemo(() => {
-    return customerApplication?.results.filter((customer) =>
-      customer.customerName.toLowerCase().includes(searchTerm.toLowerCase())
+    return customerApplication?.results.filter(
+      (customer) => !customer.is_picked &&
+        customer.customerName.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [searchTerm, customerApplication]);
-  console.log(data, currentPage, "homepage outside if");
 
   useEffect(() => {
     return () => {

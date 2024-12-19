@@ -24,8 +24,20 @@ const customerApplicationSlice = createSlice({
         ],
       };
     },
-    resetCustomerApplications: (state) => {
-      state.customerApplication = { results: [], count: 0, pages: 0 };
+    resetCustomerApplications: (state, action: PayloadAction<number | undefined>) => {
+      const applicationIdToRemove = action.payload;
+
+      if (applicationIdToRemove) {
+        if (state.customerApplication?.results) {
+          state.customerApplication.results = state.customerApplication.results.filter(
+            (app) => app.applicationId !== applicationIdToRemove
+          );
+          state.customerApplication.count = state.customerApplication.results.length;
+        }
+      } else {
+        // Reset the entire state
+        state.customerApplication = { results: [], count: 0, pages: 0 };
+      }
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.reduxLoading = action.payload;

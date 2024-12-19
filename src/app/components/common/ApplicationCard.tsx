@@ -25,6 +25,9 @@ import { useCreateTicket } from "@/hooks/ticket";
 import { Utility } from "@/utils";
 import { useModifyCustomerApplication } from "@/hooks/customerApplication";
 import { fetcher } from "@/apis/apiClient";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/redux/store";
+import { resetCustomerApplications } from "@/redux/features/customerApplicationSlice";
 
 interface ApplicationCardProps {
   customerApplication: {
@@ -86,6 +89,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
 }) => {
   const [showHistory, setShowHistory] = useState<boolean>(false);
   const [historyData, setHistoryData] = useState<any[]>([]);
+  const dispatch: AppDispatch = useDispatch();
 
   const {
     calculateDaysAgo,
@@ -132,9 +136,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
         // Mark the Card as picked
         is_picked: 1,
       });
-      if (refetch) {
-        await refetch();
-      }
+      dispatch(resetCustomerApplications(applicationId));
     } catch (error) {
       console.log("Error in checkbox change:", error);
     }
