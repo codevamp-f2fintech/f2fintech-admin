@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Divider, Typography } from "@mui/material";
+import { Box, Divider, Typography, useMediaQuery } from "@mui/material";
 import { Bolt as BoltIcon } from "@mui/icons-material";
 import { format, formatDistanceToNow } from "date-fns";
 import { Utility } from "@/utils";
@@ -13,9 +13,10 @@ interface HistoryProps {
   }>;
 }
 
-
 const History: React.FC<HistoryProps> = ({ ticketHistory }) => {
   const { capitalizeFirstLetter } = Utility();
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
   return (
     <Box
       sx={{
@@ -49,7 +50,8 @@ const History: React.FC<HistoryProps> = ({ ticketHistory }) => {
                 <Typography
                   variant="body1"
                   sx={{
-                    width: "32vw",
+                    fontSize: isMobile ? ".6rem" : isTab ? ".8rem" : "",
+                    width: isMobile ? "90vw" : isTab ? "80vh" : "32vw",
                     color: "white",
                   }}
                 >
@@ -61,6 +63,8 @@ const History: React.FC<HistoryProps> = ({ ticketHistory }) => {
                   sx={{
                     ml: "3vw",
                     color: "cyan",
+                    fontSize: isMobile ? ".6rem" : "",
+                    width: isMobile ? "30vw" : "32vw",
                   }}
                 >
                   {format(dateObj, "dd MMM yyyy HH:mm")} (

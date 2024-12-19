@@ -246,7 +246,7 @@ const Progress: React.FC = () => {
       originalEstimate: value,
     }));
   };
-  console.log(ticketDetailData, 'details data')
+  console.log(ticketDetailData, "details data");
 
   const handleChangeLoanStatus = async (event) => {
     const oldStatus = newLoanStatus; // Capture the old status before changing
@@ -405,8 +405,8 @@ const Progress: React.FC = () => {
                           fontSize: isMobile
                             ? ".7rem"
                             : isTab
-                              ? "1rem"
-                              : "1.1rem",
+                            ? "1rem"
+                            : "1.1rem",
                         }}
                       >
                         Activity:
@@ -414,7 +414,7 @@ const Progress: React.FC = () => {
                     </Box>
                     <Box
                       sx={{
-                        width: isMobile ? "60vw" : isTab ? "30vw" : "16vw",
+                        width: isMobile ? "60vw" : isTab ? "30vw" : "20vw",
                         height: "7vh",
                         borderRadius: "0px 10px 10px 0px",
                         display: "flex",
@@ -432,8 +432,8 @@ const Progress: React.FC = () => {
                           fontSize: isMobile
                             ? ".7rem"
                             : isTab
-                              ? ".9rem"
-                              : "12px",
+                            ? ".9rem"
+                            : "12px",
                           borderRadius: "4px",
                           marginLeft: "10px",
                           padding: ".4rem",
@@ -453,8 +453,8 @@ const Progress: React.FC = () => {
                           fontSize: isMobile
                             ? ".7rem"
                             : isTab
-                              ? ".9rem"
-                              : "12px",
+                            ? ".9rem"
+                            : "12px",
                           borderRadius: "4px",
                           marginLeft: "10px",
                           padding: "6px",
@@ -475,8 +475,8 @@ const Progress: React.FC = () => {
                           fontSize: isMobile
                             ? ".7rem"
                             : isTab
-                              ? ".9rem"
-                              : "12px",
+                            ? ".9rem"
+                            : "12px",
                           borderRadius: "4px",
                           marginLeft: "10px",
                           padding: "6px",
@@ -498,7 +498,9 @@ const Progress: React.FC = () => {
                   )}
 
                   {/* History Section */}
-                  {activeSection === "History" && <History ticketHistory={ticketHistory?.data} />}
+                  {activeSection === "History" && (
+                    <History ticketHistory={ticketHistory?.data} />
+                  )}
 
                   {activeSection === "WorkLog" && (
                     <WorkLogList
@@ -720,8 +722,8 @@ const Progress: React.FC = () => {
                           fontSize: isMobile
                             ? ".8rem"
                             : isTab
-                              ? ".9rem"
-                              : "14px",
+                            ? ".9rem"
+                            : "14px",
                           fontWeight: "bold",
                           color: "white",
                           marginLeft: ".5rem",
