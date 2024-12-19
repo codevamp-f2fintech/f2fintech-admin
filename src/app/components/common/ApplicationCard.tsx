@@ -46,7 +46,13 @@ interface ApplicationCardProps {
   refetch?: () => Promise<void>;
 }
 
-function InfoRow({ icon, text }: { icon: React.ReactNode; text: string | undefined }) {
+function InfoRow({
+  icon,
+  text,
+}: {
+  icon: React.ReactNode;
+  text: string | undefined;
+}) {
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
       <Box
@@ -81,15 +87,19 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
   const [showHistory, setShowHistory] = useState<boolean>(false);
   const [historyData, setHistoryData] = useState<any[]>([]);
 
-  const { calculateDaysAgo, capitalizeFirstLetter, decodedToken, formatTenure } = Utility();
+  const {
+    calculateDaysAgo,
+    capitalizeFirstLetter,
+    decodedToken,
+    formatTenure,
+  } = Utility();
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
   const { createTicket } = useCreateTicket("create-ticket");
   // Hook for modifying loan application is_picked column
-  const { modifyCustomerApplication: modifyiedCustomerApplication } = useModifyCustomerApplication(
-    "update-loan-application"
-  );
+  const { modifyCustomerApplication: modifyiedCustomerApplication } =
+    useModifyCustomerApplication("update-loan-application");
 
   const toggleHistory = () => setShowHistory((prev) => !prev);
 
@@ -110,15 +120,16 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
     }
   }, [showHistory, customerApplication?.ticketId]);
 
-
   const handleCheckboxChange = async (applicationId: number) => {
     try {
-      await createTicket({                  // Create new Ticket
+      await createTicket({
+        // Create new Ticket
         customer_application_id: applicationId,
         user_id: decodedToken()?.id,
         status: "under credit review",
       });
-      await modifyiedCustomerApplication(applicationId, {          // Mark the Card as picked
+      await modifyiedCustomerApplication(applicationId, {
+        // Mark the Card as picked
         is_picked: 1,
       });
       if (refetch) {
@@ -206,9 +217,18 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 minHeight: isMobile ? "35vh" : isTab ? "20vh" : "40vh",
               }}
             >
-              <InfoRow icon={<MailRounded />} text={customerApplication.customerEmail} />
-              <InfoRow icon={<PhoneRounded />} text={customerApplication.customerContact} />
-              <InfoRow icon={<PaidRounded />} text={customerApplication.applicationAmount} />
+              <InfoRow
+                icon={<MailRounded />}
+                text={customerApplication.customerEmail}
+              />
+              <InfoRow
+                icon={<PhoneRounded />}
+                text={customerApplication.customerContact}
+              />
+              <InfoRow
+                icon={<PaidRounded />}
+                text={customerApplication.applicationAmount}
+              />
               <InfoRow
                 icon={<AccessTimeRounded />}
                 text={formatTenure(customerApplication.applicationTenure)}
@@ -216,7 +236,9 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               {customerApplication.customerLocation && (
                 <InfoRow
                   icon={<LocationOnRounded />}
-                  text={capitalizeFirstLetter(customerApplication.customerLocation)}
+                  text={capitalizeFirstLetter(
+                    customerApplication.customerLocation
+                  )}
                 />
               )}
             </Box>
@@ -234,7 +256,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 overflowY: "scroll",
                 maxHeight: "40vh",
                 "&::-webkit-scrollbar": {
-                  display: "none", // This hides the scrollbar
+                  display: "none",
                 },
               }}
             >
@@ -248,7 +270,12 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                       variant="body2"
                       sx={{ color: "black", fontStyle: "normal", mb: 1 }}
                     >
-                      {history.action}
+                      <strong>
+                        {capitalizeFirstLetter(history.action.split(" ")[0])}
+                      </strong>
+                      {` ${history.action.substring(
+                        history.action.indexOf(" ") + 1
+                      )}`}
                     </Typography>
                     <Typography variant="caption" sx={{ color: "blue" }}>
                       {calculateDaysAgo(history.created_at)} days ago
@@ -296,7 +323,9 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               }}
             >
               <Chip
-                label={`${calculateDaysAgo(customerApplication.applicationDate)} days ago`}
+                label={`${calculateDaysAgo(
+                  customerApplication.applicationDate
+                )} days ago`}
                 size="small"
                 sx={{
                   bgcolor: "rgba(255,255,255,0.9)",

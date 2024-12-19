@@ -9,8 +9,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  InputAdornment,
-  TextField,
   Typography,
   Box,
   Divider,
@@ -24,7 +22,6 @@ import {
   ConfirmationNumber,
   Refresh,
   CheckCircle,
-  Search,
 } from "@mui/icons-material";
 
 import dayjs from "dayjs";
@@ -96,7 +93,7 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
         background: "linear-gradient(145deg, #ffffff 0%, #f8f9ff 100%)",
         width: isMobile ? "100%" : isTab ? "95vw" : "49.3vw",
         ml: isMobile ? "" : isTab ? "" : "4vw",
-        maxHeight: isMobile ? "92vh" : isTab ? "50vh" : "130vh",
+        maxHeight: isMobile ? "92vh" : isTab ? "100vh" : "130vh",
       }}
     >
       <Box

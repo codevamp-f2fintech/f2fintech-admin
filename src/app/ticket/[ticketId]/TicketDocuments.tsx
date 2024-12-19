@@ -34,9 +34,7 @@ const TicketDocuments = ({ isMobile, isTab, documents }) => {
           alignItems: "center",
           borderRadius: "10px",
           width: isMobile ? "73vw" : isTab ? "52vw" : "43.5vw",
-          background: `
-            linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
-          `,
+          bgcolor: "#9575cd",
         }}
       >
         <Typography
@@ -45,7 +43,7 @@ const TicketDocuments = ({ isMobile, isTab, documents }) => {
             mb: 2,
             mt: 0,
             color: "white",
-            fontSize: isMobile ? ".7rem" : isTab ? "1rem" : "1rem",
+            fontSize: isMobile ? ".7rem" : isTab ? "1rem" : "1.1rem",
           }}
         >
           Documents:

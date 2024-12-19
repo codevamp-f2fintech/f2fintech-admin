@@ -3,12 +3,7 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import React, { useCallback, useEffect, useState } from "react";
-import {
-  Box,
-  Grid,
-  Typography,
-  useMediaQuery,
-} from "@mui/material";
+import { Box, Grid, Typography, useMediaQuery } from "@mui/material";
 import { Dayjs } from "dayjs";
 
 import ApplicationCard from "../components/common/ApplicationCard";
@@ -28,31 +23,32 @@ const Ticket = () => {
   const [sortBy, setSortBy] = useState<string>("all");
   const [startDate, setStartDate] = useState<Dayjs | null>(null);
   const [endDate, setEndDate] = useState<Dayjs | null>(null);
+
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [hasMoreData, setHasMoreData] = useState<boolean>(true);
 
   const { ticket } = useSelector((state: RootState) => state.tickets);
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
-  const ITEMS_PER_PAGE = 1; // Number of tickets per page
+  const ITEMS_PER_PAGE = 6; // Number of tickets per page
 
   const dispatch: AppDispatch = useDispatch();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { decodedToken } = Utility();
+  const { debounceScroll, decodedToken } = Utility();
   const userRole = decodedToken()?.role;
 
   const apiEndpoint = selectedUser
     ? `get-all-tickets/${selectedUser.id}`
     : userRole === "admin"
-      ? sortBy === "all"
-        ? `get-all-tickets`
-        : `get-all-tickets?status=${sortBy}`
-      : userRole === "agent"
-        ? sortBy === "all"
-          ? `get-all-tickets/${decodedToken()?.id}?isAgent=true`
-          : `get-all-tickets/${decodedToken()?.id}?isAgent=true&status=${sortBy}`
-        : `get-all-tickets`;
+    ? sortBy === "all"
+      ? `get-all-tickets`
+      : `get-all-tickets?status=${sortBy}`
+    : userRole === "agent"
+    ? sortBy === "all"
+      ? `get-all-tickets/${decodedToken()?.id}?isAgent=true`
+      : `get-all-tickets/${decodedToken()?.id}?isAgent=true&status=${sortBy}`
+    : `get-all-tickets`;
 
   const { value: ticketData, swrLoading } = useGetTickets(
     apiEndpoint,
@@ -83,6 +79,8 @@ const Ticket = () => {
     const queryStatus = searchParams.get("status");
     if (queryStatus) {
       setSortBy(queryStatus);
+    } else {
+      setSortBy("all");
     }
   }, [searchParams]);
 
@@ -94,18 +92,19 @@ const Ticket = () => {
     } else {
       setHasMoreData(false);
     }
-  }, [ticketData?.results, dispatch, selectedUser, sortBy, filter, startDate, endDate]);
+  }, [ticketData?.results, dispatch]);
 
   // Handle infinite scrolling
-  const handleScroll = useCallback(() => {
-    if (
-      window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 &&
-      !swrLoading &&
-      hasMoreData
-    ) {
-      setCurrentPage((prevPage) => prevPage + 1);
-    }
-  }, [swrLoading, hasMoreData]);
+  const handleScroll = useCallback(
+    debounceScroll(() => {
+      const nearBottom =
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 400; // 400px threshold
+      if (nearBottom && !swrLoading && hasMoreData) {
+        setCurrentPage((prevPage) => prevPage + 1); // Increment page only once
+      }
+    }, 500), // Debounce delay: 500ms
+    [swrLoading, hasMoreData]
+  );
 
   useEffect(() => {
     window.addEventListener("scroll", handleScroll);
@@ -118,19 +117,25 @@ const Ticket = () => {
   }, [dispatch]);
 
   const handleSortChange = (value: string) => {
-    setSortBy(value.toLowerCase());
+    const sortValue = value.toLowerCase();
+    setSortBy(sortValue);
     handleFilterChange();
+    // Update query parameters in the URL
+    const params = new URLSearchParams(searchParams);
+    params.set("status", sortValue);
+
+    router.push(`?${params.toString()}`, undefined, { shallow: true });
   };
 
   useEffect(() => {
     return () => {
-      (dispatch(resetTickets()) as unknown) as void;
+      dispatch(resetTickets()) as unknown as void;
     };
   }, [dispatch]);
 
-  console.log(ticketData, 'api data');
-  console.log(ticket, 'redux data');
-  console.log(currentPage, 'paige')
+  console.log(ticketData, "api data");
+  console.log(ticket, "redux data");
+  console.log(currentPage, "paige");
 
   return (
     <Box
@@ -202,7 +207,9 @@ const Ticket = () => {
               <ApplicationCard
                 key={index}
                 customerApplication={ticket}
-                handleStartClick={() => router.push(`ticket/${ticket.ticketId}`)}
+                handleStartClick={() =>
+                  router.push(`ticket/${ticket.ticketId}`)
+                }
               />
             ))
           )}

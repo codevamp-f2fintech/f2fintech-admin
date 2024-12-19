@@ -65,7 +65,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   userRole,
   ticketCount,
   searchLabel,
-  handleFilterChange
+  handleFilterChange,
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [userAnchorEl, setUserAnchorEl] = useState<null | HTMLElement>(null);
@@ -142,7 +142,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     handleFilterChange({ startDate: start, endDate: end, page: 1 }); // Reset page to 1 and update date range
   };
 
-
   return (
     <Paper
       elevation={2}
@@ -192,8 +191,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         <Tooltip title="Filter by Status">
           <Chip
             icon={getStatusIcon(sortBy)}
-            label={`${sortBy.charAt(0).toUpperCase() + sortBy.slice(1)
-              } (${ticketCount})`}
+            label={`${
+              sortBy.charAt(0).toUpperCase() + sortBy.slice(1)
+            } (${ticketCount})`}
             onClick={(e) => setAnchorEl(e.currentTarget)}
             sx={{
               backgroundColor: getStatusColor(sortBy),

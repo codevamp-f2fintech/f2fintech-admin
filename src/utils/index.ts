@@ -97,6 +97,14 @@ export const Utility = () => {
     return formattedTime || "0h";
   };
 
+  const debounceScroll = (func: Function, delay: number) => {
+    let timeout: NodeJS.Timeout;
+    return (...args: any) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func(...args), delay);
+    };
+  };
+
   const formatTenure = (tenure: number) => {
     if (tenure <= 60) {
       return `${tenure} months`;
@@ -171,7 +179,7 @@ export const Utility = () => {
   const remLocalStorage = (key: string): void => {
     try {
       localStorage.removeItem(key);
-    } catch (err) { }
+    } catch (err) {}
   };
 
   /**
@@ -183,7 +191,7 @@ export const Utility = () => {
   const setLocalStorage = (key: string, value: any): void => {
     try {
       localStorage.setItem(key, JSON.stringify(value));
-    } catch (err) { }
+    } catch (err) {}
   };
 
   /**
@@ -303,6 +311,7 @@ export const Utility = () => {
     calculateDaysAgo,
     convertHoursToDaysAndHours,
     decodedToken,
+    debounceScroll,
     fetchData,
     formatTenure,
     formatDate,

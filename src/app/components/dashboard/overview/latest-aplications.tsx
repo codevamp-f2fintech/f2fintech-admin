@@ -74,7 +74,7 @@ export function LatestApplications({
       elevation={3}
       sx={{
         width: isMobile ? "100%" : isTab ? "100%" : "30vw",
-        maxHeight: isMobile ? "85vh" : isTab ? "50vh" : "130vh",
+        maxHeight: isMobile ? "85vh" : isTab ? "100vh" : "130vh",
       }}
     >
       <Box
@@ -106,15 +106,19 @@ export function LatestApplications({
       <TableContainer>
         <Table
           sx={{
-            minHeight: isMobile ? "57vh" : isTab ? "30vh" : "103vh",
+            minHeight: isMobile ? "" : isTab ? "20vh" : "103vh",
           }}
         >
-          <TableHead sx={{ height: isMobile ? "8vh" : isTab ? "5vh" : "12vh" }}>
+          <TableHead
+            sx={{
+              height: isMobile ? "8vh" : isTab ? "5vh" : "12vh",
+            }}
+          >
             <TableRow sx={{ bgcolor: "grey.50" }}>
-              <TableCell align="center">Sr.</TableCell>
-              <TableCell align="center">Name</TableCell>
-              <TableCell align="center">Amount</TableCell>
-              <TableCell align="center">Application Date</TableCell>
+              <TableCell>Sr.</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>Amount</TableCell>
+              <TableCell>Application Date</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -133,6 +137,7 @@ export function LatestApplications({
                 <TableRow
                   key={application.applicationId}
                   sx={{
+                    height: "2vh",
                     "&:hover": { bgcolor: "primary.50" },
                     transition: "background-color 0.2s",
                   }}
@@ -146,24 +151,20 @@ export function LatestApplications({
                         display: "flex",
                         alignItems: "center",
                         gap: 1,
+                        justifyContent: "center",
                         width: isMobile ? "30vw" : "6vw",
-                        overflow: isMobile ? "hidden" : "", // Prevents content from overflowing
                       }}
                     >
                       <Person sx={{ color: "primary.main" }} />
                       {application.customerName}
                     </Box>
                   </TableCell>
-                  <TableCell
-                    sx={{
-                      width: isMobile ? "40vw" : "",
-                      overflow: isMobile ? "hidden" : "",
-                    }}
-                  >
+                  <TableCell align="center">
                     <Box
                       sx={{
                         display: "flex",
                         alignItems: "center",
+                        justifyContent: "center",
                         gap: 1,
                         width: "8vw",
                       }}

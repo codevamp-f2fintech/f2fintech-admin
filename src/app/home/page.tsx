@@ -15,20 +15,25 @@ import ApplicationCard from "../components/common/ApplicationCard";
 import Loader from "../components/common/Loader";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
-import { setCustomerApplications, resetCustomerApplications } from "@/redux/features/customerApplicationSlice";
+import {
+  setCustomerApplications,
+  resetCustomerApplications,
+} from "@/redux/features/customerApplicationSlice";
 import { useGetCustomerApplications } from "@/hooks/customerApplication";
 import { Utility } from "@/utils";
 
-const ITEMS_PER_PAGE = 2;
+const ITEMS_PER_PAGE = 6;
 
 const Home: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [hasMoreData, setHasMoreData] = useState<boolean>(true);
 
-  const { customerApplication } = useSelector((state: RootState) => state.customerApplications);
+  const { customerApplication } = useSelector(
+    (state: RootState) => state.customerApplications
+  );
   const dispatch: AppDispatch = useDispatch();
-  const { decodedToken } = Utility();
+  const { debounceScroll, decodedToken } = Utility();
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
@@ -37,7 +42,7 @@ const Home: React.FC = () => {
     swrLoading,
     refetch,
   } = useGetCustomerApplications(
-    'get-customer-loan-applications',
+    "get-customer-loan-applications",
     currentPage,
     ITEMS_PER_PAGE
   );
@@ -45,6 +50,7 @@ const Home: React.FC = () => {
   // Fetch and update state with new data
   useEffect(() => {
     if (data.results.length > 0) {
+      console.log(data, currentPage, "homepage if condition");
       dispatch(setCustomerApplications(data));
       setHasMoreData(data.results.length === ITEMS_PER_PAGE);
     } else {
@@ -53,15 +59,16 @@ const Home: React.FC = () => {
   }, [data, dispatch]);
 
   // Handle infinite scrolling
-  const handleScroll = useCallback(() => {
-    if (
-      window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 &&
-      !swrLoading &&
-      hasMoreData
-    ) {
-      setCurrentPage((prevPage) => prevPage + 1);
-    }
-  }, [swrLoading, hasMoreData]);
+  const handleScroll = useCallback(
+    debounceScroll(() => {
+      const nearBottom =
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 400; // 400px threshold
+      if (nearBottom && !swrLoading && hasMoreData) {
+        setCurrentPage((prevPage) => prevPage + 1); // Increment page only once
+      }
+    }, 500), // Debounce delay: 500ms
+    [swrLoading, hasMoreData]
+  );
 
   useEffect(() => {
     window.addEventListener("scroll", handleScroll);
@@ -74,10 +81,11 @@ const Home: React.FC = () => {
       customer.customerName.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [searchTerm, customerApplication]);
+  console.log(data, currentPage, "homepage outside if");
 
   useEffect(() => {
     return () => {
-      (dispatch(resetCustomerApplications()) as unknown) as void;
+      dispatch(resetCustomerApplications()) as unknown as void;
     };
   }, [dispatch]);
 

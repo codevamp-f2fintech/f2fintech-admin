@@ -19,10 +19,7 @@ export const ticketSlice = createSlice({
     setTickets: (state, action: PayloadAction<Ticket>) => {
       state.ticket = {
         ...action.payload,
-        results: [
-          ...(state.ticket?.results || []),
-          ...action.payload.results,
-        ],
+        results: [...(state.ticket?.results || []), ...action.payload.results],
       };
     },
     resetTickets: (state) => {

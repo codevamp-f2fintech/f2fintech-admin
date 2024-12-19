@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
+
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
-import CardHeader from "@mui/material/CardHeader";
 import Stack from "@mui/material/Stack";
 import { useTheme } from "@mui/material/styles";
 import type { SxProps } from "@mui/material/styles";
@@ -32,7 +32,7 @@ export function Traffic({
     <Card
       sx={{
         width: "100%",
-        height: isMobile ? "75vh" : isTab ? "50vh" : "90vh",
+        height: isMobile ? "75vh" : isTab ? "44.5vh" : "90vh",
       }}
     >
       {/* <CardHeader title="Tickets" /> */}
@@ -67,6 +67,13 @@ export function Traffic({
             series={chartSeries}
             type="donut"
             width="100%"
+            sx={{
+              transition: "color 0.3s ease, transform 0.3s ease", // smooth transition for color and transform
+              "&:hover": {
+                color: "red", // color changes to green on hover
+                transform: "scale(1.1)", // scale up the text a little on hover
+              },
+            }}
           />
           <Stack
             direction="row"
@@ -84,6 +91,11 @@ export function Traffic({
                   alignItems: "center",
                   width: "100px",
                   height: "80px",
+                  transition: "color 0.3s ease, transform 0.3s ease",
+                  "&:hover": {
+                    color: "black",
+                    transform: "scale(1.1)",
+                  },
                 }}
               >
                 <Typography
@@ -93,6 +105,7 @@ export function Traffic({
                     width: "100%",
                     textAlign: "center",
                     height: "10vh",
+                    color: "red",
                   }}
                 >
                   {labels[index]}
@@ -105,6 +118,13 @@ export function Traffic({
                     textAlign: "center",
                     height: "5vh",
                     marginBottom: "2vh",
+                    color: "black",
+                    fontSize: "1rem",
+                    transition: "color 0.3s ease, transform 0.3s ease",
+                    "&:hover": {
+                      color: "black",
+                      transform: "scale(1.8)",
+                    },
                   }}
                 >
                   {item}

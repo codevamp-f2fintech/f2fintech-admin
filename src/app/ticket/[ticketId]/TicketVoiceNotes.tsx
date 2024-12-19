@@ -18,11 +18,7 @@ import { Upload } from "@mui/icons-material";
 import { RootState } from "@/redux/store";
 import { useModifyTicket } from "@/hooks/ticket";
 
-const TicketVoiceNotes = ({
-  isMobile,
-  isTab,
-  ticketDetailData
-}) => {
+const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 3;
   const [selectedAudioFile, setSelectedAudioFile] = useState();
@@ -109,7 +105,7 @@ const TicketVoiceNotes = ({
           alignItems: "center",
           borderRadius: "10px",
           width: isMobile ? "73vw" : isTab ? "52vw" : "43.5vw",
-          background: `linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)`,
+          bgcolor: "#9575cd",
         }}
       >
         <Typography
@@ -118,72 +114,11 @@ const TicketVoiceNotes = ({
             mb: 2,
             mt: 0,
             color: "white",
-            fontSize: isMobile ? ".7rem" : isTab ? "1rem" : "1rem",
+            fontSize: isMobile ? ".7rem" : isTab ? "1rem" : "1.1rem",
           }}
         >
           Voice Note:
         </Typography>
-
-        {/* Display existing notes */}
-        {/* {notes?.length > 0 ? (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              width: "100%",
-              gap: 1,
-            }}
-          >
-            {displayedNotes?.map((doc, index) => (
-              <Box
-                key={index}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: ".8rem",
-                  background: "white",
-                  borderRadius: "8px",
-                  boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-                  transition: "transform 0.2s ease",
-                  width: isMobile ? "50vw" : isTab ? "43vw" : "38.5vw",
-                  marginLeft: "1.5rem",
-                  "&:hover": {
-                    transform: "scale(1.02)",
-                    transition: "transform 0.3s ease",
-                  },
-                }}
-              >
-                <Typography
-                  variant="body1"
-                  sx={{ color: "black", flexGrow: 1 }}
-                >
-                  {doc.type}
-                </Typography>
-                <a
-                  href={doc.document_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    textDecoration: "none",
-                    color: "black",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Open
-                </a>
-                {/* Add Audio Player for Each Note 
-                <audio controls sx={{ width: "100%" }}>
-                  <source src={doc.document_url} type="audio/mp3" />
-                  Your browser does not support the audio element.
-                </audio>
-              </Box>
-            ))}
-          </Box>
-        ) : (
-          // <Typography>No notes available.</Typography>
-          <></>
-        )}*/}
 
         {/* File upload section */}
         {!selectedAudioFile && (
