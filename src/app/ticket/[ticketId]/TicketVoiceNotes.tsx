@@ -15,7 +15,7 @@ import Toast from "../../components/common/Toast";
 import { Utility } from "@/utils";
 import { useDispatch, useSelector } from "react-redux";
 import { Upload } from "@mui/icons-material";
-import { RootState } from "@/redux/store";
+import { AppDispatch, RootState } from "@/redux/store";
 import { useModifyTicket } from "@/hooks/ticket";
 
 const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
@@ -25,7 +25,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
   const [uploaded, setUploaded] = useState(false);
   const [voiceNote, setVoiceNote] = useState(ticketDetailData?.voiceNoteUrl);
   const inputRef = useRef(null);
-  const dispatch = useDispatch();
+  const dispatch: AppDispatch = useDispatch();
   const { toast } = useSelector((state: RootState) => state.toast);
   const { toastAndNavigate } = Utility();
   const { modifyTicket } = useModifyTicket("update-ticket");
@@ -39,6 +39,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
       voice_note_url: null,
     });
     setVoiceNote("");
+    setSelectedAudioFile(null);
     if (inputRef.current) {
       inputRef.current.value = ""; // Clear the file input value
     }
@@ -65,13 +66,15 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
               },
             }
           );
-          attachmentUrl = uploadResponse.data.data;
-          // update ticket api update-ticket/:ticketId
-          const updatedData = { voice_note_url: attachmentUrl };
+          const attachmentUrl = uploadResponse.data.data;
+          await modifyTicket(ticketDetailData?.ticketId, {
+            voice_note_url: attachmentUrl,
+          });
 
-          await modifyTicket(ticketDetailData?.ticketId, updatedData);
+          setVoiceNote(attachmentUrl);
           setUploaded(true);
-          toastAndNavigate(dispatch, true, "info", "Uploaded Successfully");
+          setSelectedAudioFile(null);
+          toastAndNavigate(dispatch, true, "success", "Voice note uploaded successfully");
         } catch (err) {
           console.log("Error uploading attachment:", err);
           toastAndNavigate(
@@ -88,7 +91,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
   }, [selectedAudioFile, toastAndNavigate]);
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     setSelectedAudioFile(file);
   };
 
@@ -121,7 +124,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
         </Typography>
 
         {/* File upload section */}
-        {!selectedAudioFile && (
+        {!selectedAudioFile && !voiceNote && (
           <IconButton
             component="label"
             sx={{ mt: 2, background: "white", p: 1, borderRadius: "50%" }}
@@ -130,7 +133,6 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
             <input
               ref={inputRef}
               hidden
-              multiple
               type="file"
               accept="audio/*"
               onChange={handleFileChange}
@@ -159,7 +161,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
                 width: isMobile ? "100vw" : isTab ? "90vw" : "30vw",
               }}
             >
-              <Typography>{selectedAudioFile?.name}</Typography>
+              <Typography>{selectedAudioFile?.name || "Voice Note"}</Typography>
               <IconButton onClick={handleAttachmentAudioDelete} sx={{ ml: 2 }}>
                 <DeleteIcon />
               </IconButton>
@@ -169,22 +171,18 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
               {/* Audio Player for Each Selected File */}
               <audio controls style={{ width: "100%" }}>
                 {selectedAudioFile ? (
-                  <>
-                    {/* Check the MIME type of the selected file */}
                     <source
                       src={URL.createObjectURL(selectedAudioFile)}
                       type={
                         selectedAudioFile.type === "audio/mpeg"
                           ? "audio/mpeg"
                           : selectedAudioFile.type === "audio/ogg"
-                          ? "audio/ogg"
-                          : "audio/wav" // Default to WAV if MIME type is unknown
+                            ? "audio/ogg"
+                            : "audio/wav" // Default to WAV if MIME type is unknown
                       }
                     />
-                  </>
                 ) : voiceNote ? (
                   <>
-                    {/* Add multiple sources for different file types */}
                     <source src={voiceNote} type="audio/mpeg" />
                     <source src={voiceNote} type="audio/ogg" />
                     <source src={voiceNote} type="audio/wav" />

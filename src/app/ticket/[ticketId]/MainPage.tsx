@@ -246,7 +246,7 @@ const Progress: React.FC = () => {
       originalEstimate: value,
     }));
   };
-  console.log(ticketHistory, 'details data')
+  console.log(ticketDetailData, 'details data')
 
   const handleChangeLoanStatus = async (event) => {
     const oldStatus = newLoanStatus; // Capture the old status before changing

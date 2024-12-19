@@ -21,6 +21,7 @@ const TicketDocuments = ({ isMobile, isTab, documents }) => {
     startIndex,
     startIndex + itemsPerPage
   );
+  console.log(documents, 'documents')
 
   return (
     <Grid item xs={12} md={8}>
