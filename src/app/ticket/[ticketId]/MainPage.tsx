@@ -872,6 +872,7 @@ const Progress: React.FC = () => {
             setProgress={setProgress}
             overage={overage}
             setOverage={setOverage}
+            ticketId={ticketDetailData?.ticketId}
           />
         </LocalizationProvider>
         <Toast

@@ -88,6 +88,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
   setProgress,
   overage,
   setOverage,
+  ticketId
 }) => {
   const [loading, setLoading] = useState(false);
   const maxTime = parseTimeSpent(timeLoggingEstimate?.originalEstimate || "");
@@ -105,10 +106,9 @@ const TrackingForm: React.FC<FormComponentProps> = ({
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
-  const { decodedToken, toastAndNavigate, getLocalStorage } = Utility();
-  const storedTicketId = getLocalStorage("ticketId");
+  const { decodedToken, toastAndNavigate } = Utility();
 
-  const { createTicket } = useCreateTicket("create-ticket-log", {});
+  const { createTicket } = useCreateTicket("create-ticket-log");
 
   const handleDialogClose = () => {
     setOpenDialog(false);
@@ -156,7 +156,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
     async (values: InitialValues) => {
       setLoading(true);
       const data = {
-        ticket_id: parseInt(storedTicketId.split("-")[1]),
+        ticket_id: parseInt(ticketId),
         user_id: decodedToken()?.id,
         ...values,
       };
@@ -193,7 +193,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [storedTicketId, createTicket]
+    [ticketId]
   );
 
   return (

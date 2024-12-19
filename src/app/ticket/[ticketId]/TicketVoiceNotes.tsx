@@ -23,7 +23,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
   const itemsPerPage = 3;
   const [selectedAudioFile, setSelectedAudioFile] = useState();
   const [uploaded, setUploaded] = useState(false);
-  const [voiceNote, setVoiceNote] = useState(ticketDetailData?.voiceNoteUrl);
+  const [voiceNote, setVoiceNote] = useState('');
   const inputRef = useRef(null);
   const dispatch: AppDispatch = useDispatch();
   const { toast } = useSelector((state: RootState) => state.toast);
@@ -33,6 +33,13 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
   // Calculate the notes to display on the current page
   const startIndex = (currentPage - 1) * itemsPerPage;
   // const displayedNotes = notes?.slice(startIndex, startIndex + itemsPerPage);
+
+  useEffect(() => {
+    if (ticketDetailData?.voiceNoteUrl) {
+      setVoiceNote(ticketDetailData.voiceNoteUrl);
+      console.log("Updated Voice Note URL:", ticketDetailData.voiceNoteUrl);
+    }
+  }, [ticketDetailData]);
 
   const handleAttachmentAudioDelete = async () => {
     await modifyTicket(ticketDetailData?.ticketId, {
@@ -47,10 +54,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
 
   // Create comment handler, memoized
   const handleVoiceNoteUpload = useCallback(async () => {
-    console.log("selectedAudioFile", selectedAudioFile);
     try {
-      let attachmentUrl = null;
-
       if (selectedAudioFile) {
         try {
           const formData = new FormData();
@@ -95,7 +99,6 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
     setSelectedAudioFile(file);
   };
 
-  console.log("AudioFile>>", ticketDetailData?.voiceNoteUrl);
   return (
     <Grid item xs={12} md={8}>
       <Paper
@@ -171,16 +174,16 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
               {/* Audio Player for Each Selected File */}
               <audio controls style={{ width: "100%" }}>
                 {selectedAudioFile ? (
-                    <source
-                      src={URL.createObjectURL(selectedAudioFile)}
-                      type={
-                        selectedAudioFile.type === "audio/mpeg"
-                          ? "audio/mpeg"
-                          : selectedAudioFile.type === "audio/ogg"
-                            ? "audio/ogg"
-                            : "audio/wav" // Default to WAV if MIME type is unknown
-                      }
-                    />
+                  <source
+                    src={URL.createObjectURL(selectedAudioFile)}
+                    type={
+                      selectedAudioFile.type === "audio/mpeg"
+                        ? "audio/mpeg"
+                        : selectedAudioFile.type === "audio/ogg"
+                          ? "audio/ogg"
+                          : "audio/wav" // Default to WAV if MIME type is unknown
+                    }
+                  />
                 ) : voiceNote ? (
                   <>
                     <source src={voiceNote} type="audio/mpeg" />
