@@ -39,10 +39,9 @@ import { Utility } from "@/utils";
 interface UsersPageProps {
   initialData: {
     results: UserData[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
+    count: number;
+    pages: number;
+    errorMessage?: string;
   };
 }
 
@@ -53,22 +52,21 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
   const [updatePassword, setUpdatePassword] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState<number>(initialData.page || 1); // For frontend pagination
+  const [currentPage, setCurrentPage] = useState<number>(1); // For frontend pagination
   const { user, reduxLoading } = useSelector((state: RootState) => state.user);
 
   const dispatch: AppDispatch = useDispatch();
   const { capitalizeFirstLetter, toastAndNavigate } = Utility();
 
   useEffect(() => {
-    if (initialData) {
-      dispatch(setUsers(initialData));
+    if (initialData?.data) {
+      dispatch(setUsers(initialData?.data));
     }
-  }, [initialData?.results?.length]);
+  }, [initialData?.data]);
 
   const {
     value: data,
     swrLoading,
-    isLoading,
     refetch,
   } = useGetUsers(
     initialData as User,
@@ -78,14 +76,16 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
   );
 
   useEffect(() => {
-    if (data?.results?.length > initialData?.results?.length) {
+    if (data?.results?.length > initialData?.data?.results?.length) {
       dispatch(setUsers(data));
     }
-  }, [data?.results?.length, initialData?.results?.length]);
+  }, [data?.results?.length, initialData?.data?.results?.length]);
 
+  console.log("redux users", user);
+  console.log("frontend users", data);
   // Displayed data for users
   const filteredUsers = useMemo(() => {
-    const displayData = user?.results || initialData?.results || [];
+    const displayData = user?.results || initialData?.data?.results || [];
     return displayData.filter((val) =>
       val.username?.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -303,19 +303,13 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
             ))}
         </Grid>
         {/* Pagination */}
-        <Box display="flex" justifyContent="center" mt={4}>
-          {isLoading ? (
-            <CircularProgress />
-          ) : (
-            <Pagination
-              count={data?.totalPages || initialData?.totalPages || 1}
-              page={currentPage}
-              onChange={handlePageChange}
-              color="primary"
-              variant="outlined"
-            />
-          )}
-        </Box>
+        {/* <Pagination
+          count={data?.pages || initialData?.pages || 1}
+          page={currentPage}
+          onChange={handlePageChange}
+          color="primary"
+          variant="outlined"
+        /> */}
       </Container>
       {reduxLoading || swrLoading ? (
         <Box display="flex" justifyContent="center" mb={2}>

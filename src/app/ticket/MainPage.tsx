@@ -2,48 +2,40 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
-import {
-  Box,
-  CircularProgress,
-  Grid,
-  Typography,
-  useMediaQuery,
-  Pagination,
-} from "@mui/material";
+import React, { useCallback, useEffect, useState } from "react";
+import { Box, Grid, Typography, useMediaQuery } from "@mui/material";
 import { Dayjs } from "dayjs";
 
-import ApplicationCard from "../components/ticket/ApplicationCard";
+import ApplicationCard from "../components/common/ApplicationCard";
 import FilterPanel from "../components/common/FilterPanel";
+import Loader from "../components/common/Loader";
 import { useGetTickets } from "@/hooks/ticket";
 import { fetcher } from "@/apis/apiClient";
 import { Utility } from "@/utils";
 import type { Ticket } from "@/types/ticket";
-import { CustomerData } from "@/types/customer";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
-import { setTickets } from "@/redux/features/ticketSlice";
+import { setTickets, resetTickets } from "@/redux/features/ticketSlice";
 
 const Ticket = () => {
-  const [filteredApplications, setFilteredApplications] = useState([]);
-  const [filter, setFilter] = useState("");
+  const [filter, setFilter] = useState<string>("");
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
-  const [sortBy, setSortBy] = useState("all");
+  const [sortBy, setSortBy] = useState<string>("all");
   const [startDate, setStartDate] = useState<Dayjs | null>(null);
   const [endDate, setEndDate] = useState<Dayjs | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const { tickets } = useSelector((state: RootState) => state.ticket);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const itemsPerPage = 12; // Number of application cards per page
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [hasMoreData, setHasMoreData] = useState<boolean>(true);
 
+  const { ticket } = useSelector((state: RootState) => state.tickets);
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const ITEMS_PER_PAGE = 6; // Number of tickets per page
 
   const dispatch: AppDispatch = useDispatch();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { decodedToken, setLocalStorage, remLocalStorage } = Utility();
+  const { debounceScroll, decodedToken } = Utility();
   const userRole = decodedToken()?.role;
 
   const apiEndpoint = selectedUser
@@ -58,11 +50,13 @@ const Ticket = () => {
       : `get-all-tickets/${decodedToken()?.id}?isAgent=true&status=${sortBy}`
     : `get-all-tickets`;
 
-  const { value: ticketData } = useGetTickets(
-    {} as Ticket,
+  const { value: ticketData, swrLoading } = useGetTickets(
     apiEndpoint,
-    1,
-    1000
+    currentPage,
+    ITEMS_PER_PAGE,
+    filter,
+    startDate,
+    endDate
   );
 
   const [userData, setUserData] = useState({});
@@ -71,7 +65,7 @@ const Ticket = () => {
       // Fetch user data only if user is admin
       const fetchUsers = async () => {
         try {
-          const response = await fetcher(`get-users?page=${1}&limit=${1000}`);
+          const response = await fetcher(`get-users?page=${1}&limit=${500}`);
           setUserData(response || []);
         } catch (error) {
           console.error("Error fetching users:", error);
@@ -85,97 +79,69 @@ const Ticket = () => {
     const queryStatus = searchParams.get("status");
     if (queryStatus) {
       setSortBy(queryStatus);
+    } else {
+      setSortBy("all");
     }
   }, [searchParams]);
 
+  // Reset ticket state and fetch when sortBy or other filters change
   useEffect(() => {
-    if (ticketData?.results) {
+    setCurrentPage(1);
+    dispatch(resetTickets());
+  }, [sortBy, filter, selectedUser, startDate, endDate, dispatch]);
+
+  // Fetch and update state with new data
+  useEffect(() => {
+    if (ticketData.results.length > 0) {
       dispatch(setTickets(ticketData));
-      setFilteredApplications(ticketData?.results);
+      setHasMoreData(ticketData.results.length === ITEMS_PER_PAGE);
+    } else {
+      setHasMoreData(false);
     }
-  }, [ticketData?.results]);
+  }, [ticketData?.results, dispatch]);
+
+  // Handle infinite scrolling
+  const handleScroll = useCallback(
+    debounceScroll(() => {
+      const nearBottom =
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 400; // 400px threshold
+      if (nearBottom && !swrLoading && hasMoreData) {
+        setCurrentPage((prevPage) => prevPage + 1); // Increment page only once
+      }
+    }, 200), // Debounce delay: 200ms
+    [swrLoading, hasMoreData]
+  );
 
   useEffect(() => {
-    if (tickets?.results?.length) {
-      dispatch(setTickets(tickets));
-    }
-  }, [sortBy, selectedUser, tickets?.results]);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
 
-  const handleStartClick = async (
-    customerId: string | number,
-    applicationId: string | number,
-    ticketId: string | number
-  ) => {
-    const generatedTicketId = `F2FIN-${ticketId}`;
-    remLocalStorage("ticketId");
-    setLocalStorage("ticketId", generatedTicketId);
-    router.push(
-      `/progress?customerId=${customerId}&applicationId=${applicationId}`
-    );
-    console.error("Ticket not found:", customerId, applicationId);
-  };
+  const handleFilterChange = useCallback(() => {
+    setCurrentPage(1);
+    dispatch(resetTickets());
+  }, [dispatch]);
 
   const handleSortChange = (value: string) => {
-    setSortBy(value.toLowerCase());
+    const sortValue = value.toLowerCase();
+    setSortBy(sortValue);
+    handleFilterChange();
+    // Update query parameters in the URL
+    const params = new URLSearchParams(searchParams);
+    params.set("status", sortValue);
+
+    router.push(`?${params.toString()}`, undefined, { shallow: true });
   };
 
-  const filterTickets = () => {
-    let filtered = filteredApplications;
+  useEffect(() => {
+    return () => {
+      dispatch(resetTickets()) as unknown as void;
+    };
+  }, [dispatch]);
 
-    // Filter by search
-    if (filter) {
-      const regex = new RegExp(filter, "i");
-      filtered = filtered.filter(
-        (app: CustomerData) =>
-          regex.test(app.Name) ||
-          regex.test(app.Amount.toString()) ||
-          app.Tenure.toString() === filter
-      );
-    }
-
-    // Filter by date range
-    if (startDate || endDate) {
-      const start = startDate ? new Date(startDate) : null;
-      const end = endDate ? new Date(endDate) : null;
-
-      filtered = filtered.filter((app) => {
-        const selectedTicket = tickets?.results?.find(
-          (ticket) => ticket.customer_application_id === app.applicationId
-        );
-        const createdAt = new Date(selectedTicket?.created_at);
-
-        if (start && end) return createdAt >= start && createdAt <= end;
-        if (start) return createdAt >= start;
-        if (end) return createdAt <= end;
-        return true;
-      });
-    }
-    return filtered;
-  };
-
-  const ticketCount = (status: string): number => {
-    const ticketResults = tickets?.results || [];
-
-    if (status === "all" || status === "forwarded") {
-      return filterTickets()?.length;
-    }
-    return ticketResults.filter((ticket) => ticket.ticketStatus === status)
-      .length;
-  };
-
-  // Pagination logic
-  const filteredTickets = filterTickets();
-  const totalPages = Math.ceil(filteredTickets.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentTickets = filteredTickets.slice(startIndex, endIndex);
-
-  const handlePageChange = (
-    event: React.ChangeEvent<unknown>,
-    value: number
-  ) => {
-    setCurrentPage(value);
-  };
+  console.log(ticketData, "api data");
+  console.log(ticket, "redux data");
+  console.log(currentPage, "paige");
 
   return (
     <Box
@@ -198,9 +164,10 @@ const Ticket = () => {
         selectedUser={selectedUser}
         setSelectedUser={setSelectedUser}
         handleSortChange={handleSortChange}
-        userData={userData}
+        userData={{ data: userData }}
         userRole={userRole}
-        ticketCount={ticketCount}
+        ticketCount={ticketData?.count}
+        handleFilterChange={handleFilterChange}
       />
 
       <Box
@@ -224,16 +191,7 @@ const Ticket = () => {
             flexDirection: isMobile ? "column" : isTab ? "" : "",
           }}
         >
-          {currentTickets.length > 0 ? (
-            currentTickets.map((application, index) => (
-              <ApplicationCard
-                key={index}
-                contact={application}
-                handleStartClick={handleStartClick}
-                ticket={application}
-              />
-            ))
-          ) : (
+          {!ticket?.results?.length ? (
             <Typography
               sx={{
                 width: "100%",
@@ -250,34 +208,36 @@ const Ticket = () => {
                 </Link>
               )}
             </Typography>
+          ) : (
+            <>
+              {ticket.results.map((ticket, index) => (
+                <ApplicationCard
+                  key={index}
+                  customerApplication={ticket}
+                  handleStartClick={() =>
+                    router.push(`ticket/${ticket.ticketId}`)
+                  }
+                />
+              ))}
+
+              {!hasMoreData && !swrLoading && (
+                <Typography
+                  sx={{
+                    width: "100%",
+                    textAlign: "center",
+                    mt: 5,
+                    mb: 2,
+                    color: "text.secondary",
+                  }}
+                >
+                  No more tickets to load
+                </Typography>
+              )}
+            </>
           )}
         </Grid>
       </Box>
-
-      {filteredTickets.length > itemsPerPage && (
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            mt: 2,
-            mb: 2,
-          }}
-        >
-          <Pagination
-            count={totalPages}
-            page={currentPage}
-            onChange={handlePageChange}
-            color="primary"
-            shape="rounded"
-          />
-        </Box>
-      )}
-
-      {isLoading && (
-        <Box display="flex" justifyContent="center" mt={2}>
-          <CircularProgress />
-        </Box>
-      )}
+      {swrLoading && <Loader />}
     </Box>
   );
 };

@@ -33,20 +33,21 @@ import DateRangeModal from "./DateRangeModal";
 import { User } from "@/types/user";
 
 interface FilterPanelProps {
+  searchLabel: string;
   sortBy: string;
   filter: string;
   startDate: Dayjs | null;
   endDate: Dayjs | null;
   selectedUser: User | null;
+  setSelectedUser: React.Dispatch<React.SetStateAction<User | null>>;
   setFilter: React.Dispatch<React.SetStateAction<string>>;
-  handleSortChange: (event: string | null) => void;
   setStartDate: React.Dispatch<React.SetStateAction<Dayjs | null>>;
   setEndDate: React.Dispatch<React.SetStateAction<Dayjs | null>>;
   userData: { data: User | null };
   userRole: string;
-  setSelectedUser: React.Dispatch<React.SetStateAction<User | null>>;
-  ticketCount: (status: string) => number;
-  searchLabel: string;
+  handleSortChange: (event: string | null) => void;
+  ticketCount: number;
+  handleFilterChange: (newFilterState: any) => void;
 }
 
 const FilterPanel: React.FC<FilterPanelProps> = ({
@@ -64,6 +65,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   userRole,
   ticketCount,
   searchLabel,
+  handleFilterChange,
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [userAnchorEl, setUserAnchorEl] = useState<null | HTMLElement>(null);
@@ -121,6 +123,25 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     }
   };
 
+  // Handle the status change
+  const handleStatusChange = (status: string) => {
+    handleSortChange(status); // Update the status in parent component
+    handleFilterChange({ status, page: 1 }); // Reset page to 1 and update filter
+  };
+
+  // Handle the user change
+  const handleUserChange = (user: User) => {
+    setSelectedUser(user); // Update selected user
+    handleFilterChange({ user, page: 1 }); // Reset page to 1 and update user filter
+  };
+
+  // Handle the date range change
+  const handleDateRangeChange = (start: Dayjs | null, end: Dayjs | null) => {
+    setStartDate(start);
+    setEndDate(end);
+    handleFilterChange({ startDate: start, endDate: end, page: 1 }); // Reset page to 1 and update date range
+  };
+
   return (
     <Paper
       elevation={2}
@@ -172,7 +193,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             icon={getStatusIcon(sortBy)}
             label={`${
               sortBy.charAt(0).toUpperCase() + sortBy.slice(1)
-            } (${ticketCount(sortBy)})`}
+            } (${ticketCount})`}
             onClick={(e) => setAnchorEl(e.currentTarget)}
             sx={{
               backgroundColor: getStatusColor(sortBy),
@@ -213,7 +234,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             <MenuItem
               key={status}
               onClick={() => {
-                handleSortChange(status);
+                handleStatusChange(status);
                 setAnchorEl(null);
               }}
               sx={{
@@ -283,7 +304,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             <MenuItem
               key={user.id}
               onClick={() => {
-                setSelectedUser(user);
+                handleUserChange(user);
                 setUserAnchorEl(null);
               }}
               sx={{ minWidth: 150 }}
@@ -303,6 +324,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 setStartDate(null);
                 setEndDate(null);
                 setSelectedUser(null);
+                handleFilterChange({});
               }}
               sx={{
                 color: "#f44336",
@@ -326,8 +348,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         handleClose={() => setDateModalOpen(false)}
         startDate={startDate}
         endDate={endDate}
-        setStartDate={setStartDate}
-        setEndDate={setEndDate}
+        setStartDate={(date) => handleDateRangeChange(date, endDate)}
+        setEndDate={(date) => handleDateRangeChange(startDate, date)}
       />
     </Paper>
   );

@@ -19,7 +19,7 @@ import type { AppDispatch, RootState } from "@/redux/store";
 import { Utility } from "@/utils";
 
 import { formatDistanceToNow } from "date-fns";
-import Toast from "../components/common/Toast";
+import Toast from "../../components/common/Toast";
 import {
   useGetTicketActivities,
   useDeleteTicketActivity,
@@ -225,6 +225,7 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
       [commentId]: !prev[commentId],
     }));
   };
+  console.log(storedTicketId, comments.data, userData, "comemnts");
 
   return (
     <Box mt={2} mb={2} sx={{ position: "relative" }}>
@@ -245,6 +246,17 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
             mt: 1,
             bgcolor: "#ffffff",
             borderRadius: 2,
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: "transparent", // Remove border
+              },
+              "&:hover fieldset": {
+                borderColor: "transparent", // Remove border on hover
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: "transparent", // Remove border on focus
+              },
+            },
             "&::-webkit-scrollbar": {
               display: "none", // This hides the scrollbar
             },
@@ -289,9 +301,16 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
         <Button
           variant="contained"
           sx={{
-            textTransform: "none",
-            bgcolor: theme.palette.primary.main,
-            m: 1,
+            bgcolor: "#f06292",
+            textAlign: "center",
+            textTransform: "uppercase",
+            backgroundSize: "200% auto",
+            color: "white",
+            borderRadius: "10px",
+            display: "block",
+            "&:hover": {
+              bgcolor: "#9D50BB",
+            },
           }}
           onClick={handleCreateComment}
         >
@@ -317,7 +336,7 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
                 }}
               >
                 {/* User Avatar */}
-                <Avatar sx={{ bgcolor: "#1976d2", mr: 2 }}>
+                <Avatar sx={{ bgcolor: "white", mr: 2, color: "black" }}>
                   {commentedBy?.username?.charAt(0).toUpperCase()}
                 </Avatar>
 
@@ -335,7 +354,7 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
                     </Typography>
                     <Typography
                       variant="body2"
-                      color="cornsilk"
+                      color="#FFFFFF"
                       sx={{ ml: "20vw" }}
                     >
                       {formatDistanceToNow(new Date(comment.created_at))} ago
@@ -400,7 +419,7 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
                         {/* Comment Text */}
                         <Typography
                           variant="body1"
-                          sx={{ mb: 1, color: "white" }}
+                          sx={{ mb: 1, color: "white", fontSize: ".9rem" }}
                         >
                           {capitalizeFirstLetter(comment.comment)}
                         </Typography>
@@ -414,10 +433,10 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
                               sx={{
                                 textTransform: "none",
                                 fontSize: "0.85rem",
-                                bgcolor: "gray",
+                                bgcolor: "#9D50BB",
                                 color: "white",
                                 "&:hover": {
-                                  bgcolor: "darkgray",
+                                  bgcolor: "#f06292",
                                   color: "black",
                                 },
                               }}
@@ -442,14 +461,14 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
                                   padding: 2,
                                   textAlign: "center",
                                   height: isMobile
-                                    ? "40vh"
+                                    ? "70vh"
                                     : isTab
-                                    ? "40vh"
+                                    ? "70vh"
                                     : "100%",
                                   width: isMobile
-                                    ? "80vw"
+                                    ? "95vw"
                                     : isTab
-                                    ? "60vw"
+                                    ? "85vw"
                                     : "100%",
                                 }}
                               >
@@ -459,17 +478,21 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
                                     alt="Attachment Preview"
                                     style={{
                                       height: isMobile
-                                        ? "33vh"
+                                        ? "62vh"
                                         : isTab
-                                        ? "35vh"
+                                        ? "65vh"
                                         : "90vh",
                                       width: isMobile
-                                        ? "72vw"
+                                        ? "89vw"
                                         : isTab
-                                        ? "55vw"
+                                        ? "78vw"
                                         : "80vw",
                                       borderRadius: "8px",
-                                      marginLeft: "15vw",
+                                      marginLeft: isMobile
+                                        ? ""
+                                        : isTab
+                                        ? ""
+                                        : "15vw",
                                     }}
                                   />
                                 </Box>
@@ -479,7 +502,7 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
                                     alignItems: "center",
                                     justifyContent: "center",
                                     width: "20vw",
-                                    marginLeft: "45vw",
+                                    marginLeft: isTab ? "30vw" : "45vw",
                                   }}
                                 >
                                   {/* Close button */}
@@ -542,10 +565,10 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
                           sx={{
                             textTransform: "none",
                             fontSize: "0.85rem",
-                            bgcolor: "gray",
+                            bgcolor: "#f06292",
                             color: "white",
                             "&:hover": {
-                              bgcolor: "darkgray",
+                              bgcolor: "#9D50BB",
                               color: "black",
                             },
                           }}
@@ -561,10 +584,10 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
                             textTransform: "none",
                             fontSize: "0.85rem",
                             color: "white",
-                            bgcolor: "gray",
+                            bgcolor: "#f06292",
                             ml: "1vw",
                             "&:hover": {
-                              bgcolor: "darkgray",
+                              bgcolor: "#9D50BB",
                               color: "black",
                             },
                           }}

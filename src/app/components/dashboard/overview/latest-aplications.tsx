@@ -1,16 +1,15 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-
-import Box from "@mui/material/Box";
-import Card from "@mui/material/Card";
-import Divider from "@mui/material/Divider";
-import type { SxProps } from "@mui/material/styles";
-import dayjs from "dayjs";
-import { useGetCustomers } from "@/hooks/customer";
-import { Customer } from "@/types/customer";
-import Loader from "../../common/Loader";
 import { useRouter } from "next/navigation";
+import type { SxProps } from "@mui/material/styles";
+import Box from "@mui/material/Box";
+import Divider from "@mui/material/Divider";
+import dayjs from "dayjs";
+
+import Loader from "../../common/Loader";
+import { useGetCustomerApplications } from "@/hooks/customerApplication";
+import { CustomerApplicationData } from "@/types/customerApplication";
 
 import {
   Button,
@@ -44,7 +43,7 @@ export function LatestApplications({
   sx,
 }: LatestApplicationsProps): React.JSX.Element {
   const [paginationLoading, setPaginationLoading] = useState<boolean>(false);
-  const [applications, setApplications] = useState<Customer>([]);
+  const [applications, setApplications] = useState<CustomerApplicationData>([]);
   const router = useRouter();
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
@@ -53,22 +52,18 @@ export function LatestApplications({
     value: data,
     error: getApplicationsError,
     swrLoading,
-  } = useGetCustomers({} as Customer, `get-loan-applications`, 1, 6);
+  } = useGetCustomerApplications(`get-customer-loan-applications`, 1, 6);
 
   // Handle API response
   useEffect(() => {
-    if (data?.results) {
+    if (data?.results.length > 0) {
       setApplications(data?.results);
-      // setPaginationLoading(false);
-    } else if (getApplicationsError) {
-      // setPaginationLoading(false);
     } else {
       setApplications([]);
-      // setPaginationLoading(false);
     }
   }, [data?.results, getApplicationsError]);
 
-  // console.log("applications>>>", applications);
+  console.log("applications>>>", applications);
 
   const handleViewAllClick = () => {
     router.push("/");
@@ -79,7 +74,7 @@ export function LatestApplications({
       elevation={3}
       sx={{
         width: isMobile ? "100%" : isTab ? "100%" : "30vw",
-        maxHeight: isMobile ? "85vh" : isTab ? "50vh" : "130vh",
+        maxHeight: isMobile ? "85vh" : isTab ? "100vh" : "130vh",
       }}
     >
       <Box
@@ -111,15 +106,19 @@ export function LatestApplications({
       <TableContainer>
         <Table
           sx={{
-            minHeight: isMobile ? "57vh" : isTab ? "30vh" : "103vh",
+            minHeight: isMobile ? "" : isTab ? "20vh" : "103vh",
           }}
         >
-          <TableHead sx={{ height: isMobile ? "8vh" : isTab ? "5vh" : "12vh" }}>
+          <TableHead
+            sx={{
+              height: isMobile ? "8vh" : isTab ? "5vh" : "12vh",
+            }}
+          >
             <TableRow sx={{ bgcolor: "grey.50" }}>
-              <TableCell align="center">Sr.</TableCell>
-              <TableCell align="center">Name</TableCell>
-              <TableCell align="center">Amount</TableCell>
-              <TableCell align="center">Application Date</TableCell>
+              <TableCell>Sr.</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>Amount</TableCell>
+              <TableCell>Application Date</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -136,8 +135,9 @@ export function LatestApplications({
             ) : (
               applications.map((application, index) => (
                 <TableRow
-                  key={application.id}
+                  key={application.applicationId}
                   sx={{
+                    height: "2vh",
                     "&:hover": { bgcolor: "primary.50" },
                     transition: "background-color 0.2s",
                   }}
@@ -151,30 +151,26 @@ export function LatestApplications({
                         display: "flex",
                         alignItems: "center",
                         gap: 1,
+                        justifyContent: "center",
                         width: isMobile ? "30vw" : "6vw",
-                        overflow: isMobile ? "hidden" : "", // Prevents content from overflowing
                       }}
                     >
                       <Person sx={{ color: "primary.main" }} />
-                      {application.Name}
+                      {application.customerName}
                     </Box>
                   </TableCell>
-                  <TableCell
-                    sx={{
-                      width: isMobile ? "40vw" : "",
-                      overflow: isMobile ? "hidden" : "",
-                    }}
-                  >
+                  <TableCell align="center">
                     <Box
                       sx={{
                         display: "flex",
                         alignItems: "center",
+                        justifyContent: "center",
                         gap: 1,
                         width: "8vw",
                       }}
                     >
                       <CurrencyRupeeIcon sx={{ color: "primary.main" }} />
-                      {application.Amount}
+                      {application.applicationAmount}
                     </Box>
                   </TableCell>
                   <TableCell

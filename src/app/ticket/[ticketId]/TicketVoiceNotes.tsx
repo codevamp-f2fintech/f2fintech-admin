@@ -11,39 +11,31 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import AudioFileIcon from "@mui/icons-material/Audiotrack";
 
-import Toast from "../components/common/Toast";
+import Toast from "../../components/common/Toast";
 import { Utility } from "@/utils";
 import { useDispatch, useSelector } from "react-redux";
 import { Upload } from "@mui/icons-material";
 import { RootState } from "@/redux/store";
 import { useModifyTicket } from "@/hooks/ticket";
 
-const TicketVoiceNotes = ({
-  isMobile,
-  isTab,
-  notes,
-  storedTicketId,
-  voiceNoteUrl,
-}) => {
+const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 3;
   const [selectedAudioFile, setSelectedAudioFile] = useState();
   const [uploaded, setUploaded] = useState(false);
-  const [voiceNote, setVoiceNote] = useState(voiceNoteUrl);
+  const [voiceNote, setVoiceNote] = useState(ticketDetailData?.voiceNoteUrl);
   const inputRef = useRef(null);
   const dispatch = useDispatch();
   const { toast } = useSelector((state: RootState) => state.toast);
   const { toastAndNavigate } = Utility();
   const { modifyTicket } = useModifyTicket("update-ticket");
 
-  const totalPages = Math.ceil(notes ? notes?.length / itemsPerPage : 0);
-
   // Calculate the notes to display on the current page
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const displayedNotes = notes?.slice(startIndex, startIndex + itemsPerPage);
+  // const displayedNotes = notes?.slice(startIndex, startIndex + itemsPerPage);
 
   const handleAttachmentAudioDelete = async () => {
-    await modifyTicket(+storedTicketId, {
+    await modifyTicket(ticketDetailData?.ticketId, {
       voice_note_url: null,
     });
     setVoiceNote("");
@@ -77,7 +69,7 @@ const TicketVoiceNotes = ({
           // update ticket api update-ticket/:ticketId
           const updatedData = { voice_note_url: attachmentUrl };
 
-          await modifyTicket(+storedTicketId, updatedData);
+          await modifyTicket(ticketDetailData?.ticketId, updatedData);
           setUploaded(true);
           toastAndNavigate(dispatch, true, "info", "Uploaded Successfully");
         } catch (err) {
@@ -100,7 +92,7 @@ const TicketVoiceNotes = ({
     setSelectedAudioFile(file);
   };
 
-  console.log("AudioFile>>", notes, voiceNoteUrl);
+  console.log("AudioFile>>", ticketDetailData?.voiceNoteUrl);
   return (
     <Grid item xs={12} md={8}>
       <Paper
@@ -113,7 +105,7 @@ const TicketVoiceNotes = ({
           alignItems: "center",
           borderRadius: "10px",
           width: isMobile ? "73vw" : isTab ? "52vw" : "43.5vw",
-          background: `linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)`,
+          bgcolor: "#9575cd",
         }}
       >
         <Typography
@@ -122,72 +114,11 @@ const TicketVoiceNotes = ({
             mb: 2,
             mt: 0,
             color: "white",
-            fontSize: isMobile ? ".7rem" : isTab ? "1rem" : "1rem",
+            fontSize: isMobile ? ".7rem" : isTab ? "1rem" : "1.1rem",
           }}
         >
           Voice Note:
         </Typography>
-
-        {/* Display existing notes */}
-        {notes?.length > 0 ? (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              width: "100%",
-              gap: 1,
-            }}
-          >
-            {displayedNotes?.map((doc, index) => (
-              <Box
-                key={index}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: ".8rem",
-                  background: "white",
-                  borderRadius: "8px",
-                  boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-                  transition: "transform 0.2s ease",
-                  width: isMobile ? "50vw" : isTab ? "43vw" : "38.5vw",
-                  marginLeft: "1.5rem",
-                  "&:hover": {
-                    transform: "scale(1.02)",
-                    transition: "transform 0.3s ease",
-                  },
-                }}
-              >
-                <Typography
-                  variant="body1"
-                  sx={{ color: "black", flexGrow: 1 }}
-                >
-                  {doc.type}
-                </Typography>
-                <a
-                  href={doc.document_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    textDecoration: "none",
-                    color: "black",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Open
-                </a>
-                {/* Add Audio Player for Each Note */}
-                <audio controls sx={{ width: "100%" }}>
-                  <source src={doc.document_url} type="audio/mp3" />
-                  Your browser does not support the audio element.
-                </audio>
-              </Box>
-            ))}
-          </Box>
-        ) : (
-          // <Typography>No notes available.</Typography>
-          <></>
-        )}
 
         {/* File upload section */}
         {!selectedAudioFile && (
@@ -266,7 +197,6 @@ const TicketVoiceNotes = ({
           </Box>
         )}
       </Paper>
-      {/* Integrate the Toast component */}
       <Toast
         alerting={toast.toastAlert}
         severity={toast.toastSeverity}

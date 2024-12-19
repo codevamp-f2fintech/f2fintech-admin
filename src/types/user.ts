@@ -13,8 +13,7 @@ export interface UserData {
 
 export interface User {
   results: UserData[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+  count: number;
+  pages: number;
+  errorMessage?: string;
 }

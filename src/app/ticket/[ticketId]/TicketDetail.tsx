@@ -2,8 +2,9 @@ import { Avatar, Box, Grid, Typography } from "@mui/material";
 
 import { Utility } from "@/utils";
 
-const TicketDetail = ({ ticketId, selectedCustomer, isMobile, isTab }) => {
-  const { formatTenure, formatDate, formatAmount } = Utility();
+const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
+  const { capitalizeFirstLetter, formatTenure, formatDate, formatAmount } =
+    Utility();
 
   return (
     <>
@@ -22,9 +23,10 @@ const TicketDetail = ({ ticketId, selectedCustomer, isMobile, isTab }) => {
             fontFamily: "monospace",
             fontStyle: "revert-layer",
             fontWeight: "bold",
+            textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)",
           }}
         >
-          Ticket ID: {ticketId}
+          Ticket ID: F2FIN-{ticketDetailData?.ticketId}
         </Typography>
       </Box>
 
@@ -44,7 +46,7 @@ const TicketDetail = ({ ticketId, selectedCustomer, isMobile, isTab }) => {
       >
         <Box sx={{}}>
           <Avatar
-            src={selectedCustomer.Image}
+            src={ticketDetailData?.customerDocuments}
             sx={{
               width: isMobile ? "2rem" : isTab ? "6vw" : "4rem",
               height: isMobile ? "2rem" : isTab ? "4vh" : "4rem",
@@ -56,8 +58,10 @@ const TicketDetail = ({ ticketId, selectedCustomer, isMobile, isTab }) => {
           sx={{
             flex: 1,
             p: 3,
-            borderRadius: 2,
-            bgcolor: "#1e1e1e",
+            borderRadius: 4,
+            backgroundImage: `
+      linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
+    `,
             transition: "transform 0.3s ease",
             "&:hover": {
               transform: "scale(1.02)",
@@ -67,49 +71,56 @@ const TicketDetail = ({ ticketId, selectedCustomer, isMobile, isTab }) => {
           <Grid container spacing={3}>
             {/* Name and Email */}
             <Grid item xs={12} sm={6}>
-              <Typography sx={{ color: "white", mb: 1 }}>
-                <strong>Name:</strong> {selectedCustomer.Name}
+              <Typography sx={{ mb: 1, color: "white", fontSize: "1rem" }}>
+                <strong>Name:</strong>{" "}
+                {capitalizeFirstLetter(ticketDetailData?.customerName)}
               </Typography>
               <Typography
                 sx={{
                   color: "white",
+                  fontSize: "1rem",
                   mb: 1,
                   wordWrap: "break-word",
                   whiteSpace: "normal",
                 }}
               >
-                <strong>Email:</strong> {selectedCustomer.Email}
+                <strong>Email:</strong> {ticketDetailData?.customerEmail}
               </Typography>
             </Grid>
 
             {/* Contact and Designation */}
             <Grid item xs={12} sm={6}>
-              <Typography sx={{ color: "white", mb: 1 }}>
-                <strong>Contact:</strong> +91 {selectedCustomer.Contact}
+              <Typography sx={{ color: "white", fontSize: "1rem", mb: 1 }}>
+                <strong>Contact:</strong> +91{" "}
+                {ticketDetailData?.customerContact}
               </Typography>
-              <Typography sx={{ color: "white", mb: 1 }}>
-                <strong>Designation:</strong> {selectedCustomer.Designation}
+              <Typography sx={{ color: "white", fontSize: "1rem", mb: 1 }}>
+                <strong>Designation:</strong>{" "}
+                {capitalizeFirstLetter(ticketDetailData?.customerDesignation)}
               </Typography>
             </Grid>
 
             {/* Location and Tenure */}
             <Grid item xs={12} sm={6}>
-              <Typography sx={{ color: "white", mb: 1 }}>
-                <strong>Location:</strong> {selectedCustomer.Location}
+              <Typography sx={{ color: "white", fontSize: "1rem", mb: 1 }}>
+                <strong>Location:</strong>{" "}
+                {capitalizeFirstLetter(ticketDetailData?.customerLocation)}
               </Typography>
-              <Typography sx={{ color: "white", mb: 1 }}>
-                <strong>Tenure:</strong> {formatTenure(selectedCustomer.Tenure)}
+              <Typography sx={{ color: "white", fontSize: "1rem", mb: 1 }}>
+                <strong>Tenure:</strong>{" "}
+                {formatTenure(ticketDetailData?.applicationTenure)}
               </Typography>
             </Grid>
 
             {/* Amount and Application Date */}
             <Grid item xs={12} sm={6}>
-              <Typography sx={{ color: "white", mb: 1 }}>
-                <strong>Amount:</strong> {formatAmount(selectedCustomer.Amount)}
+              <Typography sx={{ color: "white", fontSize: "1rem", mb: 1 }}>
+                <strong>Amount:</strong>{" "}
+                {formatAmount(ticketDetailData?.applicationAmount)}
               </Typography>
-              <Typography sx={{ color: "white" }}>
+              <Typography sx={{ color: "white", fontSize: "1rem" }}>
                 <strong>Application Date:</strong>{" "}
-                {formatDate(selectedCustomer.applicationDate)}
+                {formatDate(ticketDetailData?.applicationDate)}
               </Typography>
             </Grid>
           </Grid>

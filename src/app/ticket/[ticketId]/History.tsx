@@ -2,6 +2,11 @@ import React from "react";
 import { Box, Divider, Typography } from "@mui/material";
 import { Bolt as BoltIcon } from "@mui/icons-material";
 import { format, formatDistanceToNow } from "date-fns";
+
+import {
+  useCreateTicketHistory,
+  useGetTicketHistory,
+} from "@/hooks/tickethistory";
 import { Utility } from "@/utils";
 
 interface HistoryProps {
@@ -13,7 +18,18 @@ interface HistoryProps {
   }>;
 }
 
-const History: React.FC<HistoryProps> = ({ ticketHistory }) => {
+// // Fetch ticket history data
+// const { value: ticketHistory, refetch } = useGetTicketHistory(
+//   [],
+//   `get-ticket-histories/${storedTicketId}`
+// );
+
+// // Hook for creating new ticket history
+// const { createTicketHistory } = useCreateTicketHistory(
+//   "create-ticket-history"
+// );
+
+const History: React.FC<HistoryProps> = ({  }) => {
   const { capitalizeFirstLetter } = Utility();
   return (
     <Box

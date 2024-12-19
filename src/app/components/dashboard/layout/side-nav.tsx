@@ -15,9 +15,7 @@ import Tooltip from "@mui/material/Tooltip";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
 import type { NavItemConfig } from "@/types/nav";
-import { paths } from "@/paths";
-import { isNavItemActive } from "@/lib/auth/is-nav-item-active";
-
+import { isNavItemActive } from "@/utils/is-nav-item-active";
 import { navItems } from "./config";
 import { navIcons } from "./nav-icons";
 import { Utility } from "@/utils";
@@ -86,7 +84,7 @@ export function SideNav(): React.JSX.Element {
         </IconButton>
         <Box
           component={RouterLink}
-          href={paths.home}
+          href="/"
           sx={{
             display: "inline-flex",
           }}

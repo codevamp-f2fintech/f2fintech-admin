@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
 import {
   Grid,
@@ -19,12 +20,39 @@ import {
   AccessTimeRounded,
   LocationOnRounded,
 } from "@mui/icons-material";
+
 import { useCreateTicket } from "@/hooks/ticket";
 import { Utility } from "@/utils";
-import { useModifyCustomer } from "@/hooks/customer";
+import { useModifyCustomerApplication } from "@/hooks/customerApplication";
 import { fetcher } from "@/apis/apiClient";
 
-function InfoRow({ icon, text }: { icon: React.ReactNode; text: string }) {
+interface ApplicationCardProps {
+  customerApplication: {
+    customerId: number;
+    customerName: string;
+    customerEmail: string;
+    customerContact?: string;
+    customerProfileImage?: string;
+    customerLocation?: string;
+    applicationAmount: string;
+    applicationTenure: number;
+    applicationDate: string;
+    applicationId: number;
+    ticketId?: number;
+    ticketStatus?: string;
+    loanStatus?: string;
+  };
+  handleStartClick?: (ticketId: number) => void;
+  refetch?: () => Promise<void>;
+}
+
+function InfoRow({
+  icon,
+  text,
+}: {
+  icon: React.ReactNode;
+  text: string | undefined;
+}) {
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
       <Box
@@ -51,135 +79,69 @@ function InfoRow({ icon, text }: { icon: React.ReactNode; text: string }) {
   );
 }
 
-const ApplicationCard = ({
-  contact,
+const ApplicationCard: React.FC<ApplicationCardProps> = ({
+  customerApplication,
   handleStartClick = null,
-  ticket = false,
   refetch = null,
 }) => {
-  const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [limit] = useState<number>(6);
   const [showHistory, setShowHistory] = useState<boolean>(false);
   const [historyData, setHistoryData] = useState<any[]>([]);
-  const { decodedToken, capitalizeFirstLetter } = Utility();
+
+  const {
+    calculateDaysAgo,
+    capitalizeFirstLetter,
+    decodedToken,
+    formatTenure,
+  } = Utility();
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
-  const { createTicket, error } = useCreateTicket("create-ticket", {});
+  const { createTicket } = useCreateTicket("create-ticket");
   // Hook for modifying loan application is_picked column
-  const { modifyCustomer: modifyCustomerApplication } = useModifyCustomer(
-    "update-loan-application"
-  );
+  const { modifyCustomerApplication: modifyiedCustomerApplication } =
+    useModifyCustomerApplication("update-loan-application");
 
+  const toggleHistory = () => setShowHistory((prev) => !prev);
+
+  // Fetch history data when toggling history
   useEffect(() => {
-    if (showHistory && ticket) {
+    if (showHistory && customerApplication.ticketId) {
       const fetchHistoryData = async () => {
         try {
           const { data } = await fetcher(
-            `get-ticket-histories/${ticket.ticketId}`
+            `get-ticket-histories/${customerApplication.ticketId}`
           );
           setHistoryData(data);
         } catch (error) {
-          console.error("Error fetching history data:", error);
+          console.log("Error fetching history data:", error);
         }
       };
       fetchHistoryData();
     }
-  }, [showHistory, ticket]);
+  }, [showHistory, customerApplication?.ticketId]);
 
-  // Function to calculate the number of days ago
-  const calculateDaysAgo = (date: string) => {
-    const today = new Date();
-    const addedDate = new Date(date);
-    const diffTime = Math.abs(today.getTime() - addedDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-
-  // Function to create new ticket
-  const createNewTicket = async (applicationId: number) => {
+  const handleCheckboxChange = async (applicationId: number) => {
     try {
       await createTicket({
+        // Create new Ticket
         customer_application_id: applicationId,
         user_id: decodedToken()?.id,
-        status: "to do",
+        status: "under credit review",
       });
-    } catch (error) {
-      console.log("Error creating ticket:", error);
-    }
-  };
-
-  const handleCheckboxChange = async (
-    contactId: number,
-    applicationId: number
-  ) => {
-    const isAlreadySelected = selectedContacts.includes(contactId);
-
-    if (!isAlreadySelected) {
-      try {
-        await createNewTicket(applicationId); // Create new Ticket
-        await modifyCustomerApplication(applicationId, {
-          is_picked: 1,
-        }); // Mark the Card as picked
-
-        setSelectedContacts((prevSelectedContacts) => [
-          ...prevSelectedContacts,
-          contactId,
-        ]);
-        if (refetch) {
-          await refetch();
-        }
-      } catch (error) {
-        console.log("Error in checkbox change:", error);
+      await modifyiedCustomerApplication(applicationId, {
+        // Mark the Card as picked
+        is_picked: 1,
+      });
+      if (refetch) {
+        await refetch();
       }
-    } else {
-      // If already selected, remove the contactId from the selected contacts
-      setSelectedContacts((prevSelectedContacts) =>
-        prevSelectedContacts.filter((id) => id !== contactId)
-      );
+    } catch (error) {
+      console.log("Error in checkbox change:", error);
     }
-  };
-
-  // Function to format tenure
-  function formatTenure(tenure: number) {
-    if (tenure <= 60) {
-      return `${tenure} months`;
-    } else {
-      const years = (tenure / 12).toFixed(1); // Convert to years with one decimal place if needed
-      return `${years} years`;
-    }
-  }
-
-  const toggleHistory = () => {
-    setShowHistory((prev) => !prev);
-  };
-
-  const cleanActionTextWithBoldName = (text) => {
-    // Remove <b> tags and <br> tags
-    const cleanedText = text.replace(/<\/?b>/g, "").replace(/<br\s*\/?>/g, " ");
-
-    // Capitalize the first letter of the first word
-    const capitalizedText =
-      cleanedText.charAt(0).toUpperCase() + cleanedText.slice(1);
-
-    // Extract the name from the action and make it bold
-    const nameMatch = capitalizedText.match(/(\S+\s\S+)(?=\schanged\sstatus)/); // Assuming the name is before 'changed status'
-    if (nameMatch) {
-      const name = nameMatch[0];
-      const restOfText = capitalizedText.replace(name, "");
-      return (
-        <>
-          <b>{name}</b> {restOfText}
-        </>
-      );
-    }
-
-    return capitalizedText; // Return the text with the first letter capitalized
   };
 
   return (
-    <Grid item xs={12} sm={6} md={4} key={contact.Id}>
+    <Grid item xs={12} sm={6} md={4} key={customerApplication.customerId}>
       <Card
         sx={{
           maxWidth: 345,
@@ -204,8 +166,8 @@ const ApplicationCard = ({
             }}
           >
             <Avatar
-              alt={capitalizeFirstLetter(contact.Name)}
-              src={contact.Image}
+              alt={capitalizeFirstLetter(customerApplication.customerName)}
+              src={customerApplication.customerProfileImage}
               sx={{
                 width: 80,
                 height: 80,
@@ -238,7 +200,7 @@ const ApplicationCard = ({
                 width: isMobile ? "80vw" : isTab ? "25vw" : "20vw",
               }}
             >
-              {contact.Name?.toUpperCase()}
+              {customerApplication.customerName?.toUpperCase()}
             </Typography>
           </Box>
 
@@ -255,17 +217,28 @@ const ApplicationCard = ({
                 minHeight: isMobile ? "35vh" : isTab ? "20vh" : "40vh",
               }}
             >
-              <InfoRow icon={<MailRounded />} text={contact.Email} />
-              <InfoRow icon={<PhoneRounded />} text={contact.Contact} />
-              <InfoRow icon={<PaidRounded />} text={contact.Amount} />
+              <InfoRow
+                icon={<MailRounded />}
+                text={customerApplication.customerEmail}
+              />
+              <InfoRow
+                icon={<PhoneRounded />}
+                text={customerApplication.customerContact}
+              />
+              <InfoRow
+                icon={<PaidRounded />}
+                text={customerApplication.applicationAmount}
+              />
               <InfoRow
                 icon={<AccessTimeRounded />}
-                text={formatTenure(contact.Tenure)}
+                text={formatTenure(customerApplication.applicationTenure)}
               />
-              {contact.Location && (
+              {customerApplication.customerLocation && (
                 <InfoRow
                   icon={<LocationOnRounded />}
-                  text={capitalizeFirstLetter(contact.Location)}
+                  text={capitalizeFirstLetter(
+                    customerApplication.customerLocation
+                  )}
                 />
               )}
             </Box>
@@ -283,7 +256,7 @@ const ApplicationCard = ({
                 overflowY: "scroll",
                 maxHeight: "40vh",
                 "&::-webkit-scrollbar": {
-                  display: "none", // This hides the scrollbar
+                  display: "none",
                 },
               }}
             >
@@ -297,11 +270,14 @@ const ApplicationCard = ({
                       variant="body2"
                       sx={{ color: "black", fontStyle: "normal", mb: 1 }}
                     >
-                      {cleanActionTextWithBoldName(history.action)}
-                      {/* Cleaned action text */}
+                      <strong>
+                        {capitalizeFirstLetter(history.action.split(" ")[0])}
+                      </strong>
+                      {` ${history.action.substring(
+                        history.action.indexOf(" ") + 1
+                      )}`}
                     </Typography>
                     <Typography variant="caption" sx={{ color: "blue" }}>
-                      <strong>Days ago:</strong>{" "}
                       {calculateDaysAgo(history.created_at)} days ago
                     </Typography>
                   </Box>
@@ -313,7 +289,7 @@ const ApplicationCard = ({
               )}
             </Box>
           )}
-          {ticket && Object.keys(ticket).length > 0 ? (
+          {handleStartClick && customerApplication.ticketId ? (
             <Box
               sx={{
                 display: "flex",
@@ -324,13 +300,7 @@ const ApplicationCard = ({
                 variant="contained"
                 color="primary"
                 sx={{ width: "100%", borderRadius: "0px 0px 0px 10px" }}
-                onClick={() =>
-                  handleStartClick(
-                    contact.Id,
-                    contact.customer_application_id,
-                    ticket.ticketId
-                  )
-                }
+                onClick={handleStartClick}
               >
                 Visit Ticket
               </Button>
@@ -353,7 +323,9 @@ const ApplicationCard = ({
               }}
             >
               <Chip
-                label={`${calculateDaysAgo(contact.applicationDate)} days ago`}
+                label={`${calculateDaysAgo(
+                  customerApplication.applicationDate
+                )} days ago`}
                 size="small"
                 sx={{
                   bgcolor: "rgba(255,255,255,0.9)",
@@ -370,9 +342,8 @@ const ApplicationCard = ({
                     Pick
                   </Typography>
                   <Checkbox
-                    checked={selectedContacts.includes(contact.Id)}
                     onChange={() =>
-                      handleCheckboxChange(contact.Id, contact.applicationId)
+                      handleCheckboxChange(customerApplication.applicationId)
                     }
                     size="small"
                     sx={{

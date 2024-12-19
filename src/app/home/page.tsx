@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import {
@@ -9,13 +10,16 @@ import {
   Box,
   useMediaQuery,
 } from "@mui/material";
-import ApplicationCard from "../components/ticket/ApplicationCard";
+
+import ApplicationCard from "../components/common/ApplicationCard";
 import Loader from "../components/common/Loader";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
-import type { Customer } from "@/types/customer";
-import { setCustomers } from "@/redux/features/customerSlice";
-import { useGetCustomers } from "@/hooks/customer";
+import {
+  setCustomerApplications,
+  resetCustomerApplications,
+} from "@/redux/features/customerApplicationSlice";
+import { useGetCustomerApplications } from "@/hooks/customerApplication";
 import { Utility } from "@/utils";
 
 const ITEMS_PER_PAGE = 6;
@@ -23,79 +27,67 @@ const ITEMS_PER_PAGE = 6;
 const Home: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [paginationLoading, setPaginationLoading] = useState<boolean>(false);
   const [hasMoreData, setHasMoreData] = useState<boolean>(true);
+
+  const { customerApplication } = useSelector(
+    (state: RootState) => state.customerApplications
+  );
   const dispatch: AppDispatch = useDispatch();
-  const { customer } = useSelector((state: RootState) => state.customer);
-  const { decodedToken } = Utility();
+  const { debounceScroll, decodedToken } = Utility();
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+
   const {
     value: data,
-    error: getApplicationsError,
     swrLoading,
     refetch,
-  } = useGetCustomers(
-    {} as Customer,
-    `get-loan-applications`,
+  } = useGetCustomerApplications(
+    "get-customer-loan-applications",
     currentPage,
     ITEMS_PER_PAGE
   );
-  // Separate effect for data updates to isolate dispatching logic
+
+  // Fetch and update state with new data
   useEffect(() => {
-    const updateCustomers = () => {
-      if (data && data.results && data.results.length > 0) {
-        // Combine existing results with new results if on a page after first
-        const updatedResults =
-          currentPage > 1
-            ? [...(customer?.results || []), ...data.results]
-            : data.results;
-        const updatedCustomerData = {
-          ...data,
-          results: updatedResults,
-        };
-        dispatch(setCustomers(updatedCustomerData));
-        // Update hasMoreData flag
-        setHasMoreData(data.results.length === ITEMS_PER_PAGE);
-        setPaginationLoading(false);
-      } else if (data && data.results.length === 0) {
-        // No more data found
-        setHasMoreData(false);
-        setPaginationLoading(false);
-      } else if (getApplicationsError) {
-        setPaginationLoading(false);
-        setHasMoreData(false);
-      }
-    };
-
-    // Use setTimeout to break potential sync update cycles
-    const timeoutId = setTimeout(updateCustomers, 0);
-    return () => clearTimeout(timeoutId);
-  }, [data, getApplicationsError, dispatch, currentPage]);
-
-  // Pagination scroll handler
-  const handleScroll = useCallback(() => {
-    if (
-      window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 &&
-      !swrLoading &&
-      !paginationLoading &&
-      hasMoreData
-    ) {
-      setPaginationLoading(true);
-      setCurrentPage((prevPage) => prevPage + 1);
+    if (data.results.length > 0) {
+      console.log(data, currentPage, "homepage if condition");
+      dispatch(setCustomerApplications(data));
+      setHasMoreData(data.results.length === ITEMS_PER_PAGE);
+    } else {
+      setHasMoreData(false);
     }
-  }, [swrLoading, paginationLoading, hasMoreData]);
+  }, [data, dispatch]);
+
+  // Handle infinite scrolling
+  const handleScroll = useCallback(
+    debounceScroll(() => {
+      const nearBottom =
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 400; // 400px threshold
+      if (nearBottom && !swrLoading && hasMoreData) {
+        setCurrentPage((prevPage) => prevPage + 1); // Increment page only once
+      }
+    }, 500), // Debounce delay: 500ms
+    [swrLoading, hasMoreData]
+  );
 
   useEffect(() => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
 
+  // Filtered results based on search term
   const filteredCustomers = useMemo(() => {
-    return customer?.results?.filter((val) =>
-      val.Name.toLowerCase().includes(searchTerm.toLowerCase())
+    return customerApplication?.results.filter((customer) =>
+      customer.customerName.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [searchTerm, customer?.results]);
+  }, [searchTerm, customerApplication]);
+  console.log(data, currentPage, "homepage outside if");
+
+  useEffect(() => {
+    return () => {
+      dispatch(resetCustomerApplications()) as unknown as void;
+    };
+  }, [dispatch]);
 
   return (
     <Box
@@ -129,7 +121,7 @@ const Home: React.FC = () => {
               fontSize: isMobile ? ".8rem" : isTab ? "1.9rem" : "1.8rem",
             }}
           >
-            New Applications: {customer?.total || 0}
+            New Applications: {customerApplication?.count || 0}
           </Typography>
         </Box>
         <Box
@@ -173,16 +165,32 @@ const Home: React.FC = () => {
           {!filteredCustomers?.length ? (
             <Typography>No Applications Found</Typography>
           ) : (
-            filteredCustomers.map((customer) => (
-              <ApplicationCard
-                key={customer.Id}
-                contact={customer}
-                refetch={refetch}
-              />
-            ))
+            <>
+              {filteredCustomers.map((customerApplication) => (
+                <ApplicationCard
+                  key={customerApplication.customerId}
+                  customerApplication={customerApplication}
+                  refetch={refetch}
+                />
+              ))}
+
+              {/* Show "No more applications to load" message */}
+              {!hasMoreData && !swrLoading && (
+                <Typography
+                  sx={{
+                    width: "100%",
+                    textAlign: "center",
+                    mt: 2,
+                    color: "text.secondary",
+                  }}
+                >
+                  No more applications to load
+                </Typography>
+              )}
+            </>
           )}
         </Grid>
-        {(swrLoading || paginationLoading) && <Loader />}
+        {swrLoading && <Loader />}
       </Box>
     </Box>
   );

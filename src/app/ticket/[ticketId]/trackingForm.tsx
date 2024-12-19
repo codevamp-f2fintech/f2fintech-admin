@@ -15,8 +15,8 @@ import {
 import { useTheme } from "@mui/material/styles";
 import InfoIcon from "@mui/icons-material/Info";
 
-import Loader from "../components/common/Loader";
-import Toast from "../components/common/Toast";
+import Loader from "../../components/common/Loader";
+import Toast from "../../components/common/Toast";
 
 import { Utility } from "@/utils";
 import { useCreateTicket } from "@/hooks/ticket";

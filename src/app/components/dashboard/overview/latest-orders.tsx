@@ -9,8 +9,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  InputAdornment,
-  TextField,
   Typography,
   Box,
   Divider,
@@ -24,7 +22,6 @@ import {
   ConfirmationNumber,
   Refresh,
   CheckCircle,
-  Search,
 } from "@mui/icons-material";
 
 import dayjs from "dayjs";
@@ -34,6 +31,7 @@ import type { SxProps } from "@mui/material/styles";
 import { Utility } from "@/utils";
 import { ArrowRightIcon } from "@mui/x-date-pickers";
 import { useRouter } from "next/navigation";
+import { User } from "@/types/user";
 
 export interface LatestUsersProps {
   sx?: SxProps;
@@ -41,10 +39,10 @@ export interface LatestUsersProps {
 
 export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
   const { value: users, swrLoading: usersLoading } = useGetUsers(
-    {},
+    {} as User,
     "get-users",
     1,
-    1000
+    6
   );
   const { value: tickets } = useGetTickets([], `get-all-tickets`);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -62,13 +60,13 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
 
     return {
       open: userTickets.filter(
-        (ticket) => ticket.status.toLowerCase() === "open"
+        (ticket) => ticket.status.toLowerCase() === "relook"
       ).length,
       inProgress: userTickets.filter(
-        (ticket) => ticket.status.toLowerCase() === "in progress"
+        (ticket) => ticket.status.toLowerCase() === "to be login"
       ).length,
       done: userTickets.filter(
-        (ticket) => ticket.status.toLowerCase() === "done"
+        (ticket) => ticket.status.toLowerCase() === "to be disbursed"
       ).length,
     };
   };
@@ -95,7 +93,7 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
         background: "linear-gradient(145deg, #ffffff 0%, #f8f9ff 100%)",
         width: isMobile ? "100%" : isTab ? "95vw" : "49.3vw",
         ml: isMobile ? "" : isTab ? "" : "4vw",
-        maxHeight: isMobile ? "92vh" : isTab ? "50vh" : "130vh",
+        maxHeight: isMobile ? "92vh" : isTab ? "100vh" : "130vh",
       }}
     >
       <Box

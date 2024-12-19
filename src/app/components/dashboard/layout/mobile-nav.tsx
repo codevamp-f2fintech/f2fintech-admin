@@ -10,15 +10,14 @@ import Drawer from "@mui/material/Drawer";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { NavItemConfig } from "@/types/nav";
-import { paths } from "@/paths";
-import { isNavItemActive } from "@/lib/auth/is-nav-item-active";
+import { isNavItemActive } from "@/utils/is-nav-item-active";
 import { Logo } from "@/app/components/core/logo";
 
 import { navItems } from "./config";
 
 import { navIcons } from "./nav-icons";
 import { useMediaQuery } from "@mui/material";
-import { Utility } from "@/utils"; // Assuming Utility provides userRole
+import { Utility } from "@/utils";
 
 export interface MobileNavProps {
   onClose?: () => void;
@@ -71,7 +70,7 @@ export function MobileNav({
       <Stack spacing={2} sx={{ p: 3 }}>
         <Box
           component={RouterLink}
-          href={paths.home}
+          href="/"
           sx={{
             display: isMobile ? "flex" : isTab ? "flex" : "",
             alignItems: isMobile ? "center" : "",
@@ -146,11 +145,11 @@ function NavItem({
       <Box
         {...(href
           ? {
-              component: external ? "a" : RouterLink,
-              href,
-              target: external ? "_blank" : undefined,
-              rel: external ? "noreferrer" : undefined,
-            }
+            component: external ? "a" : RouterLink,
+            href,
+            target: external ? "_blank" : undefined,
+            rel: external ? "noreferrer" : undefined,
+          }
           : { role: "button" })}
         sx={{
           alignItems: "center",
