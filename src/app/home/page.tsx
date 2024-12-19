@@ -165,13 +165,29 @@ const Home: React.FC = () => {
           {!filteredCustomers?.length ? (
             <Typography>No Applications Found</Typography>
           ) : (
-            filteredCustomers.map((customerApplication) => (
-              <ApplicationCard
-                key={customerApplication.customerId}
-                customerApplication={customerApplication}
-                refetch={refetch}
-              />
-            ))
+            <>
+              {filteredCustomers.map((customerApplication) => (
+                <ApplicationCard
+                  key={customerApplication.customerId}
+                  customerApplication={customerApplication}
+                  refetch={refetch}
+                />
+              ))}
+
+              {/* Show "No more applications to load" message */}
+              {!hasMoreData && !swrLoading && (
+                <Typography
+                  sx={{
+                    width: "100%",
+                    textAlign: "center",
+                    mt: 2,
+                    color: "text.secondary",
+                  }}
+                >
+                  No more applications to load
+                </Typography>
+              )}
+            </>
           )}
         </Grid>
         {swrLoading && <Loader />}

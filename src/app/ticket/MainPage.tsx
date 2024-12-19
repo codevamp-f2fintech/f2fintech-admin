@@ -108,7 +108,7 @@ const Ticket = () => {
       if (nearBottom && !swrLoading && hasMoreData) {
         setCurrentPage((prevPage) => prevPage + 1); // Increment page only once
       }
-    }, 500), // Debounce delay: 500ms
+    }, 200), // Debounce delay: 200ms
     [swrLoading, hasMoreData]
   );
 
@@ -209,19 +209,34 @@ const Ticket = () => {
               )}
             </Typography>
           ) : (
-            ticket.results.map((ticket, index) => (
-              <ApplicationCard
-                key={index}
-                customerApplication={ticket}
-                handleStartClick={() =>
-                  router.push(`ticket/${ticket.ticketId}`)
-                }
-              />
-            ))
+            <>
+              {ticket.results.map((ticket, index) => (
+                <ApplicationCard
+                  key={index}
+                  customerApplication={ticket}
+                  handleStartClick={() =>
+                    router.push(`ticket/${ticket.ticketId}`)
+                  }
+                />
+              ))}
+
+              {!hasMoreData && !swrLoading && (
+                <Typography
+                  sx={{
+                    width: "100%",
+                    textAlign: "center",
+                    mt: 5,
+                    mb: 2,
+                    color: "text.secondary",
+                  }}
+                >
+                  No more tickets to load
+                </Typography>
+              )}
+            </>
           )}
         </Grid>
       </Box>
-
       {swrLoading && <Loader />}
     </Box>
   );

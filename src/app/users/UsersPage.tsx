@@ -81,8 +81,8 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
     }
   }, [data?.results?.length, initialData?.data?.results?.length]);
 
-  console.log('redux users', user)
-  console.log('frontend users', data)
+  console.log("redux users", user);
+  console.log("frontend users", data);
   // Displayed data for users
   const filteredUsers = useMemo(() => {
     const displayData = user?.results || initialData?.data?.results || [];
@@ -303,13 +303,13 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
             ))}
         </Grid>
         {/* Pagination */}
-        <Pagination
+        {/* <Pagination
           count={data?.pages || initialData?.pages || 1}
           page={currentPage}
           onChange={handlePageChange}
           color="primary"
           variant="outlined"
-        />
+        /> */}
       </Container>
       {reduxLoading || swrLoading ? (
         <Box display="flex" justifyContent="center" mb={2}>

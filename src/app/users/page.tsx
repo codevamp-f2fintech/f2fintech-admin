@@ -6,7 +6,7 @@ import { User } from "@/types/user";
 
 const url = `${process.env.NEXT_PUBLIC_API_URL}/get-users`;
 const PAGE = 1;
-const LIMIT = 10;
+const LIMIT = 1000;
 
 // Metadata to show in head tag.
 export const metadata: Metadata = {
@@ -21,7 +21,7 @@ const UserList = async () => {
     const response = await fetch(`${url}?page=${PAGE}&limit=${LIMIT}`, {
       method: "GET",
       headers: {
-        "x-access-token": token || '',
+        "x-access-token": token || "",
         "Content-Type": "application/json",
       },
       cache: "no-store",
