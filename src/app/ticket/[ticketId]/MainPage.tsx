@@ -694,13 +694,14 @@ const Progress: React.FC = () => {
                           <MenuItem value="under credit review">
                             Under Credit Review
                           </MenuItem>
-                          <MenuItem value="relook">Relook</MenuItem>
                           <MenuItem value="login">Login</MenuItem>
                           <MenuItem value="carry forward">
                             Carry Forward
                           </MenuItem>
                           <MenuItem value="drop">Drop</MenuItem>
+                          <MenuItem value="relook">Relook</MenuItem>
                           <MenuItem value="approved">Approved</MenuItem>
+                          <MenuItem value="rejected">Rejected</MenuItem>
                         </Select>
                       </FormControl>
                     </Grid>
