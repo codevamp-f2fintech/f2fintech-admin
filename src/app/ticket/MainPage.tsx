@@ -84,6 +84,12 @@ const Ticket = () => {
     }
   }, [searchParams]);
 
+  // Reset ticket state and fetch when sortBy or other filters change
+  useEffect(() => {
+    setCurrentPage(1);
+    dispatch(resetTickets());
+  }, [sortBy, filter, selectedUser, startDate, endDate, dispatch]);
+
   // Fetch and update state with new data
   useEffect(() => {
     if (ticketData.results.length > 0) {
