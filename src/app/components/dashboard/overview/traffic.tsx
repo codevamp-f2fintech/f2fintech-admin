@@ -28,6 +28,15 @@ export function Traffic({
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
+  function capitalizeFirstWord(text: string): string {
+    const words = text.split(" ");
+    if (words.length > 0) {
+      words[0] =
+        words[0].charAt(0).toUpperCase() + words[0].slice(1).toLowerCase();
+    }
+    return words.join(" ");
+  }
+
   return (
     <Card
       sx={{
@@ -35,7 +44,6 @@ export function Traffic({
         height: isMobile ? "75vh" : isTab ? "44.5vh" : "90vh",
       }}
     >
-      {/* <CardHeader title="Tickets" /> */}
       <Box
         sx={{
           display: "flex",
@@ -59,8 +67,8 @@ export function Traffic({
         </Typography>
       </Box>
       <Divider />
-      <CardContent sx={{ height: "89vh" }}>
-        <Stack>
+      <CardContent sx={{ height: "77vh" }}>
+        <Stack sx={{ display: "flex" }}>
           <Chart
             height={260}
             options={chartOptions}
@@ -68,69 +76,90 @@ export function Traffic({
             type="donut"
             width="100%"
             sx={{
-              transition: "color 0.3s ease, transform 0.3s ease", // smooth transition for color and transform
+              transition: "color 0.3s ease, transform 0.3s ease",
               "&:hover": {
-                color: "red", // color changes to green on hover
-                transform: "scale(1.1)", // scale up the text a little on hover
+                color: "red",
+                transform: "scale(1.1)",
               },
             }}
           />
           <Stack
             direction="row"
             sx={{
+              display: "flex",
               alignItems: "center",
               justifyContent: "center",
               flexWrap: "wrap",
-              marginTop: "2vh",
+              padding: "1vh",
+              height: "34vh",
+              // border: "2px solid gray",
+              borderRadius: "20px",
             }}
           >
-            {chartSeries.map((item, index) => (
-              <Stack
-                key={labels[index]}
-                sx={{
-                  alignItems: "center",
-                  width: "100px",
-                  height: "80px",
-                  transition: "color 0.3s ease, transform 0.3s ease",
-                  "&:hover": {
-                    color: "black",
-                    transform: "scale(1.1)",
-                  },
-                }}
-              >
-                <Typography
-                  variant="body2"
-                  fontWeight="bold"
+            {chartSeries.map((item, index) => {
+              const colors = [
+                "#009688",
+                "#ff9800",
+                "#2196f3",
+                "#f44336",
+                "#4caf50",
+                "#00bcd4",
+                "#8bc34a",
+                "#9c27b0",
+                "#3f51b5",
+                "#ff5722",
+              ];
+              const color = colors[index % colors.length];
+
+              return (
+                <Stack
+                  key={labels[index]}
                   sx={{
-                    width: "100%",
-                    textAlign: "center",
-                    height: "10vh",
-                    color: "red",
-                  }}
-                >
-                  {labels[index]}
-                </Typography>
-                <Typography
-                  color="text.secondary"
-                  variant="subtitle2"
-                  sx={{
-                    width: "100%",
-                    textAlign: "center",
+                    display: "flex",
+                    alignItems: "center",
+                    width: "10vw",
                     height: "5vh",
-                    marginBottom: "2vh",
-                    color: "black",
-                    fontSize: "1rem",
                     transition: "color 0.3s ease, transform 0.3s ease",
                     "&:hover": {
                       color: "black",
-                      transform: "scale(1.8)",
+                      transform: "scale(.9)",
                     },
                   }}
                 >
-                  {item}
-                </Typography>
-              </Stack>
-            ))}
+                  <Typography
+                    variant="body2"
+                    fontWeight="bold"
+                    sx={{
+                      width: "100%",
+                      textAlign: "center",
+                      height: "10vh",
+                      color: color,
+                    }}
+                  >
+                    {capitalizeFirstWord(labels[index])}
+                  </Typography>
+                  <Typography
+                    color="text.secondary"
+                    variant="subtitle2"
+                    sx={{
+                      width: "100%",
+                      textAlign: "center",
+                      height: "5vh",
+                      marginBottom: "2vh",
+                      color: "black",
+                      fontSize: "1rem",
+                      transition: "color 0.3s ease, transform 0.3s ease",
+                      "&:hover": {
+                        color: "black",
+                        transform: "scale(1.8)",
+                      },
+                    }}
+                  >
+                    {item}
+                  </Typography>
+                </Stack>
+              );
+            })}
           </Stack>
         </Stack>
       </CardContent>
@@ -143,7 +172,18 @@ function useChartOptions(labels: string[]): ApexOptions {
 
   return {
     chart: { background: "transparent" },
-    colors: ["#009688", "#ff9800", "#f44336", "#4caf50", "#00bcd4", "#8bc34a"],
+    colors: [
+      "#009688",
+      "#ff9800",
+      "#2196f3",
+      "#f44336",
+      "#4caf50",
+      "#00bcd4",
+      "#8bc34a",
+      "#9c27b0",
+      "#3f51b5",
+      "#ff5722",
+    ],
     dataLabels: { enabled: false },
     labels,
     legend: { show: false },

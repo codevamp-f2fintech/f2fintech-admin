@@ -230,7 +230,7 @@ const Ticket = () => {
                     color: "text.secondary",
                   }}
                 >
-                  No more tickets to load
+                  No more tickets to load...
                 </Typography>
               )}
             </>

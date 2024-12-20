@@ -22,7 +22,7 @@ export interface UserPopoverProps {
 export function UserPopover({
   anchorEl,
   onClose,
-  open
+  open,
 }: UserPopoverProps): React.JSX.Element {
   const popoverRef = React.useRef<HTMLDivElement | null>(null);
   const [userProfile, setUserProfile] = React.useState<object>();
@@ -33,7 +33,7 @@ export function UserPopover({
     if (userId) {
       try {
         const { data: response } = await UserAPI.getUserProfile(userId);
-        setUserProfile(response.data)
+        setUserProfile(response.data);
         if (response.statusCode === 200) {
           const nameLength = response.data.username?.length || 0;
           const emailLength = response.data.email?.length || 0;

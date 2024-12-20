@@ -82,7 +82,7 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
   // };
 
   const handleViewAllClick = () => {
-    router.push("/user");
+    router.push("/users");
   };
 
   return (
@@ -248,8 +248,12 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
             width: isMobile ? "30vw" : isTab ? "15vw" : "8vw",
             fontSize: ".9rem",
             mr: "1vw",
-            background:
-              "linear-gradient(125deg, #ECFCFF 0%, #ECFCFF 40%, #B2FCFF calc(40% + 1px), #B2FCFF 60%, #5EDFFF calc(60% + 1px), #5EDFFF 72%, #3E64FF calc(72% + 1px), #3E64FF 100%)",
+            bgcolor: "#f06292",
+            color: "white",
+            "&:hover": {
+              bgcolor: "#9D50BB",
+              color: "white",
+            },
           }}
         >
           View all

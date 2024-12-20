@@ -52,9 +52,10 @@ export function SideNav(): React.JSX.Element {
         "--NavItem-icon-active-color":
           "var(--mui-palette-primary-contrastText)",
         "--NavItem-icon-disabled-color": "var(--mui-palette-neutral-600)",
-        background:
-          "linear-gradient(235deg, #FFFFFF 0%, #000F25 100%), linear-gradient(180deg, #6100FF 0%, #000000 100%), linear-gradient(235deg, #FFA3AC 0%, #FFA3AC 40%, #00043C calc(40% + 1px), #00043C 60%, #005D6C calc(60% + 1px), #005D6C 70%, #00C9B1 calc(70% + 1px), #00C9B1 100%), linear-gradient(125deg, #FFA3AC 0%, #FFA3AC 40%, #00043C calc(40% + 1px), #00043C 60%, #005D6C calc(60% + 1px), #005D6C 70%, #00C9B1 calc(70% + 1px), #00C9B1 100%)",
-        backgroundBlendMode: "soft-light, screen, darken, normal",
+        backgroundImage: `
+      linear-gradient(64.5deg, rgba(245,116,185,1) 20.7%, rgba(89,97,223,1) 68.7%)
+    `,
+        backgroundBlendMode: "multiply, screen, normal",
         color: "var(--SideNav-color)",
         display: { xs: "none", lg: "flex" },
         flexDirection: "column",
@@ -177,7 +178,7 @@ function NavItem({
           : { role: "button" })}
         sx={{
           alignItems: "center",
-          borderRadius: 1,
+          borderRadius: "0px 20px 20px 0px",
           color: "white",
           cursor: "pointer",
           display: "flex",
@@ -188,6 +189,18 @@ function NavItem({
           position: "relative",
           textDecoration: "none",
           justifyContent: collapsed ? "center" : "flex-start",
+          backgroundImage: `
+      linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
+    `,
+          backgroundBlendMode: "multiply, screen, normal",
+          transition: "all 0.3s ease", // Smooth transition for all properties
+          "&:hover": {
+            backgroundImage: `
+      linear-gradient(64.5deg, rgba(255,138,185,1) 14.7%, rgba(89,150,223,1) 88.7%)
+    `,
+            transform: "scale(1)", // Slightly scale up the element on hover
+            boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)", // Add shadow on hover
+          },
         }}
       >
         <Box

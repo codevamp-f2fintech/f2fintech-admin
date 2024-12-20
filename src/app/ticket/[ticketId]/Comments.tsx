@@ -409,8 +409,9 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
                     <>
                       <Box
                         sx={{
-                          height: "12vh",
+                          height: isTab ? "6vh" : isMobile ? "10vh" : "12vh",
                           overflowY: "auto",
+
                           "&::-webkit-scrollbar": {
                             display: "none",
                           },
@@ -435,6 +436,12 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
                                 fontSize: "0.85rem",
                                 bgcolor: "#9D50BB",
                                 color: "white",
+                                width: isTab
+                                  ? "14vw"
+                                  : isMobile
+                                  ? "35vw"
+                                  : "9vw",
+                                fontSize: isTab ? "" : isMobile ? ".6rem" : "",
                                 "&:hover": {
                                   bgcolor: "#f06292",
                                   color: "black",

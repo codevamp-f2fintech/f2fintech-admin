@@ -88,7 +88,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
   setProgress,
   overage,
   setOverage,
-  ticketId
+  ticketId,
 }) => {
   const [loading, setLoading] = useState(false);
   const maxTime = parseTimeSpent(timeLoggingEstimate?.originalEstimate || "");
@@ -207,6 +207,8 @@ const TrackingForm: React.FC<FormComponentProps> = ({
           top: isMobile ? "22%" : isTab ? "15%" : "10.5%",
           height: isMobile ? "65vh" : isTab ? "60vh" : "87vh",
           padding: "2rem",
+          boxShadow:
+            "rgba(0, 0, 0, 0.1) 0px -23px 20px 0px inset, rgba(0, 0, 0, 0.15) 0px -36px 30px 0px inset, rgba(0, 0, 0, 0.1) 0px -79px 40px 0px inset, rgba(0, 0, 0, 0.06) 0px 2px 1px, rgba(0, 0, 0, 0.09) 0px 4px 2px, rgba(0, 0, 0, 0.09) 0px 8px 4px, rgba(0, 0, 0, 0.09) 0px 16px 8px, rgba(0, 0, 0, 0.09) 0px 32px 16px",
 
           "& .MuiPaper-root": {
             width: isMobile ? "110vw" : isTab ? "90vw" : "100vw",
@@ -319,8 +321,8 @@ const TrackingForm: React.FC<FormComponentProps> = ({
                     {timeLoggingEstimate.timeSpent
                       ? `${timeLoggingEstimate.timeSpent} logged`
                       : values.time_spent
-                        ? `${values.time_spent} logged`
-                        : null}
+                      ? `${values.time_spent} logged`
+                      : null}
                   </Typography>
                   <Box display="flex" flexDirection="row">
                     <Typography

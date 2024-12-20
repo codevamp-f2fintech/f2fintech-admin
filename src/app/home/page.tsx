@@ -77,7 +77,8 @@ const Home: React.FC = () => {
   // Filtered results based on search term
   const filteredCustomers = useMemo(() => {
     return customerApplication?.results.filter(
-      (customer) => !customer.is_picked &&
+      (customer) =>
+        !customer.is_picked &&
         customer.customerName.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [searchTerm, customerApplication]);
@@ -102,14 +103,21 @@ const Home: React.FC = () => {
           display: "flex",
           flexDirection: "row",
           width: "100%",
+          alignItems: "center",
         }}
       >
         <Box
           sx={{
-            height: "10vh",
-            width: isMobile ? "40vw" : isTab ? "40vw" : "30vw",
+            height: "7vh",
+            width: isMobile ? "40vw" : isTab ? "40vw" : "22vw",
             display: "flex",
             alignItems: "center",
+            justifyContent: "center",
+            borderRadius: "10px",
+            color: "#f06292",
+            "&:hover": {
+              color: "#9D50BB",
+            },
           }}
         >
           <Typography
@@ -131,7 +139,7 @@ const Home: React.FC = () => {
             flexDirection: "row",
             justifyContent: "space-evenly",
             alignItems: "center",
-            ml: isMobile ? "" : isTab ? "10vw" : "18vw",
+            ml: isMobile ? "" : isTab ? "10vw" : "25vw",
           }}
         >
           <TextField
@@ -142,6 +150,17 @@ const Home: React.FC = () => {
             sx={{
               width: isMobile ? "24vw" : isTab ? "18vw" : "12vw",
               fontSize: isMobile ? ".5rem" : isTab ? "1rem" : "",
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  border: "1px solid #d3d3d3", // Transparent border by default
+                },
+                "&:hover fieldset": {
+                  border: "1px solid #d3d3d3", // Transparent border on hover
+                },
+                "&.Mui-focused fieldset": {
+                  border: "1px solid #d3d3d3", // Light gray border on focus
+                },
+              },
             }}
           />
           <Link href="/ticket" passHref>
@@ -149,6 +168,12 @@ const Home: React.FC = () => {
               sx={{
                 width: isMobile ? "20vw" : isTab ? "18vw" : "12vw",
                 fontSize: isMobile ? ".5rem" : isTab ? "1rem" : "",
+                bgcolor: "#f06292",
+                color: "white",
+                "&:hover": {
+                  bgcolor: "#9D50BB",
+                  color: "white",
+                },
               }}
               variant="contained"
             >
@@ -159,10 +184,34 @@ const Home: React.FC = () => {
           </Link>
         </Box>
       </Box>
-      <Box sx={{ minWidth: "80vw", minHeight: "90vh" }}>
+      <Box
+        sx={{
+          minWidth: "80vw",
+          minHeight: "90vh",
+          marginTop: "1vh",
+        }}
+      >
         <Grid container spacing={2}>
           {!filteredCustomers?.length ? (
-            <Typography>No Applications Found</Typography>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "100%",
+                height: "90vh",
+              }}
+            >
+              <Typography
+                sx={{
+                  color: "black",
+                  display: "flex",
+                  mb: "20vh",
+                }}
+              >
+                No Applications Found...
+              </Typography>
+            </Box>
           ) : (
             <>
               {filteredCustomers.map((customerApplication) => (
@@ -179,11 +228,12 @@ const Home: React.FC = () => {
                   sx={{
                     width: "100%",
                     textAlign: "center",
-                    mt: 2,
-                    color: "text.secondary",
+                    mt: 4,
+                    color: "black",
+                    // ml: "4vw",
                   }}
                 >
-                  No more applications to load
+                  No more applications to load...
                 </Typography>
               )}
             </>
