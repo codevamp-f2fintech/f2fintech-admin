@@ -166,11 +166,16 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
             onClick={() => handleOpenDialog(null)}
             sx={{
               borderRadius: "100px",
-              background: "linear-gradient(45deg, #2196F3 30%, #1976D2 90%)",
               px: 3,
               textTransform: "none",
               fontWeight: 600,
               boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+              bgcolor: "#f06292",
+              color: "white",
+              "&:hover": {
+                bgcolor: "#9D50BB",
+                color: "white",
+              },
             }}
           >
             Create New User
@@ -185,8 +190,10 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
                 <Card
                   sx={{
                     borderRadius: 4,
-                    background:
-                      "linear-gradient(135deg, #8B5CF6 0%, #EC4899 50%, #3B82F6 100%)",
+                    backgroundImage: `
+      linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
+    `,
+                    backgroundBlendMode: "multiply, screen, normal",
                     boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
                     transition: "all 0.3s ease",
                     "&:hover": {

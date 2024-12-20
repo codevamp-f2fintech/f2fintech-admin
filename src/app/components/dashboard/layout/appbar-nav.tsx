@@ -13,7 +13,7 @@ import { Bell as BellIcon } from "@phosphor-icons/react/dist/ssr/Bell";
 import { List as ListIcon } from "@phosphor-icons/react/dist/ssr/List";
 
 import { MobileNav } from "./mobile-nav";
-import { UserPopover } from './user-popover';
+import { UserPopover } from "./user-popover";
 import { Utility } from "@/utils";
 import { usePopover } from "@/hooks/use-popover";
 
@@ -80,7 +80,7 @@ export function AppBarNav(): React.JSX.Element {
               <Avatar
                 onClick={userPopover.handleOpen}
                 ref={userPopover.anchorRef}
-                sx={{ cursor: 'pointer' }}
+                sx={{ cursor: "pointer" }}
               >
                 {decodedToken()?.username?.charAt(0).toUpperCase()}
               </Avatar>
@@ -89,7 +89,11 @@ export function AppBarNav(): React.JSX.Element {
         </Toolbar>
       </AppBar>
 
-      <UserPopover anchorEl={userPopover.anchorRef.current} onClose={userPopover.handleClose} open={userPopover.open} />
+      <UserPopover
+        anchorEl={userPopover.anchorRef.current}
+        onClose={userPopover.handleClose}
+        open={userPopover.open}
+      />
 
       <MobileNav
         onClose={() => {

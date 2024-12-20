@@ -22,7 +22,11 @@ export function Sales({ chartSeries, sx }: SalesProps): React.JSX.Element {
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
   return (
-    <Card sx={{ height: isTab ? "45vh" : isMobile ? "75vh" : "90vh" }}>
+    <Card
+      sx={{
+        height: isTab ? "45vh" : isMobile ? "75vh" : "90vh",
+      }}
+    >
       <Box
         sx={{
           display: "flex",

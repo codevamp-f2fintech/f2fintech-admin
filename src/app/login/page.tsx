@@ -15,12 +15,7 @@ import {
   IconButton,
   InputAdornment,
 } from "@mui/material";
-import {
-  Visibility,
-  VisibilityOff,
-  Email,
-  Lock,
-} from "@mui/icons-material";
+import { Visibility, VisibilityOff, Email, Lock } from "@mui/icons-material";
 import { ThemeProvider, useTheme, Theme } from "@mui/material/styles";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
@@ -59,9 +54,15 @@ const Login = (): JSX.Element => {
     try {
       const { data: response } = await UserAPI.login(values);
       if (response.statusCode === 200) {
-        document.cookie = `token=${response.data.access_token
-          }; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
-        toastAndNavigate(dispatch, true, "success", response.data.message || "Login Successful");
+        document.cookie = `token=${
+          response.data.access_token
+        }; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
+        toastAndNavigate(
+          dispatch,
+          true,
+          "success",
+          response.data.message || "Login Successful"
+        );
 
         const role = decodedToken(response.data.access_token)?.role;
         if (role === "admin") {
@@ -71,7 +72,14 @@ const Login = (): JSX.Element => {
         }
       }
     } catch (error: any) {
-      toastAndNavigate(dispatch, true, "error", error.response.data.message ? error.response.data.message : "Error Loging In. Try Again");
+      toastAndNavigate(
+        dispatch,
+        true,
+        "error",
+        error.response.data.message
+          ? error.response.data.message
+          : "Error Loging In. Try Again"
+      );
     }
   };
 
@@ -82,13 +90,21 @@ const Login = (): JSX.Element => {
         component="main"
         sx={{
           height: "100vh",
-          marginRight: "10vw",
-          background:
-            "linear-gradient(125deg, #ECFCFF 0%, #ECFCFF 40%, #B2FCFF calc(40% + 1px), #B2FCFF 60%, #5EDFFF calc(60% + 1px), #5EDFFF 72%, #3E64FF calc(72% + 1px), #3E64FF 100%)",
+          width: "100vw",
+          margin: 0,
+          padding: 0,
+          position: "fixed",
+          top: 0,
+          left: 0,
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          position: "fixed",
+          borderBottom: "1px solid var(--mui-palette-divider)",
+          background:
+            "linear-gradient(125deg, #ECFCFF 0%, #ECFCFF 40%, #B2FCFF calc(40% + 1px), #B2FCFF 60%, #5EDFFF calc(60% + 1px), #5EDFFF 72%, #3E64FF calc(72% + 1px), #3E64FF 100%)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
         }}
       >
         <CssBaseline />
@@ -101,7 +117,6 @@ const Login = (): JSX.Element => {
             height: "80vh",
             width: "70vw",
             borderRadius: "80px",
-            marginRight: "15vh",
             background:
               "linear-gradient(235deg, #FFFFFF 0%, #000F25 100%), linear-gradient(180deg, #6100FF 0%, #000000 100%), linear-gradient(235deg, #FFA3AC 0%, #FFA3AC 40%, #00043C calc(40% + 1px), #00043C 60%, #005D6C calc(60% + 1px), #005D6C 70%, #00C9B1 calc(70% + 1px), #00C9B1 100%), linear-gradient(125deg, #FFA3AC 0%, #FFA3AC 40%, #00043C calc(40% + 1px), #00043C 60%, #005D6C calc(60% + 1px), #005D6C 70%, #00C9B1 calc(70% + 1px), #00C9B1 100%)",
             backgroundBlendMode: "soft-light, screen, darken, normal",
@@ -112,7 +127,7 @@ const Login = (): JSX.Element => {
               background:
                 "linear-gradient(235deg, #FFFFFF 0%, #000F25 100%), linear-gradient(180deg, #6100FF 0%, #000000 100%), linear-gradient(235deg, #FFA3AC 0%, #FFA3AC 40%, #00043C calc(40% + 1px), #00043C 60%, #005D6C calc(60% + 1px), #005D6C 70%, #00C9B1 calc(70% + 1px), #00C9B1 100%), linear-gradient(125deg, #FFA3AC 0%, #FFA3AC 40%, #00043C calc(40% + 1px), #00043C 60%, #005D6C calc(60% + 1px), #005D6C 70%, #00C9B1 calc(70% + 1px), #00C9B1 100%)",
               backgroundBlendMode: "soft-light, screen, darken, normal",
-              transform: "scale(1.05)",
+              transform: "scale(1.02)",
             },
           }}
         >
@@ -135,9 +150,10 @@ const Login = (): JSX.Element => {
                 bgcolor: "white",
                 boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.3)",
                 "&:hover": {
-                  background: "black",
+                  bgcolor: "#f06292",
                   transform: "scale(1.05)",
                   boxShadow: "0px 6px 14px rgba(0, 0, 0, 0.4)",
+                  // color: "white",
                 },
               }}
             />

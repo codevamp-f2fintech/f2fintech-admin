@@ -57,7 +57,13 @@ function InfoRow({
   text: string | undefined;
 }) {
   return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 2,
+      }}
+    >
       <Box
         sx={{
           color: "#6E44FF",
@@ -151,9 +157,10 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
           overflow: "visible",
           position: "relative",
           boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
-          background: `
-      linear-gradient(135deg, #6a1b9a 0%, #d5006d 50%, #00b0ff 100%)
+          backgroundImage: `
+      linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
     `,
+          backgroundBlendMode: "multiply, screen, normal",
           pt: isMobile ? 3 : 5,
           mt: 5,
         }}
@@ -301,7 +308,16 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               <Button
                 variant="contained"
                 color="primary"
-                sx={{ width: "100%", borderRadius: "0px 0px 0px 10px" }}
+                sx={{
+                  width: "100%",
+                  borderRadius: "0px 0px 0px 10px",
+                  bgcolor: "#f06292",
+                  color: "white",
+                  "&:hover": {
+                    bgcolor: "#f06292",
+                    color: "white",
+                  },
+                }}
                 onClick={handleStartClick}
               >
                 Visit Ticket
@@ -309,7 +325,16 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               <Button
                 variant="contained"
                 color="primary"
-                sx={{ width: "100%", borderRadius: "0px 0px 10px 0px" }}
+                sx={{
+                  width: "100%",
+                  borderRadius: "0px 0px 10px 0px",
+                  bgcolor: "#f06292",
+                  color: "white",
+                  "&:hover": {
+                    bgcolor: "#f06292",
+                    color: "white",
+                  },
+                }}
                 onClick={toggleHistory}
               >
                 {showHistory ? "Close History" : "Show History"}

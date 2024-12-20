@@ -74,7 +74,10 @@ export function LatestApplications({
       elevation={3}
       sx={{
         width: isMobile ? "100%" : isTab ? "100%" : "30vw",
-        maxHeight: isMobile ? "85vh" : isTab ? "100vh" : "130vh",
+        maxHeight: isMobile ? "85vh" : isTab ? "100vh" : "126vh",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
       <Box
@@ -102,111 +105,123 @@ export function LatestApplications({
         </Typography>
       </Box>
       <Divider />
-      {/* {applications?.length && ( */}
-      <TableContainer>
-        <Table
-          sx={{
-            minHeight: isMobile ? "" : isTab ? "20vh" : "103vh",
-          }}
-        >
-          <TableHead
+      <Box sx={{ height: isTab ? "34.5vh" : "103vh" }}>
+        <TableContainer>
+          <Table
             sx={{
-              height: isMobile ? "8vh" : isTab ? "5vh" : "12vh",
+              minHeight: "auto",
+              maxHeight:
+                applications?.length <= 1
+                  ? "fit-content"
+                  : isMobile
+                  ? "85vh"
+                  : isTab
+                  ? "100vh"
+                  : "103vh",
             }}
           >
-            <TableRow sx={{ bgcolor: "grey.50" }}>
-              <TableCell>Sr.</TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell>Amount</TableCell>
-              <TableCell>Application Date</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {!applications?.length || swrLoading || paginationLoading ? (
-              <TableRow>
-                <TableCell colSpan={6} align="center">
-                  {swrLoading || paginationLoading ? (
-                    <Loader />
-                  ) : (
-                    "No applications found"
-                  )}
-                </TableCell>
+            <TableHead
+              sx={{
+                height: isMobile ? "8vh" : isTab ? "5vh" : "13vh",
+              }}
+            >
+              <TableRow sx={{ bgcolor: "grey.50" }}>
+                <TableCell>Sr.</TableCell>
+                <TableCell>Name</TableCell>
+                <TableCell>Amount</TableCell>
+                <TableCell>Application Date</TableCell>
               </TableRow>
-            ) : (
-              applications.map((application, index) => (
-                <TableRow
-                  key={application.applicationId}
-                  sx={{
-                    height: "2vh",
-                    "&:hover": { bgcolor: "primary.50" },
-                    transition: "background-color 0.2s",
-                  }}
-                >
-                  <TableCell sx={{ width: isMobile ? "2vw" : isTab ? "" : "" }}>
-                    {index + 1}
-                  </TableCell>
-                  <TableCell>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        justifyContent: "center",
-                        width: isMobile ? "30vw" : "6vw",
-                      }}
-                    >
-                      <Person sx={{ color: "primary.main" }} />
-                      {application.customerName}
-                    </Box>
-                  </TableCell>
-                  <TableCell align="center">
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 1,
-                        width: "8vw",
-                      }}
-                    >
-                      <CurrencyRupeeIcon sx={{ color: "primary.main" }} />
-                      {application.applicationAmount}
-                    </Box>
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      overflow: isMobile ? "hidden" : "",
-                      width: isMobile ? "" : isTab ? "" : "",
-                    }}
-                  >
-                    {dayjs(application.applicationDate).format("MMM D, YYYY")}
+            </TableHead>
+            <TableBody>
+              {!applications?.length || swrLoading || paginationLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6} align="center">
+                    {swrLoading || paginationLoading ? (
+                      <Loader />
+                    ) : (
+                      "No applications found"
+                    )}
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      <CardActions
-        sx={{ justifyContent: "flex-end", mt: isTab ? "1vh" : "3vh" }}
+              ) : (
+                applications.map((application, index) => (
+                  <TableRow
+                    key={application.applicationId}
+                    sx={{
+                      height: isMobile ? "10vh" : isTab ? "5vh" : "15vh",
+                      "&:hover": { bgcolor: "primary.50" },
+                      transition: "background-color 0.2s",
+                    }}
+                  >
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Person sx={{ color: "primary.main" }} />
+                        {application.customerName}
+                      </Box>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 1,
+                        }}
+                      >
+                        <CurrencyRupeeIcon sx={{ color: "primary.main" }} />
+                        {application.applicationAmount}
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      {dayjs(application.applicationDate).format("MMM D, YYYY")}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
+      <Box
+        sx={{
+          height: isMobile ? "8vh" : isTab ? "5vh" : "9vh",
+          mb: isMobile ? "1vh" : "",
+        }}
       >
-        <Button
-          color="inherit"
-          endIcon={<ArrowRightIcon />}
-          size="small"
-          variant="text"
-          onClick={handleViewAllClick}
-          sx={{
-            width: isMobile ? "30vw" : isTab ? "15vw" : "8vw",
-            fontSize: ".9rem",
-            mr: ".6vw",
-            background:
-              "linear-gradient(125deg, #ECFCFF 0%, #ECFCFF 40%, #B2FCFF calc(40% + 1px), #B2FCFF 60%, #5EDFFF calc(60% + 1px), #5EDFFF 72%, #3E64FF calc(72% + 1px), #3E64FF 100%)",
-          }}
+        <CardActions
+          sx={{ justifyContent: "flex-end", mt: isTab ? "1vh" : "3vh" }}
         >
-          View all
-        </Button>
-      </CardActions>
+          <Button
+            color="inherit"
+            endIcon={<ArrowRightIcon />}
+            size="small"
+            variant="text"
+            onClick={handleViewAllClick}
+            sx={{
+              width: isMobile ? "30vw" : isTab ? "15vw" : "8vw",
+              fontSize: ".9rem",
+              mr: ".6vw",
+              bgcolor: "#f06292",
+              position: "static",
+              color: "white",
+              "&:hover": {
+                bgcolor: "#9D50BB",
+                color: "white",
+              },
+            }}
+          >
+            View all
+          </Button>
+        </CardActions>
+      </Box>
     </Paper>
   );
 }
