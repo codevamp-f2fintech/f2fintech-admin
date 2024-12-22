@@ -256,7 +256,7 @@ const Progress: React.FC = () => {
     try {
       //use url from env
       await axios.patch(
-        `https://web.f2fintech.in/api/v1/update-loan-tracking`,
+        `${process.env.NEXT_PUBLIC_WEB_URL}/update-loan-tracking`,
         {
           //external server API
           customer_application_id: ticketDetailData?.applicationId,

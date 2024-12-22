@@ -60,6 +60,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
           const formData = new FormData();
           formData.append("document", selectedAudioFile);
           formData.append("folder", `voice-note/${selectedAudioFile.name}`);
+          console.log(formData, 'this is formdata')
 
           const uploadResponse = await axios.post(
             `${process.env.NEXT_PUBLIC_WEB_URL}/upload-to-s3`,
@@ -68,6 +69,8 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
               headers: {
                 "Content-Type": "multipart/form-data",
               },
+              maxContentLength: 20 * 1024 * 1024, // 20MB Limit
+              maxBodyLength: 20 * 1024 * 1024,
             }
           );
           const attachmentUrl = uploadResponse.data.data;
