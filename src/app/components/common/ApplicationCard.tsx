@@ -16,10 +16,10 @@ import {
 import {
   MailRounded,
   PhoneRounded,
-  PaidRounded,
   AccessTimeRounded,
   LocationOnRounded,
 } from "@mui/icons-material";
+import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
 
 import { useCreateTicket } from "@/hooks/ticket";
 import { Utility } from "@/utils";
@@ -148,6 +148,15 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
     }
   };
 
+  const formatRupees = (value: number) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      minimumFractionDigits: 2, // Ensure two decimal places
+      maximumFractionDigits: 2, // Ensure no more than two decimal places
+    }).format(value);
+  };
+
   return (
     <Grid item xs={12} sm={6} md={4} key={customerApplication.customerId}>
       <Card
@@ -235,8 +244,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 text={customerApplication.customerContact}
               />
               <InfoRow
-                icon={<PaidRounded />}
-                text={customerApplication.applicationAmount}
+                icon={<CurrencyRupeeIcon />}
+                text={formatRupees(customerApplication.applicationAmount)}
               />
               <InfoRow
                 icon={<AccessTimeRounded />}

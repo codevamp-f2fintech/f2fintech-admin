@@ -282,7 +282,14 @@ export default async function Page(): Promise<React.JSX.Element> {
   );
 
   return (
-    <Grid container spacing={3}>
+    <Grid
+      lg={12.2}
+      sm={12.3}
+      xs={12}
+      container
+      spacing={3}
+      sx={{ width: "100%" }}
+    >
       {dashboardItems.map((item, index) => (
         <Grid lg={3} sm={6} xs={12} key={index}>
           <Link

@@ -121,144 +121,156 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
         </Typography>
       </Box>
       <Divider />
-
-      <TableContainer sx={{ width: "100%" }}>
-        <Table
-          sx={{
-            minHeight: isMobile ? "" : isTab ? "20vh" : "103vh",
-          }}
-        >
-          <TableHead
+      <Box sx={{ height: isTab ? "34.5vh" : "103vh" }}>
+        <TableContainer sx={{ width: "100%" }}>
+          <Table
             sx={{
-              height: isMobile ? "5vh" : isTab ? "5vh" : "12vh",
+              minHeight: isMobile ? "" : isTab ? "20vh" : "103vh",
             }}
           >
-            <TableRow sx={{ bgcolor: "grey.50" }}>
-              <TableCell>Sr.</TableCell>
-              <TableCell>User Name</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell align="center">Open Tickets</TableCell>
-              <TableCell align="center">In Progress</TableCell>
-              <TableCell align="center">Done Tickets</TableCell>
-              <TableCell sortDirection="desc">Date</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {!filteredUsers?.length || usersLoading ? (
-              <TableRow>
-                <TableCell colSpan={6} align="center">
-                  No users found
-                </TableCell>
+            <TableHead
+              sx={{
+                height: isMobile ? "5vh" : isTab ? "5vh" : "12vh",
+              }}
+            >
+              <TableRow sx={{ bgcolor: "grey.50" }}>
+                <TableCell>Sr.</TableCell>
+                <TableCell>User Name</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell align="center">Open Tickets</TableCell>
+                <TableCell align="center">In Progress</TableCell>
+                <TableCell align="center">Done Tickets</TableCell>
+                <TableCell sortDirection="desc">Date</TableCell>
               </TableRow>
-            ) : (
-              filteredUsers.map((agent, index) => {
-                const { open, inProgress, done } = getTicketCounts(agent.id);
-
-                return (
-                  <TableRow
-                    key={agent.id}
-                    sx={{
-                      height: "2vh",
-                      "&:hover": { bgcolor: "primary.50" },
-                      transition: "background-color 0.2s",
-                    }}
+            </TableHead>
+            <TableBody>
+              {!filteredUsers?.length || usersLoading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={6}
+                    align="center"
+                    sx={{ height: isTab ? "34.5vh" : "90vh" }}
                   >
-                    <TableCell
-                      sx={{ width: isMobile ? "2vw" : isTab ? "" : "" }}
+                    No users found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredUsers.map((agent, index) => {
+                  const { open, inProgress, done } = getTicketCounts(agent.id);
+
+                  return (
+                    <TableRow
+                      key={agent.id}
+                      sx={{
+                        height: "2vh",
+                        "&:hover": { bgcolor: "primary.50" },
+                        transition: "background-color 0.2s",
+                      }}
                     >
-                      {index + 1}
-                    </TableCell>
-                    <TableCell>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 1,
-                          width: isMobile ? "30vw" : "6vw",
-                        }}
+                      <TableCell
+                        sx={{ width: isMobile ? "2vw" : isTab ? "" : "" }}
                       >
-                        <Person sx={{ color: "primary.main" }} />
-                        {capitalizeFirstLetter(agent.username)}
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: "flex", alignItems: "center" }}>
-                        <Email sx={{ color: "text.secondary" }} />
-                        {agent.email}
-                      </Box>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: 1,
-                        }}
-                      >
-                        <ConfirmationNumber sx={{ color: "warning.main" }} />
-                        {open}
-                      </Box>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: 1,
-                        }}
-                      >
-                        <Refresh sx={{ color: "primary.main" }} />
-                        {inProgress}
-                      </Box>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: 1,
-                        }}
-                      >
-                        <CheckCircle sx={{ color: "success.main" }} />
-                        {done}
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      {dayjs(agent.created_at).format("MMM D, YYYY")}
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                        {index + 1}
+                      </TableCell>
+                      <TableCell>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            width: isMobile ? "30vw" : "6vw",
+                          }}
+                        >
+                          <Person sx={{ color: "primary.main" }} />
+                          {capitalizeFirstLetter(agent.username)}
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                          <Email sx={{ color: "text.secondary" }} />
+                          {agent.email}
+                        </Box>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 1,
+                          }}
+                        >
+                          <ConfirmationNumber sx={{ color: "warning.main" }} />
+                          {open}
+                        </Box>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 1,
+                          }}
+                        >
+                          <Refresh sx={{ color: "primary.main" }} />
+                          {inProgress}
+                        </Box>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 1,
+                          }}
+                        >
+                          <CheckCircle sx={{ color: "success.main" }} />
+                          {done}
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        {dayjs(agent.created_at).format("MMM D, YYYY")}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
       {/* <Divider /> */}
-      <CardActions sx={{ justifyContent: "flex-end", mt: "3vh" }}>
-        <Button
-          color="inherit"
-          endIcon={<ArrowRightIcon />}
-          size="small"
-          variant="text"
-          onClick={handleViewAllClick}
-          sx={{
-            width: isMobile ? "30vw" : isTab ? "15vw" : "8vw",
-            fontSize: ".9rem",
-            mr: "1vw",
-            bgcolor: "#f06292",
-            color: "white",
-            "&:hover": {
-              bgcolor: "#9D50BB",
+      <Box
+        sx={{
+          height: isMobile ? "8vh" : isTab ? "5vh" : "9vh",
+          mb: isMobile ? "1vh" : "",
+        }}
+      >
+        <CardActions sx={{ justifyContent: "flex-end", mt: "3vh" }}>
+          <Button
+            color="inherit"
+            endIcon={<ArrowRightIcon />}
+            size="small"
+            variant="text"
+            onClick={handleViewAllClick}
+            sx={{
+              width: isMobile ? "30vw" : isTab ? "15vw" : "8vw",
+              fontSize: ".9rem",
+              mr: "1vw",
+              bgcolor: "#f06292",
               color: "white",
-            },
-          }}
-        >
-          View all
-        </Button>
-      </CardActions>
+              "&:hover": {
+                bgcolor: "#9D50BB",
+                color: "white",
+              },
+            }}
+          >
+            View all
+          </Button>
+        </CardActions>
+      </Box>
     </Paper>
   );
 }

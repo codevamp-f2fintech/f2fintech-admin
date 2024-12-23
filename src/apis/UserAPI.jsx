@@ -41,7 +41,7 @@ export const UserAPI = {
       method: "GET",
       signal: cancel
         ? cancelApiObject[this.getuserProfile.name].handleRequestCancellation()
-          .signal
+            .signal
         : undefined,
     });
   },
@@ -65,7 +65,7 @@ export const UserAPI = {
       data: document,
       signal: cancel
         ? cancelApiObject[this.uploadDocument.name].handleRequestCancellation()
-          .signal
+            .signal
         : undefined,
     });
   },
