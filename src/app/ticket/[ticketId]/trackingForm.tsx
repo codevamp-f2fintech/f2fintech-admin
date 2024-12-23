@@ -259,6 +259,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
                     position: "relative",
                     width: isMobile ? "70vw" : isTab ? "50vw" : "28vw",
                     height: 8,
+                    display: "flex",
                   }}
                 >
                   {/* Blue Progress (within estimate) */}
@@ -282,8 +283,8 @@ const TrackingForm: React.FC<FormComponentProps> = ({
                     <Box
                       sx={{
                         position: "absolute",
-                        // top: 0,
-                        // left: 0, // Start the orange bar from the beginning
+                        top: 0,
+                        left: 0, // Start the orange bar from the beginning
                         width: "100%",
                         height: "100%",
                         display: "flex", // Use flex to overlay bars

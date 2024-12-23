@@ -73,7 +73,7 @@ export function LatestApplications({
     <Paper
       elevation={3}
       sx={{
-        width: isMobile ? "100%" : isTab ? "100%" : "30vw",
+        width: isMobile ? "70%" : isTab ? "100%" : "30vw",
         maxHeight: isMobile ? "85vh" : isTab ? "100vh" : "126vh",
         height: "100%",
         display: "flex",
@@ -135,7 +135,11 @@ export function LatestApplications({
             <TableBody>
               {!applications?.length || swrLoading || paginationLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center">
+                  <TableCell
+                    sx={{ height: isTab ? "34.5vh" : "90vh" }}
+                    colSpan={6}
+                    align="center"
+                  >
                     {swrLoading || paginationLoading ? (
                       <Loader />
                     ) : (

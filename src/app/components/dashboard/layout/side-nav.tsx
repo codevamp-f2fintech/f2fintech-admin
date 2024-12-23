@@ -193,13 +193,13 @@ function NavItem({
       linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
     `,
           backgroundBlendMode: "multiply, screen, normal",
-          transition: "all 0.3s ease", // Smooth transition for all properties
+          transition: "all 0.3s ease",
           "&:hover": {
             backgroundImage: `
       linear-gradient(64.5deg, rgba(255,138,185,1) 14.7%, rgba(89,150,223,1) 88.7%)
     `,
-            transform: "scale(1)", // Slightly scale up the element on hover
-            boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)", // Add shadow on hover
+            transform: "scale(1)",
+            boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)",
           },
         }}
       >
@@ -210,8 +210,8 @@ function NavItem({
             display: "flex",
             justifyContent: "center",
             flex: "0 0 auto",
-            height: "5vh", // Height in vh
-            width: "3vw", // Width in vw
+            height: "5vh",
+            width: "3vw",
             borderRadius: "50px",
             boxShadow:
               "rgba(0, 0, 0, 0) 0px -23px 25px 0px inset, rgba(0, 0, 0, 0.15) 0px -36px 30px 0px inset, rgba(0, 0, 0, 0.1) 0px -79px 40px 0px inset, rgba(0, 0, 0, 0.06) 0px 2px 1px, rgba(0, 0, 0, 0.09) 0px 4px 2px, rgba(0, 0, 0, 0.09) 0px 8px 4px, rgba(0, 0, 0, 0.09) 0px 16px 8px, rgba(0, 0, 0, 0.09) 0px 32px 16px",

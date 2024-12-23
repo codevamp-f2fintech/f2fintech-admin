@@ -21,7 +21,11 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
 }) => {
   return (
     <Box
-      sx={{ position: "relative", width: "100%", height: 8 }}
+      sx={{
+        position: "relative",
+        width: "100%",
+        height: 8,
+      }}
       onClick={() => setOpenDialog(true)}
     >
       {/* Green Progress (within estimate) */}

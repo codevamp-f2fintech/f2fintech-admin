@@ -1,13 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import axios from "axios";
-import {
-  Box,
-  Grid,
-  Paper,
-  Typography,
-  Button,
-  IconButton,
-} from "@mui/material";
+import { Box, Grid, Paper, Typography, IconButton } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AudioFileIcon from "@mui/icons-material/Audiotrack";
 
@@ -23,7 +16,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
   const itemsPerPage = 3;
   const [selectedAudioFile, setSelectedAudioFile] = useState();
   const [uploaded, setUploaded] = useState(false);
-  const [voiceNote, setVoiceNote] = useState('');
+  const [voiceNote, setVoiceNote] = useState("");
   const inputRef = useRef(null);
   const dispatch: AppDispatch = useDispatch();
   const { toast } = useSelector((state: RootState) => state.toast);
@@ -60,7 +53,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
           const formData = new FormData();
           formData.append("document", selectedAudioFile);
           formData.append("folder", `voice-note/${selectedAudioFile.name}`);
-          console.log(formData, 'this is formdata')
+          console.log(formData, "this is formdata");
 
           const uploadResponse = await axios.post(
             `${process.env.NEXT_PUBLIC_WEB_URL}/upload-to-s3`,
@@ -81,7 +74,12 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
           setVoiceNote(attachmentUrl);
           setUploaded(true);
           setSelectedAudioFile(null);
-          toastAndNavigate(dispatch, true, "success", "Voice note uploaded successfully");
+          toastAndNavigate(
+            dispatch,
+            true,
+            "success",
+            "Voice note uploaded successfully"
+          );
         } catch (err) {
           console.log("Error uploading attachment:", err);
           toastAndNavigate(
@@ -183,8 +181,8 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
                       selectedAudioFile.type === "audio/mpeg"
                         ? "audio/mpeg"
                         : selectedAudioFile.type === "audio/ogg"
-                          ? "audio/ogg"
-                          : "audio/wav" // Default to WAV if MIME type is unknown
+                        ? "audio/ogg"
+                        : "audio/wav" // Default to WAV if MIME type is unknown
                     }
                   />
                 ) : voiceNote ? (
@@ -192,9 +190,11 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
                     <source src={voiceNote} type="audio/mpeg" />
                     <source src={voiceNote} type="audio/ogg" />
                     <source src={voiceNote} type="audio/wav" />
+                    {/* Add fallback for unsupported audio types */}
+                    <p>Your browser does not support the audio element.</p>
                   </>
                 ) : (
-                  <p>Your browser does not support the audio element.</p>
+                  <p>No audio file available.</p>
                 )}
               </audio>
             </Box>
