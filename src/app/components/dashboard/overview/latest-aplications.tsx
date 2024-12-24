@@ -74,7 +74,7 @@ export function LatestApplications({
       elevation={3}
       sx={{
         width: isMobile ? "70%" : isTab ? "100%" : "30vw",
-        maxHeight: isMobile ? "85vh" : isTab ? "100vh" : "126vh",
+        maxHeight: isMobile ? "85vh" : isTab ? "100vh" : "130vh",
         height: "100%",
         display: "flex",
         flexDirection: "column",

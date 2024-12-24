@@ -77,10 +77,6 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
     )
     .slice(0, 6); // Take only the 6 latest users
 
-  // const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   setSearchQuery(event.target.value);
-  // };
-
   const handleViewAllClick = () => {
     router.push("/users");
   };
