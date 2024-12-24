@@ -125,7 +125,15 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
         <TableContainer sx={{ width: "100%" }}>
           <Table
             sx={{
-              minHeight: isMobile ? "" : isTab ? "20vh" : "103vh",
+              minHeight: "auto",
+              maxHeight:
+                filteredUsers?.length <= 1
+                  ? "fit-content"
+                  : isMobile
+                  ? "85vh"
+                  : isTab
+                  ? "100vh"
+                  : "103vh",
             }}
           >
             <TableHead
@@ -162,7 +170,7 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
                     <TableRow
                       key={agent.id}
                       sx={{
-                        height: "2vh",
+                        height: "15vh",
                         "&:hover": { bgcolor: "primary.50" },
                         transition: "background-color 0.2s",
                       }}

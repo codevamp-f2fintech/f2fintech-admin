@@ -77,6 +77,7 @@ export function Traffic({
             width="100%"
             sx={{
               transition: "color 0.3s ease, transform 0.3s ease",
+
               "&:hover": {
                 color: "red",
                 transform: "scale(1.1)",
