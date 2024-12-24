@@ -526,6 +526,41 @@ const Progress: React.FC = () => {
     `,
                   }}
                 >
+                  <Grid item xs={6} md={5} mt={0}>
+                    <Button
+                      color="info"
+                      endIcon={<ArrowForwardRounded />}
+                      size="small"
+                      variant="contained"
+                      onClick={() => setNewEmployeeStatus("forwarded")}
+                      sx={{
+                        bgcolor: "#f06292",
+                        textAlign: "center",
+                        textTransform: "uppercase",
+                        backgroundSize: "200% auto",
+                        color: "white",
+                        borderRadius: "10px",
+                        margin: "1rem",
+                      }}
+                    >
+                      Forward
+                    </Button>
+                  </Grid>
+                  {/* Conditionally render the dropdown if the status is forwarded */}
+                  {newEmployeeStatus === "forwarded" && (
+                    <UserAutocomplete
+                      isMobile={isMobile}
+                      isTab={isTab}
+                      newEmployeeStatus={newEmployeeStatus}
+                      selectedUser={selectedUser}
+                      setSelectedUser={setSelectedUser}
+                      handleForwardAutocomplete={handleForwardAutocomplete}
+                      userData={userData}
+                      ticketId={ticketDetailData?.ticketId}
+                    />
+                  )}
+                  <Divider sx={{ my: 1 }} />
+
                   {/* Employee Status FormControl */}
                   <Box
                     display="flex"
@@ -598,41 +633,6 @@ const Progress: React.FC = () => {
                       </FormControl>
                     </Grid>
                   </Box>
-
-                  <Grid item xs={6} md={5} mt={0}>
-                    <Button
-                      color="info"
-                      endIcon={<ArrowForwardRounded />}
-                      size="small"
-                      variant="contained"
-                      onClick={() => setNewEmployeeStatus("forwarded")}
-                      sx={{
-                        bgcolor: "#f06292",
-                        textAlign: "center",
-                        textTransform: "uppercase",
-                        backgroundSize: "200% auto",
-                        color: "white",
-                        borderRadius: "10px",
-                        margin: "1rem",
-                      }}
-                    >
-                      Forward
-                    </Button>
-                  </Grid>
-                  {/* Conditionally render the dropdown if the status is forwarded */}
-                  {newEmployeeStatus === "forwarded" && (
-                    <UserAutocomplete
-                      isMobile={isMobile}
-                      isTab={isTab}
-                      newEmployeeStatus={newEmployeeStatus}
-                      selectedUser={selectedUser}
-                      setSelectedUser={setSelectedUser}
-                      handleForwardAutocomplete={handleForwardAutocomplete}
-                      userData={userData}
-                      ticketId={ticketDetailData?.ticketId}
-                    />
-                  )}
-                  <Divider sx={{ my: 2 }} />
 
                   <Box
                     display="flex"
