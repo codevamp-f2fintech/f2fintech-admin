@@ -51,7 +51,7 @@ const History: React.FC<HistoryProps> = ({ ticketHistory }) => {
                   variant="body1"
                   sx={{
                     fontSize: isMobile ? ".6rem" : isTab ? ".8rem" : "",
-                    width: isMobile ? "90vw" : isTab ? "80vh" : "32vw",
+                    width: isMobile ? "90vw" : isTab ? "80vh" : "50vw",
                     color: "white",
                   }}
                 >

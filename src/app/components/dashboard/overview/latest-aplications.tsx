@@ -122,7 +122,7 @@ export function LatestApplications({
           >
             <TableHead
               sx={{
-                height: isMobile ? "8vh" : isTab ? "5vh" : "13vh",
+                height: isMobile ? "8vh" : isTab ? "5vh" : "12vh",
               }}
             >
               <TableRow sx={{ bgcolor: "grey.50" }}>
