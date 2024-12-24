@@ -540,7 +540,7 @@ const Progress: React.FC = () => {
                         backgroundSize: "200% auto",
                         color: "white",
                         borderRadius: "10px",
-                        margin: "1rem",
+                        margin: ".4rem",
                       }}
                     >
                       Forward
