@@ -25,7 +25,6 @@ export const useGetTicketHistory = (
   const refetch = async () => {
     await mutate(pathKey);
   };
-
   return { value: swrData || [], swrLoading: !error && !swrData, error, refetch };
 };
 
@@ -38,17 +37,12 @@ export const useGetTicketHistory = (
 export const useCreateTicketHistory = (pathKey: string, p0?: {}) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [createdHistory, setCreatedHistory] = useState<TicketHistory | null>(
-    null
-  );
 
   const createTicketHistory = async (data: object) => {
     setLoading(true);
     setError(null);
     try {
       const response = await creator(pathKey, data);
-      setCreatedHistory(response);
-      console.log("Ticket history hook:", response);
       return response;
     } catch (err) {
       setError(err as Error);
@@ -56,7 +50,7 @@ export const useCreateTicketHistory = (pathKey: string, p0?: {}) => {
       setLoading(false);
     }
   };
-  return { createdHistory, loading, error, createTicketHistory };
+  return { loading, error, createTicketHistory };
 };
 
 /**
@@ -68,9 +62,6 @@ export const useCreateTicketHistory = (pathKey: string, p0?: {}) => {
 export const useModifyTicketHistory = (pathKey: string) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [modifiedTicketHistory, setModifiedTicketHistory] = useState<TicketHistory | null>(
-    null
-  );
 
   const modifyTicketHistory = async (
     ticketId: number,
@@ -80,18 +71,15 @@ export const useModifyTicketHistory = (pathKey: string) => {
     setError(null);
     try {
       const apiPath = `${pathKey}/${ticketId}`;
-
       const ticket = await modifier<TicketHistory, Partial<TicketHistory>>(
         apiPath,
         updatedTicketData
       );
-      setModifiedTicketHistory(ticket);
     } catch (err) {
       setError(err as Error);
     } finally {
       setLoading(false);
     }
   };
-
-  return { modifiedTicketHistory, loading, error, modifyTicketHistory };
+  return { loading, error, modifyTicketHistory };
 };

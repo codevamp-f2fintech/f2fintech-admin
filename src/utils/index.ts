@@ -53,26 +53,40 @@ export const Utility = () => {
    * @param timeSpent
    * @returns
    */
-  const parseTimeSpent = (timeSpent: string): number => {
-    const timeRegex = /^(\d+)([hdm])$/;
-    const match = timeSpent.match(timeRegex);
-
-    if (!match) return 0; // Return 0 if the format is invalid
-
-    const [, value, unit] = match;
-    const numericValue = parseInt(value, 10);
-
-    switch (unit) {
-      case "h": // hours
-        return numericValue;
-      case "d": // days (assuming 1 day = 8 working hours)
-        return numericValue * 8;
-      case "m": // minutes (convert to hours)
-        return numericValue / 60;
-      default:
-        return 0;
+  function parseTimeSpent(timeSpent?: string | null): number {
+    // Handle null, undefined, empty string, etc.
+    if (!timeSpent) {
+      return 0;
     }
-  };
+    // Regex to match all {number}{unit} pairs (like "2d", "6h", "30m")
+    const timeRegex = /(\d+)([hdm])/g;
+    let totalHours = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = timeRegex.exec(timeSpent)) !== null) {
+      const [, value, unit] = match;
+      const numericValue = parseInt(value, 10);
+
+      if (!isNaN(numericValue)) {
+        switch (unit) {
+          case "h":
+            totalHours += numericValue;
+            break;
+          case "d":
+            totalHours += numericValue * 8; // 1 day = 8 hours
+            break;
+          case "m":
+            totalHours += numericValue / 60; // convert minutes to hours
+            break;
+          default:
+            // If there's any unexpected unit, you could skip or handle differently
+            break;
+        }
+      }
+    }
+
+    return totalHours;
+  }
 
   // Function to convert hours back into 'Xd Yh' format
   const convertHoursToDaysAndHours = (totalHours: number): string => {
@@ -115,7 +129,7 @@ export const Utility = () => {
   };
 
   // Function to format the date
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     if (isNaN(date)) return "Invalid Date"; // Check if date is valid
     return date.toLocaleDateString("en-US", {
@@ -126,7 +140,7 @@ export const Utility = () => {
   };
 
   // Function to format the amount in INR
-  const formatAmount = (amount) => {
+  const formatAmount = (amount: number | string) => {
     return `₹ ${new Intl.NumberFormat("en-IN", {
       maximumFractionDigits: 2,
     }).format(amount)}`;
@@ -179,7 +193,7 @@ export const Utility = () => {
   const remLocalStorage = (key: string): void => {
     try {
       localStorage.removeItem(key);
-    } catch (err) {}
+    } catch (err) { }
   };
 
   /**
@@ -191,7 +205,7 @@ export const Utility = () => {
   const setLocalStorage = (key: string, value: any): void => {
     try {
       localStorage.setItem(key, JSON.stringify(value));
-    } catch (err) {}
+    } catch (err) { }
   };
 
   /**

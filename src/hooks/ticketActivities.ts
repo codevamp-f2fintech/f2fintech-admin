@@ -34,14 +34,12 @@ export const useGetTicketActivities = (initialData: TicketActivities[], pathKey:
 export const useCreateTicketActivity = (pathKey: string) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [createdActivity, setCreatedActivity] = useState<TicketActivities | null>(null);
 
   const createTicketActivity = async (data: object) => {
     setLoading(true);
     setError(null);
     try {
       const response = await creator(pathKey, data);
-      setCreatedActivity(response);
       return response;
     } catch (err) {
       setError(err as Error);
@@ -49,7 +47,7 @@ export const useCreateTicketActivity = (pathKey: string) => {
       setLoading(false);
     }
   };
-  return { createdActivity, loading, error, createTicketActivity };
+  return { loading, error, createTicketActivity };
 };
 
 /**
@@ -62,7 +60,6 @@ export const useCreateTicketActivity = (pathKey: string) => {
 export const useModifyTicketActivity = (pathKey: string, refreshInterval: number = 0) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [modifiedActivity, setModifiedActivity] = useState<TicketActivities | null>(null);
 
   const modifyTicketActivity = async (
     ticketId: number,
@@ -75,18 +72,14 @@ export const useModifyTicketActivity = (pathKey: string, refreshInterval: number
       const apiPath = `${pathKey}/${ticketId}/${activityId}`;
 
       const activity = await modifier<TicketActivities, Partial<TicketActivities>>(apiPath, updatedActivityData);
-      setModifiedActivity(activity);
       return activity;
     } catch (err) {
-      // Set the error state if the request fails
       setError(err as Error);
     } finally {
-      // Set loading to false after the request is complete
       setLoading(false);
     }
   };
-  // Return the modified activity, loading, and error states along with the modify function
-  return { modifiedActivity, loading, error, modifyTicketActivity };
+  return { loading, error, modifyTicketActivity };
 };
 
 /**

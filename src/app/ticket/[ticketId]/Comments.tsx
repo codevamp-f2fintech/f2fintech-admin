@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 /* eslint-disable react-hooks/exhaustive-deps */
 import axios from "axios";
 import React, { useState, useCallback } from "react";
@@ -52,28 +53,21 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
-  // Fetch comments data
   const { value: comments, refetch } = useGetTicketActivities(
     [],
     `get-all-ticket-activities/${storedTicketId}`
   );
 
-  // Hook for creating new ticket activity (comment)
   const { createTicketActivity } = useCreateTicketActivity(
     "create-ticket-activity"
   );
-
-  // Hook for deleting ticket activity
   const { deleteTicketActivity } = useDeleteTicketActivity(
     "delete-ticket-activity"
   );
-
-  // Hook for modifying ticket activity (editing comments)
   const { modifyTicketActivity } = useModifyTicketActivity(
     "update-ticket-activity"
   );
 
-  // Create comment handler, memoized
   const handleCreateComment = useCallback(async () => {
     if (!newComment.trim()) return; // Don't allow empty comments
 
@@ -119,7 +113,7 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
         setAttachment(null);
         setAttachmentPreview("");
         toastAndNavigate(dispatch, true, "info", "Commented Successfully");
-        refetch(); // Refetch the comments after successful creation
+        refetch();
       }
     } catch (error) {
       toastAndNavigate(dispatch, true, "error", "Error Creating Comment");
@@ -127,13 +121,12 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
     }
   }, [attachment, newComment, storedTicketId, refetch]);
 
-  // Delete comment handler, memoized
   const handleDeleteComment = useCallback(
     async (commentId: number) => {
       try {
         await deleteTicketActivity(commentId);
         toastAndNavigate(dispatch, true, "info", "Deleted Successfully");
-        await refetch(); // Refetch comments after successful deletion
+        await refetch();
       } catch (error) {
         toastAndNavigate(dispatch, true, "error", "Error Deleting Comment");
         console.log("Error deleting the comment:", error);
@@ -142,7 +135,6 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
     [deleteTicketActivity, refetch, dispatch, toastAndNavigate]
   );
 
-  // Start editing a comment
   const handleEditComment = useCallback(
     (commentId: number, commentText: string) => {
       setEditingCommentId(commentId);
@@ -151,7 +143,6 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
     []
   );
 
-  // Save edited comment handler, memoized
   const handleSaveEditComment = useCallback(
     async (commentId: number, ticketId: number) => {
       if (!editedComment.trim()) return;
@@ -170,7 +161,7 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
           setEditedComment("");
           setAttachment(null);
           toastAndNavigate(dispatch, true, "info", "Updated Successfully");
-          refetch(); // Refetch comments after successful update
+          refetch();
         }
       } catch (error) {
         toastAndNavigate(dispatch, true, "error", "Error Updating Comment");
@@ -180,13 +171,12 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
     [editedComment, modifyTicketActivity, refetch, dispatch, toastAndNavigate]
   );
 
-  // Cancel editing comment
   const handleCancelEdit = useCallback(() => {
     setEditingCommentId(null);
     setEditedComment("");
   }, []);
 
-  const handleAttachmentChange = (e) => {
+  const handleAttachmentChange = (e: any) => {
     const file = e.target.files[0];
     setAttachment(file);
 
@@ -214,9 +204,9 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
   const paginatedComments =
     comments && comments.data
       ? comments.data.slice(
-          (currentPage - 1) * ITEMS_PER_PAGE,
-          currentPage * ITEMS_PER_PAGE
-        )
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+      )
       : [];
 
   const toggleAttachment = (commentId) => {
@@ -225,7 +215,6 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
       [commentId]: !prev[commentId],
     }));
   };
-  console.log(storedTicketId, comments.data, userData, "comemnts");
 
   return (
     <Box mt={2} mb={2} sx={{ position: "relative" }}>
@@ -433,15 +422,14 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
                               variant="contained"
                               sx={{
                                 textTransform: "none",
-                                fontSize: "0.85rem",
                                 bgcolor: "#9D50BB",
                                 color: "white",
                                 width: isTab
                                   ? "14vw"
                                   : isMobile
-                                  ? "35vw"
-                                  : "9vw",
-                                fontSize: isTab ? "" : isMobile ? ".6rem" : "",
+                                    ? "35vw"
+                                    : "9vw",
+                                fontSize: isTab ? "" : isMobile ? ".6rem" : "0.85rem",
                                 "&:hover": {
                                   bgcolor: "#f06292",
                                   color: "black",
@@ -470,13 +458,13 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
                                   height: isMobile
                                     ? "70vh"
                                     : isTab
-                                    ? "70vh"
-                                    : "100%",
+                                      ? "70vh"
+                                      : "100%",
                                   width: isMobile
                                     ? "95vw"
                                     : isTab
-                                    ? "85vw"
-                                    : "100%",
+                                      ? "85vw"
+                                      : "100%",
                                 }}
                               >
                                 <Box>
@@ -487,19 +475,19 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
                                       height: isMobile
                                         ? "62vh"
                                         : isTab
-                                        ? "65vh"
-                                        : "90vh",
+                                          ? "65vh"
+                                          : "90vh",
                                       width: isMobile
                                         ? "89vw"
                                         : isTab
-                                        ? "78vw"
-                                        : "80vw",
+                                          ? "78vw"
+                                          : "80vw",
                                       borderRadius: "8px",
                                       marginLeft: isMobile
                                         ? ""
                                         : isTab
-                                        ? ""
-                                        : "15vw",
+                                          ? ""
+                                          : "15vw",
                                     }}
                                   />
                                 </Box>

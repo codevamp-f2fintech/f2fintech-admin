@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Formik } from "formik";
 import {
@@ -19,13 +19,8 @@ import Loader from "../../components/common/Loader";
 import Toast from "../../components/common/Toast";
 
 import { Utility } from "@/utils";
-import { useCreateTicket } from "@/hooks/ticket";
-
-// Types
-interface TimeLoggingEstimate {
-  timeSpent: string;
-  originalEstimate: string;
-}
+import { useCreateTicketLog } from "@/hooks/ticketLogs";
+import { TicketDetail } from "./MainPage";
 
 interface CreateTicketResponse {
   statusCode: number;
@@ -35,12 +30,7 @@ interface CreateTicketResponse {
 interface FormComponentProps {
   openDialog: boolean;
   setOpenDialog: (open: boolean) => void;
-  timeLoggingEstimate: TimeLoggingEstimate;
-  setTimeLoggingEstimate: (estimate: TimeLoggingEstimate) => void;
-  progress: number;
-  setProgress: (progress: number) => void;
-  overage: number;
-  setOverage: (overage: number) => void;
+  ticketDetailData: TicketDetail;
 }
 
 interface InitialValues {
@@ -53,51 +43,24 @@ const initialValues: InitialValues = {
   work_description: "",
 };
 
-function parseTimeSpent(timeSpent: string): number {
-  const timeRegex = /(\d+)([hdm])/g;
-  let totalHours = 0;
-  let match;
-
-  while ((match = timeRegex.exec(timeSpent)) !== null) {
-    const [, value, unit] = match;
-    const numericValue = parseInt(value, 10);
-
-    switch (unit) {
-      case "h":
-        totalHours += numericValue;
-        break;
-      case "d":
-        totalHours += numericValue * 8;
-        break;
-      case "m":
-        totalHours += numericValue / 60;
-        break;
-      default:
-        break;
-    }
-  }
-  return totalHours;
-}
-
 const TrackingForm: React.FC<FormComponentProps> = ({
   openDialog,
   setOpenDialog,
-  timeLoggingEstimate,
-  setTimeLoggingEstimate,
-  progress,
-  setProgress,
-  overage,
-  setOverage,
-  ticketId,
+  ticketDetailData,
 }) => {
+  const { decodedToken, parseTimeSpent, toastAndNavigate } = Utility();
   const [loading, setLoading] = useState(false);
-  const maxTime = parseTimeSpent(timeLoggingEstimate?.originalEstimate || "");
-  const existingTimeSpent = parseTimeSpent(
-    timeLoggingEstimate?.timeSpent || ""
-  );
+  // 1. OFFICIAL STATES (values that reflect the server’s “saved” total)
+  const [officialTimeSpent, setOfficialTimeSpent] = useState("");
+  const [officialTimeRemaining, setOfficialTimeRemaining] = useState(ticketDetailData?.originalEstimate);
+  const [officialProgress, setOfficialProgress] = useState(0);
+  const [officialOverage, setOfficialOverage] = useState(0);
 
-  const initialTimeRemaining = Math.max(maxTime - existingTimeSpent, 0);
-  const [timeRemaining, setTimeRemaining] = useState(initialTimeRemaining);
+  // 2. PREVIEW STATES (what user sees/edits in this dialog)
+  const [previewTimeSpent, setPreviewTimeSpent] = useState<string>("");
+  const [previewTimeRemaining, setPreviewTimeRemaining] = useState("");
+  const [previewProgress, setPreviewProgress] = useState(0);
+  const [previewOverage, setPreviewOverage] = useState(0);
 
   const toastInfo = useSelector((state: any) => state.toast);
   const dispatch = useDispatch();
@@ -105,67 +68,106 @@ const TrackingForm: React.FC<FormComponentProps> = ({
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const originalEstimateHours = useMemo(() => parseTimeSpent(ticketDetailData?.originalEstimate), [ticketDetailData?.originalEstimate]);
 
-  const { decodedToken, toastAndNavigate } = Utility();
+  const { createTicketLog } = useCreateTicketLog("create-ticket-log");
 
-  const { createTicket } = useCreateTicket("create-ticket-log");
-
-  const handleDialogClose = () => {
-    setOpenDialog(false);
-  };
-
-  // Convert hours into a "Xd Yh" format
-  const formatTimeInDaysHours = (hours: number): string => {
+  const convertHoursToDaysAndHours = (hours: number): string => {
     const days = Math.floor(hours / 8);
     const remainingHours = hours % 8;
-    return `${days}d${remainingHours > 0 ? ` ${remainingHours}h` : ""}`;
+    return `${days}d ${remainingHours}h`;
   };
 
-  const handleTimeSpentChange = (
+  useEffect(() => {
+    if (openDialog) {
+      setPreviewTimeSpent(officialTimeSpent);
+      setPreviewTimeRemaining(officialTimeRemaining);
+      setPreviewProgress(officialProgress);
+      setPreviewOverage(officialOverage);
+    }
+  }, [
+    openDialog,
+    officialTimeSpent,
+    officialTimeRemaining,
+    officialProgress,
+    officialOverage,
+  ]);
+
+  useEffect(() => {
+    if (ticketDetailData) {
+      const totalHours = ticketDetailData?.ticketLogs.reduce((acc: number, ticket: any) => {
+        return acc + parseTimeSpent(ticket.timeSpent ?? 0);
+      }, 0);
+      const finalTime = convertHoursToDaysAndHours(totalHours);
+      setOfficialTimeSpent(finalTime);
+
+      const calculatedProgress = Math.min((totalHours / originalEstimateHours) * 100, 100);
+      const calculatedOverage = totalHours > originalEstimateHours ? ((totalHours - originalEstimateHours) / originalEstimateHours) * 100 : 0;
+
+      setOfficialTimeRemaining(convertHoursToDaysAndHours(Math.max(originalEstimateHours - totalHours, 0)));
+      setOfficialProgress(calculatedProgress);
+      setOfficialOverage(calculatedOverage);
+    }
+  }, [ticketDetailData, originalEstimateHours]);
+
+  const handleTimeSpentChange = useCallback((
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     handleChange: (event: React.ChangeEvent<any>) => void
   ) => {
     const { value } = event.target;
-    const newTimeSpentInHours = parseTimeSpent(value);
-    const totalTimeSpentInHours = existingTimeSpent + newTimeSpentInHours;
+    const newAdditionalHours = parseTimeSpent(value);
+    const alreadyLoggedHours = parseTimeSpent(officialTimeSpent);
+    const totalTimeSpent = alreadyLoggedHours + newAdditionalHours;
 
-    const remainingTime = Math.max(maxTime - totalTimeSpentInHours, 0);
-    const formattedRemainingTime = formatTimeInDaysHours(remainingTime);
+    const remainingTime = Math.max(originalEstimateHours - totalTimeSpent, 0);
+    const formattedRemainingTime = convertHoursToDaysAndHours(remainingTime);
 
-    setTimeRemaining(formattedRemainingTime);
-    setTimeLoggingEstimate({
-      ...timeLoggingEstimate,
-      timeSpent: formatTimeInDaysHours(totalTimeSpentInHours),
-    });
+    setPreviewTimeRemaining(formattedRemainingTime);
+    setPreviewTimeSpent(convertHoursToDaysAndHours(totalTimeSpent));
 
-    const calculatedProgress = Math.min(
-      (totalTimeSpentInHours / maxTime) * 100,
-      100
-    ); // max 100%
-    const calculatedOverage =
-      totalTimeSpentInHours > maxTime
-        ? ((totalTimeSpentInHours - maxTime) / maxTime) * 100
-        : 0;
+    const calculatedProgress = Math.min((totalTimeSpent / originalEstimateHours) * 100, 100);
+    const calculatedOverage = totalTimeSpent > originalEstimateHours ? ((totalTimeSpent - originalEstimateHours) / originalEstimateHours) * 100 : 0;
 
-    setProgress(calculatedProgress); // Update blue bar
-    setOverage(calculatedOverage); // Update orange bar
+    setPreviewProgress(calculatedProgress);
+    setPreviewOverage(calculatedOverage);
     handleChange(event);
-  };
+  },
+    [originalEstimateHours, officialTimeSpent]
+  );
+
+  const handleDialogClose = useCallback(() => {
+    setPreviewTimeSpent(officialTimeSpent);
+    setPreviewTimeRemaining(officialTimeRemaining);
+    setPreviewProgress(officialProgress);
+    setPreviewOverage(officialOverage);
+    setOpenDialog(false);
+  }, [
+    officialTimeSpent,
+    officialTimeRemaining,
+    officialProgress,
+    officialOverage,
+    setOpenDialog
+  ]);
 
   const createTracking = useCallback(
     async (values: InitialValues) => {
       setLoading(true);
       const data = {
-        ticket_id: parseInt(ticketId),
+        ticket_id: parseInt(ticketDetailData?.ticketId),
         user_id: decodedToken()?.id,
         ...values,
       };
       if (data) {
         try {
-          const createdResponse: CreateTicketResponse = await createTicket(
+          const createdResponse: CreateTicketResponse = await createTicketLog(
             data
           );
+          console.log(createdResponse, 'resp')
           if (createdResponse?.statusCode === 200) {
+            setOfficialTimeSpent(previewTimeSpent);
+            setOfficialTimeRemaining(previewTimeRemaining);
+            setOfficialProgress(previewProgress);
+            setOfficialOverage(previewOverage);
             setLoading(false);
             toastAndNavigate(
               dispatch,
@@ -193,7 +195,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [ticketId]
+    [ticketDetailData?.ticketId]
   );
 
   return (
@@ -232,11 +234,16 @@ const TrackingForm: React.FC<FormComponentProps> = ({
           marginTop={isMobile ? "2vh" : isTab ? "5vh" : "10px"}
           marginBottom={isMobile ? "1vh" : isTab ? "3vh" : ""}
         >
-          Time tracking
+          Time Tracking
         </Typography>
         <Formik
           initialValues={initialValues}
-          onSubmit={(values) => createTracking(values)}
+          enableReinitialize
+          onSubmit={(values, { resetForm }) => {
+            createTracking(values);
+            resetForm();
+            handleDialogClose();
+          }}
         >
           {({
             values,
@@ -247,6 +254,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
             handleBlur,
             handleChange,
             handleSubmit,
+            resetForm
           }) => (
             <form onSubmit={handleSubmit}>
               <Box
@@ -262,10 +270,10 @@ const TrackingForm: React.FC<FormComponentProps> = ({
                     display: "flex",
                   }}
                 >
-                  {/* Blue Progress (within estimate) */}
+                  {/* Blue Progress (within estimate preview) */}
                   <LinearProgress
                     variant="determinate"
-                    value={progress > 100 ? 100 : progress} // Cap progress at 100%
+                    value={previewProgress > 100 ? 100 : previewProgress} // Cap progress at 100%
                     sx={{
                       height: 8,
                       borderRadius: 2,
@@ -279,7 +287,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
                     }}
                   />
                   {/* Orange Progress (exceeds estimate) */}
-                  {overage > 0 && (
+                  {previewOverage > 0 && (
                     <Box
                       sx={{
                         position: "absolute",
@@ -295,7 +303,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
                         sx={{
                           height: 8,
                           borderRadius: 2,
-                          width: `${100 - overage}%`, // Reduce green width based on overage
+                          width: `${100 - previewOverage}%`, // Reduce green width based on overage
                           backgroundColor: "#36B37E",
                         }}
                       />
@@ -304,7 +312,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
                         sx={{
                           height: 8,
                           borderRadius: 2,
-                          width: `${overage}%`, // #FFAB00 width is the overage percentage
+                          width: `${previewOverage}%`, // #FFAB00 width is the overage percentage
                           backgroundColor: "#FFAB00",
                         }}
                       />
@@ -314,32 +322,20 @@ const TrackingForm: React.FC<FormComponentProps> = ({
 
                 {/* Original estimate info */}
                 <Box display="flex" flexDirection="column" mt={2} ml={2}>
-                  <Typography
-                    variant="body2"
-                    color="textSecondary"
-                    fontSize={isMobile ? "" : isTab ? "1rem" : ""}
-                  >
-                    {timeLoggingEstimate.timeSpent
-                      ? `${timeLoggingEstimate.timeSpent} logged`
-                      : values.time_spent
-                      ? `${values.time_spent} logged`
-                      : null}
+                  <Typography variant="body2" color="textSecondary" fontSize={isMobile ? "0.8rem" : "1rem"}>
+                    {previewTimeSpent && previewTimeSpent !== "0d 0h"
+                      ? `${previewTimeSpent} logged`
+                      : "No time logged"}
                   </Typography>
-                  <Box display="flex" flexDirection="row">
-                    <Typography
-                      variant="body2"
-                      color="textSecondary"
-                      fontSize={isMobile ? "" : isTab ? ".9rem" : ""}
-                    >
+                  <Box display="flex" alignItems="center" mt={1}>
+                    <Typography variant="body2" color="textSecondary" fontSize={isMobile ? "0.8rem" : "0.9rem"}>
                       The original estimate for this issue was
                     </Typography>
                     <Typography variant="body2" color="primary" ml={1}>
-                      {timeLoggingEstimate.originalEstimate}
+                      {ticketDetailData?.originalEstimate}
                     </Typography>
                     <Tooltip title="Estimated time to complete this issue">
-                      <InfoIcon
-                        sx={{ ml: 1, fontSize: 16, cursor: "pointer" }}
-                      />
+                      <InfoIcon sx={{ ml: 1, fontSize: 16, cursor: "pointer" }} />
                     </Tooltip>
                   </Box>
                 </Box>
@@ -359,6 +355,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
                     variant="filled"
                     type="text"
                     name="time_spent"
+                    placeholder="Use the format: 1d 6h 45m"
                     label="Time Spent"
                     onBlur={handleBlur}
                     onChange={(e) => handleTimeSpentChange(e, handleChange)}
@@ -372,7 +369,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
                     variant="filled"
                     label="Time Remaining"
                     disabled
-                    value={timeRemaining}
+                    value={previewTimeRemaining}
                     fullWidth
                   />
 
@@ -409,7 +406,10 @@ const TrackingForm: React.FC<FormComponentProps> = ({
                   color="error"
                   variant="outlined"
                   sx={{ mr: 3 }}
-                  onClick={handleDialogClose}
+                  onClick={() => {
+                    resetForm();
+                    handleDialogClose();
+                  }}
                 >
                   Cancel
                 </Button>
