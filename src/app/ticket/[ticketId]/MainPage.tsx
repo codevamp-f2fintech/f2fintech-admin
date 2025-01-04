@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
@@ -37,16 +37,16 @@ import UserAutocomplete from "../../components/common/UserAutocomplete";
 
 import type { AppDispatch, RootState } from "@/redux/store";
 import { useMode, ColorModeContext } from "../../../../theme";
-import {
-  useCreateTicketHistory,
-  useGetTicketHistory,
-} from "@/hooks/tickethistory";
+import { useCreateTicketHistory } from "@/hooks/tickethistory";
 import { useModifyTicket } from "@/hooks/ticket";
 import { useGetUsers } from "@/hooks/user";
 import { Utility } from "@/utils";
 
 import { User } from "@/types/user";
 import { fetcher } from "@/apis/apiClient";
+import { useGetTicketLogs } from "@/hooks/ticketLogs";
+import useIntersectionObserver from "@/hooks/IntersectionObserver";
+import { TicketLogs } from "@/types/ticketLogs";
 
 const employeeStatusObj = [
   { value: "under credit review", label: "Under Credit Review" },
@@ -62,9 +62,11 @@ const employeeStatusObj = [
 
 export interface TicketDetail {
   ticketId: number | string;
+  userId: number | string;
   employeeStatus: string;
   voiceNoteUrl: string;
   forwardedTo: number | string;
+  isForwarded: number | null;
   originalEstimate: string;
   applicationAmount: string | number;
   applicationTenure: number | string;
@@ -78,19 +80,6 @@ export interface TicketDetail {
   customerDesignation: string;
   customerLocation: string;
   loanStatus: string;
-  ticketActivities: {
-    id: number;
-    userId: number;
-    comment: string;
-    createdAt: Date;
-  }[];
-  ticketLogs: {
-    id: number;
-    userId: number;
-    timeSpent: string;
-    workDescription: string;
-    createdAt: Date;
-  }[];
 }
 
 interface TicketDetailResponse {
@@ -98,9 +87,11 @@ interface TicketDetailResponse {
   message: string | "Ticket with Details retrieved successfully";
   data: {
     ticketId: number | string;
+    userId: number | string;
     employeeStatus: string;
     voiceNoteUrl: string;
     forwardedTo: number | string;
+    isForwarded: number | null;
     originalEstimate: string;
     applicationAmount: string | number;
     applicationTenure: number | string;
@@ -114,19 +105,6 @@ interface TicketDetailResponse {
     customerDesignation: string;
     customerLocation: string;
     loanStatus: string;
-    ticketActivities: {
-      id: number;
-      userId: number;
-      comment: string;
-      createdAt: Date;
-    }[];
-    ticketLogs: {
-      id: number;
-      userId: number;
-      timeSpent: string;
-      workDescription: string;
-      createdAt: Date;
-    }[];
   };
 }
 
@@ -135,7 +113,7 @@ const Progress: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [openDialog, setOpenDialog] = useState<boolean>(false);
   const [activeSection, setActiveSection] = useState<string>("Comments");
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState<User>();
   const [theme, colorMode] = useMode();
 
   const [progress, setProgress] = useState(0); // State to store progress percentage
@@ -147,6 +125,9 @@ const Progress: React.FC = () => {
     timeSpent: '0',
   });
   const { toast } = useSelector((state: RootState) => state.toast);
+  const [hasFetched, setHasFetched] = useState(false);   // New state to track if data is already fetched
+  const workLogRef = useRef(null);
+  const isVisible = useIntersectionObserver(workLogRef);
 
   const dispatch: AppDispatch = useDispatch();
   const params = useParams();
@@ -161,61 +142,20 @@ const Progress: React.FC = () => {
     toastAndNavigate,
   } = Utility();
 
-  const { value: ticketHistory, refetch } = useGetTicketHistory(
-    [],
-    `get-ticket-histories/${ticketId}`
-  );
-
-  const { createTicketHistory } = useCreateTicketHistory(
-    "create-ticket-history"
-  );
-
+  const { createTicketHistory } = useCreateTicketHistory("create-ticket-history");
   const { modifyTicket } = useModifyTicket("update-ticket");
   const { value: userData } = useGetUsers({} as User, "get-users", 1, 100);
+  const { value: workLog, refetch } = useGetTicketLogs(
+    {} as TicketLogs,
+    hasFetched ? `get-ticket-logs/${ticketId}` : ''
+  );
 
-  // useEffect(() => {
-  //   if (ticketId) {
-  //     setLoading(true);
-  //     const fetchTicketDetails = async () => {
-  //       try {
-  //         // First API call
-  //         const ticketDetailsPromise = fetcher(`get-ticket-with-detail/${ticketId}`);
-
-  //         // Second API call
-  //         const anotherAPICallPromise = fetcher(`get-ticket-histories/${ticketId}`);
-
-  //         // Execute both calls in parallel
-  //         const [ticketDetailsResponse, anotherAPIResponse] = await Promise.all([
-  //           ticketDetailsPromise,
-  //           anotherAPICallPromise,
-  //         ]);
-
-  //         // Handle responses
-  //         if (ticketDetailsResponse.statusCode === 200) {
-  //           setTicketDetailData(ticketDetailsResponse.data);
-  //           setTimeLoggingEstimate({
-  //             ...timeLoggingEstimate,
-  //             originalEstimate: ticketDetailsResponse.data.originalEstimate,
-  //           });
-  //           setNewLoanStatus(ticketDetailsResponse.data.loanStatus);
-  //           setNewEmployeeStatus(ticketDetailsResponse.data.employeeStatus);
-  //         }
-
-  //         if (anotherAPIResponse.statusCode === 200) {
-  //           // Handle the response of the second API call
-  //           console.log("Second API call data:", anotherAPIResponse.data);
-  //         }
-
-  //         setLoading(false);
-  //       } catch (error) {
-  //         setLoading(false);
-  //         console.log("Error fetching data:", error);
-  //       }
-  //     };
-
-  //     fetchTicketDetails();
-  //   }
-  // }, [ticketId]);
+  useEffect(() => {
+    if (isVisible && !hasFetched) {
+      refetch();
+      setHasFetched(true);
+    }
+  }, [isVisible, hasFetched]);
 
   useEffect(() => {
     if (ticketId) {
@@ -245,10 +185,10 @@ const Progress: React.FC = () => {
   }, [ticketId]);
 
   useEffect(() => {
-    if (ticketDetailData) {
-      const totalHours = ticketDetailData.ticketLogs.reduce(
+    if (workLog?.data) {
+      const totalHours = workLog?.data?.reduce(
         (acc: number, ticket: any) => {
-          return acc + parseTimeSpent(ticket.timeSpent ?? 0);
+          return acc + parseTimeSpent(ticket.time_spent ?? 0);
         }, 0);
 
       const finalTime = convertHoursToDaysAndHours(totalHours);
@@ -274,8 +214,7 @@ const Progress: React.FC = () => {
         setOverage(calculatedOverage);
       }
     }
-  }, [ticketDetailData?.ticketLogs, timeLoggingEstimate.originalEstimate]);
-
+  }, [workLog?.data, timeLoggingEstimate.originalEstimate]);
 
   const handleChangeLoanStatus = async (event: any) => {
     const oldStatus = newLoanStatus;
@@ -485,8 +424,7 @@ const Progress: React.FC = () => {
                         borderRadius: "4px",
                         marginLeft: "10px",
                         padding: "6px",
-                        cursor: "pointer",
-                        color: "black",
+                        cursor: "pointer"
                       }}
                       onClick={showHistory}
                     >
@@ -494,6 +432,7 @@ const Progress: React.FC = () => {
                     </Typography>
                     <Typography
                       component="span"
+                      ref={workLogRef}
                       sx={{
                         backgroundColor:
                           activeSection === "WorkLog" ? "#f06292" : "white",
@@ -518,21 +457,20 @@ const Progress: React.FC = () => {
 
                 {activeSection === "Comments" && (
                   <Comments
-                    storedTicketId={ticketDetailData?.ticketId}
-                    theme={theme}
+                    storedTicketId={ticketId}
                     userData={userData}
                   />
                 )}
 
                 {/* History Section */}
                 {activeSection === "History" && (
-                  <History ticketHistory={ticketHistory?.data} />
+                  <History ticketId={ticketId} activeSection={activeSection} />
                 )}
 
                 {activeSection === "WorkLog" && (
                   <WorkLogList
-                    workLog={ticketDetailData?.ticketLogs}
                     userData={userData}
+                    workLog={workLog?.data}
                   />
                 )}
               </Paper>
@@ -582,7 +520,9 @@ const Progress: React.FC = () => {
                     setSelectedUser={setSelectedUser}
                     handleForwardAutocomplete={handleForwardAutocomplete}
                     userData={userData}
-                    ticketId={ticketDetailData?.ticketId}
+                    ticketId={ticketId}
+                    userId={ticketDetailData?.userId}
+                    isForwarded={ticketDetailData?.isForwarded}
                   />
                 )}
                 <Divider sx={{ my: 1 }} />
@@ -829,7 +769,8 @@ const Progress: React.FC = () => {
         <TrackingForm
           openDialog={openDialog}
           setOpenDialog={setOpenDialog}
-          ticketDetailData={ticketDetailData}
+          ticketDetailData={workLog?.data}
+          originalEstimate={ticketDetailData?.originalEstimate}
         />
         <Toast
           alerting={toast.toastAlert}

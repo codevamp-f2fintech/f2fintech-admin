@@ -1,51 +1,48 @@
 import { useEffect, useState } from "react";
 import { Autocomplete, Box, TextField } from "@mui/material";
 
-import { fetcher } from "@/apis/apiClient";
-import { Utility } from "@/utils";
-import { UserData } from "@/types/user";
+import { User, UserData } from "@/types/user";
 
 interface UserAutocompleteProps {
   isMobile: boolean;
   isTab: boolean;
   newEmployeeStatus: string;
+  userData: User;
   selectedUser: UserData | null;
-  userData: object;
   setSelectedUser: (user: UserData | null) => void;
   handleForwardAutocomplete: (value: UserData | null) => void;
   ticketId: string | number;
+  userId: string | number;
+  isForwarded: number | null;
 }
 
 const UserAutocomplete: React.FC<UserAutocompleteProps> = ({
   isMobile,
   isTab,
   newEmployeeStatus,
+  userData,
   selectedUser,
   setSelectedUser,
   handleForwardAutocomplete,
-  userData,
   ticketId,
+  userId,
+  isForwarded
 }) => {
   const [allUsers, setAllUsers] = useState<UserData[]>([]);
-  const { getLocalStorage } = Utility();
 
   useEffect(() => {
-    if (userData?.results) {
-      setAllUsers(userData.results);
-      const fetchTicket = async () => {
-        try {
-          const response = await fetcher(`get-ticket/${ticketId}`);
-          const selectedUserObj = userData?.results?.find(
-            (user) => user.id == response?.data?.user_id
-          );
-          setSelectedUser(selectedUserObj || []);
-        } catch (error) {
-          console.error("Error fetching users:", error);
-        }
-      };
-      fetchTicket();
-    }
-  }, [userData?.results, ticketId]);
+    if (userData?.data?.results) {
+      setAllUsers(userData?.data.results);
+      try {
+        const selectedUserObj = userData?.data?.results?.find(
+          (user) => user.id == userId
+        );
+        setSelectedUser(selectedUserObj || []);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+  }, [userData?.data?.results, ticketId]);
 
   return (
     <Box

@@ -31,7 +31,7 @@ import type { SxProps } from "@mui/material/styles";
 import { Utility } from "@/utils";
 import { ArrowRightIcon } from "@mui/x-date-pickers";
 import { useRouter } from "next/navigation";
-import { User } from "@/types/user";
+import { User, UserData } from "@/types/user";
 
 export interface LatestUsersProps {
   sx?: SxProps;
@@ -44,38 +44,30 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
     1,
     6
   );
-  const { value: tickets } = useGetTickets([], `get-all-tickets`);
-  const [searchQuery, setSearchQuery] = React.useState("");
-  const { capitalizeFirstLetter } = Utility();
+  const { value: tickets, swrLoading: ticketsLoading } = useGetTickets(`get-all-tickets`, 1, 500);
+
   const router = useRouter();
+  const { capitalizeFirstLetter } = Utility();
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
-  const getTicketCounts = (userId: string) => {
-    if (!tickets?.data) return { open: 0, inProgress: 0, done: 0 };
-
-    const userTickets = tickets.data.filter(
-      (ticket) => ticket.user_id === userId
+  const getTicketCounts = (userId: string | number) => {
+    if (!tickets?.results) return { open: 0, inProgress: 0, done: 0 };
+    const userTickets = tickets.results.filter(
+      (ticket) => ticket.user_id == userId
     );
-
     return {
       open: userTickets.filter(
-        (ticket) => ticket.status.toLowerCase() === "relook"
+        (ticket) => ticket.ticketStatus.toLowerCase() === "relook"
       ).length,
       inProgress: userTickets.filter(
-        (ticket) => ticket.status.toLowerCase() === "to be login"
+        (ticket) => ticket.ticketStatus.toLowerCase() === "to be login"
       ).length,
       done: userTickets.filter(
-        (ticket) => ticket.status.toLowerCase() === "to be disbursed"
+        (ticket) => ticket.ticketStatus.toLowerCase() === "to be disbursed"
       ).length,
     };
   };
-
-  const filteredUsers = users?.results
-    ?.filter((user) =>
-      user.username.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    .slice(0, 6); // Take only the 6 latest users
 
   const handleViewAllClick = () => {
     router.push("/users");
@@ -123,13 +115,13 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
             sx={{
               minHeight: "auto",
               maxHeight:
-                filteredUsers?.length <= 1
+                users?.data?.results?.length <= 1
                   ? "fit-content"
                   : isMobile
-                  ? "85vh"
-                  : isTab
-                  ? "100vh"
-                  : "103vh",
+                    ? "85vh"
+                    : isTab
+                      ? "100vh"
+                      : "103vh",
             }}
           >
             <TableHead
@@ -139,27 +131,27 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
             >
               <TableRow sx={{ bgcolor: "grey.50" }}>
                 <TableCell>Sr.</TableCell>
-                <TableCell>User Name</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell align="center">Open Tickets</TableCell>
+                <TableCell align="center">Username</TableCell>
+                <TableCell align="center">Email</TableCell>
+                <TableCell align="center">Relook</TableCell>
                 <TableCell align="center">In Progress</TableCell>
-                <TableCell align="center">Done Tickets</TableCell>
-                <TableCell sortDirection="desc">Date</TableCell>
+                <TableCell align="center">Disbursed</TableCell>
+                <TableCell sortDirection="desc">Joined On</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {!filteredUsers?.length || usersLoading ? (
+              {usersLoading || ticketsLoading ? (
                 <TableRow>
                   <TableCell
                     colSpan={6}
                     align="center"
                     sx={{ height: isTab ? "34.5vh" : "90vh" }}
                   >
-                    No users found
+                    No Users Found
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredUsers.map((agent, index) => {
+                users.data.results.map((agent: UserData, index: number) => {
                   const { open, inProgress, done } = getTicketCounts(agent.id);
 
                   return (

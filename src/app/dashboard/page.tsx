@@ -131,7 +131,7 @@ export default async function Page(): Promise<React.JSX.Element> {
   const userToken = cookieStore.get("token");
   const { id, role } = decodedToken(userToken?.value);
 
-  console.log("role=>", id, role);
+  console.log("id role=>", id, role);
 
   const [
     totalApplications,
@@ -267,7 +267,6 @@ export default async function Page(): Promise<React.JSX.Element> {
         ]
       : []),
   ];
-  console.log(role, "role in dashbpard");
   console.log(
     totalTickets,
     totalUnderCreditReview,

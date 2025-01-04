@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 /* eslint-disable react-hooks/exhaustive-deps */
 import axios from "axios";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import {
@@ -27,26 +27,31 @@ import {
   useCreateTicketActivity,
   useModifyTicketActivity,
 } from "@/hooks/ticketActivities";
+import useIntersectionObserver from "@/hooks/IntersectionObserver";
+import { TicketActivities } from "@/types/ticketActivities";
+import { User } from "@/types/user";
 
 const ITEMS_PER_PAGE = 3;
 
 interface CommentsProps {
   storedTicketId: number;
-  theme: any;
-  userData: object;
+  userData: User;
 }
 
-const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
+const Comments = ({ storedTicketId, userData }: CommentsProps) => {
   const [newComment, setNewComment] = useState<string>("");
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
-  const [editedComment, setEditedComment] = useState<string>("");
+  const [editedComment, setEditedComment] = useState<string | undefined>("");
   const [attachment, setAttachment] = useState<string | null>(null);
   const [attachmentPreview, setAttachmentPreview] = useState<string | null>(
     null
   );
   const { toast } = useSelector((state: RootState) => state.toast);
-  const [currentPage, setCurrentPage] = useState(1); // Current page for pagination
+  const [currentPage, setCurrentPage] = useState(1);    // Current page for pagination
   const [showAttachment, setShowAttachment] = useState({});
+  const [hasFetched, setHasFetched] = useState(false);   // New state to track if data is already fetched
+  const commentRef = useRef(null);
+  const isVisible = useIntersectionObserver(commentRef);
 
   const dispatch: AppDispatch = useDispatch();
   const { capitalizeFirstLetter, decodedToken, toastAndNavigate } = Utility();
@@ -54,8 +59,8 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
   const { value: comments, refetch } = useGetTicketActivities(
-    [],
-    `get-all-ticket-activities/${storedTicketId}`
+    {} as TicketActivities,
+    hasFetched ? `get-ticket-activities/${storedTicketId}` : ''
   );
 
   const { createTicketActivity } = useCreateTicketActivity(
@@ -67,6 +72,13 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
   const { modifyTicketActivity } = useModifyTicketActivity(
     "update-ticket-activity"
   );
+
+  useEffect(() => {
+    if (isVisible && !hasFetched) {
+      refetch();
+      setHasFetched(true);
+    }
+  }, [isVisible, hasFetched]);
 
   const handleCreateComment = useCallback(async () => {
     if (!newComment.trim()) return; // Don't allow empty comments
@@ -209,7 +221,7 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
       )
       : [];
 
-  const toggleAttachment = (commentId) => {
+  const toggleAttachment = (commentId: any) => {
     setShowAttachment((prev) => ({
       ...prev,
       [commentId]: !prev[commentId],
@@ -217,7 +229,7 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
   };
 
   return (
-    <Box mt={2} mb={2} sx={{ position: "relative" }}>
+    <Box mt={2} mb={2} sx={{ position: "relative" }} ref={commentRef}>
       <Box
         sx={{
           position: "relative",
@@ -309,8 +321,8 @@ const Comments = ({ storedTicketId, theme, userData }: CommentsProps) => {
 
       <Box mt={3}>
         {paginatedComments.length > 0 ? (
-          paginatedComments.map((comment) => {
-            const commentedBy = userData?.results.find(
+          paginatedComments.map((comment: any) => {
+            const commentedBy = userData?.data?.results?.find(
               (user) => user.id == comment.user_id
             );
             return (

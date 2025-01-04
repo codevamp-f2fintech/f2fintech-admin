@@ -6,7 +6,7 @@ import { User } from "@/types/user";
 
 const url = `${process.env.NEXT_PUBLIC_API_URL}/get-users`;
 const PAGE = 1;
-const LIMIT = 1000;
+const LIMIT = 500;
 
 // Metadata to show in head tag.
 export const metadata: Metadata = {

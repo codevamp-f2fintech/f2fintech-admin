@@ -2,21 +2,34 @@ import React from "react";
 import { Box, Divider, Typography, useMediaQuery } from "@mui/material";
 import { Bolt as BoltIcon } from "@mui/icons-material";
 import { format, formatDistanceToNow } from "date-fns";
+
+import { TicketHistory } from "@/types/tickethistory";
 import { Utility } from "@/utils";
+import { useGetTicketHistory } from "@/hooks/tickethistory";
 
 interface HistoryProps {
-  ticketHistory: Array<{
-    id: number;
-    ticket_id: number;
-    action: string;
-    created_at: string;
-  }>;
+  ticketId: string | string[];
+  activeSection: string;
 }
 
-const History: React.FC<HistoryProps> = ({ ticketHistory }) => {
+const History: React.FC<HistoryProps> = ({ ticketId, activeSection }) => {
+  const [hasFetched, setHasFetched] = React.useState(false);
   const { capitalizeFirstLetter } = Utility();
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+
+  const { value: ticketHistory, refetch } = useGetTicketHistory(
+    {} as TicketHistory,
+    hasFetched ? `get-ticket-histories/${ticketId}` : ''
+  );
+
+  React.useEffect(() => {
+    if (activeSection === "History" && !hasFetched) {
+      refetch();
+      setHasFetched(true);
+    }
+  }, [activeSection, hasFetched, refetch]);
+
   return (
     <Box
       sx={{
@@ -29,8 +42,8 @@ const History: React.FC<HistoryProps> = ({ ticketHistory }) => {
         },
       }}
     >
-      {ticketHistory.length ? (
-        ticketHistory.map((history) => {
+      {ticketHistory?.data?.length ? (
+        ticketHistory.data.map((history) => {
           const dateObj = new Date(history.created_at);
           const capitalizedAction = capitalizeFirstLetter(
             history.action.replace(/<\/?[^>]+(>|$)/g, "")
@@ -83,7 +96,7 @@ const History: React.FC<HistoryProps> = ({ ticketHistory }) => {
             color: "white",
           }}
         >
-          No history
+          No Ticket History Available
         </Typography>
       )}
     </Box>

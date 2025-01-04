@@ -30,7 +30,8 @@ interface CreateTicketResponse {
 interface FormComponentProps {
   openDialog: boolean;
   setOpenDialog: (open: boolean) => void;
-  ticketDetailData: TicketDetail;
+  ticketDetailData: any;
+  originalEstimate: string | undefined;
 }
 
 interface InitialValues {
@@ -47,18 +48,19 @@ const TrackingForm: React.FC<FormComponentProps> = ({
   openDialog,
   setOpenDialog,
   ticketDetailData,
+  originalEstimate
 }) => {
   const { decodedToken, parseTimeSpent, toastAndNavigate } = Utility();
   const [loading, setLoading] = useState(false);
   // 1. OFFICIAL STATES (values that reflect the server’s “saved” total)
   const [officialTimeSpent, setOfficialTimeSpent] = useState("");
-  const [officialTimeRemaining, setOfficialTimeRemaining] = useState(ticketDetailData?.originalEstimate);
+  const [officialTimeRemaining, setOfficialTimeRemaining] = useState(originalEstimate);
   const [officialProgress, setOfficialProgress] = useState(0);
   const [officialOverage, setOfficialOverage] = useState(0);
 
   // 2. PREVIEW STATES (what user sees/edits in this dialog)
   const [previewTimeSpent, setPreviewTimeSpent] = useState<string>("");
-  const [previewTimeRemaining, setPreviewTimeRemaining] = useState("");
+  const [previewTimeRemaining, setPreviewTimeRemaining] = useState<string | undefined>("");
   const [previewProgress, setPreviewProgress] = useState(0);
   const [previewOverage, setPreviewOverage] = useState(0);
 
@@ -68,7 +70,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
-  const originalEstimateHours = useMemo(() => parseTimeSpent(ticketDetailData?.originalEstimate), [ticketDetailData?.originalEstimate]);
+  const originalEstimateHours = useMemo(() => parseTimeSpent(originalEstimate), [originalEstimate]);
 
   const { createTicketLog } = useCreateTicketLog("create-ticket-log");
 
@@ -95,8 +97,8 @@ const TrackingForm: React.FC<FormComponentProps> = ({
 
   useEffect(() => {
     if (ticketDetailData) {
-      const totalHours = ticketDetailData?.ticketLogs.reduce((acc: number, ticket: any) => {
-        return acc + parseTimeSpent(ticket.timeSpent ?? 0);
+      const totalHours = ticketDetailData.reduce((acc: number, ticket: any) => {
+        return acc + parseTimeSpent(ticket.time_spent ?? 0);
       }, 0);
       const finalTime = convertHoursToDaysAndHours(totalHours);
       setOfficialTimeSpent(finalTime);
@@ -153,7 +155,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
     async (values: InitialValues) => {
       setLoading(true);
       const data = {
-        ticket_id: parseInt(ticketDetailData?.ticketId),
+        ticket_id: parseInt(ticketDetailData?.ticket_id),
         user_id: decodedToken()?.id,
         ...values,
       };
@@ -195,7 +197,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [ticketDetailData?.ticketId]
+    [ticketDetailData?.ticket_id]
   );
 
   return (
@@ -332,7 +334,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
                       The original estimate for this issue was
                     </Typography>
                     <Typography variant="body2" color="primary" ml={1}>
-                      {ticketDetailData?.originalEstimate}
+                      {originalEstimate}
                     </Typography>
                     <Tooltip title="Estimated time to complete this issue">
                       <InfoIcon sx={{ ml: 1, fontSize: 16, cursor: "pointer" }} />

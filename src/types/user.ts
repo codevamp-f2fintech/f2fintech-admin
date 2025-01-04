@@ -12,8 +12,12 @@ export interface UserData {
 }
 
 export interface User {
-  results: UserData[];
-  count: number;
-  pages: number;
+  statusCode: number;
+  message: string;
+  data: {
+    results: UserData[];
+    count: number;
+    pages: number;
+  };
   errorMessage?: string;
 }

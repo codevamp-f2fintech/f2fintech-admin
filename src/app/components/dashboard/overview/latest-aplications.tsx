@@ -43,7 +43,7 @@ export function LatestApplications({
   sx,
 }: LatestApplicationsProps): React.JSX.Element {
   const [paginationLoading, setPaginationLoading] = useState<boolean>(false);
-  const [applications, setApplications] = useState<CustomerApplicationData>([]);
+  const [applications, setApplications] = useState<CustomerApplicationData | []>([]);
   const router = useRouter();
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
@@ -62,8 +62,6 @@ export function LatestApplications({
       setApplications([]);
     }
   }, [data?.results, getApplicationsError]);
-
-  console.log("applications>>>", applications);
 
   const handleViewAllClick = () => {
     router.push("/");
@@ -114,10 +112,10 @@ export function LatestApplications({
                 applications?.length <= 1
                   ? "fit-content"
                   : isMobile
-                  ? "85vh"
-                  : isTab
-                  ? "100vh"
-                  : "103vh",
+                    ? "85vh"
+                    : isTab
+                      ? "100vh"
+                      : "103vh",
             }}
           >
             <TableHead
@@ -127,8 +125,8 @@ export function LatestApplications({
             >
               <TableRow sx={{ bgcolor: "grey.50" }}>
                 <TableCell>Sr.</TableCell>
-                <TableCell>Name</TableCell>
-                <TableCell>Amount</TableCell>
+                <TableCell align="center">Name</TableCell>
+                <TableCell align="center">Amount</TableCell>
                 <TableCell>Application Date</TableCell>
               </TableRow>
             </TableHead>
@@ -148,7 +146,7 @@ export function LatestApplications({
                   </TableCell>
                 </TableRow>
               ) : (
-                applications.map((application, index) => (
+                applications.map((application: CustomerApplicationData, index: number) => (
                   <TableRow
                     key={application.applicationId}
                     sx={{

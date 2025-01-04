@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import _ from 'lodash';
 import {
   Paper,
   Box,
@@ -27,7 +28,7 @@ import {
   ReportRounded,
   VisibilityRounded,
 } from "@mui/icons-material";
-import dayjs, { Dayjs } from "dayjs";
+import dayjs from "dayjs";
 
 import DateRangeModal from "./DateRangeModal";
 import { User } from "@/types/user";
@@ -36,13 +37,13 @@ interface FilterPanelProps {
   searchLabel: string;
   sortBy: string;
   filter: string;
-  startDate: Dayjs | null;
-  endDate: Dayjs | null;
+  startDate: string | null;
+  endDate: string | null;
   selectedUser: User | null;
   setSelectedUser: React.Dispatch<React.SetStateAction<User | null>>;
   setFilter: React.Dispatch<React.SetStateAction<string>>;
-  setStartDate: React.Dispatch<React.SetStateAction<Dayjs | null>>;
-  setEndDate: React.Dispatch<React.SetStateAction<Dayjs | null>>;
+  setStartDate: React.Dispatch<React.SetStateAction<string | null>>;
+  setEndDate: React.Dispatch<React.SetStateAction<string | null>>;
   userData: { data: User | null };
   userRole: string;
   handleSortChange: (event: string | null) => void;
@@ -69,7 +70,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [userAnchorEl, setUserAnchorEl] = useState<null | HTMLElement>(null);
-  const [dateModalOpen, setDateModalOpen] = useState(false); // State to control modal
+  const [dateModalOpen, setDateModalOpen] = useState<boolean>(false); // State to control modal
+  const [tempInputValue, setTempInputValue] = useState<string>(filter); // Temporary input value
 
   const getStatusColor = (status: string): string => {
     const colors: { [key: string]: string } = {
@@ -105,6 +107,38 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     return icons[status] || icons.all;
   };
 
+  const debouncedSearch = useCallback(
+    _.debounce((value: string) => {
+      setFilter(value);
+      handleFilterChange({ name: value, page: 1 });
+    }, 800),
+    []
+  );
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setTempInputValue(value);
+    debouncedSearch(value);
+  };
+
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [debouncedSearch]);
+
+  // Handle the status change
+  const handleStatusChange = (status: string) => {
+    handleSortChange(status); // Update the status in parent component
+    handleFilterChange({ status, page: 1 }); // Reset page to 1 and update filter
+  };
+
+  // Handle the user change
+  const handleUserChange = (user: User) => {
+    setSelectedUser(user); // Update selected user
+    handleFilterChange({ user, page: 1 }); // Reset page to 1 and update user filter
+  };
+
   // Handler for opening the modal
   const handleDateModalOpen = () => setDateModalOpen(true);
 
@@ -123,23 +157,13 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     }
   };
 
-  // Handle the status change
-  const handleStatusChange = (status: string) => {
-    handleSortChange(status); // Update the status in parent component
-    handleFilterChange({ status, page: 1 }); // Reset page to 1 and update filter
-  };
-
-  // Handle the user change
-  const handleUserChange = (user: User) => {
-    setSelectedUser(user); // Update selected user
-    handleFilterChange({ user, page: 1 }); // Reset page to 1 and update user filter
-  };
-
   // Handle the date range change
-  const handleDateRangeChange = (start: Dayjs | null, end: Dayjs | null) => {
-    setStartDate(start);
-    setEndDate(end);
-    handleFilterChange({ startDate: start, endDate: end, page: 1 }); // Reset page to 1 and update date range
+  const handleDateModalApply = (start: string | null, end: string | null) => {
+    const formattedStart = start ? dayjs(start).format('YYYY-MM-DD HH:mm:ss') : null;
+    const formattedEnd = end ? dayjs(end).format('YYYY-MM-DD HH:mm:ss') : null;
+    setStartDate(formattedStart);
+    setEndDate(formattedEnd);
+    handleFilterChange({ startDate: formattedStart, endDate: formattedEnd, page: 1 }); // Reset page to 1 and update date range
   };
 
   return (
@@ -161,8 +185,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         <TextField
           size="small"
           placeholder={searchLabel}
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
+          value={tempInputValue}
+          onChange={handleInputChange}
           sx={{
             flex: 1,
             minWidth: 200,
@@ -177,9 +201,12 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 <SearchRounded color="action" sx={{ fontSize: 20 }} />
               </InputAdornment>
             ),
-            endAdornment: filter && (
+            endAdornment: tempInputValue && (
               <InputAdornment position="end">
-                <IconButton size="small" onClick={() => setFilter("")}>
+                <IconButton size="small" onClick={() => {
+                  setTempInputValue("");
+                  setFilter("");
+                }}>
                   <ClearRounded sx={{ fontSize: 16 }} />
                 </IconButton>
               </InputAdornment>
@@ -191,9 +218,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         <Tooltip title="Filter by Status">
           <Chip
             icon={getStatusIcon(sortBy)}
-            label={`${
-              sortBy.charAt(0).toUpperCase() + sortBy.slice(1)
-            } (${ticketCount})`}
+            label={`${sortBy.charAt(0).toUpperCase() + sortBy.slice(1)
+              } (${ticketCount})`}
             onClick={(e) => setAnchorEl(e.currentTarget)}
             sx={{
               backgroundColor: getStatusColor(sortBy),
@@ -315,12 +341,13 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         </Menu>
 
         {/* Clear Filters */}
-        {(filter || startDate || selectedUser) && (
+        {(tempInputValue || startDate || selectedUser) && (
           <Tooltip title="Clear All Filters">
             <IconButton
               size="small"
               onClick={() => {
                 setFilter("");
+                setTempInputValue("");
                 setStartDate(null);
                 setEndDate(null);
                 setSelectedUser(null);
@@ -348,8 +375,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         handleClose={() => setDateModalOpen(false)}
         startDate={startDate}
         endDate={endDate}
-        setStartDate={(date) => handleDateRangeChange(date, endDate)}
-        setEndDate={(date) => handleDateRangeChange(startDate, date)}
+        onApply={handleDateModalApply}
       />
     </Paper>
   );

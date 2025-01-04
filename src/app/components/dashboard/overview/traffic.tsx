@@ -5,13 +5,14 @@ import * as React from "react";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import { Box, Divider, useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import type { SxProps } from "@mui/material/styles";
-import Typography from "@mui/material/Typography";
 import type { ApexOptions } from "apexcharts";
-
 import { Chart } from "@/app/components/core/chart";
-import { Box, Divider, useMediaQuery } from "@mui/material";
+
+import { Utility } from "@/utils";
 
 export interface TrafficProps {
   chartSeries: number[];
@@ -25,17 +26,9 @@ export function Traffic({
   sx,
 }: TrafficProps): React.JSX.Element {
   const chartOptions = useChartOptions(labels);
+  const { capitalizeFirstLetter } = Utility();
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
-
-  function capitalizeFirstWord(text: string): string {
-    const words = text.split(" ");
-    if (words.length > 0) {
-      words[0] =
-        words[0].charAt(0).toUpperCase() + words[0].slice(1).toLowerCase();
-    }
-    return words.join(" ");
-  }
 
   return (
     <Card
@@ -137,7 +130,7 @@ export function Traffic({
                       color: color,
                     }}
                   >
-                    {capitalizeFirstWord(labels[index])}
+                    {capitalizeFirstLetter(labels[index])}
                   </Typography>
                   <Typography
                     color="text.secondary"

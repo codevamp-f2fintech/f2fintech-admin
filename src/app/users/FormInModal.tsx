@@ -132,7 +132,7 @@ const UserForm: React.FC<FormComponentProps> = ({
         handleDialogClose();
         const updatedUsers = await refetch();
         if (updatedUsers) {
-          dispatch(setUsers(updatedUsers));
+          dispatch(setUsers(updatedUsers.data));
         }
       }, 2200);
     } catch (error: any) {
@@ -176,7 +176,7 @@ const UserForm: React.FC<FormComponentProps> = ({
         handleDialogClose();
         const updatedUsers = await refetch();
         if (updatedUsers) {
-          dispatch(setUsers(updatedUsers));
+          dispatch(setUsers(updatedUsers.data));
         }
       }, 2200);
     } catch (err: any) {

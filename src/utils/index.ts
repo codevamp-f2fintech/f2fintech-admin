@@ -33,7 +33,7 @@ export const Utility = () => {
    * @param str - The string whose 1st letter is to be capitalized
    * @returns
    */
-  const capitalizeFirstLetter = (str: string) => {
+  const capitalizeFirstLetter = (str: string | undefined) => {
     if (str) {
       return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
     }
@@ -144,32 +144,6 @@ export const Utility = () => {
     return `₹ ${new Intl.NumberFormat("en-IN", {
       maximumFractionDigits: 2,
     }).format(amount)}`;
-  };
-
-  /**
-   * Utility to store value in sessionStorage.
-   * @param {string} key - The key to set in sessionStorage.
-   * @param {any} value - The value to store.
-   */
-  const setSessionStorage = (key: string, value: any): void => {
-    if (typeof window !== "undefined") {
-      // Check if window is available (client-side)
-      sessionStorage.setItem(key, JSON.stringify(value));
-    }
-  };
-
-  /**
-   * Utility to get value from sessionStorage.
-   * @param {string} key - The key to retrieve the value for.
-   * @returns {any | null} - The retrieved value or null if not found.
-   */
-  const getSessionStorage = (key: string): any | null => {
-    if (typeof window !== "undefined") {
-      // Ensure we're on the client-side
-      const storedValue = sessionStorage.getItem(key);
-      return storedValue ? JSON.parse(storedValue) : null;
-    }
-    return null; // Return null if window is not available (server-side)
   };
 
   /**
@@ -330,8 +304,6 @@ export const Utility = () => {
     formatTenure,
     formatDate,
     formatAmount,
-    getSessionStorage,
-    setSessionStorage,
     getLocalStorage,
     remLocalStorage,
     setLocalStorage,

@@ -4,7 +4,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import React, { useCallback, useEffect, useState } from "react";
 import { Box, Grid, Typography, useMediaQuery } from "@mui/material";
-import { Dayjs } from "dayjs";
 
 import ApplicationCard from "../components/common/ApplicationCard";
 import FilterPanel from "../components/common/FilterPanel";
@@ -21,8 +20,8 @@ const Ticket = () => {
   const [filter, setFilter] = useState<string>("");
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [sortBy, setSortBy] = useState<string>("all");
-  const [startDate, setStartDate] = useState<Dayjs | null>(null);
-  const [endDate, setEndDate] = useState<Dayjs | null>(null);
+  const [startDate, setStartDate] = useState<string | null>(null);
+  const [endDate, setEndDate] = useState<string | null>(null);
 
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [hasMoreData, setHasMoreData] = useState<boolean>(true);
@@ -41,14 +40,14 @@ const Ticket = () => {
   const apiEndpoint = selectedUser
     ? `get-all-tickets/${selectedUser.id}`
     : userRole === "admin"
-    ? sortBy === "all"
-      ? `get-all-tickets`
-      : `get-all-tickets?status=${sortBy}`
-    : userRole === "agent"
-    ? sortBy === "all"
-      ? `get-all-tickets/${decodedToken()?.id}?isAgent=true`
-      : `get-all-tickets/${decodedToken()?.id}?isAgent=true&status=${sortBy}`
-    : `get-all-tickets`;
+      ? sortBy === "all"
+        ? `get-all-tickets`
+        : `get-all-tickets?status=${sortBy}`
+      : userRole === "agent"
+        ? sortBy === "all"
+          ? `get-all-tickets/${decodedToken()?.id}?isAgent=true`
+          : `get-all-tickets/${decodedToken()?.id}?isAgent=true&status=${sortBy}`
+        : `get-all-tickets`;
 
   const { value: ticketData, swrLoading } = useGetTickets(
     apiEndpoint,
@@ -138,10 +137,6 @@ const Ticket = () => {
       dispatch(resetTickets()) as unknown as void;
     };
   }, [dispatch]);
-
-  console.log(ticketData, "api data");
-  console.log(ticket, "redux data");
-  console.log(currentPage, "paige");
 
   return (
     <Box

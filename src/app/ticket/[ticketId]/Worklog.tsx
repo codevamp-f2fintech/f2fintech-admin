@@ -3,10 +3,12 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { formatDistanceToNow } from "date-fns";
 
 import { Utility } from "@/utils";
+import { TicketLogsData } from "@/types/ticketLogs";
+import { User } from "@/types/user";
 
 interface WorkLogListProps {
-  userData: object;
-  workLog: any;
+  userData: User;
+  workLog: TicketLogsData;
 }
 
 const WorkLogList: React.FC<WorkLogListProps> = ({ userData, workLog }) => {
@@ -26,7 +28,7 @@ const WorkLogList: React.FC<WorkLogListProps> = ({ userData, workLog }) => {
     >
       {workLog?.length ? (
         workLog.map(log => {
-          const loggedBy = userData?.results.find(user => user.id == log.userId);
+          const loggedBy = userData?.data?.results.find(user => user.id == log.user_id);
           return (
             <Paper
               key={log.id}
@@ -57,7 +59,7 @@ const WorkLogList: React.FC<WorkLogListProps> = ({ userData, workLog }) => {
                     mr: "20VW",
                   }}
                 >
-                  logged <b>{log.timeSpent}</b>
+                  logged <b>{log.time_spent}</b>
                 </Typography>
                 <Typography
                   sx={{
@@ -65,7 +67,7 @@ const WorkLogList: React.FC<WorkLogListProps> = ({ userData, workLog }) => {
                     fontSize: ".8rem",
                   }}
                 >
-                  {formatDistanceToNow(new Date(log.createdAt))} ago
+                  {formatDistanceToNow(new Date(log.created_at))} ago
                 </Typography>
               </Box>
 
@@ -80,7 +82,7 @@ const WorkLogList: React.FC<WorkLogListProps> = ({ userData, workLog }) => {
                   fontSize: "0.9rem",
                 }}
               >
-                {capitalizeFirstLetter(log.workDescription)}
+                {capitalizeFirstLetter(log.work_description)}
               </Typography>
             </Paper>
           )

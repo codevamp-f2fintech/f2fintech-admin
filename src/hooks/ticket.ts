@@ -18,13 +18,13 @@ export const useGetTickets = (
   page: number = 1,
   limit: number = 6,
   filter: string = "",
-  startDate: Dayjs | null = null,
-  endDate: Dayjs | null = null
+  startDate: string | null = null,
+  endDate: string | null = null
 ) => {
   const params = new URLSearchParams();
-  if (filter) params.set("filter", filter);
-  if (startDate) params.set("startDate", startDate.toDate().toISOString());  // Convert to Date and then toISOString
-  if (endDate) params.set("endDate", endDate.toDate().toISOString());
+  if (filter) params.set("name", filter);
+  if (startDate) params.set("startDate", startDate);
+  if (endDate) params.set("endDate", endDate);
 
   const fullPath = pathKey.includes('?')
     ? `${pathKey}&page=${page}&limit=${limit}&${params.toString()}`

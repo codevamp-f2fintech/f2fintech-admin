@@ -22,8 +22,7 @@ interface DateRangeModalProps {
     handleClose: () => void;
     startDate: Dayjs | null;
     endDate: Dayjs | null;
-    setStartDate: (date: Dayjs) => void;
-    setEndDate: (date: Dayjs) => void;
+    onApply: (startDate: Dayjs | null, endDate: Dayjs | null) => void; // Add onApply callback
 }
 
 const DateRangeModal: React.FC<DateRangeModalProps> = ({
@@ -31,9 +30,16 @@ const DateRangeModal: React.FC<DateRangeModalProps> = ({
     handleClose,
     startDate,
     endDate,
-    setStartDate,
-    setEndDate,
+    onApply
 }) => {
+    const [tempStartDate, setTempStartDate] = React.useState<Dayjs | null>(startDate); // Temporary states
+    const [tempEndDate, setTempEndDate] = React.useState<Dayjs | null>(endDate);
+
+    const handleApply = () => {
+        onApply(tempStartDate, tempEndDate); // Call onApply with temporary state
+        handleClose();
+    };
+
     return (
         <Modal
             closeAfterTransition
@@ -110,8 +116,8 @@ const DateRangeModal: React.FC<DateRangeModalProps> = ({
                                 <TextField
                                     type="date"
                                     fullWidth
-                                    value={startDate ? dayjs(startDate).format("YYYY-MM-DD") : ""}
-                                    onChange={(e) => setStartDate(dayjs(e.target.value))}
+                                    value={tempStartDate ? dayjs(tempStartDate).format("YYYY-MM-DD") : ""}
+                                    onChange={(e) => setTempStartDate(dayjs(e.target.value))}
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
                                             borderRadius: 3,
@@ -146,8 +152,8 @@ const DateRangeModal: React.FC<DateRangeModalProps> = ({
                                 <TextField
                                     type="date"
                                     fullWidth
-                                    value={endDate ? dayjs(endDate).format("YYYY-MM-DD") : ""}
-                                    onChange={(e) => setEndDate(dayjs(e.target.value))}
+                                    value={tempEndDate ? dayjs(tempEndDate).format("YYYY-MM-DD") : ""}
+                                    onChange={(e) => setTempEndDate(dayjs(e.target.value))}
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
                                             borderRadius: 3,
@@ -187,7 +193,7 @@ const DateRangeModal: React.FC<DateRangeModalProps> = ({
                             <Button
                                 fullWidth
                                 variant="contained"
-                                onClick={() => { }}
+                                onClick={handleApply}
                                 startIcon={<CheckIcon />}
                                 sx={{
                                     borderRadius: 3,

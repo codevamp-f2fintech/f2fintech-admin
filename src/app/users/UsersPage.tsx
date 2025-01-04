@@ -18,8 +18,10 @@ import {
   Avatar,
   CircularProgress,
   Pagination,
+  InputAdornment,
 } from "@mui/material";
 import {
+  ClearRounded,
   SearchRounded,
   PersonAddRounded,
   MailRounded,
@@ -37,12 +39,7 @@ import { UserAPI } from "@/apis/UserAPI";
 import { Utility } from "@/utils";
 
 interface UsersPageProps {
-  initialData: {
-    results: UserData[];
-    count: number;
-    pages: number;
-    errorMessage?: string;
-  };
+  initialData: User
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -76,27 +73,24 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
   );
 
   useEffect(() => {
-    if (data?.results?.length > initialData?.data?.results?.length) {
+    if (data?.data?.results?.length > initialData?.data?.results?.length) {
       dispatch(setUsers(data));
     }
-  }, [data?.results?.length, initialData?.data?.results?.length]);
+  }, [data?.data?.results?.length, initialData?.data?.results?.length]);
 
-  console.log("redux users", user);
-  console.log("frontend users", data);
-  // Displayed data for users
   const filteredUsers = useMemo(() => {
     const displayData = user?.results || initialData?.data?.results || [];
-    return displayData.filter((val) =>
+    return displayData.filter((val: any) =>
       val.username?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [searchTerm, user?.results, initialData?.results]);
+  }, [searchTerm, user?.results, initialData?.data?.results]);
 
   const handleUserDelete = useCallback(async (id: string | number) => {
     try {
       await UserAPI.updateUserProfile({ id, status: "inactive" });
       const updatedUsers = await refetch();
       if (updatedUsers) {
-        dispatch(setUsers(updatedUsers));
+        dispatch(setUsers(updatedUsers.data));
       }
     } catch (err: any) {
       const errorMessage =
@@ -145,7 +139,16 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
             onChange={(e) => setSearchTerm(e.target.value)}
             InputProps={{
               startAdornment: (
-                <SearchRounded sx={{ color: "action.active", mr: 1 }} />
+                <InputAdornment position="start">
+                  <SearchRounded sx={{ color: "action.active", mr: 1 }} />
+                </InputAdornment>
+              ),
+              endAdornment: searchTerm && (
+                <InputAdornment position="end">
+                  <IconButton size="small" onClick={() => setSearchTerm("")}>
+                    <ClearRounded sx={{ fontSize: 16 }} />
+                  </IconButton>
+                </InputAdornment>
               ),
               sx: {
                 borderRadius: "100px",
@@ -185,7 +188,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
         {/* User Grid */}
         <Grid container spacing={3}>
           {filteredUsers.length &&
-            filteredUsers.map((user, index) => (
+            filteredUsers.map((user: UserData, index: number) => (
               <Grid item xs={12} md={6} key={index}>
                 <Card
                   sx={{

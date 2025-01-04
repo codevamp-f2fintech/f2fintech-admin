@@ -1,7 +1,7 @@
 import { useState } from "react";
 import useSWR, { mutate } from "swr";
 import { fetcher, creator, modifier, deleter } from "@/apis/apiClient";
-import { TicketActivities } from "@/types/ticketActivities";
+import { TicketActivities, TicketActivitiesData } from "@/types/ticketActivities";
 
 /**
  * Hook for fetching ticket activities.
@@ -10,18 +10,16 @@ import { TicketActivities } from "@/types/ticketActivities";
  * @param pathKey - The API path key used by SWR to fetch ticket activities data.
  * @returns An object containing the fetched activities, loading state, error state and refetch function.
  */
-export const useGetTicketActivities = (initialData: TicketActivities[], pathKey: string) => {
-  const { data: swrData, error } = useSWR<TicketActivities[]>(pathKey, fetcher, {
+export const useGetTicketActivities = (initialData: TicketActivities, pathKey: string) => {
+  const { data: swrData, error } = useSWR<TicketActivities>(pathKey, fetcher, {
     fallbackData: initialData,
-    refreshInterval: initialData ? 3600000 : 0, // 1-hour refresh if initialData exists
-    revalidateOnFocus: false, // Disable revalidation on window focus
+    refreshInterval: initialData ? 3600000 : 0,
+    revalidateOnFocus: false,
   });
 
-  // Manually re-trigger re-fetch
   const refetch = async () => {
     await mutate(pathKey);
   };
-
   return { value: swrData || [], swrLoading: !error && !swrData, error, refetch };
 };
 
@@ -29,7 +27,7 @@ export const useGetTicketActivities = (initialData: TicketActivities[], pathKey:
  * Hook for creating a new ticket activity.
  *
  * @param pathKey - The API path key used to create a new ticket activity.
- * @returns An object containing the created activity, loading state, error state, and the createTicketActivity function.
+ * @returns An object containing the loading state, error state, and the createTicketActivity function.
  */
 export const useCreateTicketActivity = (pathKey: string) => {
   const [loading, setLoading] = useState(false);
@@ -39,7 +37,7 @@ export const useCreateTicketActivity = (pathKey: string) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await creator(pathKey, data);
+      const response = await creator<TicketActivitiesData, Partial<TicketActivitiesData>>(pathKey, data);
       return response;
     } catch (err) {
       setError(err as Error);
@@ -54,24 +52,22 @@ export const useCreateTicketActivity = (pathKey: string) => {
  * Hook for modifying an existing ticket activity.
  *
  * @param pathKey - The API path key used to modify a ticket activity.
- * @param refreshInterval - Optional refresh interval for re-fetching activities.
- * @returns An object containing the updated activity, loading state, error state, and the modifyTicketActivity function.
+ * @returns An object containing the loading state, error state, and the modifyTicketActivity function.
  */
-export const useModifyTicketActivity = (pathKey: string, refreshInterval: number = 0) => {
+export const useModifyTicketActivity = (pathKey: string) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const modifyTicketActivity = async (
     ticketId: number,
     activityId: number,
-    updatedActivityData: Partial<TicketActivities>
+    updatedActivityData: Partial<TicketActivitiesData>
   ) => {
     setLoading(true);
     setError(null);
     try {
       const apiPath = `${pathKey}/${ticketId}/${activityId}`;
-
-      const activity = await modifier<TicketActivities, Partial<TicketActivities>>(apiPath, updatedActivityData);
+      const activity = await modifier<TicketActivitiesData, Partial<TicketActivitiesData>>(apiPath, updatedActivityData);
       return activity;
     } catch (err) {
       setError(err as Error);
