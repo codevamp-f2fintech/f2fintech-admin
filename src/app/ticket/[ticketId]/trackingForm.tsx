@@ -31,6 +31,7 @@ interface FormComponentProps {
   openDialog: boolean;
   setOpenDialog: (open: boolean) => void;
   ticketDetailData: any;
+  ticketId: string | string[];
   originalEstimate: string | undefined;
 }
 
@@ -48,6 +49,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
   openDialog,
   setOpenDialog,
   ticketDetailData,
+  ticketId,
   originalEstimate
 }) => {
   const { decodedToken, parseTimeSpent, toastAndNavigate } = Utility();
@@ -155,7 +157,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
     async (values: InitialValues) => {
       setLoading(true);
       const data = {
-        ticket_id: parseInt(ticketDetailData?.ticket_id),
+        ticket_id: +ticketId,
         user_id: decodedToken()?.id,
         ...values,
       };
@@ -197,7 +199,7 @@ const TrackingForm: React.FC<FormComponentProps> = ({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [ticketDetailData?.ticket_id]
+    [ticketId]
   );
 
   return (

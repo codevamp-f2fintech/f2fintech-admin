@@ -770,6 +770,7 @@ const Progress: React.FC = () => {
           openDialog={openDialog}
           setOpenDialog={setOpenDialog}
           ticketDetailData={workLog?.data}
+          ticketId={ticketId}
           originalEstimate={ticketDetailData?.originalEstimate}
         />
         <Toast
