@@ -37,7 +37,7 @@ export interface LatestUsersProps {
   sx?: SxProps;
 }
 
-export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
+export function LatestOrders ( { sx }: LatestUsersProps ): React.JSX.Element {
   const { value: users, swrLoading: usersLoading } = useGetUsers(
     {} as User,
     "get-users",
@@ -70,7 +70,7 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
   };
 
   const handleViewAllClick = () => {
-    router.push("/users");
+    router.push( "/users" );
   };
 
   return (
@@ -79,8 +79,8 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
       sx={{
         bgcolor: "#fff",
         background: "linear-gradient(145deg, #ffffff 0%, #f8f9ff 100%)",
-        width: isMobile ? "100%" : isTab ? "95vw" : "49.3vw",
-        ml: isMobile ? "" : isTab ? "" : "4vw",
+        width: isMobile ? "100%" : isTab ? "95vw" : "92.5%",
+        ml: isMobile ? "" : isTab ? "" : "7.5%",
         maxHeight: isMobile ? "92vh" : isTab ? "100vh" : "130vh",
       }}
     >
@@ -178,7 +178,7 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
                           }}
                         >
                           <Person sx={{ color: "primary.main" }} />
-                          {capitalizeFirstLetter(agent.username)}
+                          {capitalizeFirstLetter( agent.username )}
                         </Box>
                       </TableCell>
                       <TableCell>
@@ -227,11 +227,11 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
                         </Box>
                       </TableCell>
                       <TableCell>
-                        {dayjs(agent.created_at).format("MMM D, YYYY")}
+                        {dayjs( agent.created_at ).format( "MMM D, YYYY" )}
                       </TableCell>
                     </TableRow>
                   );
-                })
+                } )
               )}
             </TableBody>
           </Table>

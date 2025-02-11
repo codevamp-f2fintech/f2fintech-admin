@@ -39,39 +39,41 @@ export interface LatestApplicationsProps {
   sx?: SxProps;
 }
 
-export function LatestApplications({
+export function LatestApplications ( {
   sx,
 }: LatestApplicationsProps): React.JSX.Element {
   const [paginationLoading, setPaginationLoading] = useState<boolean>(false);
   const [applications, setApplications] = useState<CustomerApplicationData | []>([]);
   const router = useRouter();
-  const isMobile = useMediaQuery("(max-width:600px)");
-  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const isMobile = useMediaQuery( "(max-width:600px)" );
+  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
 
   const {
     value: data,
     error: getApplicationsError,
     swrLoading,
-  } = useGetCustomerApplications(`get-customer-loan-applications`, 1, 6);
+  } = useGetCustomerApplications( `get-customer-loan-applications`, 1, 6 );
 
   // Handle API response
-  useEffect(() => {
-    if (data?.results.length > 0) {
-      setApplications(data?.results);
-    } else {
-      setApplications([]);
+  useEffect( () => {
+    if ( data?.results.length > 0 )
+    {
+      setApplications( data?.results );
+    } else
+    {
+      setApplications( [] );
     }
   }, [data?.results, getApplicationsError]);
 
   const handleViewAllClick = () => {
-    router.push("/");
+    router.push( "/" );
   };
 
   return (
     <Paper
       elevation={3}
       sx={{
-        width: isMobile ? "70%" : isTab ? "100%" : "30vw",
+        width: isMobile ? "70%" : isTab ? "100%" : "115%",
         maxHeight: isMobile ? "85vh" : isTab ? "100vh" : "130vh",
         height: "100%",
         display: "flex",
@@ -183,10 +185,10 @@ export function LatestApplications({
                       </Box>
                     </TableCell>
                     <TableCell>
-                      {dayjs(application.applicationDate).format("MMM D, YYYY")}
+                      {dayjs( application.applicationDate ).format( "MMM D, YYYY" )}
                     </TableCell>
                   </TableRow>
-                ))
+                ) )
               )}
             </TableBody>
           </Table>
