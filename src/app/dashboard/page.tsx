@@ -262,7 +262,7 @@ export default async function Page(): Promise<React.JSX.Element> {
             key: "totalAgents",
             color: "#607d8b",
             count: totalAgents,
-            link: "/user",
+            link: "/users",
           },
         ]
       : []),
