@@ -120,6 +120,12 @@ function renderNavItems({
         return acc;
       }
 
+      // If the user is an agent, hide the "Loan Provider" link
+      if ( item.title === "Loan Provider" && userRole !== "admin" )
+      {
+        return acc;
+      }
+
       acc.push(
         <NavItem
           key={key}

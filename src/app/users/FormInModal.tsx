@@ -382,6 +382,7 @@ const UserForm: React.FC<FormComponentProps> = ({
                   </MenuItem>
                   <MenuItem value="admin">Admin</MenuItem>
                   <MenuItem value="agent">Agent</MenuItem>
+                  <MenuItem value="sales">Sales</MenuItem>
                 </Field>
               </Box>
               <Box display="flex" justifyContent="center" p="20px">
