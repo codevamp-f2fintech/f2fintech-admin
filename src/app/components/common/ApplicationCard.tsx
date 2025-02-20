@@ -242,15 +242,18 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                 minHeight: isMobile ? "35vh" : isTab ? "20vh" : "40vh",
               }}
             >
-              <InfoRow
-                icon={<MailRounded />}
-                text={customerApplication.customerEmail}
-              />
               {userRole !== "sales" &&
-                <InfoRow
-                  icon={<PhoneRounded />}
-                  text={customerApplication.customerContact}
-                />
+                <>
+                  <InfoRow
+                    icon={<MailRounded />}
+                    text={customerApplication.customerEmail}
+                  />
+
+                  <InfoRow
+                    icon={<PhoneRounded />}
+                    text={customerApplication.customerContact}
+                  />
+                </>
               }
               <InfoRow
                 icon={<CurrencyRupeeIcon />}
