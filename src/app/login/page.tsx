@@ -27,21 +27,21 @@ import { UserAPI } from "@/apis/UserAPI";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { Utility } from "@/utils";
 
-const LoginSchema = Yup.object().shape({
-  email: Yup.string().email("Invalid email").required("Required"),
-  password: Yup.string().min(8, "Password too short").required("Required"),
-});
+const LoginSchema = Yup.object().shape( {
+  email: Yup.string().email( "Invalid email" ).required( "Required" ),
+  password: Yup.string().min( 8, "Password too short" ).required( "Required" ),
+} );
 
 const Login = (): JSX.Element => {
-  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [ showPassword, setShowPassword ] = useState<boolean>( false );
   const theme: Theme = useTheme();
   const router = useRouter();
   const dispatch: AppDispatch = useDispatch();
-  const { toast } = useSelector((state: RootState) => state.toast);
+  const { toast } = useSelector( ( state: RootState ) => state.toast );
   const { decodedToken, toastAndNavigate } = Utility();
 
   const handleClickShowPassword = (): void => {
-    setShowPassword((prev) => !prev);
+    setShowPassword( ( prev ) => !prev );
   };
 
   const handleMouseDownPassword = (
@@ -50,13 +50,14 @@ const Login = (): JSX.Element => {
     event.preventDefault();
   };
 
-  const handleLogin = async (values: { email: string; password: string }) => {
-    try {
-      const { data: response } = await UserAPI.login(values);
-      if (response.statusCode === 200) {
-        document.cookie = `token=${
-          response.data.access_token
-        }; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
+  const handleLogin = async ( values: { email: string; password: string } ) => {
+    try
+    {
+      const { data: response } = await UserAPI.login( values );
+      if ( response.statusCode === 200 )
+      {
+        document.cookie = `token=${ response.data.access_token
+          }; path=/; max-age=${ 1 * 24 * 60 * 60 }; secure; samesite=strict`;
         toastAndNavigate(
           dispatch,
           true,
@@ -64,14 +65,20 @@ const Login = (): JSX.Element => {
           response.data.message || "Login Successful"
         );
 
-        const role = decodedToken(response.data.access_token)?.role;
-        if (role === "admin") {
-          router.push("/dashboard");
-        } else if (role === "agent") {
-          router.push("/home");
+        const role = decodedToken( response.data.access_token )?.role;
+        if ( role === "admin" )
+        {
+          router.push( "/dashboard" );
+        } else if ( role === "agent" )
+        {
+          router.push( "/home" );
+        } else if ( role === "sales" )
+        {
+          router.push( "/ticket" );
         }
       }
-    } catch (error: any) {
+    } catch ( error: any )
+    {
       toastAndNavigate(
         dispatch,
         true,
@@ -173,14 +180,14 @@ const Login = (): JSX.Element => {
             <Formik
               initialValues={{ email: "", password: "" }}
               validationSchema={LoginSchema}
-              onSubmit={async (values, { setSubmitting, resetForm }) => {
-                setSubmitting(true);
-                await handleLogin(values);
-                setSubmitting(false);
+              onSubmit={async ( values, { setSubmitting, resetForm } ) => {
+                setSubmitting( true );
+                await handleLogin( values );
+                setSubmitting( false );
                 resetForm();
               }}
             >
-              {({ errors, touched, isSubmitting, dirty }) => (
+              {( { errors, touched, isSubmitting, dirty } ) => (
                 <Form>
                   <Field
                     as={TextField}
@@ -203,7 +210,7 @@ const Login = (): JSX.Element => {
                     InputLabelProps={{
                       style: { color: "white" },
                     }}
-                    error={touched.email && Boolean(errors.email)}
+                    error={touched.email && Boolean( errors.email )}
                     helperText={touched.email && errors.email}
                   />
                   <Field
@@ -239,7 +246,7 @@ const Login = (): JSX.Element => {
                     InputLabelProps={{
                       style: { color: "white" },
                     }}
-                    error={touched.password && Boolean(errors.password)}
+                    error={touched.password && Boolean( errors.password )}
                     helperText={touched.password && errors.password}
                   />
                   <Button
