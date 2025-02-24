@@ -108,6 +108,7 @@ export const useModifyTicket = (pathKey: string) => {
     setLoading(true);
     setError(null);
     try {
+      console.log( 'updatedTicketData', updatedTicketData );
       const apiPath = `${pathKey}/${ticketId}`;
       const ticket = await modifier<JoinedTicketData, Partial<JoinedTicketData>>(
         apiPath,

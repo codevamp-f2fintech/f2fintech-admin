@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState } from "react";
 import {
   Container,
@@ -12,15 +13,21 @@ import {
   Select,
   FormControl,
   InputLabel,
-  SelectChangeEvent,
+  InputAdornment,
 } from "@mui/material";
 import { ArrowBackRounded } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
+import { useCreateLoanProvider } from "@/hooks/loanProvider";
+import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import { AddPhotoAlternate as AddPhotoAlternateIcon } from "@mui/icons-material"; 
 
 const LoanFormPage = () => {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
+  const [ loading, setLoading ] = useState( false );
+  const { createLoanProvider } = useCreateLoanProvider( "create-loan-provider" );
+
+  const [ formData, setFormData ] = useState( {
     interestRate: "",
     maxLoanAmount: "",
     maxTenure: "",
@@ -34,30 +41,28 @@ const LoanFormPage = () => {
     charges: "",
     minimumKyc: "",
     documentReq: "",
-  });
+  } );
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = ( e: React.ChangeEvent<HTMLInputElement> ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData( ( prev ) => ( { ...prev, [ name ]: value } ) );
   };
 
-  const handleSelectChange = (e: SelectChangeEvent) => {
+  const handleSelectChange = ( e: SelectChangeEvent ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData( ( prev ) => ( { ...prev, [ name ]: value } ) );
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async ( e: React.FormEvent ) => {
     e.preventDefault();
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      router.push("/loan-provider");
-    }, 2000);
+    setLoading( true );
+    const res = await createLoanProvider( formData );
+    console.log( "loan prov res", res );
+    setLoading( false );
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
+    <Container sx={{ py: 4}}>
       <Box sx={{ mb: 4 }}>
         <Button
           startIcon={<ArrowBackRounded />}
@@ -67,12 +72,13 @@ const LoanFormPage = () => {
           Back
         </Button>
         <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
-          Create
+          Create Loan Provider
         </Typography>
       </Box>
 
       <Box component="form" onSubmit={handleSubmit}>
         <Grid container spacing={3}>
+          {/* Interest Rate */}
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
@@ -82,8 +88,17 @@ const LoanFormPage = () => {
               value={formData.interestRate}
               onChange={handleInputChange}
               required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <CurrencyRupeeIcon sx={{ color: "action.active" }} />
+                  </InputAdornment>
+                ),
+              }}
             />
           </Grid>
+
+          {/* Maximum Loan Amount */}
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
@@ -93,9 +108,17 @@ const LoanFormPage = () => {
               value={formData.maxLoanAmount}
               onChange={handleInputChange}
               required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <CurrencyRupeeIcon sx={{ color: "action.active" }} />
+                  </InputAdornment>
+                ),
+              }}
             />
-
           </Grid>
+
+          {/* Max Tenure */}
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
@@ -105,8 +128,17 @@ const LoanFormPage = () => {
               value={formData.maxTenure}
               onChange={handleInputChange}
               required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <CalendarMonthIcon sx={{ color: "action.active" }} />
+                  </InputAdornment>
+                ),
+              }}
             />
           </Grid>
+
+          {/* Minimum Amount */}
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
@@ -116,8 +148,101 @@ const LoanFormPage = () => {
               value={formData.minAmount}
               onChange={handleInputChange}
               required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <CurrencyRupeeIcon sx={{ color: "action.active" }} />
+                  </InputAdornment>
+                ),
+              }}
             />
           </Grid>
+
+          {/* Title */}
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Title"
+              name="title"
+              value={formData.title}
+              onChange={handleInputChange}
+              required
+            />
+          </Grid>
+
+          {/* Description */}
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Description"
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              required
+            />
+          </Grid>
+
+          {/* Short Description */}
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Short Description"
+              name="shortDescription"
+              value={formData.shortDescription}
+              onChange={handleInputChange}
+              required
+            />
+          </Grid>
+
+          {/* Long Description */}
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Long Description"
+              name="longDescription"
+              value={formData.longDescription}
+              onChange={handleInputChange}
+              required
+            />
+          </Grid>
+
+          {/* Charges */}
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Charges"
+              name="charges"
+              value={formData.charges}
+              onChange={handleInputChange}
+              required
+            />
+          </Grid>
+
+          {/* Minimum KYC */}
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Minimum KYC"
+              name="minimumKyc"
+              value={formData.minimumKyc}
+              onChange={handleInputChange}
+              required
+            />
+          </Grid>
+
+          {/* Document Required */}
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Document Required"
+              name="documentReq"
+              value={formData.documentReq}
+              onChange={handleInputChange}
+              required
+            />
+          </Grid>
+
+          {/* Is Home Loan */}
           <Grid item xs={12} md={6}>
             <FormControl fullWidth required>
               <InputLabel>Is Home Loan?</InputLabel>
@@ -132,87 +257,92 @@ const LoanFormPage = () => {
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Home Image"
-              name="homeImage"
-              value={formData.homeImage}
-              onChange={handleInputChange}
-              required
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Title"
-              name="title"
-              value={formData.title}
-              onChange={handleInputChange}
-              required
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Description"
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              required
-            />
 
-          </Grid>
+          {/* Home Image */}
           <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Short Description"
-              name="shortDescription"
-              value={formData.shortDescription}
-              onChange={handleInputChange}
-              required
-            />
+            <FormControl fullWidth>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  border: "2px dashed #cccccc",
+                  borderRadius: "8px",
+                  padding: 2,
+                  cursor: "pointer",
+                  textAlign: "center",
+                  transition: "border-color 0.3s ease",
+                  width: "10vw",
+                  "&:hover": {
+                    borderColor: "#f06292", // Border color on hover
+                  },
+                }}
+                component="label"
+              >
+                {/* Icon for image upload */}
+                <AddPhotoAlternateIcon
+                  sx={{
+                    fontSize: "48px",
+                    color: "#cccccc",
+                    mb: 1,
+                    transition: "color 0.3s ease",
+                  }}
+                />
+                <Typography variant="body2" sx={{ color: "#cccccc" }}>
+                  Upload image
+                </Typography>
+                {/* File input */}
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={( e ) => {
+                    const file = e.target.files?.[ 0 ];
+                    if ( file )
+                    {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setFormData( ( prev ) => ( {
+                          ...prev,
+                          homeImage: reader.result as string, // Store Base64 or File URL
+                        } ) );
+                      };
+                      reader.readAsDataURL( file );
+                    }
+                  }}
+                />
+              </Box>
+
+              {/* Image Preview */}
+              {formData.homeImage && (
+                <Box
+                  mt={2}
+                  display="flex"
+                  justifyContent="center"
+                  sx={{
+                    border: "1px solid #ddd",
+                    padding: 1,
+                    borderRadius: "8px",
+                    height: "30vh"
+                  }}
+                >
+                  <img
+                    src={formData.homeImage}
+                    alt="Preview"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "fill",
+                      borderRadius: "8px",
+                    }}
+                  />
+                </Box>
+              )}
+            </FormControl>
           </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Long Description"
-              name="longDescription"
-              value={formData.longDescription}
-              onChange={handleInputChange}
-              required
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Charges"
-              name="charges"
-              value={formData.charges}
-              onChange={handleInputChange}
-              required
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Minimum KYC"
-              name="minimumKyc"
-              value={formData.minimumKyc}
-              onChange={handleInputChange}
-              required
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Document Required"
-              name="documentReq"
-              value={formData.documentReq}
-              onChange={handleInputChange}
-              required
-            />
-          </Grid>
+
+
         </Grid>
 
         <Box sx={{ mt: 4, display: "flex", justifyContent: "flex-end", gap: 2 }}>

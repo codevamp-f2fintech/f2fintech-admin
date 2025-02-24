@@ -2,6 +2,7 @@ export interface JoinedTicketData {
   customer_application_id: number;
   user_id: number;
   forwarded_to: number;
+  forwarded_by: number;
   is_forwarded: number;
   original_estimate: string;
   voice_note_url: string | null;

@@ -66,6 +66,7 @@ export interface TicketDetail {
   employeeStatus: string;
   voiceNoteUrl: string;
   forwardedTo: number | string;
+  forwardedBy: number | string;
   isForwarded: number | null;
   originalEstimate: string;
   applicationAmount: string | number;
@@ -91,6 +92,7 @@ interface TicketDetailResponse {
     employeeStatus: string;
     voiceNoteUrl: string;
     forwardedTo: number | string;
+    forwardedBy: number | string;
     isForwarded: number | null;
     originalEstimate: string;
     applicationAmount: string | number;
@@ -270,6 +272,7 @@ const Progress: React.FC = () => {
     try {
       await modifyTicket(+ticketId, {
         forwarded_to: value.id,
+        forwarded_by: decodedToken()?.id,
         is_forwarded: 1,
       });
 

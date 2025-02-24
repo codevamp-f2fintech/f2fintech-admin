@@ -15,6 +15,8 @@ import type { Ticket } from "@/types/ticket";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import { setTickets, resetTickets } from "@/redux/features/ticketSlice";
+import { Button } from "@mui/material";
+import { ArrowBackRounded } from "@mui/icons-material";
 
 const Ticket = () => {
   const [ filter, setFilter ] = useState<string>( "" );
@@ -159,23 +161,36 @@ const Ticket = () => {
         flexDirection: "column",
       }}
     >
-      <FilterPanel
-        searchLabel="Search Tickets"
-        sortBy={sortBy}
-        filter={filter}
-        setFilter={setFilter}
-        startDate={startDate}
-        setStartDate={setStartDate}
-        endDate={endDate}
-        setEndDate={setEndDate}
-        selectedUser={selectedUser}
-        setSelectedUser={setSelectedUser}
-        handleSortChange={handleSortChange}
-        userData={{ data: userData }}
-        userRole={userRole}
-        ticketCount={ticketData?.count}
-        handleFilterChange={handleFilterChange}
-      />
+      <Box sx={{ display: "flex", alignItems: "center", flexDirection: "row", width: "100%", justifyContent: "flex-start" }}>
+        <Box>
+          <Button
+            startIcon={<ArrowBackRounded />}
+            onClick={() => router.back()}
+            sx={{ mb: 2, }}
+          >
+
+          </Button>
+        </Box>
+        <Box sx={{ marginLeft: "13vw" }}>
+          <FilterPanel
+            searchLabel="Search Tickets"
+            sortBy={sortBy}
+            filter={filter}
+            setFilter={setFilter}
+            startDate={startDate}
+            setStartDate={setStartDate}
+            endDate={endDate}
+            setEndDate={setEndDate}
+            selectedUser={selectedUser}
+            setSelectedUser={setSelectedUser}
+            handleSortChange={handleSortChange}
+            userData={{ data: userData }}
+            userRole={userRole}
+            ticketCount={ticketData?.count}
+            handleFilterChange={handleFilterChange}
+          />
+        </Box>
+      </Box>
 
       <Box
         sx={{
@@ -186,6 +201,7 @@ const Ticket = () => {
           justifyContent: "space-between",
           paddingTop: "20px",
           marginBottom: "0",
+
         }}
       >
         <Grid
