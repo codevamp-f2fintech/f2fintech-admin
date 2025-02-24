@@ -54,9 +54,9 @@ export async function middleware ( request: NextRequest ) {
         {
           return NextResponse.redirect( new URL( "/unauthorised", request.url ) );
         }
-        if ( role === "sales" && !request.nextUrl.pathname.startsWith( "/ticket" ) )
+        if ( role === "sales" && !request.nextUrl.pathname.startsWith( "/home" ) && !request.nextUrl.pathname.startsWith( "/ticket" ) )
         {
-          return NextResponse.redirect( new URL( "/ticket", request.url ) );
+          return NextResponse.redirect( new URL( "/home", request.url ) );
         }
       } catch ( error )
       {

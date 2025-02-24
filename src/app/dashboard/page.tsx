@@ -35,106 +35,141 @@ interface Ticket {
 }
 
 // Server-side function to fetch total applications count
-async function fetchTotalApplications() {
-  try {
+async function fetchTotalApplications () {
+  try
+  {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/application/count`,
+      `${ process.env.NEXT_PUBLIC_API_URL }/application/count`,
       {
         cache: "no-store", // To Prevent caching
       }
     );
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    if ( !response.ok )
+    {
+      throw new Error( `HTTP error! status: ${ response.status }` );
     }
     const resData = await response.json();
     return resData.data;
-  } catch (error) {
-    console.error("Failed to fetch total applications:", error);
+  } catch ( error )
+  {
+    console.error( "Failed to fetch total applications:", error );
+    return null;
+  }
+}
+// Server-side function to fetch total applications count
+async function fetchTotalNewApplication () {
+  console.log( "ye chla" )
+  try
+  {
+    const response = await fetch(
+      `${ process.env.NEXT_PUBLIC_API_URL }/application/new-count`,
+      {
+        cache: "no-store", // To Prevent caching
+      }
+    );
+
+    if ( !response.ok )
+    {
+      throw new Error( `HTTP error! status: ${ response.status }` );
+    }
+    const resData = await response.json();
+    console.log( "ye chla res", resData )
+    return resData.data;
+  } catch ( error )
+  {
+    console.error( "Failed to fetch total new applications:", error );
     return null;
   }
 }
 
-async function fetchTotalTickets(
+async function fetchTotalTickets (
   status: string | null = null,
   id: number | null = null,
   role: string
 ): Promise<number> {
-  let url = `${process.env.NEXT_PUBLIC_API_URL}/dashboard/tickets/count`;
+  let url = `${ process.env.NEXT_PUBLIC_API_URL }/dashboard/tickets/count`;
 
-  if (role === "agent" && id !== null) {
-    url += `/${id}`;
+  if ( role === "agent" && id !== null )
+  {
+    url += `/${ id }`;
   }
 
-  if (status) {
-    url += `/${encodeURIComponent(status)}`;
+  if ( status )
+  {
+    url += `/${ encodeURIComponent( status ) }`;
   }
-  const response = await fetch(url, {
+  const response = await fetch( url, {
     cache: "no-store",
-  }); // To Prevent caching
+  } ); // To Prevent caching
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch total Tickets");
+  if ( !response.ok )
+  {
+    throw new Error( "Failed to fetch total Tickets" );
   }
   const resData = await response.json();
   return resData.data;
 }
 
-async function getTotalTicketsByMonth(year: number): Promise<Ticket[]> {
+async function getTotalTicketsByMonth ( year: number ): Promise<Ticket[]> {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/dashboard/tickets/counts-by-month?year=${year}`,
+    `${ process.env.NEXT_PUBLIC_API_URL }/dashboard/tickets/counts-by-month?year=${ year }`,
     {
       cache: "no-store", // To Prevent Caching
     }
   );
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch monthly count");
+  if ( !response.ok )
+  {
+    throw new Error( "Failed to fetch monthly count" );
   }
   const resData = await response.json();
-  return resData.data.map((ticket: Ticket) => ticket.count);
+  return resData.data.map( ( ticket: Ticket ) => ticket.count );
 }
 
-async function getDoneTicketsByMonth(year: number): Promise<Ticket[]> {
+async function getDoneTicketsByMonth ( year: number ): Promise<Ticket[]> {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/dashboard/tickets/done-counts-by-month?year=${year}`,
+    `${ process.env.NEXT_PUBLIC_API_URL }/dashboard/tickets/done-counts-by-month?year=${ year }`,
     {
       cache: "no-store", // To Prevent Caching
     }
   );
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch monthly done count");
+  if ( !response.ok )
+  {
+    throw new Error( "Failed to fetch monthly done count" );
   }
   const resData = await response.json();
-  return resData.data.map((ticket: Ticket) => ticket.count);
+  return resData.data.map( ( ticket: Ticket ) => ticket.count );
 }
 
-async function fetchAgentCount(): Promise<number> {
+async function fetchAgentCount (): Promise<number> {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/dashboard/agents/count`,
+    `${ process.env.NEXT_PUBLIC_API_URL }/dashboard/agents/count`,
     {
       cache: "no-store", // To Prevent Caching
     }
   );
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch agent count");
+  if ( !response.ok )
+  {
+    throw new Error( "Failed to fetch agent count" );
   }
   const resData = await response.json();
   return resData.data;
 }
 
-export default async function Page(): Promise<React.JSX.Element> {
+export default async function Page (): Promise<React.JSX.Element> {
   const cookieStore = cookies();
   const { decodedToken } = Utility();
-  const userToken = cookieStore.get("token");
-  const { id, role } = decodedToken(userToken?.value);
+  const userToken = cookieStore.get( "token" );
+  const { id, role } = decodedToken( userToken?.value );
 
-  console.log("id role=>", id, role);
+  console.log( "id role=>", id, role );
 
   const [
     totalApplications,
+    totalNewApplications,
     totalTickets,
     totalUnderCreditReview,
     totalToBeLogin,
@@ -147,24 +182,25 @@ export default async function Page(): Promise<React.JSX.Element> {
     totalRelook,
     totalTicketsByMonth,
     doneTicketsByMonth,
-  ] = await Promise.all([
+  ] = await Promise.all( [
     fetchTotalApplications(),
-    fetchTotalTickets(null, id, role),
-    fetchTotalTickets("under credit review", id, role),
-    fetchTotalTickets("to be login", id, role),
-    fetchTotalTickets("pendency in file", id, role),
-    fetchTotalTickets("to be approved", id, role),
-    fetchTotalTickets("to be disbursed", id, role),
-    fetchTotalTickets("file send to banker", id, role),
-    fetchTotalTickets("tvr done", id, role),
-    fetchTotalTickets("cam report done", id, role),
-    fetchTotalTickets("relook", id, role),
-    getTotalTicketsByMonth(2024),
-    getDoneTicketsByMonth(2024),
-  ]);
+    fetchTotalNewApplication(),
+    fetchTotalTickets( null, id, role ),
+    fetchTotalTickets( "under credit review", id, role ),
+    fetchTotalTickets( "to be login", id, role ),
+    fetchTotalTickets( "pendency in file", id, role ),
+    fetchTotalTickets( "to be approved", id, role ),
+    fetchTotalTickets( "to be disbursed", id, role ),
+    fetchTotalTickets( "file send to banker", id, role ),
+    fetchTotalTickets( "tvr done", id, role ),
+    fetchTotalTickets( "cam report done", id, role ),
+    fetchTotalTickets( "relook", id, role ),
+    getTotalTicketsByMonth( 2024 ),
+    getDoneTicketsByMonth( 2024 ),
+  ] );
 
   const totalAgents = role === "admin" ? await fetchAgentCount() : null;
-
+  console.log( totalNewApplications, 'new apps' )
   const dashboardItems = [
     {
       icon: FilterListRounded,
@@ -172,6 +208,14 @@ export default async function Page(): Promise<React.JSX.Element> {
       key: "totalApplications",
       color: "#2196f3",
       count: totalApplications,
+      link: "#",
+    },
+    {
+      icon: FilterListRounded,
+      label: "New Applications",
+      key: "totalNewApplications",
+      color: "#2196f3",
+      count: totalNewApplications,
       link: "/",
     },
     {
@@ -180,7 +224,7 @@ export default async function Page(): Promise<React.JSX.Element> {
       key: "totalTickets",
       color: "#009688",
       count: totalTickets,
-      link: `/ticket?status=${decodeURIComponent("all")}`,
+      link: `/ticket?status=${ decodeURIComponent( "all" ) }`,
     },
     {
       icon: AssignmentRounded,
@@ -188,7 +232,7 @@ export default async function Page(): Promise<React.JSX.Element> {
       key: "underCreditReview",
       color: "#ff9800",
       count: totalUnderCreditReview,
-      link: `/ticket?status=${decodeURIComponent("under credit review")}`,
+      link: `/ticket?status=${ decodeURIComponent( "under credit review" ) }`,
     },
     {
       icon: LoginRounded,
@@ -196,7 +240,7 @@ export default async function Page(): Promise<React.JSX.Element> {
       key: "toBeLogin",
       color: "#2196f3",
       count: totalToBeLogin,
-      link: `/ticket?status=${decodeURIComponent("to be login")}`,
+      link: `/ticket?status=${ decodeURIComponent( "to be login" ) }`,
     },
     {
       icon: PendingActionsRounded,
@@ -204,7 +248,7 @@ export default async function Page(): Promise<React.JSX.Element> {
       key: "pendencyInFile",
       color: "#f44336",
       count: totalPendencyInFile,
-      link: `/ticket?status=${decodeURIComponent("pendency in file")}`,
+      link: `/ticket?status=${ decodeURIComponent( "pendency in file" ) }`,
     },
     {
       icon: ThumbUpRounded,
@@ -212,7 +256,7 @@ export default async function Page(): Promise<React.JSX.Element> {
       key: "toBeApproved",
       color: "#4caf50",
       count: totalToBeApproved,
-      link: `/ticket?status=${decodeURIComponent("to be approved")}`,
+      link: `/ticket?status=${ decodeURIComponent( "to be approved" ) }`,
     },
     {
       icon: AccountBalanceRounded,
@@ -220,7 +264,7 @@ export default async function Page(): Promise<React.JSX.Element> {
       key: "tvrDone",
       color: "#00bcd4",
       count: totalTvrDone,
-      link: `/ticket?status=${decodeURIComponent("tvr done")}`,
+      link: `/ticket?status=${ decodeURIComponent( "tvr done" ) }`,
     },
     {
       icon: ReportRounded,
@@ -228,7 +272,7 @@ export default async function Page(): Promise<React.JSX.Element> {
       key: "camReportDone",
       color: "#8bc34a",
       count: totalCamReportDone,
-      link: `/ticket?status=${decodeURIComponent("cam report done")}`,
+      link: `/ticket?status=${ decodeURIComponent( "cam report done" ) }`,
     },
     {
       icon: ForwardRounded,
@@ -236,7 +280,7 @@ export default async function Page(): Promise<React.JSX.Element> {
       key: "toBeDisbursed",
       color: "#9c27b0",
       count: totalToBeDisbursed,
-      link: `/ticket?status=${decodeURIComponent("to be disbursed")}`,
+      link: `/ticket?status=${ decodeURIComponent( "to be disbursed" ) }`,
     },
     {
       icon: SendRounded,
@@ -244,7 +288,7 @@ export default async function Page(): Promise<React.JSX.Element> {
       key: "fileSendToBanker",
       color: "#3f51b5",
       count: totalFileSendToBanker,
-      link: `/ticket?status=${decodeURIComponent("file send to banker")}`,
+      link: `/ticket?status=${ decodeURIComponent( "file send to banker" ) }`,
     },
     {
       icon: VisibilityRounded,
@@ -252,20 +296,20 @@ export default async function Page(): Promise<React.JSX.Element> {
       key: "relook",
       color: "#ff5722",
       count: totalRelook,
-      link: `/ticket?status=${decodeURIComponent("relook")}`,
+      link: `/ticket?status=${ decodeURIComponent( "relook" ) }`,
     },
-    ...(role === "admin"
+    ...( role === "admin"
       ? [
-          {
-            icon: PersonRounded,
-            label: "Total Agents",
-            key: "totalAgents",
-            color: "#607d8b",
-            count: totalAgents,
-            link: "/users",
-          },
-        ]
-      : []),
+        {
+          icon: PersonRounded,
+          label: "Total Agents",
+          key: "totalAgents",
+          color: "#607d8b",
+          count: totalAgents,
+          link: "/users",
+        },
+      ]
+      : [] ),
   ];
   console.log(
     totalTickets,
@@ -282,7 +326,7 @@ export default async function Page(): Promise<React.JSX.Element> {
 
   return (
     <Grid lg={12.2} sm={12.3} container spacing={3} sx={{ width: "100%" }}>
-      {dashboardItems.map((item, index) => (
+      {dashboardItems.map( ( item, index ) => (
         <Grid lg={3} sm={6} xs={12} key={index}>
           <Link
             href={item.link || ""}
@@ -295,7 +339,7 @@ export default async function Page(): Promise<React.JSX.Element> {
                 height: "100%",
                 backgroundColor: item.color,
                 borderRadius: "20px",
-
+                maxHeight: "20vh",
                 ":hover": {
                   transform: "scale(1.1)",
                   transition: "all 300ms ease-in-out",
@@ -305,7 +349,7 @@ export default async function Page(): Promise<React.JSX.Element> {
             />
           </Link>
         </Grid>
-      ))}
+      ) )}
       <Grid lg={8} xs={12}>
         <Sales
           chartSeries={[

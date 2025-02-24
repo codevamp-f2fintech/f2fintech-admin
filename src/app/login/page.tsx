@@ -69,12 +69,9 @@ const Login = (): JSX.Element => {
         if ( role === "admin" )
         {
           router.push( "/dashboard" );
-        } else if ( role === "agent" )
+        } else if ( role === "agent" || role === "sales" )
         {
           router.push( "/home" );
-        } else if ( role === "sales" )
-        {
-          router.push( "/ticket" );
         }
       }
     } catch ( error: any )
