@@ -4,15 +4,17 @@ import customerApplicationReducer from "./features/customerApplicationSlice";
 import ticketReducer from "./features/ticketSlice";
 import toastReducer from "./features/toastSlice";
 import userReducer from "./features/userSlice";
+import loanProviderReducer from "./features/loanProviderSlice";
 
-export const store = configureStore({
+export const store = configureStore( {
   reducer: {
     customerApplications: customerApplicationReducer,
+    loanProviders: loanProviderReducer,
     tickets: ticketReducer,
     toast: toastReducer,
     user: userReducer,
   },
-});
+} );
 
 export default store;
 

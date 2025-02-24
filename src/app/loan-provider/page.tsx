@@ -1,9 +1,12 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "@/redux/store";
+import { setLoanProviders } from "@/redux/features/loanProviderSlice";
+import { useGetLoanProviders } from "@/hooks/loanProvider";
+import { Utility } from "@/utils";
 import {
     Card,
     CardContent,
@@ -20,59 +23,69 @@ import {
     CircularProgress,
     InputAdornment,
 } from "@mui/material";
-import {
-    ClearRounded,
-    SearchRounded,
-    PersonAddRounded,
-    MailRounded,
-    EditRounded,
-    DeleteRounded,
-    PersonRounded,
-} from "@mui/icons-material";
+import { ClearRounded, SearchRounded, PersonAddRounded } from "@mui/icons-material";
+import PublicIcon from '@mui/icons-material/Public';
 
-const dummyData = [
-    { id: 1, name: "Loan Provider A", email: "a@provider.com", type: "Bank"},
-    { id: 2, name: "Loan Provider B", email: "b@provider.com", type: "Credit Union"},
-    { id: 3, name: "Loan Provider C", email: "c@provider.com", type: "Online Lender"},
-    { id: 4, name: "Loan Provider D", email: "d@provider.com", type: "Bank"},
-    { id: 5, name: "Loan Provider E", email: "e@provider.com", type: "Online Lender"},
-];
-
+const ITEMS_PER_PAGE = 10;
 
 const LoanProviderPage = () => {
+    const [ currentPage, setCurrentPage ] = useState( 1 );
+    const [ hasMoreData, setHasMoreData ] = useState( true );
+    const { loanProvider, reduxLoading } = useSelector( ( state: RootState ) => state.loanProviders );
+    const { debounceScroll } = Utility();
+
+    const {
+        value: data,
+        swrLoading,
+        refetch,
+    } = useGetLoanProviders( null, "get-all-loan-providers", currentPage, ITEMS_PER_PAGE );
+
+    const dispatch: AppDispatch = useDispatch();
     const router = useRouter();
 
+    // Set loan providers when data changes
+    useEffect( () => {
+        if ( data?.data?.results )
+        {
+            dispatch( setLoanProviders( data?.data?.results ) );
+            setHasMoreData( data.data.results.length === ITEMS_PER_PAGE );
+        } else
+        {
+            setHasMoreData( false );
+        }
+    }, [ data?.data?.results, dispatch ] );
+
     const [ searchTerm, setSearchTerm ] = useState<string>( "" );
-    const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-     const [openDialog, setOpenDialog] = useState(false);
-      const [updatePassword, setUpdatePassword] = useState(false);
 
     const filteredLoanProviders = useMemo( () => {
-        return dummyData.filter( ( val ) =>
-            val.name.toLowerCase().includes( searchTerm.toLowerCase() )
+        return ( loanProvider || [] ).filter( ( provider ) =>
+            provider.title?.toLowerCase().includes( searchTerm.toLowerCase() )
         );
-    }, [ searchTerm ] );
+    }, [ searchTerm, loanProvider ] );
 
-    const handleOpenDialog = ( userId: string | null = null ) => {
-        setSelectedUserId( userId );
-        setUpdatePassword( false );
-        setOpenDialog( !openDialog );
-    };
+    // Infinite Scroll Logic
+    const handleScroll = useCallback(
+        debounceScroll( () => {
+            const nearBottom =
+                window.innerHeight + window.scrollY >= document.body.offsetHeight - 400; // 400px threshold
+            if ( nearBottom && !swrLoading && hasMoreData )
+            {
+                setCurrentPage( ( prevPage ) => prevPage + 1 );
+            }
+        }, 500 ),
+        [ swrLoading, hasMoreData ]
+    );
+
+    useEffect( () => {
+        window.addEventListener( "scroll", handleScroll );
+        return () => window.removeEventListener( "scroll", handleScroll );
+    }, [ handleScroll ] );
 
     return (
-        <Box sx={{ minHeight: "100vh", px: { xs: 2, sm: 4 } }}>
+        <Box sx={{ minHeight: "100vh", px: { xs: 2, sm: 4 }, py: { xs: 2, sm: 4 } }}>
             <Container maxWidth="xl">
                 {/* Header */}
-                <Box
-                    sx={{
-                        display: "flex",
-                        flexDirection: { xs: "column", md: "row" },
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: 2,
-                        mb: 4,
-                    }}
-                >
+                <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, alignItems: "center", justifyContent: "space-between", gap: 2, mb: 4 }}>
                     <TextField
                         placeholder="Search by name..."
                         variant="outlined"
@@ -108,9 +121,7 @@ const LoanProviderPage = () => {
                     <Button
                         variant="contained"
                         startIcon={<PersonAddRounded />}
-                        onClick={() => router.push("/loan-provider/loanFormPage")}
-
-
+                        onClick={() => router.push( "/loan-provider/loanFormPage" )}
                         sx={{
                             borderRadius: "100px",
                             px: 3,
@@ -134,87 +145,55 @@ const LoanProviderPage = () => {
                     {filteredLoanProviders.length &&
                         filteredLoanProviders.map( ( provider ) => (
                             <Grid item xs={12} md={6} key={provider.id}>
-                                <Card
-                                    sx={{
-                                        borderRadius: 4,
-                                        backgroundImage: `linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)`,
-                                        boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
-                                        transition: "all 0.3s ease",
-                                        "&:hover": {
-                                            transform: "translateY(-4px)",
-                                            boxShadow: "0 12px 24px rgba(0,0,0,0.15)",
-                                        },
-                                    }}
-                                >
-                                    <CardContent sx={{ p: 3 }}>
-                                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "start", mb: 3 }}>
-                                            <Box>
-                                                <Typography variant="h5" sx={{ color: "white", fontWeight: 600, mb: 1 }}>
-                                                    {provider.name}
-                                                </Typography>
-                                                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                                    <MailRounded sx={{ color: "rgba(255,255,255,0.8)", fontSize: 18 }} />
-                                                    <Typography sx={{ color: "rgba(255,255,255,0.8)", fontSize: "0.9rem" }}>
-                                                        {provider.email}
-                                                    </Typography>
-                                                </Box>
-                                            </Box>
-                                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                                <Chip
-                                                    icon={<PersonRounded sx={{ color: "white !important" }} />}
-                                                    label={provider.type}
-                                                    sx={{
-                                                        bgcolor: "rgba(255,255,255,0.2)",
-                                                        color: "white",
-                                                        borderRadius: "100px",
-                                                        "& .MuiChip-icon": { color: "white" },
-                                                    }}
+                                <Card sx={{ borderRadius: 4, boxShadow: "0 10px 20px rgba(0,0,0,0.1)", transition: "all 0.3s ease", "&:hover": { transform: "translateY(-4px)", boxShadow: "0 12px 24px rgba(0,0,0,0.15)" } }}>
+                                    <CardContent sx={{ p: 3, minHeight: "30vh" }}>
+                                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "start", mb: 0 }}>
+                                            {/* Image */}
+                                            <Box sx={{ width: "50%", height: "28vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                                                <img
+                                                    src={provider.home_image}
+                                                    alt="Home"
+                                                    style={{ width: "100%", height: "100%", objectFit: "fit" }}
                                                 />
                                             </Box>
-                                        </Box>
 
-                                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 2 }}>
-                                            <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 48, height: 48 }}>
-                                                {provider.name.charAt( 0 )}
-                                            </Avatar>
-                                            <Box sx={{ display: "flex", gap: 1 }}>
-                                                <Tooltip title="Edit">
-                                                    <IconButton
-                                                        size="small"
-                                                        sx={{
-                                                            color: "white",
-                                                            bgcolor: "rgba(255,255,255,0.1)",
-                                                            "&:hover": { bgcolor: "rgba(255,255,255,0.2)" },
-                                                        }}
-                                                        onClick={() => handleOpenDialog( provider.id.toString() )}
+                                            {/* Text */}
+                                            <Box sx={{ width: "55%", paddingLeft: 2 }}>
+                                                <Typography variant="h5" sx={{ color: "black", fontWeight: 600, mb: 1 }}>
+                                                    {provider.title}
+                                                </Typography>
 
+                                                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                                                    <PublicIcon sx={{ color: "blue", fontSize: 18 }} />
+                                                    <Typography sx={{ color: "black", fontSize: "0.9rem" }}>
+                                                        {provider.country}
+                                                    </Typography>
+                                                </Box>
 
-                                                    >
-                                                        <EditRounded />
-                                                    </IconButton>
-                                                </Tooltip>
-                                                <Tooltip title="Delete">
-                                                    <IconButton
-                                                        size="small"
-                                                        sx={{
-                                                            color: "white",
-                                                            bgcolor: "rgba(255,255,255,0.1)",
-                                                            "&:hover": { bgcolor: "rgba(255,255,255,0.2)" },
-                                                        }}
-                                                    >
-                                                        <DeleteRounded />
-                                                    </IconButton>
-                                                </Tooltip>
+                                                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                                    <PublicIcon sx={{ color: "blue", fontSize: 18 }} />
+                                                    <Typography sx={{ color: "black", fontSize: "0.9rem" }}>
+                                                        {provider.short_description}
+                                                    </Typography>
+                                                </Box>
                                             </Box>
                                         </Box>
                                     </CardContent>
                                 </Card>
                             </Grid>
                         ) )}
+
+                    {/* Show "No more data" message */}
+                    {!hasMoreData && !swrLoading && (
+                        <Typography sx={{ width: "100%", textAlign: "center", mt: 4, color: "black" }}>
+                            No more loan providers to load...
+                        </Typography>
+                    )}
                 </Grid>
             </Container>
 
-            {false && (
+            {/* Show loading spinner */}
+            {swrLoading && (
                 <Box display="flex" justifyContent="center" mb={2}>
                     <CircularProgress />
                 </Box>
