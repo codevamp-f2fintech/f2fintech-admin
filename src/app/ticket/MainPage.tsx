@@ -51,8 +51,8 @@ const Ticket = () => {
           : `get-all-tickets/${decodedToken()?.id}?isAgent=true&status=${sortBy == 'forwarded to me' || sortBy == 'forwarded by me' ? sortBy.replace(/\s+/g, "") : sortBy}`
         : userRole === "sales"
           ? sortBy === "all"
-            ? `get-all-tickets`
-            : `get-all-tickets?status=${sortBy == 'forwarded to me' || sortBy == 'forwarded by me' ? sortBy.replace(/\s+/g, "") : sortBy}`
+            ? `get-all-tickets?appliedBy=${ decodedToken()?.id}`
+            : `get-all-tickets?appliedBy=${ decodedToken()?.id}&status=${sortBy == 'forwarded to me' || sortBy == 'forwarded by me' ? sortBy.replace(/\s+/g, "") : sortBy}`
           : `get-all-tickets`;
 
   const { value: ticketData, swrLoading } = useGetTickets(

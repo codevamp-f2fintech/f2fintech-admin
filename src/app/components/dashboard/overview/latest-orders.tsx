@@ -151,7 +151,7 @@ export function LatestOrders ( { sx }: LatestUsersProps ): React.JSX.Element {
                   </TableCell>
                 </TableRow>
               ) : (
-                users.data.results.map((agent: UserData, index: number) => {
+                users?.data?.results?.map((agent: UserData, index: number) => {
                   const { open, inProgress, done } = getTicketCounts(agent.id);
 
                   return (
