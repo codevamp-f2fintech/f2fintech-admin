@@ -81,7 +81,7 @@ export function SideNav(): React.JSX.Element {
             top: "0",
           }}
         >
-          {collapsed ? <MenuIcon /> : <ArrowBackIcon />}
+          <MenuIcon />
         </IconButton>
         <Box
           component={RouterLink}

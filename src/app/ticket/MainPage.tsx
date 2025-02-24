@@ -157,21 +157,11 @@ const Ticket = () => {
       sx={{
         display: "flex",
         alignItems: "center",
-        justifyContent: "space-between",
+        justifyContent: "center",
         flexDirection: "column",
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", flexDirection: "row", width: "100%", justifyContent: "flex-start" }}>
-        <Box>
-          <Button
-            startIcon={<ArrowBackRounded />}
-            onClick={() => router.back()}
-            sx={{ mb: 2, }}
-          >
-
-          </Button>
-        </Box>
-        <Box sx={{ marginLeft: "13vw" }}>
+       
           <FilterPanel
             searchLabel="Search Tickets"
             sortBy={sortBy}
@@ -189,8 +179,6 @@ const Ticket = () => {
             ticketCount={ticketData?.count}
             handleFilterChange={handleFilterChange}
           />
-        </Box>
-      </Box>
 
       <Box
         sx={{
