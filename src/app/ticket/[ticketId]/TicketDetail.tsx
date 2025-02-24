@@ -1,33 +1,48 @@
-import { Avatar, Box, Grid, Typography } from "@mui/material";
+import { Avatar, Box, Button, Grid, Typography } from "@mui/material";
 
 import { Utility } from "@/utils";
+import { ArrowBackRounded } from "@mui/icons-material";
+import { useRouter } from "next/navigation";
 
-const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
+const TicketDetail = ( { ticketDetailData, isMobile, isTab } ) => {
   const { capitalizeFirstLetter, formatTenure, formatDate, formatAmount } =
     Utility();
+  const router = useRouter();
+  console.log( "path>>", router );
 
   return (
     <>
       <Box
         display="flex"
-        justifyContent="space-between"
-        alignItems="center"
+        justifyContent="flex-start"
+        alignItems="flex-start"
         mb={1}
       >
-        <Typography
-          variant="h5"
-          sx={{
-            color: "white",
-            textDecoration: "none",
-            fontSize: "1.5rem",
-            fontFamily: "monospace",
-            fontStyle: "revert-layer",
-            fontWeight: "bold",
-            textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)",
-          }}
-        >
-          Ticket ID: F2FIN-{ticketDetailData?.ticketId}
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "flex-start" }}>
+          <Button
+            startIcon={<ArrowBackRounded />}
+            onClick={() => { router.back(); }}
+            sx={{ color: "white" }}
+          >
+            Back
+          </Button>
+        </Box>
+        <Box sx={{marginLeft: "8vw" }}>
+          <Typography
+            variant="h5"
+            sx={{
+              color: "white",
+              textDecoration: "none",
+              fontSize: "1.5rem",
+              fontFamily: "monospace",
+              fontStyle: "revert-layer",
+              fontWeight: "bold",
+              textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)",
+            }}
+          >
+            Ticket ID: F2FIN-{ticketDetailData?.ticketId}
+          </Typography>
+        </Box>
       </Box>
 
       <Box
@@ -73,7 +88,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
             <Grid item xs={12} sm={6}>
               <Typography sx={{ mb: 1, color: "white", fontSize: "1rem" }}>
                 <strong>Name:</strong>{" "}
-                {capitalizeFirstLetter(ticketDetailData?.customerName)}
+                {capitalizeFirstLetter( ticketDetailData?.customerName )}
               </Typography>
               <Typography
                 sx={{
@@ -96,7 +111,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
               </Typography>
               <Typography sx={{ color: "white", fontSize: "1rem", mb: 1 }}>
                 <strong>Designation:</strong>{" "}
-                {capitalizeFirstLetter(ticketDetailData?.customerDesignation)}
+                {capitalizeFirstLetter( ticketDetailData?.customerDesignation )}
               </Typography>
             </Grid>
 
@@ -104,11 +119,11 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
             <Grid item xs={12} sm={6}>
               <Typography sx={{ color: "white", fontSize: "1rem", mb: 1 }}>
                 <strong>Location:</strong>{" "}
-                {capitalizeFirstLetter(ticketDetailData?.customerLocation)}
+                {capitalizeFirstLetter( ticketDetailData?.customerLocation )}
               </Typography>
               <Typography sx={{ color: "white", fontSize: "1rem", mb: 1 }}>
                 <strong>Tenure:</strong>{" "}
-                {formatTenure(ticketDetailData?.applicationTenure)}
+                {formatTenure( ticketDetailData?.applicationTenure )}
               </Typography>
             </Grid>
 
@@ -116,11 +131,11 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
             <Grid item xs={12} sm={6}>
               <Typography sx={{ color: "white", fontSize: "1rem", mb: 1 }}>
                 <strong>Amount:</strong>{" "}
-                {formatAmount(ticketDetailData?.applicationAmount)}
+                {formatAmount( ticketDetailData?.applicationAmount )}
               </Typography>
               <Typography sx={{ color: "white", fontSize: "1rem" }}>
                 <strong>Application Date:</strong>{" "}
-                {formatDate(ticketDetailData?.applicationDate)}
+                {formatDate( ticketDetailData?.applicationDate )}
               </Typography>
             </Grid>
           </Grid>

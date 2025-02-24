@@ -10,6 +10,7 @@ import {
   Tooltip,
   Menu,
   MenuItem,
+  Button,
 } from "@mui/material";
 import {
   SearchRounded,
@@ -27,11 +28,13 @@ import {
   AccountBalanceRounded,
   ReportRounded,
   VisibilityRounded,
+  ArrowBackRounded,
 } from "@mui/icons-material";
 import dayjs from "dayjs";
 
 import DateRangeModal from "./DateRangeModal";
 import { User } from "@/types/user";
+import { useRouter } from "next/navigation";
 
 interface FilterPanelProps {
   searchLabel: string;
@@ -141,6 +144,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
   // Handler for opening the modal
   const handleDateModalOpen = () => setDateModalOpen(true);
+  const router = useRouter();
 
   // Format the date range to be displayed on the chip
   const formatDateRange = () => {
@@ -174,10 +178,16 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         borderRadius: 3,
         background: "linear-gradient(135deg, #fff 0%, #f5f5f5 100%)",
         display: "flex",
-        flexDirection: "column",
+        flexDirection: "row",
         gap: 2,
       }}
     >
+      <Button
+        startIcon={<ArrowBackRounded />}
+        onClick={() => { router.back(); }}
+        sx={{ color: "black" }}
+      >
+      </Button>
       {/* Search and Filters Row */}
       <Box
         sx={{ display: "flex", gap: 1, alignItems: "center", flexWrap: "wrap" }}
