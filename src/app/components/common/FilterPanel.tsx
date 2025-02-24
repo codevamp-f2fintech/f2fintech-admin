@@ -28,8 +28,10 @@ import {
   AccountBalanceRounded,
   ReportRounded,
   VisibilityRounded,
-  ArrowBackRounded,
+  ArrowDownwardRounded,
+  ArrowUpwardRounded,
 } from "@mui/icons-material";
+import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import dayjs from "dayjs";
 
 import DateRangeModal from "./DateRangeModal";
@@ -54,6 +56,19 @@ interface FilterPanelProps {
   handleFilterChange: (newFilterState: any) => void;
 }
 
+const statusOptions = [
+  "all",
+  "under credit review",
+  "to be login",
+  "pendency in file",
+  "to be approved",
+  "to be disbursed",
+  "file send to banker",
+  "tvr done",
+  "cam report done",
+  "relook",
+];
+
 const FilterPanel: React.FC<FilterPanelProps> = ({
   sortBy,
   filter,
@@ -71,7 +86,10 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   searchLabel,
   handleFilterChange,
 }) => {
+  // anchorEl for the main "status" menu
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  // anchorEl for the forwarded submenu
+  const [forwardedAnchorEl, setForwardedAnchorEl] = useState<null | HTMLElement>(null);
   const [userAnchorEl, setUserAnchorEl] = useState<null | HTMLElement>(null);
   const [dateModalOpen, setDateModalOpen] = useState<boolean>(false); // State to control modal
   const [tempInputValue, setTempInputValue] = useState<string>(filter); // Temporary input value
@@ -88,6 +106,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       "file send to banker": "#3f51b5", // Indigo
       relook: "#ff5722", // Orange-Red
       forwarded: "#ffc107", // Amber for Forwarded
+      "forwarded to me": "#ff7043", // Deep Orange
+      "forwarded by me": "#26c6da", // cyan
       all: "#757575", // Grey
     };
     return colors[status] || colors.all;
@@ -105,6 +125,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       "cam report done": <ReportRounded sx={{ fontSize: 20 }} />,
       relook: <VisibilityRounded sx={{ fontSize: 20 }} />,
       forwarded: <ForwardToInboxRounded sx={{ fontSize: 20 }} />,
+      "forwarded to me": <ArrowDownwardRounded sx={{ fontSize: 20 }} />,
+      "forwarded by me": <ArrowUpwardRounded sx={{ fontSize: 20 }} />,
       all: <FilterListRounded sx={{ fontSize: 20 }} />,
     };
     return icons[status] || icons.all;
@@ -168,6 +190,15 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     setStartDate(formattedStart);
     setEndDate(formattedEnd);
     handleFilterChange({ startDate: formattedStart, endDate: formattedEnd, page: 1 }); // Reset page to 1 and update date range
+  };
+
+  // Submenu open/close for "Forwarded"
+  const handleForwardedMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setForwardedAnchorEl(event.currentTarget);
+  };
+
+  const handleForwardedMenuClose = () => {
+    setForwardedAnchorEl(null);
   };
 
   return (
@@ -254,19 +285,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             },
           }}
         >
-          {[
-            "all",
-            "forwarded",
-            "under credit review",
-            "to be login",
-            "pendency in file",
-            "to be approved",
-            "to be disbursed",
-            "file send to banker",
-            "tvr done",
-            "cam report done",
-            "relook",
-          ].map((status) => (
+          {/* Normal statuses (excluding "forwarded") */}
+          {statusOptions.map((status) => (
             <MenuItem
               key={status}
               onClick={() => {
@@ -280,15 +300,78 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 "&:hover": {
                   backgroundColor: `${getStatusColor(status)}10`,
                 },
-                "&.Mui-selected": {
-                  backgroundColor: `${getStatusColor(status)}20`,
-                },
               }}
             >
               {getStatusIcon(status)}
-              {`${status.charAt(0).toUpperCase() + status.slice(1)} `}
+              {status.charAt(0).toUpperCase() + status.slice(1)}
             </MenuItem>
           ))}
+
+          {/* "Forwarded" with nested submenu */}
+          <MenuItem
+            onMouseEnter={handleForwardedMenuOpen}
+            onMouseLeave={handleForwardedMenuClose}
+            sx={{
+              gap: 1,
+              minWidth: 180,
+              color: getStatusColor("forwarded"),
+              "&:hover": {
+                backgroundColor: `${getStatusColor("forwarded")}10`,
+              },
+            }}
+          >
+            {/** If you want a special icon for "Forwarded": */}
+            {/** Or just reuse getStatusIcon("forwarded") if you like */}
+            <ForwardToInboxRounded sx={{ fontSize: 20 }} />
+            Forwarded
+            <ArrowRightIcon fontSize="small" sx={{ marginLeft: "auto" }} />
+
+            {/* Nested Submenu */}
+            <Menu
+              anchorEl={forwardedAnchorEl}
+              open={Boolean(forwardedAnchorEl)}
+              onClose={handleForwardedMenuClose}
+              anchorOrigin={{ vertical: "top", horizontal: "right" }}
+              transformOrigin={{ vertical: "top", horizontal: "left" }}
+            >
+              <MenuItem
+                onClick={() => {
+                  handleStatusChange("forwarded To Me");
+                  handleForwardedMenuClose();
+                  setAnchorEl(null);
+                }}
+                sx={{
+                  gap: 1,
+                  minWidth: 180,
+                  color: getStatusColor("forwarded to me"),
+                  "&:hover": {
+                    backgroundColor: `${getStatusColor("forwarded to me")}22`
+                  },
+                }}
+              >
+                {getStatusIcon("forwarded to me")}
+                Forwarded To Me
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  handleStatusChange("forwarded by me");
+                  handleForwardedMenuClose();
+                  setAnchorEl(null);
+                }}
+                sx={{
+                  gap: 1,
+                  minWidth: 180,
+                  color: getStatusColor("forwarded by me"),
+                  "&:hover": {
+                    backgroundColor: `${getStatusColor("forwarded by me")}22`
+                  },
+                }}
+              >
+                {getStatusIcon("forwarded by me")}
+                Forwarded By Me
+              </MenuItem>
+            </Menu>
+          </MenuItem>
         </Menu>
 
         {/* Date Range */}
