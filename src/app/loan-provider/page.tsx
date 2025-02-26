@@ -125,7 +125,7 @@ const handleScroll = useCallback(
                     <Button
                         variant="contained"
                         startIcon={<PersonAddRounded />}
-                        onClick={() => router.push( "/loan-provider/loanFormPage" )}
+                        onClick={() => router.push( "/loan-provider/create" )}
                         sx={{
                             borderRadius: "100px",
                             px: 3,
