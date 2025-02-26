@@ -16,8 +16,9 @@ export const useGetCustomerApplications = (
   pathKey: string,
   page: number = 1,
   limit: number = 6,
+  salesUserId?: number | string | null
 ) => {
-  const url = `${pathKey}?page=${page}&limit=${limit}`;
+  const url = salesUserId ? `${pathKey}?page=${page}&limit=${limit}&appliedBy=${salesUserId}` : `${pathKey}?page=${page}&limit=${limit}`;
   const {
     data: swrData,
     error,

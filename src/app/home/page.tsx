@@ -34,8 +34,9 @@ const Home: React.FC = () => {
   );
   const dispatch: AppDispatch = useDispatch();
   const { debounceScroll, decodedToken } = Utility();
-  const isMobile = useMediaQuery( "(max-width:600px)" );
-  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const salesUserId = decodedToken()?.role === "sales" ? decodedToken()?.id : null;
 
   const {
     value: data,
@@ -44,7 +45,8 @@ const Home: React.FC = () => {
   } = useGetCustomerApplications(
     "get-customer-loan-applications",
     currentPage,
-    ITEMS_PER_PAGE
+    ITEMS_PER_PAGE,
+    salesUserId
   );
 
   // Fetch and update state with new data
@@ -139,12 +141,12 @@ const Home: React.FC = () => {
         <Box
           sx={{
             height: "10vh",
-            width: isMobile ? "51vw" : isTab ? "40vw" : "30vw",
+            width: isMobile ? "61vw" : isTab ? "50vw" : "40vw",
             display: "flex",
             flexDirection: "row",
             justifyContent: "space-evenly",
             alignItems: "center",
-            ml: isMobile ? "" : isTab ? "10vw" : "25vw",
+            ml: isMobile ? "" : isTab ? "" : "8vw",
           }}
         >
           <TextField
@@ -182,11 +184,30 @@ const Home: React.FC = () => {
               }}
               variant="contained"
             >
-              {decodedToken()?.role === "admin"
+              {decodedToken()?.role === "admin" || decodedToken()?.role === "sales"
                 ? "Show Tickets"
                 : "Show My Tickets"}
             </Button>
           </Link>
+
+          {decodedToken()?.role === "sales" ?
+            <Link href="/home/create" passHref>
+              <Button
+                sx={{
+                  width: isMobile ? "23vw" : isTab ? "21vw" : "15vw",
+                  fontSize: isMobile ? ".5rem" : isTab ? "1rem" : "",
+                  bgcolor: "#9D50BB",
+                  color: "white",
+                  "&:hover": {
+                    bgcolor: "#f06292"
+                  },
+                }}
+                variant="contained"
+              >
+                Create New Application
+              </Button>
+            </Link>
+            : null}
         </Box>
       </Box>
       <Box
