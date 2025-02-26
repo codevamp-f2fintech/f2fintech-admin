@@ -68,6 +68,8 @@ const statusOptions = [
   "tvr done",
   "cam report done",
   "relook",
+  "approved",
+  "disbursed",
 ];
 
 const FilterPanel: React.FC<FilterPanelProps> = ({

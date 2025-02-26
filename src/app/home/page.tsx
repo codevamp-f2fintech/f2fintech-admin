@@ -25,17 +25,17 @@ import { Utility } from "@/utils";
 const ITEMS_PER_PAGE = 6;
 
 const Home: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [hasMoreData, setHasMoreData] = useState<boolean>(true);
+  const [ searchTerm, setSearchTerm ] = useState<string>( "" );
+  const [ currentPage, setCurrentPage ] = useState<number>( 1 );
+  const [ hasMoreData, setHasMoreData ] = useState<boolean>( true );
 
   const { customerApplication } = useSelector(
-    (state: RootState) => state.customerApplications
+    ( state: RootState ) => state.customerApplications
   );
   const dispatch: AppDispatch = useDispatch();
   const { debounceScroll, decodedToken } = Utility();
-  const isMobile = useMediaQuery("(max-width:600px)");
-  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const isMobile = useMediaQuery( "(max-width:600px)" );
+  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
 
   const {
     value: data,
@@ -48,46 +48,51 @@ const Home: React.FC = () => {
   );
 
   // Fetch and update state with new data
-  useEffect(() => {
-    if (data.results.length > 0) {
-      dispatch(setCustomerApplications(data));
-      setHasMoreData(data.results.length === ITEMS_PER_PAGE);
-    } else {
-      setHasMoreData(false);
+  useEffect( () => {
+    if ( data.results.length > 0 )
+    {
+      dispatch( setCustomerApplications( data ) );
+      setHasMoreData( data.results.length === ITEMS_PER_PAGE );
+    } else
+    {
+      setHasMoreData( false );
     }
-  }, [data, dispatch]);
+  }, [ data, dispatch ] );
 
   // Handle infinite scrolling
   const handleScroll = useCallback(
-    debounceScroll(() => {
+    debounceScroll( () => {
       const nearBottom =
         window.innerHeight + window.scrollY >= document.body.offsetHeight - 400; // 400px threshold
-      if (nearBottom && !swrLoading && hasMoreData) {
-        setCurrentPage((prevPage) => prevPage + 1);
+      if ( nearBottom && !swrLoading && hasMoreData )
+      {
+        setCurrentPage( ( prevPage ) => prevPage + 1 );
       }
-    }, 500),
-    [swrLoading, hasMoreData]
+    }, 500 ),
+    [ swrLoading, hasMoreData ]
   );
 
-  useEffect(() => {
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
+  useEffect( () => {
+    window.addEventListener( "scroll", handleScroll );
+    return () => window.removeEventListener( "scroll", handleScroll );
+  }, [ handleScroll ] );
 
   // Filtered results based on search term
-  const filteredCustomers = useMemo(() => {
+  const filteredCustomers = useMemo( () => {
     return customerApplication?.results.filter(
-      (customer) =>
+      ( customer ) =>
         !customer.is_picked &&
-        customer.customerName.toLowerCase().includes(searchTerm.toLowerCase())
+        customer.customerName.toLowerCase().includes( searchTerm.toLowerCase() )
+        ||
+        customer.customerContact.toLowerCase().includes( searchTerm )
     );
-  }, [searchTerm, customerApplication]);
+  }, [ searchTerm, customerApplication ] );
 
-  useEffect(() => {
+  useEffect( () => {
     return () => {
-      dispatch(resetCustomerApplications()) as unknown as void;
+      dispatch( resetCustomerApplications() ) as unknown as void;
     };
-  }, [dispatch]);
+  }, [ dispatch ] );
 
   return (
     <Box
@@ -143,10 +148,10 @@ const Home: React.FC = () => {
           }}
         >
           <TextField
-            label="Search by name..."
+            label="Search by name or number..."
             size="small"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={( e ) => setSearchTerm( e.target.value )}
             sx={{
               width: isMobile ? "24vw" : isTab ? "18vw" : "12vw",
               fontSize: isMobile ? ".5rem" : isTab ? "1rem" : "",
@@ -214,13 +219,13 @@ const Home: React.FC = () => {
             </Box>
           ) : (
             <>
-              {filteredCustomers.map((customerApplication) => (
+              {filteredCustomers.map( ( customerApplication ) => (
                 <ApplicationCard
                   key={customerApplication.customerId}
                   customerApplication={customerApplication}
                   refetch={refetch}
                 />
-              ))}
+              ) )}
 
               {/* Show "No more applications to load" message */}
               {!hasMoreData && !swrLoading && (

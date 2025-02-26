@@ -4,19 +4,20 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 
 import {
-  PersonRounded,
   VisibilityRounded,
   FilterListRounded,
-  AssignmentRounded,
-  PendingActionsRounded,
   ThumbUpRounded,
-  AccountBalanceRounded,
-  ReportRounded,
   LoginRounded,
   ForwardRounded,
-  SendRounded,
 } from "@mui/icons-material";
 import Grid from "@mui/material/Unstable_Grid2";
+import ArchiveIcon from '@mui/icons-material/Archive';
+import FiberNewIcon from '@mui/icons-material/FiberNew';
+import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
+import PendingActionsIcon from '@mui/icons-material/PendingActions';
+import RuleIcon from '@mui/icons-material/Rule';
+import SendTimeExtensionIcon from '@mui/icons-material/SendTimeExtension';
+import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 
 import { Budget } from "@/app/components/dashboard/overview/budget";
 import { LatestOrders } from "@/app/components/dashboard/overview/latest-orders";
@@ -24,6 +25,7 @@ import { LatestApplications } from "@/app/components/dashboard/overview/latest-a
 import { Sales } from "@/app/components/dashboard/overview/sales";
 import { Traffic } from "@/app/components/dashboard/overview/traffic";
 import { Utility } from "@/utils";
+import { Paper } from "@mui/material";
 
 export const metadata = {
   title: `F2 Fintech Admin Portal`,
@@ -180,6 +182,8 @@ export default async function Page (): Promise<React.JSX.Element> {
     totalTvrDone,
     totalCamReportDone,
     totalRelook,
+    totalApproved,
+    totalDisbursed,
     totalTicketsByMonth,
     doneTicketsByMonth,
   ] = await Promise.all( [
@@ -195,7 +199,9 @@ export default async function Page (): Promise<React.JSX.Element> {
     fetchTotalTickets( "tvr done", id, role ),
     fetchTotalTickets( "cam report done", id, role ),
     fetchTotalTickets( "relook", id, role ),
-    getTotalTicketsByMonth( 2024 ),
+    fetchTotalTickets( "approved",id ,role),
+    fetchTotalTickets( "disbursed", id, role ),
+    getTotalTicketsByMonth( 2024 ),   
     getDoneTicketsByMonth( 2024 ),
   ] );
 
@@ -203,18 +209,18 @@ export default async function Page (): Promise<React.JSX.Element> {
   console.log( totalNewApplications, 'new apps' )
   const dashboardItems = [
     {
-      icon: FilterListRounded,
+      icon: ArchiveIcon,
       label: "Total Applications",
       key: "totalApplications",
-      color: "#2196f3",
+      color: "#90a4ae",
       count: totalApplications,
       link: "#",
     },
     {
-      icon: FilterListRounded,
+      icon: FiberNewIcon,
       label: "New Applications",
       key: "totalNewApplications",
-      color: "#2196f3",
+      color: "#ffd600",
       count: totalNewApplications,
       link: "/",
     },
@@ -227,10 +233,10 @@ export default async function Page (): Promise<React.JSX.Element> {
       link: `/ticket?status=${ decodeURIComponent( "all" ) }`,
     },
     {
-      icon: AssignmentRounded,
+      icon: WorkHistoryIcon,
       label: "Under Credit Review",
       key: "underCreditReview",
-      color: "#ff9800",
+      color: "#827717",
       count: totalUnderCreditReview,
       link: `/ticket?status=${ decodeURIComponent( "under credit review" ) }`,
     },
@@ -243,23 +249,16 @@ export default async function Page (): Promise<React.JSX.Element> {
       link: `/ticket?status=${ decodeURIComponent( "to be login" ) }`,
     },
     {
-      icon: PendingActionsRounded,
+      icon: PendingActionsIcon,
       label: "Pendency in File",
       key: "pendencyInFile",
       color: "#f44336",
       count: totalPendencyInFile,
       link: `/ticket?status=${ decodeURIComponent( "pendency in file" ) }`,
     },
+   
     {
-      icon: ThumbUpRounded,
-      label: "To be Approved",
-      key: "toBeApproved",
-      color: "#4caf50",
-      count: totalToBeApproved,
-      link: `/ticket?status=${ decodeURIComponent( "to be approved" ) }`,
-    },
-    {
-      icon: AccountBalanceRounded,
+      icon: RuleIcon,
       label: "Tvr Done",
       key: "tvrDone",
       color: "#00bcd4",
@@ -267,7 +266,7 @@ export default async function Page (): Promise<React.JSX.Element> {
       link: `/ticket?status=${ decodeURIComponent( "tvr done" ) }`,
     },
     {
-      icon: ReportRounded,
+      icon: RuleIcon,
       label: "Cam Report Done",
       key: "camReportDone",
       color: "#8bc34a",
@@ -278,12 +277,20 @@ export default async function Page (): Promise<React.JSX.Element> {
       icon: ForwardRounded,
       label: "To be Disbursed",
       key: "toBeDisbursed",
-      color: "#9c27b0",
+      color: "#ffcc80",
       count: totalToBeDisbursed,
       link: `/ticket?status=${ decodeURIComponent( "to be disbursed" ) }`,
     },
     {
-      icon: SendRounded,
+      icon: SendTimeExtensionIcon,
+      label: "Disbursed",
+      key: "disbursed",
+      color: "#ff9800",
+      count: totalDisbursed,
+      link: `/ticket?status=${ decodeURIComponent( "disbursed" ) }`,
+    },
+    {
+      icon: SendTimeExtensionIcon,
       label: "File Send to Banker",
       key: "fileSendToBanker",
       color: "#3f51b5",
@@ -298,13 +305,30 @@ export default async function Page (): Promise<React.JSX.Element> {
       count: totalRelook,
       link: `/ticket?status=${ decodeURIComponent( "relook" ) }`,
     },
+    {
+      icon: ThumbUpRounded,
+      label: "To be Approved",
+      key: "toBeApproved",
+      color: "#aed581",
+      count: totalToBeApproved,
+      link: `/ticket?status=${ decodeURIComponent( "to be approved" ) }`,
+    },
+    {
+      icon: SendTimeExtensionIcon,
+      label: "Approved",
+      key: "approved",
+      color: "#64dd17",
+      count: totalApproved,
+      link: `/ticket?status=${ decodeURIComponent( "approved" ) }`,
+    },
+   
     ...( role === "admin"
       ? [
         {
-          icon: PersonRounded,
+          icon: SupervisorAccountIcon,
           label: "Total Agents",
           key: "totalAgents",
-          color: "#607d8b",
+          color: "#90a4ae",
           count: totalAgents,
           link: "/users",
         },
@@ -321,6 +345,7 @@ export default async function Page (): Promise<React.JSX.Element> {
     totalTvrDone,
     totalCamReportDone,
     totalRelook,
+    totalApproved,
     "tickets count"
   );
 
@@ -350,55 +375,105 @@ export default async function Page (): Promise<React.JSX.Element> {
           </Link>
         </Grid>
       ) )}
-      <Grid lg={8} xs={12}>
-        <Sales
-          chartSeries={[
-            {
-              name: "Total Tickets",
-              data: totalTicketsByMonth,
-            },
-            {
-              name: "To be disbursed",
-              data: doneTicketsByMonth,
-            },
-          ]}
-          sx={{ height: "100%" }}
-        />
+      <Grid container spacing={3} item lg={12} xs={12}>
+        <Grid item lg={7} md={6} xs={12}>
+          <Paper
+            elevation={3}
+            sx={{
+              p: 1,
+              backgroundColor: "#fff",
+              borderRadius: "15px",
+              height: "100%",
+            }}
+          >
+            <Sales
+              chartSeries={[
+                { name: "Total Tickets", data: totalTicketsByMonth },
+                { name: "To be Disbursed", data: doneTicketsByMonth },
+              ]}
+              sx={{ height: "100%" }}
+            />
+          </Paper>
+        </Grid>
+
+        {/* 📌 Traffic Chart */}
+        <Grid item lg={5} md={6} xs={12}>
+          <Paper
+            elevation={3}
+            sx={{
+              p: 1,
+              backgroundColor: "#fff",
+              borderRadius: "15px",
+              height: "100%",
+            }}
+          >
+            <Traffic
+              chartSeries={[
+                totalTickets,
+                totalUnderCreditReview,
+                totalToBeLogin,
+                totalPendencyInFile,
+                totalToBeApproved,
+                totalTvrDone,
+                totalCamReportDone,
+                totalToBeLogin,
+                totalToBeDisbursed,
+                totalFileSendToBanker,
+                totalApproved,
+                totalDisbursed,
+              ]}
+              labels={[
+                "Total Tickets",
+                "Under Credit Review",
+                "Total To Be Login",
+                "Pendency in File",
+                "To be Approved",
+                "TVR Done",
+                "Cam Report Done",
+                "To be Login",
+                "To be Disbursed",
+                "File Sent to Banker",
+                "Approved",
+                "Disbursed",
+
+              ]}
+              sx={{ height: "100%" }}
+            />
+          </Paper>
+        </Grid>
+
       </Grid>
-      <Grid lg={4} md={6} xs={12}>
-        <Traffic
-          chartSeries={[
-            totalTickets,
-            totalUnderCreditReview,
-            totalToBeLogin,
-            totalPendencyInFile,
-            totalToBeApproved,
-            totalTvrDone,
-            totalCamReportDone,
-            totalToBeLogin,
-            totalToBeDisbursed,
-            totalFileSendToBanker,
-          ]}
-          labels={[
-            "Total Tickets",
-            "Under Credit Review",
-            "totalToBeLogin",
-            "Pendency in file",
-            "To be approved",
-            "TVR done",
-            "Cam report done",
-            "To be login",
-            "To be disbursed",
-            "File send to banker",
-          ]}
-          sx={{ height: "100%" }}
-        />
-      </Grid>
-      <Grid lg={4} md={6} xs={12}>
-        <LatestApplications sx={{ height: "100%" }} />
-      </Grid>
-      <Grid lg={8} md={12} xs={12}>
-        <LatestOrders sx={{ height: "100%" }} />
+
+      <Grid container spacing={3} item lg={12} xs={12}>
+        <Grid item lg={4} md={6} xs={12}>
+          <Paper
+            elevation={3}
+            sx={{
+              p: 1,
+              backgroundColor: "#f8f9fa",
+              borderRadius: "15px",
+              height: "100%",
+            }}
+          >
+            <LatestApplications sx={{ height: "100%" }} />
+          </Paper>
+        </Grid>
+
+        {/* 📜 Latest Orders */}
+        <Grid item lg={8} md={6} xs={12}>
+          <Paper
+            elevation={3}
+            sx={{
+              p: 1,
+              backgroundColor: "#fff",
+              borderRadius: "15px",
+              height: "100%",
+            }}
+          >
+            <LatestOrders sx={{ height: "100%" }} />
+          </Paper>
+        </Grid>
+
       </Grid>
     </Grid>
   );

@@ -256,6 +256,10 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                 </>
               }
               <InfoRow
+                icon={<MailRounded />}
+                text={customerApplication.customerEmail}
+              />
+              <InfoRow
                 icon={<CurrencyRupeeIcon />}
                 text={formatRupees( customerApplication.applicationAmount )}
               />
@@ -383,7 +387,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                   "& .MuiChip-label": { color: "#6E44FF" },
                 }}
               />
-              {decodedToken()?.role === "admin" ? null : (
+              {decodedToken()?.role === "admin" || decodedToken().role === "sales" ? null : (
                 <Box sx={{ display: "flex", alignItems: "center" }}>
                   <Typography
                     variant="body2"

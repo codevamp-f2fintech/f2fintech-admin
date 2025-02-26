@@ -11,6 +11,9 @@ const nextConfig = {
     eslint: {
         ignoreDuringBuilds: true, // This will ignore ESLint errors during build
     },
+    images: {
+        domains: [ 'f2fintechcustomerdocs.s3.eu-north-1.amazonaws.com' ],
+    },
 };
 
 export default nextConfig;
