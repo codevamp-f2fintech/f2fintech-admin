@@ -58,6 +58,8 @@ const employeeStatusObj = [
   { value: "tvr done", label: "TVR Done" },
   { value: "cam report done", label: "CAM Report Done" },
   { value: "relook", label: "Relook" },
+  { value: "disbursed", label: "Disbursed" },
+  { value: "approved", label: "Approved" },
 ];
 
 export interface TicketDetail {

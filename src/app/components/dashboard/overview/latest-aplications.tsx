@@ -73,7 +73,7 @@ export function LatestApplications ( {
     <Paper
       elevation={3}
       sx={{
-        width: isMobile ? "70%" : isTab ? "100%" : "115%",
+        width: isMobile ? "70%" : isTab ? "100%" : "100%",
         maxHeight: isMobile ? "85vh" : isTab ? "100vh" : "130vh",
         height: "100%",
         display: "flex",
@@ -101,7 +101,7 @@ export function LatestApplications ( {
             mt: isTab ? "" : "4vh",
           }}
         >
-          Latest Applications
+          New Applications
         </Typography>
       </Box>
       <Divider />

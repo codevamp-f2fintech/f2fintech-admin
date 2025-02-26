@@ -79,8 +79,8 @@ export function LatestOrders ( { sx }: LatestUsersProps ): React.JSX.Element {
       sx={{
         bgcolor: "#fff",
         background: "linear-gradient(145deg, #ffffff 0%, #f8f9ff 100%)",
-        width: isMobile ? "100%" : isTab ? "95vw" : "92.5%",
-        ml: isMobile ? "" : isTab ? "" : "7.5%",
+        width: isMobile ? "100%" : isTab ? "95vw" : "100%",
+        ml: isMobile ? "" : isTab ? "" : "",
         maxHeight: isMobile ? "92vh" : isTab ? "100vh" : "130vh",
       }}
     >

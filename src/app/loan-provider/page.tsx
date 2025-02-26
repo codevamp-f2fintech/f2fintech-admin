@@ -10,7 +10,6 @@ import { Utility } from "@/utils";
 import {
     Card,
     CardContent,
-    Chip,
     TextField,
     Button,
     IconButton,
@@ -18,15 +17,13 @@ import {
     Box,
     Container,
     Grid,
-    Tooltip,
-    Avatar,
     CircularProgress,
     InputAdornment,
 } from "@mui/material";
 import { ClearRounded, SearchRounded, PersonAddRounded } from "@mui/icons-material";
 import PublicIcon from '@mui/icons-material/Public';
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 100;
 
 const LoanProviderPage = () => {
     const [ currentPage, setCurrentPage ] = useState( 1 );
@@ -63,23 +60,30 @@ const LoanProviderPage = () => {
         );
     }, [ searchTerm, loanProvider ] );
 
-    // Infinite Scroll Logic
-    const handleScroll = useCallback(
-        debounceScroll( () => {
-            const nearBottom =
-                window.innerHeight + window.scrollY >= document.body.offsetHeight - 400; // 400px threshold
-            if ( nearBottom && !swrLoading && hasMoreData )
-            {
-                setCurrentPage( ( prevPage ) => prevPage + 1 );
+   // Infinite Scroll Logic
+const handleScroll = useCallback(
+    debounceScroll(() => {
+        const nearBottom =
+            window.innerHeight + window.scrollY >= document.body.offsetHeight - 400; // 400px threshold
+
+        if (nearBottom) {
+            if (!swrLoading && hasMoreData) {
+                // If it's not the last page, load the next page
+                setCurrentPage((prevPage) => prevPage + 1);
+            } else if (!hasMoreData) {
+                // If it's the last page, show the "No more loan providers" message
+                setNoMoreData(true);
             }
-        }, 500 ),
-        [ swrLoading, hasMoreData ]
-    );
+        }
+    }, 500),
+    [swrLoading, hasMoreData]
+);
 
     useEffect( () => {
         window.addEventListener( "scroll", handleScroll );
         return () => window.removeEventListener( "scroll", handleScroll );
     }, [ handleScroll ] );
+
 
     return (
         <Box sx={{ minHeight: "100vh", px: { xs: 2, sm: 4 }, py: { xs: 2, sm: 4 } }}>
@@ -121,7 +125,7 @@ const LoanProviderPage = () => {
                     <Button
                         variant="contained"
                         startIcon={<PersonAddRounded />}
-                        onClick={() => router.push( "/loan-provider/loanFormPage" )}
+                        onClick={() => router.push( "/loan-provider/create" )}
                         sx={{
                             borderRadius: "100px",
                             px: 3,
