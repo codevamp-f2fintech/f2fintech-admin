@@ -364,7 +364,7 @@ export default async function Page (): Promise<React.JSX.Element> {
                 height: "100%",
                 backgroundColor: item.color,
                 borderRadius: "20px",
-                maxHeight: "20vh",
+                maxHeight: "25vh",
                 ":hover": {
                   transform: "scale(1.1)",
                   transition: "all 300ms ease-in-out",
