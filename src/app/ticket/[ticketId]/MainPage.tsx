@@ -297,11 +297,11 @@ const Progress: React.FC = () => {
         action: historyMessage,
       } );
 
-      toastAndNavigate( dispatch, true, "info", "User Forwarded Successfully" );
+      toastAndNavigate( dispatch, true, "info", "Ticket Forwarded Successfully" );
       await refetch();
     } catch ( error )
     {
-      toastAndNavigate( dispatch, true, "error", "Error Forwarding User" );
+      toastAndNavigate( dispatch, true, "error", "Error Forwarding Ticket" );
     }
   };
 
