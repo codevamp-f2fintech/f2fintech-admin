@@ -170,7 +170,7 @@ const Step3Form: React.FC<Step3FormProps> = ({
                 >
                   ( Upload your recent 6 months Bank Statement)
                   <br />
-                  (Maximum File Upload Limit Is 10 )
+                  (Maximum File Upload Limit Is <span style={{ color: "#FFd700" }}>10</span> )
                 </Typography>
               </Box>
 
@@ -180,13 +180,16 @@ const Step3Form: React.FC<Step3FormProps> = ({
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
+                  width: "30vw",
+                  alignContent: "center",
+                  justifyContent: "center"
                 }}
               >
                 {/* File picker with multiple file upload support */}
                 {selectedFiles.length < 10 && (
                   <IconButton
                     component="label"
-                    sx={{ mb: 2, color: "#FFD700" }}
+                    sx={{ mb: 0, color: "#FFD700",display: "flex",justifyContent: "center" }}
                   >
                     <AddPhotoAlternateIcon />
                     <input
@@ -241,16 +244,15 @@ const Step3Form: React.FC<Step3FormProps> = ({
                     />
                   </IconButton>
                 )}
-
                 {/* Display selected file names with delete icons */}
                 {selectedFiles.length > 0 && (
-                  <Box sx={{ width: "100%", maxWidth: "40vw", mt: 2 }}>
+                  <Box sx={{ width: "100%", maxWidth: "40vw", mt: 2, }}>
                     {selectedFiles.map((file, index) => (
                       <Box
                         key={index}
                         sx={{
                           display: "flex",
-                          justifyContent: "space-between",
+                          justifyContent: "center",
                           alignItems: "center",
                           mb: 1,
                         }}
@@ -266,13 +268,15 @@ const Step3Form: React.FC<Step3FormProps> = ({
                     ))}
                   </Box>
                 )}
-
+               
+               
                 {/* Upload button */}
                 <Box
                   sx={{
                     display: "flex",
                     justifyContent: "flex-end",
-                    ml: "17vw",
+                    ml: "16vw",
+                    mb: "13vh"
                   }}
                 >
                   <Button
@@ -285,7 +289,6 @@ const Step3Form: React.FC<Step3FormProps> = ({
                     sx={{
                       color: "black",
                       backgroundColor: "#FFD700",
-
                       fontFamily: "Poppins",
                       fontSize: "1rem",
                       lineHeight: "1.5rem",
@@ -313,6 +316,7 @@ const Step3Form: React.FC<Step3FormProps> = ({
                     Skip
                   </Button>
                 </Box>
+                
               </Box>
             </Container>
           </Form>

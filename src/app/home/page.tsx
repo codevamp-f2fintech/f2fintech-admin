@@ -146,7 +146,7 @@ const Home: React.FC = () => {
             flexDirection: "row",
             justifyContent: "space-evenly",
             alignItems: "center",
-            ml: isMobile ? "" : isTab ? "" : "8vw",
+            ml: isMobile ? "" : isTab ? "" : "19vw",
           }}
         >
           <TextField
@@ -173,7 +173,7 @@ const Home: React.FC = () => {
           <Link href="/ticket" passHref>
             <Button
               sx={{
-                width: isMobile ? "20vw" : isTab ? "18vw" : "12vw",
+                width: isMobile ? "20vw" : isTab ? "18vw" : "10vw",
                 fontSize: isMobile ? ".5rem" : isTab ? "1rem" : "",
                 bgcolor: "#f06292",
                 color: "white",
