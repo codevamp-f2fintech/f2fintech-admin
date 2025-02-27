@@ -141,12 +141,12 @@ const Home: React.FC = () => {
         <Box
           sx={{
             height: "10vh",
-            width: isMobile ? "61vw" : isTab ? "50vw" : "30vw",
+            width: isMobile ? "61vw" : isTab ? "50vw" : "45vw",
             display: "flex",
             flexDirection: "row",
             justifyContent: "space-evenly",
             alignItems: "center",
-            ml: isMobile ? "" : isTab ? "" : "26vw",
+            ml: isMobile ? "" : isTab ? "" : "10vw",
           }}
         >
           <TextField
