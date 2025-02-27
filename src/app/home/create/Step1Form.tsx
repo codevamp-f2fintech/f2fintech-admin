@@ -58,125 +58,137 @@ const initialValues = {
 
 interface Step1FormProps {
   applicationNumber?: number | string | null;
-  setApplicationNumber?: (num: number | string | null) => void;
+  setApplicationNumber?: ( num: number | string | null ) => void;
   getStarted?: boolean;
-  setGetStarted?: (value: boolean) => void;
+  setGetStarted?: ( value: boolean ) => void;
   salary?: any;
 }
 
-const Step1Form: React.FC<Step1FormProps> = ({
+const Step1Form: React.FC<Step1FormProps> = ( {
   applicationNumber,
   setApplicationNumber,
   getStarted,
   setGetStarted,
   salary,
-}) => {
-  const [amount, setAmount] = useState<string>("");
-  const [tenure, setTenure] = useState<string>("");
-  const [provider, setProvider] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [errors, setErrors] = useState<{ amount: string; tenure: string; provider: string }>({
+} ) => {
+  const [ amount, setAmount ] = useState<string>( "" );
+  const [ tenure, setTenure ] = useState<string>( "" );
+  const [ provider, setProvider ] = useState<string>( "" );
+  const [ loading, setLoading ] = useState<boolean>( false );
+  const [ errors, setErrors ] = useState<{ amount: string; tenure: string; provider: string }>( {
     amount: "",
     tenure: "",
     provider: "",
-  });
-  const [loanStatus, setLoanStatus] = useState<string | null>(null);
-  const toastInfo = useSelector((state: any) => state.toast);
+  } );
+  const [ loanStatus, setLoanStatus ] = useState<string | null>( null );
+  const toastInfo = useSelector( ( state: any ) => state.toast );
   const dispatch = useDispatch();
 
   const { decodedToken, getLocalStorage, remLocalStorage, setLocalStorage, toastAndNavigate
   } = Utility();
-  const storedCustomerId = getLocalStorage("customerInfo")?.id;
+  const storedCustomerId = getLocalStorage( "customerInfo" )?.id;
 
   // Generate random application number
   const randomNumberGenerator = (): number =>
-    Math.floor(10000000 + Math.random() * 90000000);
+    Math.floor( 10000000 + Math.random() * 90000000 );
 
-  const randomFourDigitNumber = Math.floor(1000 + Math.random() * 9000); // Generate random 4-digit number
+  const randomFourDigitNumber = Math.floor( 1000 + Math.random() * 9000 ); // Generate random 4-digit number
 
   // Get the current date and calculate 20 years ago
-  const minDate = dayjs("1900-01-01");
-  const maxDate = dayjs().subtract(20, "year");
+  const minDate = dayjs( "1900-01-01" );
+  const maxDate = dayjs().subtract( 20, "year" );
 
   // Validation function for the amount
-  const validateAmount = (value: string): void => {
+  const validateAmount = ( value: string ): void => {
     let error = "";
-    if (!value) {
+    if ( !value )
+    {
       error = "This Field is required";
-    } else if (isNaN(Number(value))) {
+    } else if ( isNaN( Number( value ) ) )
+    {
       error = "Amount must be a number";
-    } else if (Number(value) < 50000 || Number(value) > 100000000) {
+    } else if ( Number( value ) < 50000 || Number( value ) > 100000000 )
+    {
       error = "Amount must be within 50 thousand and 10 crore";
-    } else if (Number(value) % 5 !== 0) {
+    } else if ( Number( value ) % 5 !== 0 )
+    {
       error = "Amount must be divisible by 5";
     }
-    setErrors((prev) => ({ ...prev, amount: error }));
+    setErrors( ( prev ) => ( { ...prev, amount: error } ) );
   };
 
   // Validation function for the tenure
-  const validateTenure = (value: string): void => {
+  const validateTenure = ( value: string ): void => {
     let error = "";
-    if (!value) {
+    if ( !value )
+    {
       error = "This Field is required";
     }
-    setErrors((prev) => ({ ...prev, tenure: error }));
+    setErrors( ( prev ) => ( { ...prev, tenure: error } ) );
   };
 
-  const validateProvider = (value: string): void => {
+  const validateProvider = ( value: string ): void => {
     let error = "";
-    if (!value) {
+    if ( !value )
+    {
       error = "This Field is required";
     }
-    setErrors((prev) => ({ ...prev, tenure: error }));
+    setErrors( ( prev ) => ( { ...prev, tenure: error } ) );
   };
 
   // Fetch application number and loan status using stored customer ID
-  useEffect(() => {
+  useEffect( () => {
     const fetchCustomerData = async () => {
-      if (storedCustomerId) {
-        try {
+      if ( storedCustomerId )
+      {
+        try
+        {
           const { data: response } = await axios.get(
-            `${process.env.NEXT_PUBLIC_WEB_URL}/get-application-by-id/${storedCustomerId}`);
-          if (response.status === "Success") {
-            setApplicationNumber(response.data.application_no);
+            `${ process.env.NEXT_PUBLIC_WEB_URL }/get-application-by-id/${ storedCustomerId }` );
+          if ( response.status === "Success" )
+          {
+            setApplicationNumber( response.data.application_no );
             const { data: resp } = await axios.get(
-              `${process.env.NEXT_PUBLIC_WEB_URL}/get-loan-tracking-by-id/${response.data.id}`);
-            if (resp.status === "Success") {
-              setLoanStatus(resp.data.status);
+              `${ process.env.NEXT_PUBLIC_WEB_URL }/get-loan-tracking-by-id/${ response.data.id }` );
+            if ( resp.status === "Success" )
+            {
+              setLoanStatus( resp.data.status );
             }
           }
-        } catch (err) {
-          console.log("Error fetching customer data:", err);
+        } catch ( err )
+        {
+          console.log( "Error fetching customer data:", err );
         }
       }
     };
     fetchCustomerData();
-  }, [storedCustomerId]);
+  }, [ storedCustomerId ] );
 
   // Function to register the customer
-  async function registerCustomer(customer) {
+  async function registerCustomer ( customer ) {
     const { data: res } = await axios.post(
-      `${process.env.NEXT_PUBLIC_WEB_URL}/create-customer`,
+      `${ process.env.NEXT_PUBLIC_WEB_URL }/create-customer`,
       customer
     )
-    if (res.status !== "Success") {
-      throw new Error(`Registration failed: ${res.message}`);
+    if ( res.status !== "Success" )
+    {
+      throw new Error( `Registration failed: ${ res.message }` );
     }
     return res.data.id;
   }
 
   // Function to create customer info
-  async function createCustomerInfo(customerId, restValues) {
+  async function createCustomerInfo ( customerId, restValues ) {
     await axios.post(
-      `${process.env.NEXT_PUBLIC_WEB_URL}/create-customer-info`,
+      `${ process.env.NEXT_PUBLIC_WEB_URL }/create-customer-info`,
       {
         customer_id: customerId,
         ...restValues,
-      })
+      } )
   }
 
   // Function to create the customer application
-  async function createCustomerApplication(
+  async function createCustomerApplication (
     customerId,
     applicationNumber,
     amount,
@@ -185,7 +197,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
   ) {
     const { data: applicationResponse } =
       await axios.post(
-        `${process.env.NEXT_PUBLIC_WEB_URL}/create-application`,
+        `${ process.env.NEXT_PUBLIC_WEB_URL }/create-application`,
         {
           customer_id: customerId,
           applied_by: decodedToken()?.id,
@@ -193,43 +205,44 @@ const Step1Form: React.FC<Step1FormProps> = ({
           amount,
           tenure,
           provider
-        })
+        } )
     return applicationResponse.data.applicationId;
   }
 
   // Function to create loan tracking
-  async function createLoanTracking(applicationId) {
+  async function createLoanTracking ( applicationId ) {
     await axios.post(
-      `${process.env.NEXT_PUBLIC_WEB_URL}/create-loan-tracking`,
+      `${ process.env.NEXT_PUBLIC_WEB_URL }/create-loan-tracking`,
       {
         customer_application_id: applicationId,
         status: "submitted",
-      })
+      } )
   }
 
   // Function to log in the customer
-  async function loginCustomer(contact, name) {
+  async function loginCustomer ( contact, name ) {
     const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_WEB_URL}/login`,
+      `${ process.env.NEXT_PUBLIC_WEB_URL }/login`,
       {
         contact,
-        password: `${name.replace(/\s/g, "")}@${randomFourDigitNumber}`,
-      })
+        password: `${ name.replace( /\s/g, "" ) }@${ randomFourDigitNumber }`,
+      } )
 
-    if (response.data.status === "Success") {
+    if ( response.data.status === "Success" )
+    {
       const customerInfo = {
         id: response.data.data.id,
         name: response.data.data.name,
         token: response.data.data.token,
       };
-      setLocalStorage("customerInfo", customerInfo);
+      setLocalStorage( "customerInfo", customerInfo );
       location.reload();
     }
   }
 
   // Create new customer with loan application
   const create = useCallback(
-    async (values: typeof initialValues) => {
+    async ( values: typeof initialValues ) => {
       const applicationNumberGenerated = randomNumberGenerator();
       const { contact, email, name, status, dob, ...restValues } = values;
       const customer = {
@@ -237,13 +250,14 @@ const Step1Form: React.FC<Step1FormProps> = ({
         dob,
         email,
         name,
-        password: `${name.replace(/\s/g, "")}@${randomFourDigitNumber}`,
+        password: `${ name.replace( /\s/g, "" ) }@${ randomFourDigitNumber }`,
         status,
       };
-      try {
+      try
+      {
         const customerId =
-          storedCustomerId || (await registerCustomer(customer));
-        await createCustomerInfo(customerId, restValues);
+          storedCustomerId || ( await registerCustomer( customer ) );
+        await createCustomerInfo( customerId, restValues );
         const applicationId = await createCustomerApplication(
           customerId,
           applicationNumberGenerated,
@@ -251,32 +265,35 @@ const Step1Form: React.FC<Step1FormProps> = ({
           tenure,
           provider
         );
-        await createLoanTracking(applicationId);
+        await createLoanTracking( applicationId );
         !storedCustomerId
-          ? await loginCustomer(contact, name)
+          ? await loginCustomer( contact, name )
           : location.reload();
 
         console.log(
           "Customer info, application, and loan tracking created successfully"
         );
-      } catch (err) {
-        toastAndNavigate(dispatch, true, "error", err?.response?.data?.msg);
+      } catch ( err )
+      {
+        toastAndNavigate( dispatch, true, "error", err?.response?.data?.msg );
         console.log(
           "Error during customer creation:",
           err?.response?.data?.msg
         );
-      } finally {
-        setLoading(false);
+      } finally
+      {
+        setLoading( false );
       }
     },
-    [amount, tenure, provider]
+    [ amount, tenure, provider ]
   );
 
   // If application number and loan status exists, display success message without making user to fill the form again
   if (
     applicationNumber &&
-    !(loanStatus === "disbursed" || loanStatus === "rejected")
-  ) {
+    !( loanStatus === "disbursed" || loanStatus === "rejected" )
+  )
+  {
     return (
       <Box
         sx={{
@@ -337,32 +354,35 @@ const Step1Form: React.FC<Step1FormProps> = ({
             `To speed up the
           process, please complete the next steps.`}
         </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          sx={{
-            width: "100%",
-            borderRadius: "0px 0px 10px 0px",
-            bgcolor: "#f06292",
-            color: "white",
-            "&:hover": {
+        {salary ?
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{
+              width: "100%",
+              borderRadius: "0px 0px 10px 0px",
               bgcolor: "#f06292",
               color: "white",
-            },
-          }}
-          onClick={() => {
-            remLocalStorage("customerInfo");
-            location.reload();
-          }}
-        >
-          Fill Another Application
-        </Button>
+              "&:hover": {
+                bgcolor: "#f06292",
+                color: "white",
+              },
+            }}
+            onClick={() => {
+              remLocalStorage( "customerInfo" );
+              location.reload();
+            }}
+          >
+            Fill Another Application
+          </Button>
+          : null}
       </Box>
     );
   }
 
   // Initial form view with amount and tenure selection
-  if (!getStarted) {
+  if ( !getStarted )
+  {
     return (
       <Box
         sx={{
@@ -408,11 +428,11 @@ const Step1Form: React.FC<Step1FormProps> = ({
             label="Provider Name*"
             placeholder="Any Loan Provider preference?"
             value={provider}
-            onChange={(e) => {
-              setProvider(e.target.value);
-              validateProvider(e.target.value);
+            onChange={( e ) => {
+              setProvider( e.target.value );
+              validateProvider( e.target.value );
             }}
-            onBlur={() => validateProvider(provider)}
+            onBlur={() => validateProvider( provider )}
             error={!!errors.provider}
             helperText={errors.provider}
             InputProps={{
@@ -464,11 +484,11 @@ const Step1Form: React.FC<Step1FormProps> = ({
             label="Enter Amount*"
             placeholder="How Much Loan Do You Require?"
             value={amount}
-            onChange={(e) => {
-              setAmount(e.target.value);
-              validateAmount(e.target.value);
+            onChange={( e ) => {
+              setAmount( e.target.value );
+              validateAmount( e.target.value );
             }}
-            onBlur={() => validateAmount(amount)}
+            onBlur={() => validateAmount( amount )}
             error={!!errors.amount}
             helperText={errors.amount}
             InputProps={{
@@ -522,11 +542,11 @@ const Step1Form: React.FC<Step1FormProps> = ({
             variant="filled"
             name="tenure"
             value={tenure}
-            onChange={(e) => {
-              setTenure(e.target.value);
-              validateTenure(e.target.value);
+            onChange={( e ) => {
+              setTenure( e.target.value );
+              validateTenure( e.target.value );
             }}
-            onBlur={() => validateTenure(tenure)}
+            onBlur={() => validateTenure( tenure )}
             sx={{
               "& .MuiFilledInput-root": {
                 borderRadius: "10px",
@@ -548,7 +568,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
               },
             }}
           >
-            {["3 Years", "5 Years", "8 Years"].map((label) => (
+            {[ "3 Years", "5 Years", "8 Years" ].map( ( label ) => (
               <MenuItem
                 key={label}
                 value={label}
@@ -569,7 +589,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
               >
                 {label}
               </MenuItem>
-            ))}
+            ) )}
           </Select>
 
           {errors.tenure && (
@@ -600,7 +620,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
           variant="contained"
           endIcon={<ArrowForwardIcon />}
           onClick={() => {
-            setGetStarted(true); // This sets getStarted to true
+            setGetStarted( true ); // This sets getStarted to true
           }}
           sx={{
             fontWeight: "500",
@@ -631,9 +651,9 @@ const Step1Form: React.FC<Step1FormProps> = ({
         enableReinitialize
         initialValues={initialValues}
         validationSchema={step1ValidationSchema}
-        onSubmit={(values) => create(values)}
+        onSubmit={( values ) => create( values )}
       >
-        {({
+        {( {
           dirty,
           errors,
           touched,
@@ -643,7 +663,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
           handleChange,
           handleBlur,
           handleSubmit,
-        }) => (
+        } ) => (
           <Form onSubmit={handleSubmit}>
             <Container
               sx={{
@@ -781,11 +801,11 @@ const Step1Form: React.FC<Step1FormProps> = ({
                   label="PAN*"
                   value={values.pan}
                   onBlur={handleBlur}
-                  onChange={(event) => {
+                  onChange={( event ) => {
                     const uppercaseValue = event.target.value.toUpperCase();
-                    setFieldValue("pan", uppercaseValue); // Update the Formik field value in uppercase
+                    setFieldValue( "pan", uppercaseValue ); // Update the Formik field value in uppercase
                   }}
-                  error={touched.pan && Boolean(errors.pan)}
+                  error={touched.pan && Boolean( errors.pan )}
                   helperText={touched.pan && errors.pan}
                   inputProps={{
                     maxLength: 10,
@@ -938,7 +958,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
                   value={values.city}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  error={touched.city && Boolean(errors.city)}
+                  error={touched.city && Boolean( errors.city )}
                   helperText={touched.city && errors.city}
                   InputLabelProps={{
                     style: { color: "white" },
@@ -1013,7 +1033,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <DatePicker
                       format="DD MMMM YYYY"
-                      views={["year", "month", "day"]}
+                      views={[ "year", "month", "day" ]}
                       label="Select Date Of Birth*"
                       name="dob"
                       minDate={minDate} // Start at 1900
@@ -1021,9 +1041,9 @@ const Step1Form: React.FC<Step1FormProps> = ({
                       error={touched.dob && !!errors.dob}
                       helperText={touched.dob && errors.dob}
                       value={values.dob}
-                      onBlur={() => setFieldTouched("dob", true)}
-                      onChange={(newValue) => setFieldValue("dob", newValue)}
-                      renderInput={(params) => (
+                      onBlur={() => setFieldTouched( "dob", true )}
+                      onChange={( newValue ) => setFieldValue( "dob", newValue )}
+                      renderInput={( params ) => (
                         <TextField {...params} fullWidth margin="normal" />
                       )}
                       PopperProps={{
