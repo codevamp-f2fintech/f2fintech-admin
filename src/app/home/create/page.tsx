@@ -118,12 +118,6 @@ const MultiStepForm: React.FC = () => {
           if ( response.status === "Success" )
           {
             setApplicationData( response.data );
-            const { data: resp } = await axios.get(
-              `${ process.env.NEXT_PUBLIC_WEB_URL }/get-loan-tracking-by-id/${ response.data.id }` );
-            if ( resp.status === "Success" )
-            {
-              setLoanStatus( resp.data.status );
-            }
           }
         } catch ( err )
         {
@@ -181,6 +175,11 @@ const MultiStepForm: React.FC = () => {
     }
   };
 
+  console.log( 'applicationNumber', applicationNumber, activeStep, applicationData?.salary, getStarted );
+  // activeStep === 0 &&
+  //   !applicationData?.salary &&
+  //   !getStarted &&
+
   return (
     <Container
       maxWidth={false}
@@ -214,7 +213,7 @@ const MultiStepForm: React.FC = () => {
             maxHeight: "260vh", // Adjust height as needed
             // border: "2px solid yellow",
             backgroundColor: "#424242",
-              borderRadius: "20px 0px 0px 20px",
+            borderRadius: "20px 0px 0px 20px",
           }}
         >
           <Box sx={{ width: "100%" }}>

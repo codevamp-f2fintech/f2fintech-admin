@@ -219,6 +219,12 @@ const Step1Form: React.FC<Step1FormProps> = ( {
       } )
   }
 
+  const setCustomerData = async ( customerInfo ) => {
+    setGetStarted(false);
+    await setLocalStorage( "customerInfo", customerInfo );
+    location.reload();
+  }
+
   // Function to log in the customer
   async function loginCustomer ( contact, name ) {
     const response = await axios.post(
@@ -267,7 +273,10 @@ const Step1Form: React.FC<Step1FormProps> = ( {
         );
         await createLoanTracking( applicationId );
         !storedCustomerId
-          ? await loginCustomer( contact, name )
+          ? await setCustomerData( {
+            id: customerId,
+            name: customer.name
+          } )
           : location.reload();
 
         console.log(
@@ -586,7 +595,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
               "& .MuiInputLabel-root.Mui-focused": {
                 color: "#ffffff",
               },
-              
+
             }}
           >
             {[ "3 Years", "5 Years", "8 Years" ].map( ( label ) => (
@@ -1170,7 +1179,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                         contact me for marketing purposes via
                         <br />
                         <br />
-                        <Box sx={{width: "10vw",display: "flex",alignItems: "center",justifyContent: "space-between"}}><SmsIcon /> <CallIcon /> <WhatsAppIcon />
+                        <Box sx={{ width: "10vw", display: "flex", alignItems: "center", justifyContent: "space-between" }}><SmsIcon /> <CallIcon /> <WhatsAppIcon />
                           <EmailIcon /></Box>
                       </Typography>
                     }
