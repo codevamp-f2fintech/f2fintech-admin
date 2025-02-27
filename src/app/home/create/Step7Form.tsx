@@ -290,7 +290,7 @@ const Step7Form: React.FC<Step7FormProps> = ({
               border: "1px solid transparent",
             },
             "& .MuiInputAdornment-root": {
-              color: "white",
+              color: "#9e9e9e",
             },
             "& .css-ubk1op-MuiFormLabel-root-MuiInputLabel-root": {
               color: "white",
@@ -330,7 +330,7 @@ const Step7Form: React.FC<Step7FormProps> = ({
               border: "1px solid transparent",
             },
             "& .MuiInputAdornment-root": {
-              color: "white",
+              color: "#9e9e9e",
             },
             "& .css-ubk1op-MuiFormLabel-root-MuiInputLabel-root": {
               color: "white",
@@ -369,7 +369,7 @@ const Step7Form: React.FC<Step7FormProps> = ({
               border: "1px solid transparent",
             },
             "& .MuiInputAdornment-root": {
-              color: "white",
+              color: "#9e9e9e",
             },
             "& .css-ubk1op-MuiFormLabel-root-MuiInputLabel-root": {
               color: "white",
@@ -471,13 +471,13 @@ const Step7Form: React.FC<Step7FormProps> = ({
       <Box
         sx={{
           display: "flex",
-          width: "40vw",
+          width: "30vw",
           justifyContent: "flex-start",
         }}
       >
         <Button
           onClick={handleBack}
-          sx={{ mt: 2, fontFamily: "Poppins", fontSize: ".9rem" }}
+          sx={{ mt: 2, fontFamily: "Poppins", fontSize: ".9rem", color: "white" }}
           disabled={aadharUploadsSuccess || profileDetail}
         >
           Back

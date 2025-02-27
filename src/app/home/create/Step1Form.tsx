@@ -441,6 +441,9 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                   <AccountBalanceIcon />
                 </InputAdornment>
               ),
+              style: {
+                color: "white", // This sets the text color to white
+              },
             }}
             sx={{
               fontSize: "13px",
@@ -451,6 +454,9 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                 backgroundColor: "transparent !important", // Makes the input background transparent
               },
               "& .MuiFormLabel-root": {
+                color: "#9e9e9e", // Label color
+              },
+              "& .MuiFormLabel-focus": {
                 color: "#ffffff", // Label color
               },
               "& .MuiFilledInput-underline:before": {
@@ -460,7 +466,11 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                 borderBottomColor: "#ffffff", // Underline color on hover
               },
               "& .MuiFilledInput-underline:after": {
-                borderBottomColor: "#FFD700", // Underline color when focused
+                borderBottomColor: "#039be5", // Underline color when focused
+              },
+              "& .MuiFormLabel-root.Mui-focused": {
+                color: "#e0e0e0 !important", // Ensure label color stays white when focused
+                fontSize: "1rem",
               },
             }}
           />
@@ -497,6 +507,9 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                   <CurrencyRupeeIcon />
                 </InputAdornment>
               ),
+              style: {
+                color: "white", // This sets the text color to white
+              },
             }}
             sx={{
               fontSize: "13px",
@@ -507,6 +520,9 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                 backgroundColor: "transparent !important", // Makes the input background transparent
               },
               "& .MuiFormLabel-root": {
+                color: "#9e9e9e", // Label color
+              },
+              "& .MuiFormLabel-focus": {
                 color: "#ffffff", // Label color
               },
               "& .MuiFilledInput-underline:before": {
@@ -516,7 +532,11 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                 borderBottomColor: "#ffffff", // Underline color on hover
               },
               "& .MuiFilledInput-underline:after": {
-                borderBottomColor: "#FFD700", // Underline color when focused
+                borderBottomColor: "#039be5", // Underline color when focused
+              },
+              "& .MuiFormLabel-root.Mui-focused": {
+                color: "#e0e0e0 !important", // Ensure label color stays white when focused
+                fontSize: "1rem",
               },
             }}
           />
@@ -535,7 +555,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
             marginBottom: 3,
           }}
         >
-          <InputLabel style={{ color: "#7F9E8A" }}>
+          <InputLabel style={{ color: "#bdbdbd" }}>
             Select A Comfortable Tenure
           </InputLabel>
           <Select
@@ -561,11 +581,12 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                 },
               },
               "& .MuiInputAdornment-root": {
-                color: "black",
+                color: "#ffffff",
               },
               "& .MuiInputLabel-root.Mui-focused": {
-                color: "black",
+                color: "#ffffff",
               },
+              
             }}
           >
             {[ "3 Years", "5 Years", "8 Years" ].map( ( label ) => (
@@ -573,17 +594,17 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                 key={label}
                 value={label}
                 sx={{
-                  backgroundColor: "black", // Default background color
-                  color: "white", // Default text color
+                  backgroundColor: "white", // Default background color
+                  color: "black", // Default text color
                   "&:hover": {
-                    backgroundColor: "#333333", // Slightly lighter black on hover
+                    backgroundColor: "#757575", // Slightly lighter black on hover
                   },
                   "&.Mui-selected": {
                     backgroundColor: "black", // Background color when selected
                     color: "white", // Text color when selected
                   },
                   "&.Mui-selected:hover": {
-                    backgroundColor: "#333333", // Slightly lighter black on hover when selected
+                    backgroundColor: "#757575", // Slightly lighter black on hover when selected
                   },
                 }}
               >
@@ -628,7 +649,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
             fontFamily: "Poppins",
             lineHeight: "1.5rem",
             mt: 2,
-            backgroundColor: "#FFD700",
+            backgroundColor: "#039be5",
             // width: "45%",
             width: {
               xs: "80%",
@@ -672,6 +693,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                 alignItems: "center",
                 width: "100%",
                 marginBottom: "15px",
+                padding: "2rem"
               }}
             >
               <Box
@@ -716,6 +738,8 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                   alignItems: "center",
                   margin: "15px 15px",
                   gap: 2,
+                  color: "red"
+
                 }}
               >
                 <TextField
@@ -730,7 +754,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                   error={!!touched.name && !!errors.name}
                   helperText={touched.name && errors.name}
                   InputLabelProps={{
-                    style: { color: "white" },
+                    style: { color: "#9e9e9e" },
                   }}
                   sx={{
                     width: {
@@ -741,6 +765,9 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     height: "50px",
                     fontSize: "16px",
                     marginBottom: 3,
+                    "& .MuiInputBase-input": {
+                      color: "white", // This sets the text color inside the input field to white
+                    },
                   }}
                 />
 
@@ -756,7 +783,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                   error={!!touched.contact && !!errors.contact}
                   helperText={touched.contact && errors.contact}
                   InputLabelProps={{
-                    style: { color: "white" },
+                    style: { color: "#9e9e9e" },
                   }}
                   sx={{
                     width: {
@@ -767,6 +794,9 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     height: "50px",
                     fontSize: "16px",
                     marginBottom: 3,
+                    "& .MuiInputBase-input": {
+                      color: "white", // This sets the text color inside the input field to white
+                    },
                   }}
                 />
                 <TextField
@@ -781,7 +811,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                   error={!!touched.email && !!errors.email}
                   helperText={touched.email && errors.email}
                   InputLabelProps={{
-                    style: { color: "white" },
+                    style: { color: "#9e9e9e" },
                   }}
                   sx={{
                     width: {
@@ -792,6 +822,9 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     height: "50px",
                     fontSize: "16px",
                     marginBottom: 3,
+                    "& .MuiInputBase-input": {
+                      color: "white", // This sets the text color inside the input field to white
+                    },
                   }}
                 />
                 <TextField
@@ -812,13 +845,16 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     style: { textTransform: "uppercase" }, // Applies uppercase stylin
                   }}
                   InputLabelProps={{
-                    style: { color: "white" },
+                    style: { color: "#9e9e9e" },
                   }}
                   sx={{
                     width: "75%",
                     height: "50px",
                     fontSize: "16px",
                     marginBottom: 3,
+                    "& .MuiInputBase-input": {
+                      color: "white", // This sets the text color inside the input field to white
+                    },
                   }}
                 />
                 <TextField
@@ -833,7 +869,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                   error={!!touched.father_name && !!errors.father_name}
                   helperText={touched.father_name && errors.father_name}
                   InputLabelProps={{
-                    style: { color: "white" },
+                    style: { color: "#9e9e9e" },
                   }}
                   sx={{
                     width: {
@@ -844,6 +880,9 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     height: "50px",
                     fontSize: "16px",
                     marginBottom: 3,
+                    "& .MuiInputBase-input": {
+                      color: "white", // This sets the text color inside the input field to white
+                    },
                   }}
                 />
                 <TextField
@@ -858,7 +897,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                   error={!!touched.mother_name && !!errors.mother_name}
                   helperText={touched.mother_name && errors.mother_name}
                   InputLabelProps={{
-                    style: { color: "white" },
+                    style: { color: "#9e9e9e" },
                   }}
                   sx={{
                     width: {
@@ -869,6 +908,9 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     height: "50px",
                     fontSize: "16px",
                     marginBottom: 3,
+                    "& .MuiInputBase-input": {
+                      color: "white", // This sets the text color inside the input field to white
+                    },
                   }}
                 />
                 <TextField
@@ -883,7 +925,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                   error={!!touched.working_address && !!errors.working_address}
                   helperText={touched.working_address && errors.working_address}
                   InputLabelProps={{
-                    style: { color: "white" },
+                    style: { color: "#9e9e9e" },
                   }}
                   sx={{
                     width: {
@@ -894,6 +936,9 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     height: "50px",
                     fontSize: "16px",
                     marginBottom: 3,
+                    "& .MuiInputBase-input": {
+                      color: "white", // This sets the text color inside the input field to white
+                    },
                   }}
                 />
                 <TextField
@@ -912,7 +957,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     touched.permanent_address && errors.permanent_address
                   }
                   InputLabelProps={{
-                    style: { color: "white" },
+                    style: { color: "#9e9e9e" },
                   }}
                   sx={{
                     width: {
@@ -923,6 +968,9 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     height: "50px",
                     fontSize: "16px",
                     marginBottom: 3,
+                    "& .MuiInputBase-input": {
+                      color: "white", // This sets the text color inside the input field to white
+                    },
                   }}
                 />
                 <TextField
@@ -937,7 +985,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                   error={!!touched.current_address && !!errors.current_address}
                   helperText={touched.current_address && errors.current_address}
                   InputLabelProps={{
-                    style: { color: "white" },
+                    style: { color: "#9e9e9e" },
                   }}
                   sx={{
                     width: {
@@ -948,6 +996,9 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     height: "50px",
                     fontSize: "16px",
                     marginBottom: 3,
+                    "& .MuiInputBase-input": {
+                      color: "white", // This sets the text color inside the input field to white
+                    },
                   }}
                 />
                 <TextField
@@ -961,7 +1012,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                   error={touched.city && Boolean( errors.city )}
                   helperText={touched.city && errors.city}
                   InputLabelProps={{
-                    style: { color: "white" },
+                    style: { color: "#9e9e9e" },
                   }}
                   sx={{
                     width: {
@@ -972,6 +1023,9 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     height: "50px",
                     fontSize: "16px",
                     marginBottom: 3,
+                    "& .MuiInputBase-input": {
+                      color: "white", // This sets the text color inside the input field to white
+                    },
                   }}
                 />
                 <FormControl
@@ -983,6 +1037,9 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     height: "50px",
                     fontSize: "16px",
                     marginBottom: 3,
+                    "& .MuiInputBase-input": {
+                      color: "white", // This sets the text color inside the input field to white
+                    },
                   }}
                 >
                   <InputLabel sx={{ color: "white" }}>
@@ -1112,8 +1169,9 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                         and/or their authorized third party service providers to
                         contact me for marketing purposes via
                         <br />
-                        <SmsIcon /> <CallIcon /> <WhatsAppIcon />
-                        <EmailIcon />
+                        <br />
+                        <Box sx={{width: "10vw",display: "flex",alignItems: "center",justifyContent: "space-between"}}><SmsIcon /> <CallIcon /> <WhatsAppIcon />
+                          <EmailIcon /></Box>
                       </Typography>
                     }
                   />
@@ -1122,13 +1180,13 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                   disabled={!dirty || loading}
                   type="submit"
                   sx={{
-                    color: "black",
+                    color: "#ffffff",
                     fontWeight: "500",
                     borderRadius: "20px",
                     fontSize: {
                       xs: "0.875rem", // Mobile
                       sm: "1rem", // Tablet
-                      md: "1.125rem", // Desktop
+                      md: "1rem", // Desktop
                     },
                     lineHeight: "1.5rem",
                     width: {
@@ -1142,11 +1200,11 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                       md: "8px 16px", // Desktop
                     },
                     mt: 2,
-                    backgroundColor: "#FFD700",
+                    backgroundColor: "#039be5",
                     marginBottom: 3,
                     "&:hover": {
                       color: "#ffffff",
-                      backgroundColor: "#FFD700",
+                      backgroundColor: "#0277bd",
                     },
                   }}
                 >
