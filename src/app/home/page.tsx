@@ -33,7 +33,7 @@ const Home: React.FC = () => {
     ( state: RootState ) => state.customerApplications
   );
   const dispatch: AppDispatch = useDispatch();
-  const { debounceScroll, decodedToken } = Utility();
+  const { debounceScroll, decodedToken, remLocalStorage } = Utility();
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
   const salesUserId = decodedToken()?.role === "sales" ? decodedToken()?.id : null;
@@ -201,6 +201,9 @@ const Home: React.FC = () => {
                   "&:hover": {
                     bgcolor: "#f06292"
                   },
+                }}
+                onClick={() => {
+                  remLocalStorage( "customerInfo" );
                 }}
                 variant="contained"
               >
