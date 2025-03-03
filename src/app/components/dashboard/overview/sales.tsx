@@ -12,14 +12,14 @@ import { Chart } from "@/app/components/core/chart";
 import { Box, Typography, useMediaQuery } from "@mui/material";
 
 export interface SalesProps {
-  chartSeries: { name: string; data: number[] }[];
+  chartSeries: { name: string; data: number }[];
   sx?: SxProps;
 }
 
-export function Sales ( { chartSeries, sx }: SalesProps ): React.JSX.Element {
+export function Sales({ chartSeries, sx }: SalesProps): React.JSX.Element {
   const chartOptions = useChartOptions();
-  const isMobile = useMediaQuery( "(max-width:600px)" );
-  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
   return (
     <Card
@@ -65,7 +65,7 @@ export function Sales ( { chartSeries, sx }: SalesProps ): React.JSX.Element {
   );
 }
 
-function useChartOptions (): ApexOptions {
+function useChartOptions(): ApexOptions {
   const theme = useTheme();
 
   return {
@@ -76,7 +76,7 @@ function useChartOptions (): ApexOptions {
     },
     colors: [
       theme.palette.primary.main,
-      alpha( theme.palette.primary.main, 0.25 ),
+      alpha(theme.palette.primary.main, 0.25),
     ],
     dataLabels: { enabled: false },
     fill: { opacity: 1, type: "solid" },
@@ -88,7 +88,7 @@ function useChartOptions (): ApexOptions {
     },
     legend: { show: false },
     plotOptions: { bar: { columnWidth: "40px" } },
-    stroke: { colors: [ "transparent" ], show: true, width: 2 },
+    stroke: { colors: ["transparent"], show: true, width: 2 },
     theme: { mode: theme.palette.mode },
     xaxis: {
       axisBorder: { color: theme.palette.divider, show: true },
@@ -111,7 +111,7 @@ function useChartOptions (): ApexOptions {
     },
     yaxis: {
       labels: {
-        formatter: ( value ) => `${ value }`,
+        formatter: (value) => `${value}`,
         offsetX: -10,
         style: { colors: theme.palette.text.secondary },
       },

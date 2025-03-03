@@ -60,16 +60,16 @@ interface FilterPanelProps {
 const statusOptions = [
   "all",
   "under credit review",
-  "to be login",
+  "operations",
   "pendency in file",
+  "file send to banker",
   "to be approved",
   "to be disbursed",
-  "file send to banker",
-  "tvr done",
-  "cam report done",
-  "relook",
   "approved",
   "disbursed",
+  // "tvr done",
+  // "cam report done",
+  // "relook",
 ];
 
 const FilterPanel: React.FC<FilterPanelProps> = ({
@@ -100,18 +100,18 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   const getStatusColor = (status: string): string => {
     const colors: { [key: string]: string } = {
       "under credit review": "#ff9800", // Orange ----
-      "cam report done": "#8bc34a", // Light Green   ----
+      "operations": "#2196f3", // Blue
       "pendency in file": "#f44336", // Red   ----
-      "to be approved": "#4caf50", // Green   ----
-      "tvr done": "#00bcd4", // Cyan   ----
-      "to be login": "#2196f3", // Blue
-      "to be disbursed": "#9c27b0", // Purple
       "file send to banker": "#3f51b5", // Indigo
-      relook: "#ff5722", // Orange-Red
+      "to be approved": "#4caf50", // Green   ----
+      "to be disbursed": "#9c27b0", // Purple
+      "approved": "#8bc34a", // Light Green   ----
+      "disbursed": "#00bcd4", // Cyan   ----
       forwarded: "#ffc107", // Amber for Forwarded
       "forwarded to me": "#ff7043", // Deep Orange
       "forwarded by me": "#26c6da", // cyan
       all: "#757575", // Grey
+      // relook: "#ff5722", // Orange-Red
     };
     return colors[status] || colors.all;
   };
@@ -119,14 +119,13 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   const getStatusIcon = (status: string): JSX.Element => {
     const icons: { [key: string]: JSX.Element } = {
       "under credit review": <AssignmentRounded sx={{ fontSize: 20 }} />,
-      "to be login": <LoginRounded sx={{ fontSize: 20 }} />,
+      "operations": <LoginRounded sx={{ fontSize: 20 }} />,
       "pendency in file": <PendingActionsRounded sx={{ fontSize: 20 }} />,
+      "file send to banker": <SendRounded sx={{ fontSize: 20 }} />,
       "to be approved": <ThumbUpRounded sx={{ fontSize: 20 }} />,
       "to be disbursed": <ForwardRounded sx={{ fontSize: 20 }} />,
-      "file send to banker": <SendRounded sx={{ fontSize: 20 }} />,
-      "tvr done": <AccountBalanceRounded sx={{ fontSize: 20 }} />,
-      "cam report done": <ReportRounded sx={{ fontSize: 20 }} />,
-      relook: <VisibilityRounded sx={{ fontSize: 20 }} />,
+      "approved": <AccountBalanceRounded sx={{ fontSize: 20 }} />,
+      "disbursed": <ReportRounded sx={{ fontSize: 20 }} />,
       forwarded: <ForwardToInboxRounded sx={{ fontSize: 20 }} />,
       "forwarded to me": <ArrowDownwardRounded sx={{ fontSize: 20 }} />,
       "forwarded by me": <ArrowUpwardRounded sx={{ fontSize: 20 }} />,
