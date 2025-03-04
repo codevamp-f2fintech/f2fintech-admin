@@ -6,7 +6,7 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { Box, Divider, useMediaQuery } from "@mui/material";
+import { Box, Divider, TextField, useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import type { SxProps } from "@mui/material/styles";
 import type { ApexOptions } from "apexcharts";
@@ -17,18 +17,20 @@ import { Utility } from "@/utils";
 export interface TrafficProps {
   chartSeries: number[];
   labels: string[];
-  sx?: SxProps;
+  date?: string,
+  setDate?: () => {};
 }
 
-export function Traffic({
+export function Traffic ( {
   chartSeries,
   labels,
-  sx,
-}: TrafficProps): React.JSX.Element {
-  const chartOptions = useChartOptions(labels);
+  date,
+  setDate,
+}: TrafficProps ): React.JSX.Element {
+  const chartOptions = useChartOptions( labels );
   const { capitalizeFirstLetter } = Utility();
-  const isMobile = useMediaQuery("(max-width:600px)");
-  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const isMobile = useMediaQuery( "(max-width:600px)" );
+  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
 
   return (
     <Card
@@ -40,7 +42,7 @@ export function Traffic({
       <Box
         sx={{
           display: "flex",
-          justifyContent: "flex-start",
+          justifyContent: "space-between",
           alignItems: "center",
           height: isMobile ? "8vh" : isTab ? "5vh" : "12vh",
         }}
@@ -63,14 +65,13 @@ export function Traffic({
       <CardContent sx={{ height: "77vh" }}>
         <Stack sx={{ display: "flex" }}>
           <Chart
-            height={260}
+            height={200}
             options={chartOptions}
             series={chartSeries}
             type="donut"
             width="100%"
             sx={{
               transition: "color 0.3s ease, transform 0.3s ease",
-
               "&:hover": {
                 color: "red",
                 transform: "scale(1.1)",
@@ -84,30 +85,29 @@ export function Traffic({
               alignItems: "center",
               justifyContent: "center",
               flexWrap: "wrap",
-              padding: "1vh",
-              height: "34vh",
-              // border: "2px solid gray",
+              // padding: "1rem",
+              height: "38vh",
               borderRadius: "20px",
             }}
           >
-            {chartSeries.map((item, index) => {
+            {chartSeries.map( ( item, index ) => {
               const colors = [
                 "#009688",
-                "#ff9800",
+                "#827717",
                 "#2196f3",
                 "#f44336",
-                "#4caf50",
-                "#00bcd4",
-                "#8bc34a",
-                "#9c27b0",
+                "#ffcc80",
+                "#ff9800",
                 "#3f51b5",
-                "#ff5722",
+                "#aed581",
+                "#64dd17",
+                "#90a4ae",
               ];
-              const color = colors[index % colors.length];
+              const color = colors[ index % colors.length ];
 
               return (
                 <Stack
-                  key={labels[index]}
+                  key={labels[ index ]}
                   sx={{
                     display: "flex",
                     alignItems: "center",
@@ -130,7 +130,7 @@ export function Traffic({
                       color: color,
                     }}
                   >
-                    {capitalizeFirstLetter(labels[index])}
+                    {capitalizeFirstLetter( labels[ index ] )}
                   </Typography>
                   <Typography
                     color="text.secondary"
@@ -153,7 +153,7 @@ export function Traffic({
                   </Typography>
                 </Stack>
               );
-            })}
+            } )}
           </Stack>
         </Stack>
       </CardContent>
@@ -161,22 +161,22 @@ export function Traffic({
   );
 }
 
-function useChartOptions(labels: string[]): ApexOptions {
+function useChartOptions ( labels: string[] ): ApexOptions {
   const theme = useTheme();
 
   return {
     chart: { background: "transparent" },
     colors: [
       "#009688",
-      "#ff9800",
+      "#827717",
       "#2196f3",
       "#f44336",
-      "#4caf50",
-      "#00bcd4",
-      "#8bc34a",
-      "#9c27b0",
+      "#ffcc80",
+      "#ff9800",
       "#3f51b5",
-      "#ff5722",
+      "#aed581",
+      "#64dd17",
+      "#90a4ae",
     ],
     dataLabels: { enabled: false },
     labels,

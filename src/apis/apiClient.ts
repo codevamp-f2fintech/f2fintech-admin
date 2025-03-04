@@ -8,7 +8,7 @@ import { axiosInstance } from "./config/axiosConfig";
  * @returns {Promise<T>} - A promise that resolves to the fetched data.
  * @throws {Error} - If the response does not contain data.
  */
-export const fetcher = async <T>(url: string): Promise<T> => {
+export const fetcher = async <T>(url: string, p0: { method: string; }): Promise<T> => {
   const res = await axiosInstance.get<T>(url);
   if (!res.data) {
     throw new Error("No data found");

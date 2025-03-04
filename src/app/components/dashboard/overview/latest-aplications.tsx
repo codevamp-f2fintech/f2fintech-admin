@@ -105,8 +105,8 @@ export function LatestApplications ( {
         </Typography>
       </Box>
       <Divider />
-      <Box sx={{ height: isTab ? "34.5vh" : "103vh" }}>
-        <TableContainer>
+      <Box sx={{ height: isTab ? "34.5vh" : "103vh",width: "100%" }}>
+        <TableContainer sx={{overflow: "hidden"}}>
           <Table
             sx={{
               minHeight: "auto",

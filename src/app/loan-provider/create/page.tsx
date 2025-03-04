@@ -447,7 +447,6 @@ const LoanFormPage = () => {
               {/* Submit button */}
               <Box sx={{ mt: 4, display: "flex", justifyContent: "flex-end", gap: 2,ml: "47vw" }}>
                 <Button
-                  variant="outlined"
                   onClick={() => router.back()}
                   sx={{
                     bgcolor: "#f06292",

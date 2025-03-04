@@ -12,12 +12,18 @@ import {
   Checkbox,
   Chip,
   useMediaQuery,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Dialog,
 } from "@mui/material";
 import {
   MailRounded,
   PhoneRounded,
   AccessTimeRounded,
   LocationOnRounded,
+  DeleteOutlined,
 } from "@mui/icons-material";
 import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
 
@@ -46,17 +52,19 @@ interface ApplicationCardProps {
     loanStatus?: string;
     userRole?: string;
   };
-  handleStartClick?: (ticketId: number) => void;
+  handleStartClick?: ( ticketId: number ) => void;
   refetch?: () => Promise<void>;
+  userRole?: string;
+  handleDeleteTicket?: ( ticketId: number ) => void;
 }
 
-function InfoRow({
+function InfoRow ( {
   icon,
   text,
 }: {
   icon: React.ReactNode;
   text: string | undefined;
-}) {
+} ) {
   return (
     <Box
       sx={{
@@ -78,9 +86,9 @@ function InfoRow({
           padding: "8px",
         }}
       >
-        {React.cloneElement(icon as React.ReactElement, {
+        {React.cloneElement( icon as React.ReactElement, {
           fontSize: "small",
-        })}
+        } )}
       </Box>
       <Typography variant="body2" sx={{ color: "#333", fontWeight: "medium" }}>
         {text}
@@ -89,74 +97,100 @@ function InfoRow({
   );
 }
 
-const ApplicationCard: React.FC<ApplicationCardProps> = ({
+const ApplicationCard: React.FC<ApplicationCardProps> = ( {
   customerApplication,
   handleStartClick = null,
   refetch = null,
-  userRole
-}) => {
-  const [showHistory, setShowHistory] = useState<boolean>(false);
-  const [historyData, setHistoryData] = useState<any[]>([]);
+  userRole,
+  handleDeleteTicket,
+} ) => {
+  const [ showHistory, setShowHistory ] = useState<boolean>( false );
+  const [ historyData, setHistoryData ] = useState<any[]>( [] );
+  const [ openDeleteDialog, setOpenDeleteDialog ] = useState<boolean>( false );
   const dispatch: AppDispatch = useDispatch();
-
+  
   const {
     calculateDaysAgo,
     capitalizeFirstLetter,
     decodedToken,
     formatTenure,
   } = Utility();
-  const isMobile = useMediaQuery("(max-width:600px)");
-  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const isMobile = useMediaQuery( "(max-width:600px)" );
+  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
 
-  const { createTicket } = useCreateTicket("create-ticket");
+  const { createTicket } = useCreateTicket( "create-ticket" );
   // Hook for modifying loan application is_picked column
   const { modifyCustomerApplication: modifyiedCustomerApplication } =
-    useModifyCustomerApplication("update-loan-application");
+    useModifyCustomerApplication( "update-loan-application" );
 
-  const toggleHistory = () => setShowHistory((prev) => !prev);
+  const toggleHistory = () => setShowHistory( ( prev ) => !prev );
+
+
+  // Delete dialog handlers
+  const openConfirmDialog = ( e ) => {
+    e.stopPropagation();
+    setOpenDeleteDialog( true );
+  };
+
+  const closeConfirmDialog = () => {
+    setOpenDeleteDialog( false );
+  };
+
+  const confirmDelete = () => {
+    if ( handleDeleteTicket && customerApplication.ticketId )
+    {
+      handleDeleteTicket( customerApplication.ticketId );
+    }
+    setOpenDeleteDialog( false );
+  };
 
   // Fetch history data when toggling history
-  useEffect(() => {
-    if (showHistory && customerApplication.ticketId) {
+  useEffect( () => {
+    if ( showHistory && customerApplication.ticketId )
+    {
       const fetchHistoryData = async () => {
-        try {
+        try
+        {
           const { data } = await fetcher(
-            `get-ticket-histories/${customerApplication.ticketId}`
+            `get-ticket-histories/${ customerApplication.ticketId }`
           );
-          setHistoryData(data);
-        } catch (error) {
-          console.log("Error fetching history data:", error);
+          setHistoryData( data );
+        } catch ( error )
+        {
+          console.log( "Error fetching history data:", error );
         }
       };
       fetchHistoryData();
     }
-  }, [showHistory, customerApplication?.ticketId]);
+  }, [ showHistory, customerApplication?.ticketId ] );
 
-  const handleCheckboxChange = async (applicationId: number) => {
-    try {
-      await createTicket({
+  const handleCheckboxChange = async ( applicationId: number ) => {
+    try
+    {
+      await createTicket( {
         // Create new Ticket
         customer_application_id: applicationId,
         user_id: decodedToken()?.id,
         status: "under credit review",
-      });
-      await modifyiedCustomerApplication(applicationId, {
+      } );
+      await modifyiedCustomerApplication( applicationId, {
         // Mark the Card as picked
         is_picked: 1,
-      });
-      dispatch(resetCustomerApplications(applicationId));
-    } catch (error) {
-      console.log("Error in checkbox change:", error);
+      } );
+      dispatch( resetCustomerApplications( applicationId ) );
+    } catch ( error )
+    {
+      console.log( "Error in checkbox change:", error );
     }
   };
 
-  const formatRupees = (value: number) => {
-    return new Intl.NumberFormat("en-IN", {
+  const formatRupees = ( value: number ) => {
+    return new Intl.NumberFormat( "en-IN", {
       style: "currency",
       currency: "INR",
       minimumFractionDigits: 2, // Ensure two decimal places
       maximumFractionDigits: 2, // Ensure no more than two decimal places
-    }).format(value);
+    } ).format( value );
   };
 
   return (
@@ -186,7 +220,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
             }}
           >
             <Avatar
-              alt={capitalizeFirstLetter(customerApplication.customerName)}
+              alt={capitalizeFirstLetter( customerApplication.customerName )}
               src={customerApplication.customerProfileImage}
               sx={{
                 width: 80,
@@ -222,6 +256,25 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
             >
               {customerApplication.customerName?.toUpperCase()}
             </Typography>
+            {/* Delete button for admin only */}
+            {userRole === "admin" && handleDeleteTicket && (
+              <Button
+                variant="contained"
+                sx={{
+                  width: "10%",
+                  borderRadius: "50px",
+                  backgroundColor: "transparent",
+                  ml:"17vw",
+                  "&:hover": {
+                    bgcolor: "#cc0000",
+                  },
+                }}
+                onClick={openConfirmDialog}
+              >
+                <DeleteOutlined />
+              </Button>
+            )
+            }
           </Box>
 
           {!showHistory ? (
@@ -256,11 +309,11 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               />
               <InfoRow
                 icon={<CurrencyRupeeIcon />}
-                text={formatRupees(customerApplication.applicationAmount)}
+                text={formatRupees( customerApplication.applicationAmount )}
               />
               <InfoRow
                 icon={<AccessTimeRounded />}
-                text={formatTenure(customerApplication.applicationTenure)}
+                text={formatTenure( customerApplication.applicationTenure )}
               />
               {customerApplication.customerLocation && (
                 <InfoRow
@@ -290,7 +343,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               }}
             >
               {historyData.length > 0 ? (
-                historyData.map((history, index) => (
+                historyData.map( ( history, index ) => (
                   <Box
                     key={index}
                     sx={{ display: "flex", flexDirection: "column", mb: 2 }}
@@ -300,17 +353,17 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                       sx={{ color: "black", fontStyle: "normal", mb: 1 }}
                     >
                       <strong>
-                        {capitalizeFirstLetter(history.action.split(" ")[0])}
+                        {capitalizeFirstLetter( history.action.split( " " )[ 0 ] )}
                       </strong>
-                      {` ${history.action.substring(
-                        history.action.indexOf(" ") + 1
-                      )}`}
+                      {` ${ history.action.substring(
+                        history.action.indexOf( " " ) + 1
+                      ) }`}
                     </Typography>
                     <Typography variant="caption" sx={{ color: "blue" }}>
-                      {calculateDaysAgo(history.created_at)} days ago
+                      {calculateDaysAgo( history.created_at )} days ago
                     </Typography>
                   </Box>
-                ))
+                ) )
               ) : (
                 <Typography variant="body2" sx={{ color: "#333" }}>
                   No history data available.
@@ -344,6 +397,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   Visit Ticket
                 </Button>
               }
+
+              
               <Button
                 variant="contained"
                 color="primary"
@@ -372,9 +427,9 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               }}
             >
               <Chip
-                label={`${calculateDaysAgo(
+                label={`${ calculateDaysAgo(
                   customerApplication.applicationDate
-                )} days ago`}
+                ) } days ago`}
                 size="small"
                 sx={{
                   bgcolor: "rgba(255,255,255,0.9)",
@@ -382,7 +437,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   "& .MuiChip-label": { color: "#6E44FF" },
                 }}
               />
-              {(decodedToken()?.role === "admin" || decodedToken()?.role === "sales") ? null : (
+              {( decodedToken()?.role === "admin" || decodedToken()?.role === "sales" ) ? null : (
                 <Box sx={{ display: "flex", alignItems: "center" }}>
                   <Typography
                     variant="body2"
@@ -392,7 +447,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   </Typography>
                   <Checkbox
                     onChange={() =>
-                      handleCheckboxChange(customerApplication.applicationId)
+                      handleCheckboxChange( customerApplication.applicationId )
                     }
                     size="small"
                     sx={{
@@ -408,6 +463,30 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
           )}
         </CardContent>
       </Card>
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={openDeleteDialog}
+        onClose={closeConfirmDialog}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {"Confirm Ticket Deletion"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Are you sure you want to delete this ticket? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeConfirmDialog} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={confirmDelete} color="error" autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Grid>
   );
 };

@@ -1,7 +1,7 @@
+"use client";
 import * as React from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 
 import {
   VisibilityRounded,
@@ -25,11 +25,8 @@ import { LatestApplications } from "@/app/components/dashboard/overview/latest-a
 import { Sales } from "@/app/components/dashboard/overview/sales";
 import { Traffic } from "@/app/components/dashboard/overview/traffic";
 import { Utility } from "@/utils";
-import { Paper } from "@mui/material";
-
-export const metadata = {
-  title: `F2 Fintech Admin Portal`,
-} satisfies Metadata;
+import { Box, Paper, TextField } from "@mui/material";
+import NewApplications from "../components/dashboard/overview/new-application";
 
 interface Ticket {
   month: string;
@@ -37,178 +34,218 @@ interface Ticket {
 }
 
 // Server-side function to fetch total applications count
-async function fetchTotalApplications() {
-  try {
+async function fetchTotalApplications () {
+  try
+  {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/application/count`,
+      `${ process.env.NEXT_PUBLIC_API_URL }/application/count`,
       {
         cache: "no-store", // To Prevent caching
       }
     );
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    if ( !response.ok )
+    {
+      throw new Error( `HTTP error! status: ${ response.status }` );
     }
     const resData = await response.json();
     return resData.data;
-  } catch (error) {
-    console.error("Failed to fetch total applications:", error);
+  } catch ( error )
+  {
+    console.error( "Failed to fetch total applications:", error );
     return null;
   }
 }
 // Server-side function to fetch total applications count
-async function fetchTotalNewApplication() {
-  try {
+async function fetchTotalNewApplication () {
+  try
+  {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/application/new-count`,
+      `${ process.env.NEXT_PUBLIC_API_URL }/application/new-count`,
       {
         cache: "no-store", // To Prevent caching
       }
     );
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    if ( !response.ok )
+    {
+      throw new Error( `HTTP error! status: ${ response.status }` );
     }
     const resData = await response.json();
     return resData.data;
-  } catch (error) {
-    console.error("Failed to fetch total new applications:", error);
+  } catch ( error )
+  {
+    console.error( "Failed to fetch total new applications:", error );
     return null;
   }
 }
 
-async function fetchTotalTickets(
+async function fetchTotalTickets (
   status: string | null = null,
   id: number | null = null,
-  role: string
+  role: string,
+  date?: string
 ): Promise<number> {
-  let url = `${process.env.NEXT_PUBLIC_API_URL}/dashboard/tickets/count`;
+  let url = `${ process.env.NEXT_PUBLIC_API_URL }/dashboard/tickets/count`;
 
-  if (role === "agent" && id !== null) {
-    url += `/${id}`;
+  if ( role === "agent" && id !== null )
+  {
+    url += `/${ id }`;
   }
 
-  if (status) {
-    url += `/${encodeURIComponent(status)}`;
+  if ( status )
+  {
+    url += `/${ encodeURIComponent( status ) }`;
   }
-  const response = await fetch(url, {
+  if ( date )
+  {
+    url += `?date=${ encodeURIComponent( date ) }`;
+  }
+  const response = await fetch( url, {
     cache: "no-store",
-  }); // To Prevent caching
+  } ); // To Prevent caching
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch total Tickets");
+  if ( !response.ok )
+  {
+    throw new Error( "Failed to fetch total Tickets" );
   }
   const resData = await response.json();
   return resData.data;
 }
 
-async function getTotalTicketsByMonth(year: number): Promise<Ticket[]> {
+async function getTotalTicketsByMonth ( year: number ): Promise<Ticket[]> {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/dashboard/tickets/counts-by-month?year=${year}`,
+    `${ process.env.NEXT_PUBLIC_API_URL }/dashboard/tickets/counts-by-month?year=${ year }`,
     {
       cache: "no-store", // To Prevent Caching
     }
   );
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch monthly count");
+  if ( !response.ok )
+  {
+    throw new Error( "Failed to fetch monthly count" );
   }
   const resData = await response.json();
-  return resData.data.map((ticket: Ticket) => ticket.count);
+  return resData.data.map( ( ticket: Ticket ) => ticket.count );
 }
 
-async function getDoneTicketsByMonth(year: number): Promise<Ticket[]> {
+async function getDoneTicketsByMonth ( year: number ): Promise<Ticket[]> {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/dashboard/tickets/done-counts-by-month?year=${year}`,
+    `${ process.env.NEXT_PUBLIC_API_URL }/dashboard/tickets/done-counts-by-month?year=${ year }`,
     {
       cache: "no-store", // To Prevent Caching
     }
   );
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch monthly done count");
+  if ( !response.ok )
+  {
+    throw new Error( "Failed to fetch monthly done count" );
   }
   const resData = await response.json();
-  return resData.data.map((ticket: Ticket) => ticket.count);
+  return resData.data.map( ( ticket: Ticket ) => ticket.count );
 }
 
-async function fetchAgentCount(): Promise<number> {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/dashboard/agents/count`,
+// eslint-disable-next-line @next/next/no-async-client-component
+export default function Page (): Promise<React.JSX.Element> {
+  const { decodedToken, getCookies } = Utility();
+  const cookies = getCookies();
+  const userToken = cookies.token;
+  const { id, role } = decodedToken( userToken?.value );
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const [ date, setDate ] = React.useState<string | null>( null );
+  const [ allCounts, setAllCounts ] = React.useState( {} );
+  const [ totalAgents, setTotalAgents ] = React.useState( null );
+
+  async function fetchAgentCount () {
+    const response = await fetch(
+      `${ process.env.NEXT_PUBLIC_API_URL }/dashboard/agents/count`,
+      {
+        cache: "no-store", // To Prevent Caching
+      }
+    );
+
+    if ( !response.ok )
     {
-      cache: "no-store", // To Prevent Caching
+      throw new Error( "Failed to fetch agent count" );
     }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch agent count");
+    const resData = await response.json();
+    setTotalAgents( resData.data );
   }
-  const resData = await response.json();
-  return resData.data;
-}
 
-export default async function Page(): Promise<React.JSX.Element> {
-  const cookieStore = cookies();
-  const { decodedToken } = Utility();
-  const userToken = cookieStore.get("token");
-  const { id, role } = decodedToken(userToken?.value);
+  console.log( "id role=>", id, role );
 
-  console.log("id role=>", id, role);
+  React.useEffect( () => {
+    getAllCounts();
+  }, [ date ] );
 
-  const [
-    totalApplications,
-    totalNewApplications,
-    totalTickets,
-    totalUnderCreditReview,
-    totalOperations,
-    totalPendencyInFile,
-    totalFileSendToBanker,
-    totalToBeApproved,
-    totalToBeDisbursed,
-    totalApproved,
-    totalDisbursed,
-    totalTicketsByMonth,
-    doneTicketsByMonth,
-    // totalToBeLogin,
-    // totalTvrDone,
-    // totalCamReportDone,
-    // totalRelook,
-  ] = await Promise.all([
-    fetchTotalApplications(),
-    fetchTotalNewApplication(),
-    fetchTotalTickets(null, id, role),
-    fetchTotalTickets("under credit review", id, role),
-    fetchTotalTickets("operations", id, role),
-    fetchTotalTickets("pendency in file", id, role),
-    fetchTotalTickets("file send to banker", id, role),
-    fetchTotalTickets("to be approved", id, role),
-    fetchTotalTickets("to be disbursed", id, role),
-    fetchTotalTickets("approved", id, role),
-    fetchTotalTickets("disbursed", id, role),
-    getTotalTicketsByMonth(2024),
-    getDoneTicketsByMonth(2024),
-    // fetchTotalTickets( "to be login", id, role ),
-    // fetchTotalTickets( "tvr done", id, role ),
-    // fetchTotalTickets( "cam report done", id, role ),
-    // fetchTotalTickets( "relook", id, role ),
-  ]);
+  React.useEffect( () => {
+    fetchAgentCount();
+  }, [] );
 
-  const totalAgents = role === "admin" ? await fetchAgentCount() : null;
+  const getAllCounts = async () => {
+    const [
+      totalApplications,
+      totalNewApplications,
+      totalTickets,
+      totalUnderCreditReview,
+      totalOperations,
+      totalPendencyInFile,
+      totalFileSendToBanker,
+      totalToBeApproved,
+      totalToBeDisbursed,
+      totalApproved,
+      totalDisbursed,
+      totalTicketsByMonth,
+      doneTicketsByMonth,
+    ] = await Promise.all( [
+      fetchTotalApplications(),
+      fetchTotalNewApplication(),
+      fetchTotalTickets( null, id, role, date ),
+      fetchTotalTickets( "under credit review", id, role, date ),
+      fetchTotalTickets( "operations", id, role, date ),
+      fetchTotalTickets( "pendency in file", id, role, date ),
+      fetchTotalTickets( "file send to banker", id, role, date ),
+      fetchTotalTickets( "to be approved", id, role, date ),
+      fetchTotalTickets( "to be disbursed", id, role, date ),
+      fetchTotalTickets( "approved", id, role, date ),
+      fetchTotalTickets( "disbursed", id, role, date ),
+      getTotalTicketsByMonth( 2024 ),
+      getDoneTicketsByMonth( 2024 ),
+    ] );
+
+    //set all counts in state
+    setAllCounts( {
+      totalApplications,
+      totalNewApplications,
+      totalTickets,
+      totalUnderCreditReview,
+      totalOperations,
+      totalPendencyInFile,
+      totalFileSendToBanker,
+      totalToBeApproved,
+      totalToBeDisbursed,
+      totalApproved,
+      totalDisbursed,
+      totalTicketsByMonth,
+      doneTicketsByMonth,
+    } )
+  }
+
   const dashboardItems = [
     {
       icon: ArchiveIcon,
       label: "Total Applications",
       key: "totalApplications",
       color: "#90a4ae",
-      count: totalApplications,
+      count: allCounts?.totalApplications,
       link: "#",
     },
     {
       icon: FiberNewIcon,
-      label: "New Applications",
+      label: "Fresh Applications",
       key: "totalNewApplications",
       color: "#ffd600",
-      count: totalNewApplications,
+      count: allCounts?.totalNewApplications,
       link: "/",
     },
     {
@@ -216,100 +253,83 @@ export default async function Page(): Promise<React.JSX.Element> {
       label: "Total Tickets",
       key: "totalTickets",
       color: "#009688",
-      count: totalTickets,
-      link: `/ticket?status=${decodeURIComponent("all")}`,
+      count: allCounts?.totalTickets,
+      link: `/ticket?status=${ decodeURIComponent( "all" ) }`,
     },
     {
       icon: WorkHistoryIcon,
       label: "Under Credit Review",
       key: "underCreditReview",
       color: "#827717",
-      count: totalUnderCreditReview,
-      link: `/ticket?status=${decodeURIComponent("under credit review")}`,
+      count: allCounts?.totalUnderCreditReview,
+      link: `/ticket?status=${ decodeURIComponent( "under credit review" ) }`,
     },
     {
       icon: LoginRounded,
       label: "Operations",
       key: "operations",
       color: "#2196f3",
-      count: totalOperations,
-      link: `/ticket?status=${decodeURIComponent("operations")}`,
+      count: allCounts?.totalOperations,
+      link: `/ticket?status=${ decodeURIComponent( "operations" ) }`,
     },
     {
       icon: PendingActionsIcon,
       label: "Pendency in File",
       key: "pendencyInFile",
       color: "#f44336",
-      count: totalPendencyInFile,
-      link: `/ticket?status=${decodeURIComponent("pendency in file")}`,
-    },
-    {
-      icon: SendTimeExtensionIcon,
-      label: "File Send to Banker",
-      key: "fileSendToBanker",
-      color: "#3f51b5",
-      count: totalFileSendToBanker,
-      link: `/ticket?status=${decodeURIComponent("file send to banker")}`,
-    },
-    {
-      icon: ThumbUpRounded,
-      label: "To be Approved",
-      key: "toBeApproved",
-      color: "#aed581",
-      count: totalToBeApproved,
-      link: `/ticket?status=${decodeURIComponent("to be approved")}`,
+      count: allCounts?.totalPendencyInFile,
+      link: `/ticket?status=${ decodeURIComponent( "pendency in file" ) }`,
     },
     {
       icon: ForwardRounded,
       label: "To be Disbursed",
       key: "toBeDisbursed",
       color: "#ffcc80",
-      count: totalToBeDisbursed,
-      link: `/ticket?status=${decodeURIComponent("to be disbursed")}`,
+      count: allCounts?.totalToBeDisbursed,
+      link: `/ticket?status=${ decodeURIComponent( "to be disbursed" ) }`,
+    },
+    {
+      icon: SendTimeExtensionIcon,
+      label: "Disbursed",
+      key: "disbursed",
+      color: "#ff9800",
+      count: allCounts?.totalDisbursed,
+      link: `/ticket?status=${ decodeURIComponent( "disbursed" ) }`,
+    },
+    {
+      icon: SendTimeExtensionIcon,
+      label: "File Send to Banker",
+      key: "fileSendToBanker",
+      color: "#3f51b5",
+      count: allCounts?.totalFileSendToBanker,
+      link: `/ticket?status=${ decodeURIComponent( "file send to banker" ) }`,
+    },
+    {
+      icon: SendTimeExtensionIcon,
+      label: "Carry forward",
+      key: "caryforward",
+      color: "pink",
+      count: allCounts?.totalFileSendToBanker,
+      link: `/ticket?status=${ decodeURIComponent( "file sent to carry forward" ) }`,
+    },
+    {
+      icon: ThumbUpRounded,
+      label: "To be Approved",
+      key: "toBeApproved",
+      color: "#aed581",
+      count: allCounts?.totalToBeApproved,
+      link: `/ticket?status=${ decodeURIComponent( "to be approved" ) }`,
     },
     {
       icon: SendTimeExtensionIcon,
       label: "Approved",
       key: "approved",
       color: "#64dd17",
-      count: totalApproved,
-      link: `/ticket?status=${decodeURIComponent("approved")}`,
-    },
-    {
-      icon: SendTimeExtensionIcon,
-      label: "Disbursed",
-      key: "disbursed",
-      color: "#00bcd4",
-      count: totalDisbursed,
-      link: `/ticket?status=${decodeURIComponent("disbursed")}`,
+      count: allCounts?.totalApproved,
+      link: `/ticket?status=${ decodeURIComponent( "approved" ) }`,
     },
 
-    // {
-    //   icon: VisibilityRounded,
-    //   label: "Relook",
-    //   key: "relook",
-    //   color: "#ff5722",
-    //   count: totalRelook,
-    //   link: `/ticket?status=${decodeURIComponent("relook")}`,
-    // },
-    // {
-    //   icon: RuleIcon,
-    //   label: "Tvr Done",
-    //   key: "tvrDone",
-    //   color: "#00bcd4",
-    //   count: totalTvrDone,
-    //   link: `/ticket?status=${decodeURIComponent("tvr done")}`,
-    // },
-    // {
-    //   icon: RuleIcon,
-    //   label: "Cam Report Done",
-    //   key: "camReportDone",
-    //   color: "#8bc34a",
-    //   count: totalCamReportDone,
-    //   link: `/ticket?status=${decodeURIComponent("cam report done")}`,
-    // },
-
-    ...(role === "admin"
+    ...( role === "admin"
       ? [
         {
           icon: SupervisorAccountIcon,
@@ -320,144 +340,166 @@ export default async function Page(): Promise<React.JSX.Element> {
           link: "/users",
         },
       ]
-      : []),
+      : [] ),
   ];
   console.log(
-    totalTickets,
-    totalUnderCreditReview,
-    totalOperations,
-    totalPendencyInFile,
-    totalFileSendToBanker,
-    totalToBeApproved,
-    totalToBeDisbursed,
-    totalApproved,
-    totalDisbursed,
+    allCounts,
     "tickets count"
   );
 
   return (
-    <Grid lg={12.2} sm={12.3} container spacing={3} sx={{ width: "100%" }}>
-      {dashboardItems.map((item, index) => (
-        <Grid lg={3} sm={6} xs={12} key={index}>
-          <Link
-            href={item.link || ""}
-            style={{ textDecoration: "none", color: "inherit" }}
-          >
-            <Budget
-              Icon={item.icon}
-              name={item.label}
+    <>
+      <Box sx={{display: "flex",justifyContent: "flex-end",mb: "1.3rem"}}>
+        <TextField
+          label="Date"
+          type="date"
+          onChange={( e ) => setDate( e.target.value )}
+          InputLabelProps={{ shrink: true }}
+          sx={{
+            width: 150,
+            borderRadius: 2,  // Rounded corners
+            backgroundColor: "#f3f3f3",  // Light gray background
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 2,  // Rounded input field
+              backgroundColor: "#ffffff", // White background for input field
+            },
+            '& .MuiInputLabel-root': {
+              color: "#3f51b5",  // Label color
+            },
+            '& .MuiInput-underline:after': {
+              borderBottomColor: "#3f51b5",  // Color when focused
+            },
+            '&:hover .MuiOutlinedInput-root': {
+              borderColor: "#3f51b5",  // Border color on hover
+            },
+            '&:focus-within .MuiOutlinedInput-root': {
+              borderColor: "#3f51b5",  // Border color on focus
+            },
+          }}
+        />
+
+      </Box>
+      <Grid lg={12.2} sm={12.3} container spacing={3} sx={{ width: "100%" }}>
+
+        {dashboardItems.map( ( item, index ) => (
+          <Grid lg={3} sm={6} xs={12} key={index}>
+            <Link
+              href={item.link || ""}
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              <Budget
+                Icon={item.icon}
+                name={item.label}
+                sx={{
+                  height: "100%",
+                  backgroundColor: item.color,
+                  borderRadius: "20px",
+                  maxHeight: "25vh",
+                  ":hover": {
+                    transform: "scale(1.1)",
+                    transition: "all 300ms ease-in-out",
+                  },
+                }}
+                value={item.count}
+              />
+            </Link>
+          </Grid>
+        ) )}
+        <Grid container spacing={3} item lg={12} xs={12}>
+          <Grid item lg={7} md={6} xs={12}>
+            <Paper
+              elevation={3}
               sx={{
+                p: 1,
+                backgroundColor: "#fff",
+                borderRadius: "15px",
                 height: "100%",
-                backgroundColor: item.color,
-                borderRadius: "20px",
-                maxHeight: "25vh",
-                ":hover": {
-                  transform: "scale(1.1)",
-                  transition: "all 300ms ease-in-out",
-                },
               }}
-              value={item.count}
-            />
-          </Link>
-        </Grid>
-      ))}
-      <Grid container spacing={3} item lg={12} xs={12}>
-        <Grid item lg={7} md={6} xs={12}>
-          <Paper
-            elevation={3}
-            sx={{
-              p: 1,
-              backgroundColor: "#fff",
-              borderRadius: "15px",
-              height: "100%",
-            }}
-          >
-            <Sales
-              chartSeries={[
-                { name: "Total Tickets", data: totalTicketsByMonth },
-                { name: "To be Disbursed", data: doneTicketsByMonth },
-              ]}
-              sx={{ height: "100%" }}
-            />
-          </Paper>
+            >
+              <Sales
+                chartSeries={[
+                  { name: "Total Tickets", data: allCounts?.totalTicketsByMonth },
+                  { name: "To be Disbursed", data: allCounts?.doneTicketsByMonth },
+                ]}
+                sx={{ height: "100%" }}
+              />
+            </Paper>
+          </Grid>
+
+          {/* 📌 Traffic Chart */}
+          <Grid item lg={5} md={6} xs={12}>
+            <Paper
+              elevation={3}
+              sx={{
+                p: 1,
+                backgroundColor: "#fff",
+                borderRadius: "15px",
+                height: "100%",
+              }}
+            >
+              <Traffic
+                date={date}
+                setDate={setDate}
+                chartSeries={[
+                  allCounts?.totalTickets,
+                  allCounts?.totalUnderCreditReview,
+                  allCounts?.totalOperations,
+                  allCounts?.totalPendencyInFile,
+                  allCounts?.totalToBeDisbursed,
+                  allCounts?.totalDisbursed,
+                  allCounts?.totalFileSendToBanker,
+                  allCounts?.totalToBeApproved,
+                  allCounts?.totalApproved,
+                ]}
+                labels={[
+                  "Total Tickets",
+                  "Under Credit Review",
+                  "Operations",
+                  "Pendency in File",
+                  "To be Disbursed",
+                  "Disbursed",
+                  "File Send to Banker",
+                  "To be Approved",
+                  "Approved",
+                ]}
+                sx={{ height: "100%" }}
+              />
+            </Paper>
+          </Grid>
+
         </Grid>
 
-        {/* 📌 Traffic Chart */}
-        <Grid item lg={5} md={6} xs={12}>
-          <Paper
-            elevation={3}
-            sx={{
-              p: 1,
-              backgroundColor: "#fff",
-              borderRadius: "15px",
-              height: "100%",
-            }}
-          >
-            <Traffic
-              chartSeries={[
-                totalTickets,
-                totalUnderCreditReview,
-                totalOperations,
-                totalPendencyInFile,
-                totalFileSendToBanker,
-                totalToBeApproved,
-                totalToBeDisbursed,
-                totalApproved,
-                totalDisbursed,
-                // totalToBeLogin,
-                // totalTvrDone,
-                // totalCamReportDone,
-                // totalToBeLogin,
-              ]}
-              labels={[
-                "Total Tickets",
-                "Under Credit Review",
-                "Operations",
-                "Pendency in File",
-                "File Send to Banker",
-                "To be Approved",
-                "To be Disbursed",
-                "Approved",
-                "Disbursed"
-              ]}
-              sx={{ height: "100%" }}
-            />
-          </Paper>
-        </Grid>
+        <Grid container spacing={3} item lg={12} xs={12}>
+          <Grid item lg={4} md={6} xs={12}>
+            <Paper
+              elevation={3}
+              sx={{
+                p: 1,
+                backgroundColor: "#f8f9fa",
+                borderRadius: "15px",
+                height: "100%",
+              }}
+            >
+              <LatestApplications sx={{ height: "100%" }} />
+            </Paper>
+          </Grid>
 
+          {/* 📜 Latest Orders */}
+          <Grid item lg={8} md={6} xs={12}>
+            <Paper
+              elevation={3}
+              sx={{
+                p: 1,
+                backgroundColor: "#fff",
+                borderRadius: "15px",
+                height: "100%",
+              }}
+            >
+              <LatestOrders sx={{ height: "100%" }} />
+            </Paper>
+          </Grid>
+        </Grid>
       </Grid>
-
-      <Grid container spacing={3} item lg={12} xs={12}>
-        <Grid item lg={4} md={6} xs={12}>
-          <Paper
-            elevation={3}
-            sx={{
-              p: 1,
-              backgroundColor: "#f8f9fa",
-              borderRadius: "15px",
-              height: "100%",
-            }}
-          >
-            <LatestApplications sx={{ height: "100%" }} />
-          </Paper>
-        </Grid>
-
-        {/* 📜 Latest Orders */}
-        <Grid item lg={8} md={6} xs={12}>
-          <Paper
-            elevation={3}
-            sx={{
-              p: 1,
-              backgroundColor: "#fff",
-              borderRadius: "15px",
-              height: "100%",
-            }}
-          >
-            <LatestOrders sx={{ height: "100%" }} />
-          </Paper>
-        </Grid>
-
-      </Grid>
-    </Grid>
+    </>
   );
 }
