@@ -24,16 +24,20 @@ import {
   AccessTimeRounded,
   LocationOnRounded,
   DeleteOutlined,
+  Close,
+  DeleteForever,
 } from "@mui/icons-material";
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
 
 import { useCreateTicket } from "@/hooks/ticket";
 import { Utility } from "@/utils";
 import { useModifyCustomerApplication } from "@/hooks/customerApplication";
 import { fetcher } from "@/apis/apiClient";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/redux/store";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
 import { resetCustomerApplications } from "@/redux/features/customerApplicationSlice";
+import SendOTP from "./SendOTP";
 
 interface ApplicationCardProps {
   customerApplication: {
@@ -51,6 +55,7 @@ interface ApplicationCardProps {
     ticketStatus?: string;
     loanStatus?: string;
     userRole?: string;
+    applicationProvider?: string;
   };
   handleStartClick?: ( ticketId: number ) => void;
   refetch?: () => Promise<void>;
@@ -108,13 +113,14 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
   const [ historyData, setHistoryData ] = useState<any[]>( [] );
   const [ openDeleteDialog, setOpenDeleteDialog ] = useState<boolean>( false );
   const dispatch: AppDispatch = useDispatch();
-  
+
   const {
     calculateDaysAgo,
     capitalizeFirstLetter,
     decodedToken,
     formatTenure,
   } = Utility();
+  const [ showOtpComponent, setShowOtpComponent ] = useState<boolean>( false );
   const isMobile = useMediaQuery( "(max-width:600px)" );
   const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
 
@@ -126,7 +132,6 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
   const toggleHistory = () => setShowHistory( ( prev ) => !prev );
 
 
-  // Delete dialog handlers
   const openConfirmDialog = ( e ) => {
     e.stopPropagation();
     setOpenDeleteDialog( true );
@@ -136,12 +141,12 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
     setOpenDeleteDialog( false );
   };
 
-  const confirmDelete = () => {
-    if ( handleDeleteTicket && customerApplication.ticketId )
+  const confirmDelete = async () => {
+    const email = localStorage.getItem( 'email' ); // Assuming the email is stored in localStorage
+    if ( email )
     {
-      handleDeleteTicket( customerApplication.ticketId );
+      setShowOtpComponent( true );
     }
-    setOpenDeleteDialog( false );
   };
 
   // Fetch history data when toggling history
@@ -237,11 +242,13 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                 boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
               }}
             />
+          </Box>
+          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
             <Typography
               variant="h5"
               component="div"
               sx={{
-                mt: 3,
+                // mt: 3,
                 color: "white",
                 fontWeight: "bold",
                 whiteSpace: "normal",
@@ -251,7 +258,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                 textAlign: "center",
                 fontSize: "1.3rem",
                 height: isMobile ? "7vh" : isTab ? "4vh" : "8vh",
-                width: isMobile ? "80vw" : isTab ? "25vw" : "20vw",
+                width: isMobile ? "80vw" : isTab ? "25vw" : "30vw",
+
               }}
             >
               {customerApplication.customerName?.toUpperCase()}
@@ -264,7 +272,9 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                   width: "10%",
                   borderRadius: "50px",
                   backgroundColor: "transparent",
-                  ml:"17vw",
+                  position: "absolute",
+                  top: "8vh",
+                  ml: "17vw",
                   "&:hover": {
                     bgcolor: "#cc0000",
                   },
@@ -304,16 +314,16 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                 </>
               }
               <InfoRow
-                icon={<MailRounded />}
-                text={customerApplication.customerEmail}
-              />
-              <InfoRow
                 icon={<CurrencyRupeeIcon />}
                 text={formatRupees( customerApplication.applicationAmount )}
               />
               <InfoRow
                 icon={<AccessTimeRounded />}
                 text={formatTenure( customerApplication.applicationTenure )}
+              />
+              <InfoRow
+                icon={<AccountBalanceIcon />}
+                text={( customerApplication.applicationProvider || "No provider available...." )}
               />
               {customerApplication.customerLocation && (
                 <InfoRow
@@ -323,6 +333,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                   )}
                 />
               )}
+
             </Box>
           ) : (
             <Box
@@ -398,7 +409,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                 </Button>
               }
 
-              
+
               <Button
                 variant="contained"
                 color="primary"
@@ -469,25 +480,121 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
         onClose={closeConfirmDialog}
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
+        sx={{
+          borderRadius: "20px", // Rounded corners for the dialog
+          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+          padding: "20px",
+        }}
       >
-        <DialogTitle id="alert-dialog-title">
-          {"Confirm Ticket Deletion"}
+        <DialogTitle
+          id="alert-dialog-title"
+          sx={{
+            backgroundImage: `
+      linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
+    `,
+            backgroundBlendMode: "multiply, screen, normal",
+            color: "white",
+            padding: "20px",
+            borderRadius: "1px 1px 0 0",
+            fontWeight: "bold",
+            textAlign: "center",
+            fontSize: "1.25rem",
+          }}
+        >
+          Confirm Ticket Deletion
         </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
+        <DialogContent
+          sx={{
+            padding: "20px",
+            backgroundColor: "#f9f9f9",
+            borderRadius: "8px",
+            marginBottom: "16px",
+            fontSize: "1rem",
+            lineHeight: "1.5",
+            bgcolor: "lightcyan"
+
+          }}
+        >
+          <DialogContentText
+            id="alert-dialog-description"
+            sx={{
+              fontSize: "0.9rem",
+              color: "#555",
+              marginBottom: "20px",
+              textAlign: "center",
+              padding: "2rem"
+            }}
+          >
             Are you sure you want to delete this ticket? This action cannot be undone.
           </DialogContentText>
+
+          {/* OTP Component if required */}
+          {showOtpComponent && (
+            <Box
+              sx={{
+                padding: "16px",
+                backgroundColor: "#fafafa",
+                borderRadius: "8px",
+                boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                marginBottom: "16px",
+              }}
+            >
+              <SendOTP
+                handleDeleteTicket={handleDeleteTicket}
+                ticketId={customerApplication.ticketId}
+                email={localStorage.getItem( "email" ) || ""}
+              />
+            </Box>
+          )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={closeConfirmDialog} color="primary">
+        <DialogActions
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            padding: "10px",
+            bgcolor: "lightcyan"
+          }}
+        >
+          <Button
+            onClick={closeConfirmDialog}
+            color="primary"
+            variant="outlined"
+            sx={{
+              backgroundColor: "#f0f0f0",
+              color: "#333",
+              padding: "10px 20px",
+              borderRadius: "8px",
+              fontWeight: "bold",
+              "&:hover": {
+                backgroundColor: "#ddd",
+              },
+            }}
+            startIcon={<Close />}
+          >
             Cancel
           </Button>
-          <Button onClick={confirmDelete} color="error" autoFocus>
+          <Button
+            onClick={confirmDelete}
+            color="error"
+            variant="contained"
+            sx={{
+              backgroundColor: "#FF3B30",
+              color: "white",
+              padding: "10px 20px",
+              borderRadius: "8px",
+              fontWeight: "bold",
+              "&:hover": {
+                backgroundColor: "#D32F2F",
+              },
+            }}
+            startIcon={<DeleteForever />}
+          >
             Delete
           </Button>
         </DialogActions>
       </Dialog>
     </Grid>
+
   );
 };
 

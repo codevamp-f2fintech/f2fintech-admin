@@ -43,6 +43,7 @@ export function UserPopover({
             400, // Max width
             Math.max(230, longestTextLength * 10) // Min width and dynamic scaling
           );
+          localStorage.setItem( "email", response.data.email )
 
           if (popoverRef.current) {
             popoverRef.current.style.width = `${requiredWidth}px`;

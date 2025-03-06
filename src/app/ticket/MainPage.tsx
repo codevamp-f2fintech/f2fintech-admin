@@ -15,8 +15,6 @@ import type { Ticket } from "@/types/ticket";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import { setTickets, resetTickets } from "@/redux/features/ticketSlice";
-import { Button } from "@mui/material";
-import { ArrowBackRounded } from "@mui/icons-material";
 
 const Ticket = () => {
   const [ filter, setFilter ] = useState<string>( "" );
@@ -148,8 +146,9 @@ const Ticket = () => {
   };
 
   const handleDeleteTicket = async ( ticketId: number ) => {
-    await deleteTicket( 'delete-ticket', ticketId );
+    const deleteTicketResp = await deleteTicket( 'delete-ticket', ticketId );
     dispatch( resetTickets() );
+    return deleteTicketResp;
   }
 
   useEffect( () => {

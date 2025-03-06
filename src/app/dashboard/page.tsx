@@ -4,7 +4,6 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 import {
-  VisibilityRounded,
   FilterListRounded,
   ThumbUpRounded,
   LoginRounded,
@@ -15,7 +14,6 @@ import ArchiveIcon from '@mui/icons-material/Archive';
 import FiberNewIcon from '@mui/icons-material/FiberNew';
 import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
-import RuleIcon from '@mui/icons-material/Rule';
 import SendTimeExtensionIcon from '@mui/icons-material/SendTimeExtension';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 
@@ -26,7 +24,6 @@ import { Sales } from "@/app/components/dashboard/overview/sales";
 import { Traffic } from "@/app/components/dashboard/overview/traffic";
 import { Utility } from "@/utils";
 import { Box, Paper, TextField } from "@mui/material";
-import NewApplications from "../components/dashboard/overview/new-application";
 
 interface Ticket {
   month: string;
@@ -129,6 +126,8 @@ async function getTotalTicketsByMonth ( year: number ): Promise<Ticket[]> {
   return resData.data.map( ( ticket: Ticket ) => ticket.count );
 }
 
+
+
 async function getDoneTicketsByMonth ( year: number ): Promise<Ticket[]> {
   const response = await fetch(
     `${ process.env.NEXT_PUBLIC_API_URL }/dashboard/tickets/done-counts-by-month?year=${ year }`,
@@ -153,6 +152,7 @@ export default function Page (): Promise<React.JSX.Element> {
   const { id, role } = decodedToken( userToken?.value );
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const [ date, setDate ] = React.useState<string | null>( null );
+  const [ selectedMonth, setSelectedMonth ] = React.useState<string>( "" );
   const [ allCounts, setAllCounts ] = React.useState( {} );
   const [ totalAgents, setTotalAgents ] = React.useState( null );
 
@@ -176,7 +176,7 @@ export default function Page (): Promise<React.JSX.Element> {
 
   React.useEffect( () => {
     getAllCounts();
-  }, [ date ] );
+  }, [ date, selectedMonth ] );
 
   React.useEffect( () => {
     fetchAgentCount();
@@ -195,6 +195,7 @@ export default function Page (): Promise<React.JSX.Element> {
       totalToBeDisbursed,
       totalApproved,
       totalDisbursed,
+      totalCarryForward,
       totalTicketsByMonth,
       doneTicketsByMonth,
     ] = await Promise.all( [
@@ -209,6 +210,7 @@ export default function Page (): Promise<React.JSX.Element> {
       fetchTotalTickets( "to be disbursed", id, role, date ),
       fetchTotalTickets( "approved", id, role, date ),
       fetchTotalTickets( "disbursed", id, role, date ),
+      fetchTotalTickets( "carry forward", id, role, date ),
       getTotalTicketsByMonth( 2024 ),
       getDoneTicketsByMonth( 2024 ),
     ] );
@@ -226,6 +228,7 @@ export default function Page (): Promise<React.JSX.Element> {
       totalToBeDisbursed,
       totalApproved,
       totalDisbursed,
+      totalCarryForward,
       totalTicketsByMonth,
       doneTicketsByMonth,
     } )
@@ -309,7 +312,7 @@ export default function Page (): Promise<React.JSX.Element> {
       label: "Carry forward",
       key: "caryforward",
       color: "pink",
-      count: allCounts?.totalFileSendToBanker,
+      count: allCounts?.totalCarryForward,
       link: `/ticket?status=${ decodeURIComponent( "file sent to carry forward" ) }`,
     },
     {
@@ -377,7 +380,6 @@ export default function Page (): Promise<React.JSX.Element> {
             },
           }}
         />
-
       </Box>
       <Grid lg={12.2} sm={12.3} container spacing={3} sx={{ width: "100%" }}>
 

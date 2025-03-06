@@ -138,7 +138,7 @@ const Home: React.FC = () => {
               fontSize: isMobile ? ".8rem" : isTab ? "1.9rem" : "1.8rem",
             }}
           >
-            New Applications: {customerApplication?.count || 0}
+            Fresh Applications: {customerApplication?.count || 0}
           </Typography>
         </Box>
         <Box

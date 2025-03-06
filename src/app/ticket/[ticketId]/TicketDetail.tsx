@@ -4,10 +4,17 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Utility } from "@/utils";
 import axios from "axios";
+import Toast from "../../components/common/Toast";
+import { AppDispatch, RootState } from "@/redux/store";
+import { useDispatch, useSelector } from "react-redux";
+
 
 const TicketDetail = ( { ticketDetailData, isMobile, isTab } ) => {
   const { capitalizeFirstLetter, formatTenure, formatDate, formatAmount } = Utility();
   const router = useRouter();
+  const { toast } = useSelector( ( state: RootState ) => state.toast );
+  const dispatch: AppDispatch = useDispatch();
+  const { toastAndNavigate } = Utility();
 
   const [ openEditModal, setOpenEditModal ] = useState( false );
   const [ editedTicketData, setEditedTicketData ] = useState( ticketDetailData );
@@ -19,6 +26,7 @@ const TicketDetail = ( { ticketDetailData, isMobile, isTab } ) => {
       setEditedTicketData( ticketDetailData );
     }
   }, [ ticketDetailData ] );
+  console.log( "ticketDetailData>>>>>>>", ticketDetailData )
 
   const handleOpenEditModal = () => {
     setOpenEditModal( true );
@@ -33,21 +41,6 @@ const TicketDetail = ( { ticketDetailData, isMobile, isTab } ) => {
     const updatedTicketData = { ...editedTicketData, [ name ]: value };
     setEditedTicketData( updatedTicketData );
   };
-
-  // API call to update ticket data
-  // const updateAPI = async ( updatedData: any ) => {
-  //   try
-  //   {
-  //     const response = await axios.patch(
-  //       `/api/v1/update-loan-application/${ editedTicketData?.ticketId }`,
-  //       updatedData
-  //     );
-  //     console.log( "Updated successfully:", response.data );
-  //   } catch ( error )
-  //   {
-  //     console.error( "Error updating application:", error );
-  //   }
-  // };
 
   const handleSaveEdit = async () => {
     try
@@ -183,6 +176,11 @@ const TicketDetail = ( { ticketDetailData, isMobile, isTab } ) => {
                 <strong>Application Date:</strong> {formatDate( editedTicketData?.applicationDate )}
               </Typography>
             </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography sx={{ color: "white", fontSize: "1rem", mb: 1 }}>
+                <strong>Loan Provider:</strong> {capitalizeFirstLetter( editedTicketData?.applicationProvider ) || "No provider available"}
+              </Typography>
+            </Grid>
           </Grid>
         </Box>
       </Box>
@@ -196,7 +194,6 @@ const TicketDetail = ( { ticketDetailData, isMobile, isTab } ) => {
         sx={{
           "& .MuiDialogContent-root": {
             padding: "16px",
-            overflow: "auto", // Allow scrolling
             maxHeight: "500px", // Set a max height for the content to ensure scrolling is needed
           },
           "& .MuiDialogActions-root": {
@@ -287,6 +284,11 @@ const TicketDetail = ( { ticketDetailData, isMobile, isTab } ) => {
           </Button>
         </DialogActions>
       </Dialog>
+      <Toast
+        alerting={toast.toastAlert}
+        severity={toast.toastSeverity}
+        message={toast.toastMessage}
+      />
     </>
   );
 };
