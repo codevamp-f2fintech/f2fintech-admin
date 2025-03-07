@@ -105,8 +105,8 @@ export function LatestApplications ( {
         </Typography>
       </Box>
       <Divider />
-      <Box sx={{ height: isTab ? "34.5vh" : "103vh" }}>
-        <TableContainer>
+      <Box sx={{ height: isTab ? "34.5vh" : "103vh", width: "100%" }}>
+        <TableContainer sx={{width: "100%"}}>
           <Table
             sx={{
               minHeight: "auto",
@@ -118,14 +118,15 @@ export function LatestApplications ( {
                     : isTab
                       ? "100vh"
                       : "103vh",
+              width: "100%",
             }}
           >
             <TableHead
               sx={{
-                height: isMobile ? "8vh" : isTab ? "5vh" : "12vh",
+                height: isMobile ? "8vh" : isTab ? "5vh" : "12vh"
               }}
             >
-              <TableRow sx={{ bgcolor: "grey.50" }}>
+              <TableRow sx={{ bgcolor: "grey.50",width: "20vw" }}>
                 <TableCell>Sr.</TableCell>
                 <TableCell align="center">Name</TableCell>
                 <TableCell align="center">Amount</TableCell>

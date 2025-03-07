@@ -12,22 +12,32 @@ import {
   Checkbox,
   Chip,
   useMediaQuery,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Dialog,
 } from "@mui/material";
 import {
   MailRounded,
   PhoneRounded,
   AccessTimeRounded,
   LocationOnRounded,
+  DeleteOutlined,
+  Close,
+  DeleteForever,
 } from "@mui/icons-material";
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
 
 import { useCreateTicket } from "@/hooks/ticket";
 import { Utility } from "@/utils";
 import { useModifyCustomerApplication } from "@/hooks/customerApplication";
 import { fetcher } from "@/apis/apiClient";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/redux/store";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
 import { resetCustomerApplications } from "@/redux/features/customerApplicationSlice";
+import SendOTP from "./SendOTP";
 
 interface ApplicationCardProps {
   customerApplication: {
@@ -45,18 +55,21 @@ interface ApplicationCardProps {
     ticketStatus?: string;
     loanStatus?: string;
     userRole?: string;
+    applicationProvider?: string;
   };
-  handleStartClick?: (ticketId: number) => void;
+  handleStartClick?: ( ticketId: number ) => void;
   refetch?: () => Promise<void>;
+  userRole?: string;
+  handleDeleteTicket?: ( ticketId: number ) => void;
 }
 
-function InfoRow({
+function InfoRow ( {
   icon,
   text,
 }: {
   icon: React.ReactNode;
   text: string | undefined;
-}) {
+} ) {
   return (
     <Box
       sx={{
@@ -78,9 +91,9 @@ function InfoRow({
           padding: "8px",
         }}
       >
-        {React.cloneElement(icon as React.ReactElement, {
+        {React.cloneElement( icon as React.ReactElement, {
           fontSize: "small",
-        })}
+        } )}
       </Box>
       <Typography variant="body2" sx={{ color: "#333", fontWeight: "medium" }}>
         {text}
@@ -89,14 +102,16 @@ function InfoRow({
   );
 }
 
-const ApplicationCard: React.FC<ApplicationCardProps> = ({
+const ApplicationCard: React.FC<ApplicationCardProps> = ( {
   customerApplication,
   handleStartClick = null,
   refetch = null,
-  userRole
-}) => {
-  const [showHistory, setShowHistory] = useState<boolean>(false);
-  const [historyData, setHistoryData] = useState<any[]>([]);
+  userRole,
+  handleDeleteTicket,
+} ) => {
+  const [ showHistory, setShowHistory ] = useState<boolean>( false );
+  const [ historyData, setHistoryData ] = useState<any[]>( [] );
+  const [ openDeleteDialog, setOpenDeleteDialog ] = useState<boolean>( false );
   const dispatch: AppDispatch = useDispatch();
 
   const {
@@ -105,58 +120,82 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
     decodedToken,
     formatTenure,
   } = Utility();
-  const isMobile = useMediaQuery("(max-width:600px)");
-  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const [ showOtpComponent, setShowOtpComponent ] = useState<boolean>( false );
+  const isMobile = useMediaQuery( "(max-width:600px)" );
+  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
 
-  const { createTicket } = useCreateTicket("create-ticket");
+  const { createTicket } = useCreateTicket( "create-ticket" );
   // Hook for modifying loan application is_picked column
   const { modifyCustomerApplication: modifyiedCustomerApplication } =
-    useModifyCustomerApplication("update-loan-application");
+    useModifyCustomerApplication( "update-loan-application" );
 
-  const toggleHistory = () => setShowHistory((prev) => !prev);
+  const toggleHistory = () => setShowHistory( ( prev ) => !prev );
+
+
+  const openConfirmDialog = ( e ) => {
+    e.stopPropagation();
+    setOpenDeleteDialog( true );
+  };
+
+  const closeConfirmDialog = () => {
+    setOpenDeleteDialog( false );
+  };
+
+  const confirmDelete = async () => {
+    const email = localStorage.getItem( 'email' ); // Assuming the email is stored in localStorage
+    if ( email )
+    {
+      setShowOtpComponent( true );
+    }
+  };
 
   // Fetch history data when toggling history
-  useEffect(() => {
-    if (showHistory && customerApplication.ticketId) {
+  useEffect( () => {
+    if ( showHistory && customerApplication.ticketId )
+    {
       const fetchHistoryData = async () => {
-        try {
+        try
+        {
           const { data } = await fetcher(
-            `get-ticket-histories/${customerApplication.ticketId}`
+            `get-ticket-histories/${ customerApplication.ticketId }`
           );
-          setHistoryData(data);
-        } catch (error) {
-          console.log("Error fetching history data:", error);
+          setHistoryData( data );
+        } catch ( error )
+        {
+          console.log( "Error fetching history data:", error );
         }
       };
       fetchHistoryData();
     }
-  }, [showHistory, customerApplication?.ticketId]);
+  }, [ showHistory, customerApplication?.ticketId ] );
 
-  const handleCheckboxChange = async (applicationId: number) => {
-    try {
-      await createTicket({
+  const handleCheckboxChange = async ( applicationId: number ) => {
+    try
+    {
+      await createTicket( {
         // Create new Ticket
         customer_application_id: applicationId,
         user_id: decodedToken()?.id,
         status: "under credit review",
-      });
-      await modifyiedCustomerApplication(applicationId, {
+      } );
+      await modifyiedCustomerApplication( applicationId, {
         // Mark the Card as picked
         is_picked: 1,
-      });
-      dispatch(resetCustomerApplications(applicationId));
-    } catch (error) {
-      console.log("Error in checkbox change:", error);
+      } );
+      dispatch( resetCustomerApplications( applicationId ) );
+    } catch ( error )
+    {
+      console.log( "Error in checkbox change:", error );
     }
   };
 
-  const formatRupees = (value: number) => {
-    return new Intl.NumberFormat("en-IN", {
+  const formatRupees = ( value: number ) => {
+    return new Intl.NumberFormat( "en-IN", {
       style: "currency",
       currency: "INR",
       minimumFractionDigits: 2, // Ensure two decimal places
       maximumFractionDigits: 2, // Ensure no more than two decimal places
-    }).format(value);
+    } ).format( value );
   };
 
   return (
@@ -186,7 +225,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
             }}
           >
             <Avatar
-              alt={capitalizeFirstLetter(customerApplication.customerName)}
+              alt={capitalizeFirstLetter( customerApplication.customerName )}
               src={customerApplication.customerProfileImage}
               sx={{
                 width: 80,
@@ -203,11 +242,13 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
               }}
             />
+          </Box>
+          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
             <Typography
               variant="h5"
               component="div"
               sx={{
-                mt: 3,
+                // mt: 3,
                 color: "white",
                 fontWeight: "bold",
                 whiteSpace: "normal",
@@ -217,11 +258,33 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 textAlign: "center",
                 fontSize: "1.3rem",
                 height: isMobile ? "7vh" : isTab ? "4vh" : "8vh",
-                width: isMobile ? "80vw" : isTab ? "25vw" : "20vw",
+                width: isMobile ? "80vw" : isTab ? "25vw" : "30vw",
+
               }}
             >
               {customerApplication.customerName?.toUpperCase()}
             </Typography>
+            {/* Delete button for admin only */}
+            {userRole === "admin" && handleDeleteTicket && (
+              <Button
+                variant="contained"
+                sx={{
+                  width: "10%",
+                  borderRadius: "50px",
+                  backgroundColor: "transparent",
+                  position: "absolute",
+                  top: "8vh",
+                  ml: "17vw",
+                  "&:hover": {
+                    bgcolor: "#cc0000",
+                  },
+                }}
+                onClick={openConfirmDialog}
+              >
+                <DeleteOutlined />
+              </Button>
+            )
+            }
           </Box>
 
           {!showHistory ? (
@@ -251,16 +314,16 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 </>
               }
               <InfoRow
-                icon={<MailRounded />}
-                text={customerApplication.customerEmail}
-              />
-              <InfoRow
                 icon={<CurrencyRupeeIcon />}
-                text={formatRupees(customerApplication.applicationAmount)}
+                text={formatRupees( customerApplication.applicationAmount )}
               />
               <InfoRow
                 icon={<AccessTimeRounded />}
-                text={formatTenure(customerApplication.applicationTenure)}
+                text={formatTenure( customerApplication.applicationTenure )}
+              />
+              <InfoRow
+                icon={<AccountBalanceIcon />}
+                text={( customerApplication.applicationProvider || "No provider available...." )}
               />
               {customerApplication.customerLocation && (
                 <InfoRow
@@ -270,6 +333,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   )}
                 />
               )}
+
             </Box>
           ) : (
             <Box
@@ -290,7 +354,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               }}
             >
               {historyData.length > 0 ? (
-                historyData.map((history, index) => (
+                historyData.map( ( history, index ) => (
                   <Box
                     key={index}
                     sx={{ display: "flex", flexDirection: "column", mb: 2 }}
@@ -300,17 +364,17 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                       sx={{ color: "black", fontStyle: "normal", mb: 1 }}
                     >
                       <strong>
-                        {capitalizeFirstLetter(history.action.split(" ")[0])}
+                        {capitalizeFirstLetter( history.action.split( " " )[ 0 ] )}
                       </strong>
-                      {` ${history.action.substring(
-                        history.action.indexOf(" ") + 1
-                      )}`}
+                      {` ${ history.action.substring(
+                        history.action.indexOf( " " ) + 1
+                      ) }`}
                     </Typography>
                     <Typography variant="caption" sx={{ color: "blue" }}>
-                      {calculateDaysAgo(history.created_at)} days ago
+                      {calculateDaysAgo( history.created_at )} days ago
                     </Typography>
                   </Box>
-                ))
+                ) )
               ) : (
                 <Typography variant="body2" sx={{ color: "#333" }}>
                   No history data available.
@@ -344,6 +408,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   Visit Ticket
                 </Button>
               }
+
+
               <Button
                 variant="contained"
                 color="primary"
@@ -372,9 +438,9 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               }}
             >
               <Chip
-                label={`${calculateDaysAgo(
+                label={`${ calculateDaysAgo(
                   customerApplication.applicationDate
-                )} days ago`}
+                ) } days ago`}
                 size="small"
                 sx={{
                   bgcolor: "rgba(255,255,255,0.9)",
@@ -382,7 +448,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   "& .MuiChip-label": { color: "#6E44FF" },
                 }}
               />
-              {(decodedToken()?.role === "admin" || decodedToken()?.role === "sales") ? null : (
+              {( decodedToken()?.role === "admin" || decodedToken()?.role === "sales" ) ? null : (
                 <Box sx={{ display: "flex", alignItems: "center" }}>
                   <Typography
                     variant="body2"
@@ -392,7 +458,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   </Typography>
                   <Checkbox
                     onChange={() =>
-                      handleCheckboxChange(customerApplication.applicationId)
+                      handleCheckboxChange( customerApplication.applicationId )
                     }
                     size="small"
                     sx={{
@@ -408,7 +474,127 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
           )}
         </CardContent>
       </Card>
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={openDeleteDialog}
+        onClose={closeConfirmDialog}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+        sx={{
+          borderRadius: "20px", // Rounded corners for the dialog
+          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+          padding: "20px",
+        }}
+      >
+        <DialogTitle
+          id="alert-dialog-title"
+          sx={{
+            backgroundImage: `
+      linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
+    `,
+            backgroundBlendMode: "multiply, screen, normal",
+            color: "white",
+            padding: "20px",
+            borderRadius: "1px 1px 0 0",
+            fontWeight: "bold",
+            textAlign: "center",
+            fontSize: "1.25rem",
+          }}
+        >
+          Confirm Ticket Deletion
+        </DialogTitle>
+        <DialogContent
+          sx={{
+            padding: "20px",
+            backgroundColor: "#f9f9f9",
+            borderRadius: "8px",
+            marginBottom: "16px",
+            fontSize: "1rem",
+            lineHeight: "1.5",
+            bgcolor: "lightcyan"
+
+          }}
+        >
+          <DialogContentText
+            id="alert-dialog-description"
+            sx={{
+              fontSize: "0.9rem",
+              color: "#555",
+              marginBottom: "20px",
+              textAlign: "center",
+              padding: "2rem"
+            }}
+          >
+            Are you sure you want to delete this ticket? This action cannot be undone.
+          </DialogContentText>
+
+          {/* OTP Component if required */}
+          {showOtpComponent && (
+            <Box
+              sx={{
+                padding: "16px",
+                backgroundColor: "#fafafa",
+                borderRadius: "8px",
+                boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                marginBottom: "16px",
+              }}
+            >
+              <SendOTP
+                handleDeleteTicket={handleDeleteTicket}
+                ticketId={customerApplication.ticketId}
+                email={localStorage.getItem( "email" ) || ""}
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            padding: "10px",
+            bgcolor: "lightcyan"
+          }}
+        >
+          <Button
+            onClick={closeConfirmDialog}
+            color="primary"
+            variant="outlined"
+            sx={{
+              backgroundColor: "#f0f0f0",
+              color: "#333",
+              padding: "10px 20px",
+              borderRadius: "8px",
+              fontWeight: "bold",
+              "&:hover": {
+                backgroundColor: "#ddd",
+              },
+            }}
+            startIcon={<Close />}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmDelete}
+            color="error"
+            variant="contained"
+            sx={{
+              backgroundColor: "#FF3B30",
+              color: "white",
+              padding: "10px 20px",
+              borderRadius: "8px",
+              fontWeight: "bold",
+              "&:hover": {
+                backgroundColor: "#D32F2F",
+              },
+            }}
+            startIcon={<DeleteForever />}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Grid>
+
   );
 };
 

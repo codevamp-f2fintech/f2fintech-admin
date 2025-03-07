@@ -10,41 +10,66 @@ export interface BudgetProps {
   name: string;
   sx?: SxProps;
   value: string;
-  Icon: string;
+  Icon: any; // Changed from string to any to accept a component
+  setDate?: ( date: string ) => void;
 }
 
-export function Budget({
+export function Budget ( {
   name,
   sx,
   value,
   Icon,
-}: BudgetProps): React.JSX.Element {
+  setDate,
+}: BudgetProps ): React.JSX.Element {
   return (
-    <Card sx={sx}>
-      <CardContent>
-        <Stack spacing={3}>
-          <Stack
-            direction="row"
-            sx={{ alignItems: "flex-start", justifyContent: "space-between" }}
-            spacing={3}
-          >
-            <Stack spacing={3}>
-              <Typography color="white" variant="overline" fontSize="0.9rem">
-                {name}
-              </Typography>
-              <Typography variant="h4">{value}</Typography>
-            </Stack>
-            <Avatar
+    <Card
+      sx={{
+        borderRadius: "12px",
+        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+        height: "100%",
+        ...sx
+      }}
+    >
+      <CardContent sx={{ padding: "16px" }}>
+        <Stack
+          direction="row"
+          sx={{
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            height: "100%"
+          }}
+        >
+          <Stack spacing={1}>
+            <Typography
+              color="inherit"
+              variant="overline"
+              fontSize="0.8rem"
+              fontWeight= { 600 }
+              sx={{ }}
+            >
+              {name}
+            </Typography>
+            <Typography
+              variant="h4"
               sx={{
-                backgroundColor: "white",
-                color: "black",
-                height: "45px",
-                width: "45px",
+                fontSize: "2.5rem",
+                marginTop: "8px",
+                fontWeight: 500
               }}
             >
-              {Icon && <Icon sx={{ fontSize: 20 }} />}
-            </Avatar>
+              {value}
+            </Typography>
           </Stack>
+          <Avatar
+            sx={{
+              backgroundColor: "white",
+              color: "black",
+              height: "45px",
+              width: "45px",
+            }}
+          >
+            {Icon && React.createElement( Icon, { sx: { fontSize: 20 } } )}
+          </Avatar>
         </Stack>
       </CardContent>
     </Card>

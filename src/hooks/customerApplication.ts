@@ -16,9 +16,21 @@ export const useGetCustomerApplications = (
   pathKey: string,
   page: number = 1,
   limit: number = 6,
-  salesUserId?: number | string | null
+  salesUserId?: number | string | null,
+  formattedStartDate?: string | null,
+  formattedEndDate?: string | null
 ) => {
-  const url = salesUserId ? `${pathKey}?page=${page}&limit=${limit}&appliedBy=${salesUserId}` : `${pathKey}?page=${page}&limit=${limit}`;
+  let url = salesUserId ?
+    `${ pathKey }?page=${ page }&limit=${ limit }&appliedBy=${ salesUserId }` :
+    `${ pathKey }?page=${ page }&limit=${ limit }`;
+  if ( formattedStartDate )
+  {
+    url += `&startDate=${ formattedStartDate }`;
+  }
+  if ( formattedEndDate )
+  {
+    url += `&endDate=${ formattedEndDate }`;
+  }
   const {
     data: swrData,
     error,
@@ -38,7 +50,7 @@ export const useGetCustomerApplications = (
   );
 
   const refetch = async () => {
-    await mutate(url);
+    await mutate( url );
   };
 
   return {
@@ -59,24 +71,27 @@ export const useGetCustomerApplications = (
  * @param pathKey - The API path key used to create a new customer.
  * @returns An object containing the created customer, loading state, error state, and the createCustomer function.
  */
-export const useCreateCustomerApplication = (pathKey: string) => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+export const useCreateCustomerApplication = ( pathKey: string ) => {
+  const [ loading, setLoading ] = useState( false );
+  const [ error, setError ] = useState<Error | null>( null );
 
-  const createCustomerApplication = async (ticketData: {
+  const createCustomerApplication = async ( ticketData: {
     applicationId: number;
     userId: number;
     status: string;
-  }) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await creator(pathKey, ticketData);
+  } ) => {
+    setLoading( true );
+    setError( null );
+    try
+    {
+      const response = await creator( pathKey, ticketData );
       return response;
-    } catch (err) {
-      setError(err as Error);
-    } finally {
-      setLoading(false);
+    } catch ( err )
+    {
+      setError( err as Error );
+    } finally
+    {
+      setLoading( false );
     }
   };
 
@@ -89,28 +104,31 @@ export const useCreateCustomerApplication = (pathKey: string) => {
  * @param pathKey - The API path key used to modify a customer.
  * @returns An object containing the updated customer, loading state, error state, and the modifyCustomer function.
  */
-export const useModifyCustomerApplication = (pathKey: string) => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+export const useModifyCustomerApplication = ( pathKey: string ) => {
+  const [ loading, setLoading ] = useState( false );
+  const [ error, setError ] = useState<Error | null>( null );
 
   const modifyCustomerApplication = async (
     id: number,
     updatedCustomerApplicationData: Partial<CustomerApplicationData>
   ) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const apiPath = `${pathKey}/${id}`;
+    setLoading( true );
+    setError( null );
+    try
+    {
+      const apiPath = `${ pathKey }/${ id }`;
 
       const customerApplication = await modifier<CustomerApplicationData, Partial<CustomerApplicationData>>(
         apiPath,
         updatedCustomerApplicationData
       );
       return customerApplication;
-    } catch (err) {
-      setError(err as Error);
-    } finally {
-      setLoading(false);
+    } catch ( err )
+    {
+      setError( err as Error );
+    } finally
+    {
+      setLoading( false );
     }
   };
   return { loading, error, modifyCustomerApplication };

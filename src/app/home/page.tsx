@@ -9,6 +9,8 @@ import {
   Typography,
   Box,
   useMediaQuery,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
 
 import ApplicationCard from "../components/common/ApplicationCard";
@@ -21,8 +23,9 @@ import {
 } from "@/redux/features/customerApplicationSlice";
 import { useGetCustomerApplications } from "@/hooks/customerApplication";
 import { Utility } from "@/utils";
+import { ClearRounded, SearchRounded } from "@mui/icons-material";
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 12;
 
 const Home: React.FC = () => {
   const [ searchTerm, setSearchTerm ] = useState<string>( "" );
@@ -135,18 +138,18 @@ const Home: React.FC = () => {
               fontSize: isMobile ? ".8rem" : isTab ? "1.9rem" : "1.8rem",
             }}
           >
-            New Applications: {customerApplication?.count || 0}
+            Fresh Applications: {customerApplication?.count || 0}
           </Typography>
         </Box>
         <Box
           sx={{
             height: "10vh",
-            width: isMobile ? "61vw" : isTab ? "50vw" : "45vw",
+            width: isMobile ? "61vw" : isTab ? "50vw" : "70%",
             display: "flex",
             flexDirection: "row",
             justifyContent: "space-evenly",
             alignItems: "center",
-            ml: isMobile ? "" : isTab ? "" : "10vw",
+            ml: isMobile ? "" : isTab ? "" : "3vw",
           }}
         >
           <TextField
@@ -154,19 +157,29 @@ const Home: React.FC = () => {
             size="small"
             value={searchTerm}
             onChange={( e ) => setSearchTerm( e.target.value )}
-            sx={{
-              width: isMobile ? "24vw" : isTab ? "18vw" : "12vw",
-              fontSize: isMobile ? ".5rem" : isTab ? "1rem" : "",
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": {
-                  border: "1px solid #d3d3d3", // Transparent border by default
-                },
-                "&:hover fieldset": {
-                  border: "1px solid #d3d3d3", // Transparent border on hover
-                },
-                "&.Mui-focused fieldset": {
-                  border: "1px solid #d3d3d3", // Light gray border on focus
-                },
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchRounded sx={{ color: "action.active", mr: 1 }} />
+                </InputAdornment>
+              ),
+              endAdornment: searchTerm && (
+                <InputAdornment position="end">
+                  <IconButton size="small" onClick={() => setSearchTerm( "" )}>
+                    <ClearRounded sx={{ fontSize: 16 }} />
+                  </IconButton>
+                </InputAdornment>
+              ),
+              sx: {
+                borderRadius: "100px",
+                backgroundColor: "rgba(255, 255, 255, 0.9)",
+                "& fieldset": { border: "none" },
+                width: "15vw",
+              },
+            }}
+            InputLabelProps={{
+              style: {
+                color: "#757575",
               },
             }}
           />
@@ -194,7 +207,7 @@ const Home: React.FC = () => {
             <Link href="/home/create" passHref>
               <Button
                 sx={{
-                  width: isMobile ? "23vw" : isTab ? "21vw" : "15vw",
+                  width: isMobile ? "23vw" : isTab ? "21vw" : "20vw",
                   fontSize: isMobile ? ".5rem" : isTab ? "1rem" : "",
                   bgcolor: "#9D50BB",
                   color: "white",
