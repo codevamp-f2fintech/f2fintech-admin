@@ -210,6 +210,7 @@ const TicketDetail = ( { ticketDetailData, isMobile, isTab } ) => {
           "& *": {
             scrollbarWidth: "none", // Firefox scrollbar hiding
           },
+          height: "70v%"
         }}
       >
         <DialogTitle sx={{ fontWeight: "bold", textAlign: "center" }}>Edit Ticket Details</DialogTitle>
