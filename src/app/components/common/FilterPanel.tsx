@@ -31,6 +31,7 @@ import {
   ArrowDownwardRounded,
   ArrowUpwardRounded,
   ArrowBackRounded,
+  CancelRounded,
 } from "@mui/icons-material";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import dayjs from "dayjs";
@@ -68,6 +69,7 @@ const statusOptions = [
   "approved",
   "disbursed",
   "carry forward",
+  "rejected",
   // "tvr done",
   // "cam report done",
   // "relook",
@@ -109,6 +111,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       "approved": "#8bc34a", // Light Green   ----
       "disbursed": "#00bcd4", // Cyan   ----
       "carry forward": "#9e9e9e", // Grey
+      "rejected": "#f44336", // Red   ----
       forwarded: "#ffc107", // Amber for Forwarded
       "forwarded to me": "#ff7043", // Deep Orange
       "forwarded by me": "#26c6da", // cyan
@@ -129,6 +132,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       "approved": <AccountBalanceRounded sx={{ fontSize: 20 }} />,
       "disbursed": <ReportRounded sx={{ fontSize: 20 }} />,
       "carry forward" : <ForwardRounded sx={{ fontSize: 20 }} />,  //////
+      "rejected": <CancelRounded sx={{ fontSize: 20 }} />,
       forwarded: <ForwardToInboxRounded sx={{ fontSize: 20 }} />,
       "forwarded to me": <ArrowDownwardRounded sx={{ fontSize: 20 }} />,
       "forwarded by me": <ArrowUpwardRounded sx={{ fontSize: 20 }} />,
