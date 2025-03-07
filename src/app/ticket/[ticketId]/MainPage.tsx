@@ -58,6 +58,7 @@ const employeeStatusObj = [
   { value: "approved", label: "Approved" },
   { value: "disbursed", label: "Disbursed" },
   { value: "carry forward", label: "Carry Forward" },
+  { value: "rejected", label: "Rejected"},
   // { value: "to be login", label: "To Be Login" },
   // { value: "tvr done", label: "TVR Done" },
   // { value: "cam report done", label: "CAM Report Done" },

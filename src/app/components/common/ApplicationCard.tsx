@@ -37,7 +37,8 @@ import { fetcher } from "@/apis/apiClient";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { resetCustomerApplications } from "@/redux/features/customerApplicationSlice";
-import SendOTP from "./SendOTP";
+import Toast from "../../components/common/Toast";
+// import SendOTP from "./SendOTP";
 
 interface ApplicationCardProps {
   customerApplication: {
@@ -113,6 +114,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
   const [ historyData, setHistoryData ] = useState<any[]>( [] );
   const [ openDeleteDialog, setOpenDeleteDialog ] = useState<boolean>( false );
   const dispatch: AppDispatch = useDispatch();
+  const { toast } = useSelector( ( state: RootState ) => state.toast );
+  const { toastAndNavigate } = Utility();
 
   const {
     calculateDaysAgo,
@@ -141,11 +144,42 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
     setOpenDeleteDialog( false );
   };
 
+  // Inside the confirmDelete function
   const confirmDelete = async () => {
-    const email = localStorage.getItem( 'email' ); // Assuming the email is stored in localStorage
-    if ( email )
+    if ( handleDeleteTicket )
     {
-      setShowOtpComponent( true );
+      try
+      {
+        // Perform the delete action
+        await handleDeleteTicket( customerApplication.ticketId );
+
+        // Display success toast message
+        toastAndNavigate(
+          dispatch,
+          true,
+          "success",
+          "Ticket deleted successfully",
+          null,
+          null,
+          true
+        );
+
+        // Close the delete dialog after successful deletion
+        closeConfirmDialog();
+      } catch ( error )
+      {
+        console.log( "Error deleting ticket:", error );
+        // Optionally, you can display an error toast message here as well
+        toastAndNavigate(
+          dispatch,
+          true,
+          "error",
+          "Failed to delete ticket. Please try again.",
+          null,
+          null,
+          true
+        );
+      }
     }
   };
 
@@ -273,7 +307,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                   borderRadius: "50px",
                   backgroundColor: "transparent",
                   position: "absolute",
-                  top: "8vh",
+                  top: "2.5vh",
                   ml: "17vw",
                   "&:hover": {
                     bgcolor: "#cc0000",
