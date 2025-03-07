@@ -282,7 +282,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
               variant="h5"
               component="div"
               sx={{
-                // mt: 3,
+                mb: 1,
                 color: "white",
                 fontWeight: "bold",
                 whiteSpace: "normal",
