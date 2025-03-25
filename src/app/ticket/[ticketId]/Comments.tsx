@@ -34,7 +34,7 @@ import { User } from "@/types/user";
 const ITEMS_PER_PAGE = 3;
 
 interface CommentsProps {
-  storedTicketId: number;
+  storedTicketId: string | string[];
   userData: User;
 }
 

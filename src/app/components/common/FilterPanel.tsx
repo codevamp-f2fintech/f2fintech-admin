@@ -28,6 +28,8 @@ import {
   AccountBalanceRounded,
   ReportRounded,
   VisibilityRounded,
+  PauseCircleOutlineRounded,
+  DeleteForeverRounded,
   ArrowDownwardRounded,
   ArrowUpwardRounded,
   ArrowBackRounded,
@@ -64,13 +66,14 @@ const statusOptions = [
   "operations",
   "pendency in file",
   "file send to banker",
+  'hold',
   "to be approved",
   "to be disbursed",
   "approved",
   "disbursed",
   "carry forward",
-  "rejected",
-  'drop'
+  'drop',
+  "rejected"
   // "tvr done",
   // "cam report done",
   // "relook",
@@ -107,6 +110,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       "operations": "#2196f3", // Blue
       "pendency in file": "#f44336", // Red   ----
       "file send to banker": "#3f51b5", // Indigo
+      "hold": "#ffeb3b", // Yellow
       "to be approved": "#4caf50", // Green   ----
       "to be disbursed": "#9c27b0", // Purple
       "approved": "#8bc34a", // Light Green   ----
@@ -129,13 +133,14 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       "operations": <LoginRounded sx={{ fontSize: 20 }} />,
       "pendency in file": <PendingActionsRounded sx={{ fontSize: 20 }} />,
       "file send to banker": <SendRounded sx={{ fontSize: 20 }} />,
+      "hold": <PauseCircleOutlineRounded sx={{ fontSize: 20 }} />,
       "to be approved": <ThumbUpRounded sx={{ fontSize: 20 }} />,
       "to be disbursed": <ForwardRounded sx={{ fontSize: 20 }} />,
       "approved": <AccountBalanceRounded sx={{ fontSize: 20 }} />,
       "disbursed": <ReportRounded sx={{ fontSize: 20 }} />,
       "carry forward": <ForwardRounded sx={{ fontSize: 20 }} />,
       "rejected": <CancelRounded sx={{ fontSize: 20 }} />,
-      "drop": <CancelRounded sx={{ fontSize: 20 }} />,
+      "drop": <DeleteForeverRounded sx={{ fontSize: 20 }} />,
       forwarded: <ForwardToInboxRounded sx={{ fontSize: 20 }} />,
       "forwarded to me": <ArrowDownwardRounded sx={{ fontSize: 20 }} />,
       "forwarded by me": <ArrowUpwardRounded sx={{ fontSize: 20 }} />,

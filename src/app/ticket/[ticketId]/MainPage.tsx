@@ -60,6 +60,7 @@ const employeeStatusObj = [
   { value: "carry forward", label: "Carry Forward" },
   { value: "rejected", label: "Rejected" },
   { value: "drop", label: "Drop" },
+  { value: "hold", label: "Hold" },
   // { value: "to be login", label: "To Be Login" },
   // { value: "tvr done", label: "TVR Done" },
   // { value: "cam report done", label: "CAM Report Done" },
@@ -682,6 +683,7 @@ const Progress: React.FC = () => {
                         <MenuItem value="carry forward">
                           Carry Forward
                         </MenuItem>
+                        <MenuItem value="hold">Hold</MenuItem>
                         <MenuItem value="drop">Drop</MenuItem>
                         <MenuItem value="rejected">Rejected</MenuItem>
                         <MenuItem value="relook">Relook</MenuItem>
