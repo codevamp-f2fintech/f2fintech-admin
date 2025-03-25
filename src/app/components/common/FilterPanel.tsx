@@ -70,6 +70,7 @@ const statusOptions = [
   "disbursed",
   "carry forward",
   "rejected",
+  'drop'
   // "tvr done",
   // "cam report done",
   // "relook",
@@ -112,6 +113,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       "disbursed": "#00bcd4", // Cyan   ----
       "carry forward": "#9e9e9e", // Grey
       "rejected": "#f44336", // Red   ----
+      "drop": "#ff5722", // Orange-Red
       forwarded: "#ffc107", // Amber for Forwarded
       "forwarded to me": "#ff7043", // Deep Orange
       "forwarded by me": "#26c6da", // cyan
@@ -131,8 +133,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       "to be disbursed": <ForwardRounded sx={{ fontSize: 20 }} />,
       "approved": <AccountBalanceRounded sx={{ fontSize: 20 }} />,
       "disbursed": <ReportRounded sx={{ fontSize: 20 }} />,
-      "carry forward" : <ForwardRounded sx={{ fontSize: 20 }} />,  //////
+      "carry forward": <ForwardRounded sx={{ fontSize: 20 }} />,
       "rejected": <CancelRounded sx={{ fontSize: 20 }} />,
+      "drop": <CancelRounded sx={{ fontSize: 20 }} />,
       forwarded: <ForwardToInboxRounded sx={{ fontSize: 20 }} />,
       "forwarded to me": <ArrowDownwardRounded sx={{ fontSize: 20 }} />,
       "forwarded by me": <ArrowUpwardRounded sx={{ fontSize: 20 }} />,
