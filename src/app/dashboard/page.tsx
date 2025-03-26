@@ -1,9 +1,14 @@
 "use client";
+
 import * as React from "react";
 import Link from "next/link";
-import type { Metadata } from "next";
-
 import {
+  AccountBalanceRounded,
+  CancelRounded,
+  DeleteForeverRounded,
+  PauseCircleOutlineRounded,
+  ReportRounded,
+  SendRounded,
   FilterListRounded,
   ThumbUpRounded,
   LoginRounded,
@@ -31,160 +36,147 @@ interface Ticket {
 }
 
 // Server-side function to fetch total applications count
-async function fetchTotalApplications () {
-  try
-  {
+async function fetchTotalApplications(): Promise<number | null> {
+  try {
     const response = await fetch(
-      `${ process.env.NEXT_PUBLIC_API_URL }/application/count`,
+      `${process.env.NEXT_PUBLIC_API_URL}/application/count`,
       {
         cache: "no-store", // To Prevent caching
       }
     );
 
-    if ( !response.ok )
-    {
-      throw new Error( `HTTP error! status: ${ response.status }` );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     const resData = await response.json();
     return resData.data;
-  } catch ( error )
-  {
-    console.error( "Failed to fetch total applications:", error );
+  } catch (error) {
+    console.error("Failed to fetch total applications:", error);
     return null;
   }
 }
+
 // Server-side function to fetch total new applications count
-async function fetchTotalNewApplication () {
-  try
-  {
+async function fetchTotalNewApplication(): Promise<number | null> {
+  try {
     const response = await fetch(
-      `${ process.env.NEXT_PUBLIC_API_URL }/application/new-count`,
+      `${process.env.NEXT_PUBLIC_API_URL}/application/new-count`,
       {
         cache: "no-store", // To Prevent caching
       }
     );
 
-    if ( !response.ok )
-    {
-      throw new Error( `HTTP error! status: ${ response.status }` );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     const resData = await response.json();
     return resData.data;
-  } catch ( error )
-  {
-    console.error( "Failed to fetch total new applications:", error );
+  } catch (error) {
+    console.error("Failed to fetch total new applications:", error);
     return null;
   }
 }
 
-async function fetchTotalTickets (
+async function fetchTotalTickets(
   status: string | null = null,
   id: number | null = null,
   role: string,
-  date?: string,
+  date?: string | null,
   month?: string
 ): Promise<number> {
-  let url = `${ process.env.NEXT_PUBLIC_API_URL }/dashboard/tickets/count`;
+  let url = `${process.env.NEXT_PUBLIC_API_URL}/dashboard/tickets/count`;
 
-  if ( role === "agent" && id !== null )
-  {
-    url += `/${ id }`;
+  if (role === "agent" && id !== null) {
+    url += `/${id}`;
   }
 
-  if ( status )
-  {
-    url += `/${ encodeURIComponent( status ) }`;
+  if (status) {
+    url += `/${encodeURIComponent(status)}`;
   }
 
-  if ( date )
-  {
-    url += `?date=${ encodeURIComponent( date ) }`;
+  if (date) {
+    url += `?date=${encodeURIComponent(date)}`;
   }
 
-  if ( month )
-  {
-    url += `?month=${ encodeURIComponent( month ) }`;
+  if (month) {
+    url += `?month=${encodeURIComponent(month)}`;
   }
 
-  const response = await fetch( url, {
+  const response = await fetch(url, {
     cache: "no-store",
-  } ); // To Prevent caching
+  }); // To Prevent caching
 
-  if ( !response.ok )
-  {
-    throw new Error( "Failed to fetch total Tickets" );
+  if (!response.ok) {
+    throw new Error("Failed to fetch total Tickets");
   }
   const resData = await response.json();
   return resData.data;
 }
 
-async function getTotalTicketsByMonth ( year: number ): Promise<Ticket[]> {
+async function getTotalTicketsByMonth(year: number): Promise<Ticket[]> {
   const response = await fetch(
-    `${ process.env.NEXT_PUBLIC_API_URL }/dashboard/tickets/counts-by-month?year=${ year }`,
+    `${process.env.NEXT_PUBLIC_API_URL}/dashboard/tickets/counts-by-month?year=${year}`,
     {
       cache: "no-store", // To Prevent Caching
     }
   );
 
-  if ( !response.ok )
-  {
-    throw new Error( "Failed to fetch monthly count" );
+  if (!response.ok) {
+    throw new Error("Failed to fetch monthly count");
   }
   const resData = await response.json();
-  return resData.data.map( ( ticket: Ticket ) => ticket.count );
+  return resData.data.map((ticket: Ticket) => ticket.count);
 }
 
-async function getDoneTicketsByMonth ( year: number ): Promise<Ticket[]> {
+async function getDoneTicketsByMonth(year: number): Promise<Ticket[]> {
   const response = await fetch(
-    `${ process.env.NEXT_PUBLIC_API_URL }/dashboard/tickets/done-counts-by-month?year=${ year }`,
+    `${process.env.NEXT_PUBLIC_API_URL}/dashboard/tickets/done-counts-by-month?year=${year}`,
     {
       cache: "no-store", // To Prevent Caching
     }
   );
 
-  if ( !response.ok )
-  {
-    throw new Error( "Failed to fetch monthly done count" );
+  if (!response.ok) {
+    throw new Error("Failed to fetch monthly done count");
   }
   const resData = await response.json();
-  return resData.data.map( ( ticket: Ticket ) => ticket.count );
+  return resData.data.map((ticket: Ticket) => ticket.count);
 }
 
 // eslint-disable-next-line @next/next/no-async-client-component
-export default function Page (): Promise<React.JSX.Element> {
+export default function Page(): React.JSX.Element {
   const { decodedToken, getCookies } = Utility();
   const cookies = getCookies();
   const userToken = cookies.token;
-  const { id, role } = decodedToken( userToken?.value );
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const [ date, setDate ] = React.useState<string | null>( null );
-  const [ selectedMonth, setSelectedMonth ] = React.useState<string>( "" );
-  const [ allCounts, setAllCounts ] = React.useState( {} );
-  const [ totalAgents, setTotalAgents ] = React.useState( null );
+  const { id, role } = decodedToken(userToken?.value);
 
-  async function fetchAgentCount () {
+  const [date, setDate] = React.useState<string | null>(null);
+  const [selectedMonth, setSelectedMonth] = React.useState<string>("");
+  const [allCounts, setAllCounts] = React.useState<any>({});
+  const [totalAgents, setTotalAgents] = React.useState<number | null>(null);
+
+  async function fetchAgentCount() {
     const response = await fetch(
-      `${ process.env.NEXT_PUBLIC_API_URL }/dashboard/agents/count`,
+      `${process.env.NEXT_PUBLIC_API_URL}/dashboard/agents/count`,
       {
         cache: "no-store", // To Prevent Caching
       }
     );
 
-    if ( !response.ok )
-    {
-      throw new Error( "Failed to fetch agent count" );
+    if (!response.ok) {
+      throw new Error("Failed to fetch agent count");
     }
     const resData = await response.json();
-    setTotalAgents( resData.data );
+    setTotalAgents(resData.data);
   }
 
-  React.useEffect( () => {
+  React.useEffect(() => {
     getAllCounts();
-  }, [ date, selectedMonth ] );  // Added selectedMonth dependency
+  }, [date, selectedMonth]);  // Added selectedMonth dependency
 
-  React.useEffect( () => {
+  React.useEffect(() => {
     fetchAgentCount();
-  }, [] );
+  }, []);
 
   const getAllCounts = async () => {
     const [
@@ -201,27 +193,31 @@ export default function Page (): Promise<React.JSX.Element> {
       totalToBeApproved,
       totalApproved,
       totalRejected,
+      totalDrop,
+      totalHold,
       totalTicketsByMonth,
       doneTicketsByMonth,
-    ] = await Promise.all( [
+    ] = await Promise.all([
       fetchTotalApplications(),
       fetchTotalNewApplication(),
-      fetchTotalTickets( null, id, role, date, selectedMonth ),
-      fetchTotalTickets( "under credit review", id, role, date, selectedMonth ),
-      fetchTotalTickets( "operations", id, role, date, selectedMonth ),
-      fetchTotalTickets( "pendency in file", id, role, date, selectedMonth ),
-      fetchTotalTickets( "to be disbursed", id, role, date, selectedMonth ),
-      fetchTotalTickets( "disbursed", id, role, date, selectedMonth ),
-      fetchTotalTickets( "file send to banker", id, role, date, selectedMonth ),
-      fetchTotalTickets( "carry forward", id, role, date, selectedMonth ),
-      fetchTotalTickets( "to be approved", id, role, date, selectedMonth ),
-      fetchTotalTickets( "approved", id, role, date, selectedMonth ),
-      fetchTotalTickets( "rejected", id, role, date, selectedMonth ),
-      getTotalTicketsByMonth( 2024 ),
-      getDoneTicketsByMonth( 2024 ),
-    ] );
+      fetchTotalTickets(null, id, role, date, selectedMonth),
+      fetchTotalTickets("under credit review", id, role, date, selectedMonth),
+      fetchTotalTickets("operations", id, role, date, selectedMonth),
+      fetchTotalTickets("pendency in file", id, role, date, selectedMonth),
+      fetchTotalTickets("to be disbursed", id, role, date, selectedMonth),
+      fetchTotalTickets("disbursed", id, role, date, selectedMonth),
+      fetchTotalTickets("file send to banker", id, role, date, selectedMonth),
+      fetchTotalTickets("carry forward", id, role, date, selectedMonth),
+      fetchTotalTickets("to be approved", id, role, date, selectedMonth),
+      fetchTotalTickets("approved", id, role, date, selectedMonth),
+      fetchTotalTickets("rejected", id, role, date, selectedMonth),
+      fetchTotalTickets("drop", id, role, date, selectedMonth),
+      fetchTotalTickets("hold", id, role, date, selectedMonth),
+      getTotalTicketsByMonth(2024),
+      getDoneTicketsByMonth(2024),
+    ]);
 
-    setAllCounts( {
+    setAllCounts({
       totalApplications,
       totalNewApplications,
       totalTickets,
@@ -235,9 +231,11 @@ export default function Page (): Promise<React.JSX.Element> {
       totalToBeApproved,
       totalApproved,
       totalRejected,
+      totalDrop,
+      totalHold,
       totalTicketsByMonth,
       doneTicketsByMonth,
-    } );
+    });
   };
 
   const dashboardItems = [
@@ -263,7 +261,7 @@ export default function Page (): Promise<React.JSX.Element> {
       key: "totalTickets",
       color: "#009688",
       count: allCounts?.totalTickets,
-      link: `/ticket?status=${ decodeURIComponent( "all" ) }`,
+      link: `/ticket?status=${decodeURIComponent("all")}`,
     },
     {
       icon: WorkHistoryIcon,
@@ -271,7 +269,7 @@ export default function Page (): Promise<React.JSX.Element> {
       key: "underCreditReview",
       color: "#827717",
       count: allCounts?.totalUnderCreditReview,
-      link: `/ticket?status=${ decodeURIComponent( "under credit review" ) }`,
+      link: `/ticket?status=${decodeURIComponent("under credit review")}`,
     },
     {
       icon: LoginRounded,
@@ -279,7 +277,7 @@ export default function Page (): Promise<React.JSX.Element> {
       key: "operations",
       color: "#2196f3",
       count: allCounts?.totalOperations,
-      link: `/ticket?status=${ decodeURIComponent( "operations" ) }`,
+      link: `/ticket?status=${decodeURIComponent("operations")}`,
     },
     {
       icon: PendingActionsIcon,
@@ -287,39 +285,23 @@ export default function Page (): Promise<React.JSX.Element> {
       key: "pendencyInFile",
       color: "#7c4dff",
       count: allCounts?.totalPendencyInFile,
-      link: `/ticket?status=${ decodeURIComponent( "pendency in file" ) }`,
+      link: `/ticket?status=${decodeURIComponent("pendency in file")}`,
     },
     {
-      icon: ForwardRounded,
-      label: "To be Disbursed",
-      key: "toBeDisbursed",
-      color: "#ffcc80",
-      count: allCounts?.totalToBeDisbursed,
-      link: `/ticket?status=${ decodeURIComponent( "to be disbursed" ) }`,
-    },
-    {
-      icon: SendTimeExtensionIcon,
-      label: "Disbursed",
-      key: "disbursed",
-      color: "#ff9800",
-      count: allCounts?.totalDisbursed,
-      link: `/ticket?status=${ decodeURIComponent( "disbursed" ) }`,
-    },
-    {
-      icon: SendTimeExtensionIcon,
+      icon: SendRounded,
       label: "File Send to Banker",
       key: "fileSendToBanker",
       color: "#3f51b5",
       count: allCounts?.totalFileSendToBanker,
-      link: `/ticket?status=${ decodeURIComponent( "file send to banker" ) }`,
+      link: `/ticket?status=${decodeURIComponent("file send to banker")}`,
     },
     {
-      icon: SendTimeExtensionIcon,
-      label: "Carry forwarded",
-      key: "caryForward",
-      color: "pink",
-      count: allCounts?.totalCarryForward,
-      link: `/ticket?status=${ decodeURIComponent( "carry forward" ) }`,
+      icon: PauseCircleOutlineRounded,
+      label: "Hold",
+      key: "hold",
+      color: "#ffeb3b",
+      count: allCounts?.totalHold,
+      link: `/ticket?status=${decodeURIComponent("hold")}`,
     },
     {
       icon: ThumbUpRounded,
@@ -327,27 +309,58 @@ export default function Page (): Promise<React.JSX.Element> {
       key: "toBeApproved",
       color: "#aed581",
       count: allCounts?.totalToBeApproved,
-      link: `/ticket?status=${ decodeURIComponent( "to be approved" ) }`,
+      link: `/ticket?status=${decodeURIComponent("to be approved")}`,
     },
     {
-      icon: SendTimeExtensionIcon,
+      icon: ForwardRounded,
+      label: "To be Disbursed",
+      key: "toBeDisbursed",
+      color: "#ffcc80",
+      count: allCounts?.totalToBeDisbursed,
+      link: `/ticket?status=${decodeURIComponent("to be disbursed")}`,
+    },
+    {
+      icon: AccountBalanceRounded,
       label: "Approved",
       key: "approved",
       color: "#64dd17",
       count: allCounts?.totalApproved,
-      link: `/ticket?status=${ decodeURIComponent( "approved" ) }`,
+      link: `/ticket?status=${decodeURIComponent("approved")}`,
+    },
+    {
+      icon: ReportRounded,
+      label: "Disbursed",
+      key: "disbursed",
+      color: "#ff9800",
+      count: allCounts?.totalDisbursed,
+      link: `/ticket?status=${decodeURIComponent("disbursed")}`,
     },
     {
       icon: SendTimeExtensionIcon,
+      label: "Carry Forward",
+      key: "caryForward",
+      color: "pink",
+      count: allCounts?.totalCarryForward,
+      link: `/ticket?status=${decodeURIComponent("carry forward")}`,
+    },
+    {
+      icon: CancelRounded,
       label: "Rejected",
       key: "rejected",
-      color: "#f44336", 
+      color: "#f44336",
       count: allCounts?.totalRejected,
-      link: `/ticket?status=${ decodeURIComponent( "rejected" ) }`,
+      link: `/ticket?status=${decodeURIComponent("rejected")}`,
+    },
+    {
+      icon: DeleteForeverRounded,
+      label: "Drop",
+      key: "drop",
+      color: "#ff5722",
+      count: allCounts?.totalDrop,
+      link: `/ticket?status=${decodeURIComponent("drop")}`,
     },
 
-
-    ...( role === "admin"
+    ...(role === "admin"
       ? [
         {
           icon: SupervisorAccountIcon,
@@ -358,7 +371,7 @@ export default function Page (): Promise<React.JSX.Element> {
           link: "/users",
         },
       ]
-      : [] ),
+      : []),
   ];
 
   return (
@@ -371,7 +384,7 @@ export default function Page (): Promise<React.JSX.Element> {
             <Select
               labelId="month-select-label"
               value={selectedMonth}
-              onChange={( e ) => setSelectedMonth( e.target.value )}
+              onChange={(e) => setSelectedMonth(e.target.value)}
               label="Month"
               sx={{
                 width: 150,
@@ -415,7 +428,7 @@ export default function Page (): Promise<React.JSX.Element> {
           <TextField
             label="Date"
             type="date"
-            onChange={( e ) => setDate( e.target.value )}
+            onChange={(e) => setDate(e.target.value)}
             InputLabelProps={{ shrink: true }}
             sx={{
               width: 150,
@@ -443,7 +456,7 @@ export default function Page (): Promise<React.JSX.Element> {
       </Box>
 
       <Grid lg={12.2} sm={12.3} container spacing={3} sx={{ width: "100%" }}>
-        {dashboardItems.map( ( item, index ) => (
+        {dashboardItems.map((item, index) => (
           <Grid lg={3} sm={6} xs={12} key={index}>
             <Link href={item.link || ""} style={{ textDecoration: "none", color: "inherit" }}>
               <Budget
@@ -463,8 +476,8 @@ export default function Page (): Promise<React.JSX.Element> {
               />
             </Link>
           </Grid>
-        ) )}
-        <Grid container spacing={3} item lg={12} xs={12}>
+        ))}
+        <Grid container spacing={3} lg={12} xs={12}>
           <Grid item lg={7} md={6} xs={12}>
             <Paper
               elevation={3}
@@ -530,7 +543,7 @@ export default function Page (): Promise<React.JSX.Element> {
 
         </Grid>
 
-        <Grid container spacing={3} item lg={12} xs={12}>
+        <Grid container spacing={3} lg={12} xs={12}>
           <Grid item lg={4} md={6} xs={12}>
             <Paper
               elevation={3}
