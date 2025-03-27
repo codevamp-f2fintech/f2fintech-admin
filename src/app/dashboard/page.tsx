@@ -83,7 +83,7 @@ async function fetchTotalTickets(
   role: string,
   date?: string | null,
   month?: string
-): Promise<number> {
+): Promise<number | { count: number, amount: number }> {
   let url = `${process.env.NEXT_PUBLIC_API_URL}/dashboard/tickets/count`;
 
   if (role === "agent" && id !== null) {
@@ -110,6 +110,12 @@ async function fetchTotalTickets(
     throw new Error("Failed to fetch total Tickets");
   }
   const resData = await response.json();
+
+  if (status === 'disbursed') {
+    // When the status is disbursed, return both the count and total amount
+    return { count: resData.data.count, amount: resData.data.amount };
+  }
+
   return resData.data;
 }
 
@@ -143,7 +149,6 @@ async function getDoneTicketsByMonth(year: number): Promise<Ticket[]> {
   return resData.data.map((ticket: Ticket) => ticket.count);
 }
 
-// eslint-disable-next-line @next/next/no-async-client-component
 export default function Page(): React.JSX.Element {
   const { decodedToken, getCookies } = Utility();
   const cookies = getCookies();
@@ -154,6 +159,7 @@ export default function Page(): React.JSX.Element {
   const [selectedMonth, setSelectedMonth] = React.useState<string>("");
   const [allCounts, setAllCounts] = React.useState<any>({});
   const [totalAgents, setTotalAgents] = React.useState<number | null>(null);
+  const currentYear = new Date().getFullYear();
 
   async function fetchAgentCount() {
     const response = await fetch(
@@ -217,6 +223,11 @@ export default function Page(): React.JSX.Element {
       getDoneTicketsByMonth(2024),
     ]);
 
+    // Normalize the data for `disbursed` status
+    const normalizedDisbursed = typeof totalDisbursed === 'object' && totalDisbursed !== null
+      ? totalDisbursed
+      : { count: totalDisbursed, amount: null };
+
     setAllCounts({
       totalApplications,
       totalNewApplications,
@@ -225,7 +236,7 @@ export default function Page(): React.JSX.Element {
       totalOperations,
       totalPendencyInFile,
       totalToBeDisbursed,
-      totalDisbursed,
+      totalDisbursed: normalizedDisbursed,
       totalFileSendToBanker,
       totalCarryForward,
       totalToBeApproved,
@@ -237,7 +248,7 @@ export default function Page(): React.JSX.Element {
       doneTicketsByMonth,
     });
   };
-
+  console.log(allCounts, 'disbursed')
   const dashboardItems = [
     {
       icon: ArchiveIcon,
@@ -332,7 +343,8 @@ export default function Page(): React.JSX.Element {
       label: "Disbursed",
       key: "disbursed",
       color: "#ff9800",
-      count: allCounts?.totalDisbursed,
+      count: allCounts?.totalDisbursed?.count,
+      amount: allCounts?.totalDisbursed?.amount,
       link: `/ticket?status=${decodeURIComponent("disbursed")}`,
     },
     {
@@ -473,6 +485,7 @@ export default function Page(): React.JSX.Element {
                   },
                 }}
                 value={item.count}
+                amount={item.amount !== null ? item.amount : null}
               />
             </Link>
           </Grid>
@@ -490,8 +503,8 @@ export default function Page(): React.JSX.Element {
             >
               <Sales
                 chartSeries={[
-                  { name: "Total Tickets", data: allCounts?.totalTicketsByMonth },
-                  { name: "To be Disbursed", data: allCounts?.doneTicketsByMonth },
+                  { name: "Total Tickets", data: allCounts?.totalTicketsByMonth?.map((value) => Math.round(value)) },
+                  { name: "Disbursed Tickets", data: allCounts?.doneTicketsByMonth?.map((value) => Math.round(value)) },
                 ]}
                 sx={{ height: "100%" }}
               />
@@ -518,7 +531,7 @@ export default function Page(): React.JSX.Element {
                   allCounts?.totalOperations,
                   allCounts?.totalPendencyInFile,
                   allCounts?.totalToBeDisbursed,
-                  allCounts?.totalDisbursed,
+                  allCounts?.totalDisbursed?.count,
                   allCounts?.totalFileSendToBanker,
                   allCounts?.totalToBeApproved,
                   allCounts?.totalApproved,
