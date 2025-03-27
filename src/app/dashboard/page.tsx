@@ -219,8 +219,8 @@ export default function Page(): React.JSX.Element {
       fetchTotalTickets("rejected", id, role, date, selectedMonth),
       fetchTotalTickets("drop", id, role, date, selectedMonth),
       fetchTotalTickets("hold", id, role, date, selectedMonth),
-      getTotalTicketsByMonth(2024),
-      getDoneTicketsByMonth(2024),
+      getTotalTicketsByMonth(currentYear),
+      getDoneTicketsByMonth(currentYear),
     ]);
 
     // Normalize the data for `disbursed` status
