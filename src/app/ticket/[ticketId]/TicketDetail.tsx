@@ -7,55 +7,87 @@ import axios from "axios";
 import Toast from "../../components/common/Toast";
 import { AppDispatch, RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
+import { useCreateTicketHistory } from "@/hooks/tickethistory";
 
-
-const TicketDetail = ( { ticketDetailData, isMobile, isTab } ) => {
-  const { capitalizeFirstLetter, formatTenure, formatDate, formatAmount } = Utility();
+const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
   const router = useRouter();
-  const { toast } = useSelector( ( state: RootState ) => state.toast );
   const dispatch: AppDispatch = useDispatch();
-  const { toastAndNavigate } = Utility();
+  const { toast } = useSelector((state: RootState) => state.toast);
+  const { capitalizeFirstLetter, formatTenure, formatDate, formatAmount, decodedToken, toastAndNavigate } = Utility();
 
-  const [ openEditModal, setOpenEditModal ] = useState( false );
-  const [ editedTicketData, setEditedTicketData ] = useState( ticketDetailData );
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [editedTicketData, setEditedTicketData] = useState(ticketDetailData);
+  const { createTicketHistory } = useCreateTicketHistory("create-ticket-history");
 
   // Update editedTicketData when ticketDetailData changes
-  useEffect( () => {
-    if ( ticketDetailData )
-    {
-      setEditedTicketData( ticketDetailData );
+  useEffect(() => {
+    if (ticketDetailData) {
+      setEditedTicketData(ticketDetailData);
     }
-  }, [ ticketDetailData ] );
-  console.log( "ticketDetailData>>>>>>>", ticketDetailData )
+  }, [ticketDetailData]);
 
   const handleOpenEditModal = () => {
-    setOpenEditModal( true );
+    setOpenEditModal(true);
   };
 
   const handleCloseEditModal = () => {
-    setOpenEditModal( false );
+    setOpenEditModal(false);
   };
 
-  const handleInputChange = ( e ) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    const updatedTicketData = { ...editedTicketData, [ name ]: value };
-    setEditedTicketData( updatedTicketData );
+    const updatedTicketData = { ...editedTicketData, [name]: value };
+    setEditedTicketData(updatedTicketData);
+  };
+
+  // A helper function to compare the original and edited ticket details
+  const getChangedFields = (original, edited) => {
+    const changes: string[] = [];
+    Object.keys(original).forEach((key) => {
+      if (original[key] !== edited[key]) {
+        changes.push(`${key} changed from "${original[key]}" to "${edited[key]}"`);
+      }
+    });
+    return changes;
   };
 
   const handleSaveEdit = async () => {
-    try
-    {
+    try {
       // Call the update API on Save
-      const response = await axios.patch(
-        `${ process.env.NEXT_PUBLIC_API_URL }/update-loan-application/${ editedTicketData?.applicationId
-        }`,
+      const { data: response } = await axios.patch(
+        `${process.env.NEXT_PUBLIC_API_URL}/update-loan-application/${editedTicketData?.applicationId}`,
         editedTicketData
       );
-      console.log( "Ticket updated successfully:", response.data );
-      setOpenEditModal( false ); // Close the modal after saving
-    } catch ( error )
-    {
-      console.error( "Error saving the ticket:", error );
+      if (response?.statusCode === 200) {
+        const loggedInUser = decodedToken()?.username;
+        const changes = getChangedFields(ticketDetailData, editedTicketData);
+
+        const formattedChanges = changes.map((change) => {
+          const [key, rest] = change.split(" changed from ");
+          return `${key} changed from ${rest}`;
+        });
+
+        const historyMessage = changes.length > 0
+          ? `${loggedInUser} edited the following Ticket Details:
+               ${formattedChanges}`
+          : `${loggedInUser} did not change any details.`;
+
+        const createdHistory = await createTicketHistory({
+          ticket_id: ticketDetailData?.ticketId,
+          action: historyMessage,
+        });
+        if (createdHistory?.statusCode === 200) {
+          toastAndNavigate(dispatch, true, "info", "Ticket Details Edited Successfully");
+          setOpenEditModal(false); // Close the modal after saving
+        } else {
+          setOpenEditModal(false); // Close the modal after saving
+        }
+      } else {
+        setOpenEditModal(false); // Close the modal after saving
+      }
+    } catch (error) {
+      console.error("Error saving the ticket:", error);
+      setOpenEditModal(false); // Close the modal after saving
     }
   };
 
@@ -65,9 +97,7 @@ const TicketDetail = ( { ticketDetailData, isMobile, isTab } ) => {
         <Box sx={{ display: "flex", alignItems: "flex-start" }}>
           <Button
             startIcon={<ArrowBackRounded />}
-            onClick={() => {
-              router.back();
-            }}
+            onClick={() => router.back()}
             sx={{ color: "white" }}
           >
             Back
@@ -117,7 +147,7 @@ const TicketDetail = ( { ticketDetailData, isMobile, isTab } ) => {
       >
         <Box>
           <Avatar
-            src={ticketDetailData?.customerDocuments}
+            src={ticketDetailData?.customerName}
             sx={{
               width: isMobile ? "2rem" : isTab ? "6vw" : "4rem",
               height: isMobile ? "2rem" : isTab ? "4vh" : "4rem",
@@ -138,7 +168,7 @@ const TicketDetail = ( { ticketDetailData, isMobile, isTab } ) => {
             {/* Ticket Details */}
             <Grid item xs={12} sm={6}>
               <Typography sx={{ mb: 1, color: "white", fontSize: "1rem" }}>
-                <strong>Name:</strong> {capitalizeFirstLetter( editedTicketData?.customerName )}
+                <strong>Name:</strong> {capitalizeFirstLetter(editedTicketData?.customerName)}
               </Typography>
               <Typography
                 sx={{
@@ -157,28 +187,28 @@ const TicketDetail = ( { ticketDetailData, isMobile, isTab } ) => {
                 <strong>Contact:</strong> +91 {editedTicketData?.customerContact}
               </Typography>
               <Typography sx={{ color: "white", fontSize: "1rem", mb: 1 }}>
-                <strong>Designation:</strong> {capitalizeFirstLetter( editedTicketData?.customerDesignation )}
+                <strong>Designation:</strong> {capitalizeFirstLetter(editedTicketData?.customerDesignation)}
               </Typography>
             </Grid>
             <Grid item xs={12} sm={6}>
               <Typography sx={{ color: "white", fontSize: "1rem", mb: 1 }}>
-                <strong>Location:</strong> {capitalizeFirstLetter( editedTicketData?.customerLocation )}
+                <strong>Location:</strong> {capitalizeFirstLetter(editedTicketData?.customerLocation)}
               </Typography>
               <Typography sx={{ color: "white", fontSize: "1rem", mb: 1 }}>
-                <strong>Tenure:</strong> {formatTenure( editedTicketData?.applicationTenure )}
+                <strong>Tenure:</strong> {formatTenure(editedTicketData?.applicationTenure)}
               </Typography>
             </Grid>
             <Grid item xs={12} sm={6}>
               <Typography sx={{ color: "white", fontSize: "1rem", mb: 1 }}>
-                <strong>Amount:</strong> {formatAmount( editedTicketData?.applicationAmount )}
+                <strong>Amount:</strong> {formatAmount(editedTicketData?.applicationAmount)}
               </Typography>
               <Typography sx={{ color: "white", fontSize: "1rem" }}>
-                <strong>Application Date:</strong> {formatDate( editedTicketData?.applicationDate )}
+                <strong>Application Date:</strong> {formatDate(editedTicketData?.applicationDate)}
               </Typography>
             </Grid>
             <Grid item xs={12} sm={6}>
               <Typography sx={{ color: "white", fontSize: "1rem", mb: 1 }}>
-                <strong>Loan Provider:</strong> {capitalizeFirstLetter( editedTicketData?.applicationProvider ) || "No provider available"}
+                <strong>Loan Provider:</strong> {capitalizeFirstLetter(editedTicketData?.applicationProvider) || "No provider available"}
               </Typography>
             </Grid>
           </Grid>
