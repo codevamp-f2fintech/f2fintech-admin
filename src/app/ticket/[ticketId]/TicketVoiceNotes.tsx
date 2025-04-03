@@ -10,11 +10,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { Upload } from "@mui/icons-material";
 import { AppDispatch, RootState } from "@/redux/store";
 import { useModifyTicket } from "@/hooks/ticket";
+import Loader from "@/app/components/common/Loader";
 
 const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 3;
   const [selectedAudioFile, setSelectedAudioFile] = useState();
+  const [loading, setLoading] = useState(false);
   const [uploaded, setUploaded] = useState(false);
   const [voiceNote, setVoiceNote] = useState("");
   const inputRef = useRef(null);
@@ -35,63 +37,79 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
   }, [ticketDetailData]);
 
   const handleAttachmentAudioDelete = async () => {
-    await modifyTicket(ticketDetailData?.ticketId, {
+    setLoading(true);
+    const deleteResponse = await modifyTicket(ticketDetailData?.ticketId, {
       voice_note_url: null,
     });
-    setVoiceNote("");
-    setSelectedAudioFile(null);
-    if (inputRef.current) {
-      inputRef.current.value = ""; // Clear the file input value
+    if (deleteResponse?.statusCode === 200) {
+      setVoiceNote("");
+      setSelectedAudioFile(null);
+      setLoading(false);
+      toastAndNavigate(
+        dispatch,
+        true,
+        "success",
+        "Voice note deleted successfully"
+      );
+      if (inputRef.current) {
+        inputRef.current.value = ""; // Clear the file input value
+      }
+    } else {
+      setLoading(false);
+      toastAndNavigate(
+        dispatch,
+        true,
+        "error",
+        "Error deleting voice note"
+      );
     }
   };
 
   // Create comment handler, memoized
   const handleVoiceNoteUpload = useCallback(async () => {
-    try {
-      if (selectedAudioFile) {
-        try {
-          const formData = new FormData();
-          formData.append("document", selectedAudioFile);
-          formData.append("folder", `voice-note/${selectedAudioFile.name}`);
-          console.log(formData, "this is formdata");
+    setLoading(true);
+    if (selectedAudioFile) {
+      try {
+        const formData = new FormData();
+        formData.append("document", selectedAudioFile);
+        formData.append("folder", `voice-note/${selectedAudioFile.name}`);
 
-          const uploadResponse = await axios.post(
-            `${process.env.NEXT_PUBLIC_WEB_URL}/upload-to-s3`,
-            formData,
-            {
-              headers: {
-                "Content-Type": "multipart/form-data",
-              },
-              maxContentLength: 20 * 1024 * 1024, // 20MB Limit
-              maxBodyLength: 20 * 1024 * 1024,
-            }
-          );
-          const attachmentUrl = uploadResponse.data.data;
-          await modifyTicket(ticketDetailData?.ticketId, {
-            voice_note_url: attachmentUrl,
-          });
+        const uploadResponse = await axios.post(
+          `${process.env.NEXT_PUBLIC_WEB_URL}/upload-to-s3`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+            maxContentLength: 20 * 1024 * 1024, // 20MB Limit
+            maxBodyLength: 20 * 1024 * 1024,
+          }
+        );
+        const attachmentUrl = uploadResponse?.data?.data;
+        await modifyTicket(ticketDetailData?.ticketId, {
+          voice_note_url: attachmentUrl,
+        });
 
-          setVoiceNote(attachmentUrl);
-          setUploaded(true);
-          setSelectedAudioFile(null);
-          toastAndNavigate(
-            dispatch,
-            true,
-            "success",
-            "Voice note uploaded successfully"
-          );
-        } catch (err) {
-          console.log("Error uploading attachment:", err);
-          toastAndNavigate(
-            dispatch,
-            true,
-            "error",
-            "Error uploading voice note"
-          );
-        }
+        setVoiceNote(attachmentUrl);
+        setUploaded(true);
+        setSelectedAudioFile(null);
+        setLoading(false);
+        toastAndNavigate(
+          dispatch,
+          true,
+          "success",
+          "Voice note uploaded successfully"
+        );
+      } catch (err) {
+        console.log("Error uploading attachment:", err);
+        setLoading(false);
+        toastAndNavigate(
+          dispatch,
+          true,
+          "error",
+          "Error uploading voice note"
+        );
       }
-    } catch (error) {
-      console.log("Error uploading voice note:", error);
     }
   }, [selectedAudioFile, toastAndNavigate]);
 
@@ -118,8 +136,6 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
         <Typography
           variant="h6"
           sx={{
-            mb: 2,
-            mt: 0,
             color: "white",
             fontSize: isMobile ? ".7rem" : isTab ? "1rem" : "1.1rem",
           }}
@@ -148,7 +164,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
         {(voiceNote || selectedAudioFile) && (
           <Box
             sx={{
-              width: "100%",
+              width: "inherit",
               mt: 2,
               display: "flex",
               alignItems: "center",
@@ -162,17 +178,15 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
                 justifyContent: "space-between",
                 alignItems: "center",
                 mb: 1,
-                width: isMobile ? "100vw" : isTab ? "90vw" : "30vw",
+                width: isMobile ? "100vw" : isTab ? "90vw" : "40vw",
               }}
             >
-              <Typography>{selectedAudioFile?.name || "Voice Note"}</Typography>
-              <IconButton onClick={handleAttachmentAudioDelete} sx={{ ml: 2 }}>
-                <DeleteIcon />
-              </IconButton>
-              {selectedAudioFile && !uploaded && (
-                <Upload onClick={handleVoiceNoteUpload} />
-              )}
-              {/* Audio Player for Each Selected File */}
+              <Typography sx={{
+                maxWidth: '267px',
+                marginRight: '15px'
+              }}>
+                {selectedAudioFile?.name || "Voice Note"}</Typography>
+              {/* Audio Player for Selected File */}
               <audio controls style={{ width: "100%" }}>
                 {selectedAudioFile ? (
                   <source
@@ -181,8 +195,8 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
                       selectedAudioFile.type === "audio/mpeg"
                         ? "audio/mpeg"
                         : selectedAudioFile.type === "audio/ogg"
-                        ? "audio/ogg"
-                        : "audio/wav" // Default to WAV if MIME type is unknown
+                          ? "audio/ogg"
+                          : "audio/wav" // Default to WAV if MIME type is unknown
                     }
                   />
                 ) : voiceNote ? (
@@ -197,6 +211,14 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
                   <p>No audio file available.</p>
                 )}
               </audio>
+              <IconButton onClick={handleAttachmentAudioDelete} sx={{ ml: 2 }}>
+                <DeleteIcon />
+              </IconButton>
+              {selectedAudioFile && !uploaded && (
+                <IconButton onClick={handleVoiceNoteUpload} sx={{ ml: 1 }}>
+                  <Upload />
+                </IconButton>
+              )}
             </Box>
           </Box>
         )}
@@ -206,7 +228,8 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
         severity={toast.toastSeverity}
         message={toast.toastMessage}
       />
-    </Grid>
+      {loading && <Loader />}
+    </Grid >
   );
 };
 
