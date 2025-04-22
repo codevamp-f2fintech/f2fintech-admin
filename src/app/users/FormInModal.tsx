@@ -381,6 +381,7 @@ const UserForm: React.FC<FormComponentProps> = ({
                     <em>None</em>
                   </MenuItem>
                   <MenuItem value="admin">Admin</MenuItem>
+                  <MenuItem value="sub admin">Sub Admin</MenuItem>
                   <MenuItem value="agent">Agent</MenuItem>
                   <MenuItem value="sales">Sales</MenuItem>
                 </Field>
