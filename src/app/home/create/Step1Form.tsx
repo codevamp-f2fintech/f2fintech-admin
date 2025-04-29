@@ -220,35 +220,15 @@ const Step1Form: React.FC<Step1FormProps> = ( {
   }
 
   const setCustomerData = async ( customerInfo ) => {
-    setGetStarted(false);
-    await setLocalStorage( "customerInfo", customerInfo );
+    setGetStarted( false );
+    setLocalStorage( "customerInfo", customerInfo );
     location.reload();
-  }
-
-  // Function to log in the customer
-  async function loginCustomer ( contact, name ) {
-    const response = await axios.post(
-      `${ process.env.NEXT_PUBLIC_WEB_URL }/login`,
-      {
-        contact,
-        password: `${ name.replace( /\s/g, "" ) }@${ randomFourDigitNumber }`,
-      } )
-
-    if ( response.data.status === "Success" )
-    {
-      const customerInfo = {
-        id: response.data.data.id,
-        name: response.data.data.name,
-        token: response.data.data.token,
-      };
-      setLocalStorage( "customerInfo", customerInfo );
-      location.reload();
-    }
   }
 
   // Create new customer with loan application
   const create = useCallback(
     async ( values: typeof initialValues ) => {
+      setLoading( true );
       const applicationNumberGenerated = randomNumberGenerator();
       const { contact, email, name, status, dob, ...restValues } = values;
       const customer = {
@@ -278,13 +258,14 @@ const Step1Form: React.FC<Step1FormProps> = ( {
             name: customer.name
           } )
           : location.reload();
-
+        setLoading( false );
         console.log(
           "Customer info, application, and loan tracking created successfully"
         );
       } catch ( err )
       {
-        toastAndNavigate( dispatch, true, "error", err?.response?.data?.msg );
+        toastAndNavigate( dispatch, true, "error", err?.response?.data?.msg || "Error Occurred. Please Try Again" );
+        setLoading( false ); 
         console.log(
           "Error during customer creation:",
           err?.response?.data?.msg
@@ -298,10 +279,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
   );
 
   // If application number and loan status exists, display success message without making user to fill the form again
-  if (
-    applicationNumber &&
-    !( loanStatus === "disbursed" || loanStatus === "rejected" )
-  )
+  if ( applicationNumber )
   {
     return (
       <Box
@@ -1232,7 +1210,6 @@ const Step1Form: React.FC<Step1FormProps> = ( {
         alerting={toastInfo.toastAlert}
         message={toastInfo.toastMessage}
         severity={toastInfo.toastSeverity}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       />
     </>
   );

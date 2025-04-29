@@ -1,10 +1,10 @@
 'use client';
 
 import axios from "axios";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Formik, Form, ErrorMessage } from "formik";
-import { Box, Typography, Button, IconButton, Tooltip } from "@mui/material";
+import { Box, Typography, Button, IconButton, Tooltip, CircularProgress, Alert, Snackbar } from "@mui/material";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import DeleteIcon from "@mui/icons-material/Delete";
 import * as Yup from "yup";
@@ -18,6 +18,7 @@ const validationSchema = Yup.object( {
   aadharBack: Yup.mixed().nullable(),
   passportSizePhoto: Yup.mixed().nullable(),
 } );
+
 
 // Initial values
 interface FormValues {
@@ -147,11 +148,23 @@ const Step4Form: React.FC<Step4FormProps> = ( {
   } );
   const toastInfo = useSelector( ( state: any ) => state.toast );
   const dispatch = useDispatch();
+  const [ isUploading, setIsUploading ] = useState( false );
 
   const { getLocalStorage, setLocalStorage, toastAndNavigate } =
     Utility();
   const customerId = getLocalStorage( "customerInfo" )?.id;
   const StatementUpload = getLocalStorage( "StatementUpload" );
+
+  const [ toast, setToast ] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error";
+  }>( { open: false, message: "", severity: "success" } );
+
+  const handleToast = ( message: string, severity: "success" | "error" ) => {
+    setToast( { open: true, message, severity } );
+  };
+  
 
   const handleFileChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -198,13 +211,8 @@ const Step4Form: React.FC<Step4FormProps> = ( {
       }
     } catch ( err )
     {
-      console.error( `Error uploading ${ type }:`, err );
-      toastAndNavigate(
-        dispatch,
-        true,
-        "error",
-        `Error Uploading ${ type }`
-      );
+      // console.error( `Error uploading ${ type }:`, err );
+      handleToast( `Error Uploading ${ type }`, "error" );
     }
   };
 
@@ -212,8 +220,15 @@ const Step4Form: React.FC<Step4FormProps> = ( {
   // Form submission handler
   const handleFormSubmit = useCallback(
     async ( values: FormValues ) => {
+      // Check if the user is online
+      if ( !navigator.onLine )
+      {
+        handleToast( "No internet connection. Please try again later.", "error" );
+        return;
+      }
       const uploadPromises: Promise<any>[] = [];
       const { aadharFront, aadharBack, pancard, passportSizePhoto } = values;
+      setIsUploading( true );
 
       try
       {
@@ -239,8 +254,9 @@ const Step4Form: React.FC<Step4FormProps> = ( {
         }
 
         await Promise.all( uploadPromises );
-        console.log( "All documents uploaded successfully" );
-        toastAndNavigate( dispatch, true, "info", "Uploaded Successfully" );
+        // console.log( "All documents uploaded successfully" );
+        // toastAndNavigate( dispatch, true, "info", "Uploaded Successfully" );
+        handleToast( "Documents uploaded successfully!", "success" );
         setAadharUploadsSuccess( true );
         setLocalStorage( "profileDetail", true );
 
@@ -251,12 +267,27 @@ const Step4Form: React.FC<Step4FormProps> = ( {
 
       } catch ( err )
       {
-        toastAndNavigate( dispatch, true, "error", "Upload Failed. Please Try Again" );
-        console.error( "Error in uploading one or more documents:", err );
+        // toastAndNavigate( dispatch, true, "error", "Upload Failed. Please Try Again" );
+        handleToast( "Upload Failed. Please Try Again", "error" );
+        // console.error( "Error in uploading one or more documents:", err );
       }
+      setIsUploading( false );
     },
     [ dispatch, handleNext ]
   );
+
+   useEffect( () => {
+      const handleOnline = () => handleToast( "Back online", "success" );
+      const handleOffline = () => handleToast( "You are offline", "error" );
+  
+      window.addEventListener( "online", handleOnline );
+      window.addEventListener( "offline", handleOffline );
+  
+      return () => {
+        window.removeEventListener( "online", handleOnline );
+        window.removeEventListener( "offline", handleOffline );
+      };
+    }, [] );
 
   return (
     <>
@@ -409,8 +440,24 @@ const Step4Form: React.FC<Step4FormProps> = ( {
                     },
                   }}
                 >
-                  Upload
+                  {isUploading ? (
+                    <CircularProgress
+                      size={24}
+                      sx={{
+                        color: "black",
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        marginTop: "-12px", // Adjust positioning so it stays centered
+                        marginLeft: "-12px", // Adjust positioning so it stays centered
+                        zIndex: 1, // Ensure it's displayed on top of the button text
+                      }}
+                    />
+                  ) : (
+                    "Upload"
+                  )}
                 </Button>
+
                 <Button
                   sx={{
                     mr: 4,
@@ -428,12 +475,22 @@ const Step4Form: React.FC<Step4FormProps> = ( {
           </Form>
         )}
       </Formik>
-      <Toast
-        alerting={toastInfo.toastAlert}
-        message={toastInfo.toastMessage}
-        severity={toastInfo.toastSeverity}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      />
+     {/* MUI Snackbar for toast messages */}
+          <Snackbar
+            open={toast.open}
+            autoHideDuration={2000}
+            onClose={() => setToast( ( prev ) => ( { ...prev, open: false } ) )}
+            anchorOrigin={{ vertical: "top", horizontal: "center" }}
+          >
+            <Alert
+              onClose={() => setToast( ( prev ) => ( { ...prev, open: false } ) )}
+              severity={toast.severity}
+              sx={{ width: "100%" }}
+              variant="filled"
+            >
+              {toast.message}
+            </Alert>
+          </Snackbar>
     </>
   );
 };

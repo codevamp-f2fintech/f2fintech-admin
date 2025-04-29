@@ -4,11 +4,10 @@ import axios from "axios";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Formik, Form } from "formik";
-import { Box, Typography, Container, Button, IconButton } from "@mui/material";
+import { Box, Typography, Container, Button, IconButton, Alert, Snackbar, CircularProgress } from "@mui/material";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-import Toast from "@/app/components/common/Toast";
 import { Utility } from "@/utils";
 
 interface Step3FormProps {
@@ -27,12 +26,20 @@ const Step3Form: React.FC<Step3FormProps> = ({
   setAllUploadsSuccess,
 }) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]); // To store selected files
+  const [ toast, setToast ] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error";
+  }>( { open: false, message: "", severity: "success" } );
   const dispatch = useDispatch();
-  const toastInfo = useSelector((state: any) => state.toast);
   const { getLocalStorage, setLocalStorage, toastAndNavigate } = Utility();
   const customerId = getLocalStorage("customerInfo")?.id;
+  const [isUploading, setIsUploading] = useState(false);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const handleToast = ( message: string, severity: "success" | "error" ) => {
+    setToast( { open: true, message, severity } );
+  };
 
   // Handle deleting a file from the selected files array
   const handleAttachmentDelete = (index: number) => {
@@ -46,7 +53,14 @@ const Step3Form: React.FC<Step3FormProps> = ({
   // Submitting the form and uploading files
   const handleFormSubmit = useCallback(
     async (values: typeof initialValues) => {
+      // Check if the user is online
+      if ( !navigator.onLine )
+      {
+        handleToast( "No internet connection. Please try again later.", "error" );
+        return;
+      }
       let attachmentUrl = null;
+      setIsUploading(true);
 
       for (const file of values.data) {
         const formData = new FormData();
@@ -76,27 +90,32 @@ const Step3Form: React.FC<Step3FormProps> = ({
             )
             setAllUploadsSuccess(true);
             setLocalStorage("StatementUpload", true);
+            handleToast( "Documents uploaded successfully!", "success" );
           }
-        } catch (err) {
-          console.log("Error uploading attachment:", err);
-          toastAndNavigate(
-            dispatch,
-            true,
-            "error",
-            "Error uploading documents"
-          );
-          setAllUploadsSuccess(false);
+        } catch ( err )
+        {
+          console.error( "Error uploading attachment:", err );
+          handleToast( "Error uploading documents", "error" );
+          setAllUploadsSuccess( false );
         }
       }
+      setIsUploading(false);
     },
-    [
-      customerId,
-      dispatch,
-      setAllUploadsSuccess,
-      setLocalStorage,
-      toastAndNavigate,
-    ]
+    [ customerId, setAllUploadsSuccess, setLocalStorage ]
   );
+
+  useEffect( () => {
+    const handleOnline = () => handleToast( "Back online", "success" );
+    const handleOffline = () => handleToast( "You are offline", "error" );
+
+    window.addEventListener( "online", handleOnline );
+    window.addEventListener( "offline", handleOffline );
+
+    return () => {
+      window.removeEventListener( "online", handleOnline );
+      window.removeEventListener( "offline", handleOffline );
+    };
+  }, [] );
 
   useEffect(() => {
     if (allUploadsSuccess) {
@@ -206,24 +225,14 @@ const Step3Form: React.FC<Step3FormProps> = ({
                           selectedFiles.length + newFiles.length;
 
                         if (totalFiles > 10) {
-                          toastAndNavigate(
-                            dispatch,
-                            true,
-                            "error",
-                            "Maximum limit reached: 10 files"
-                          );
+                          handleToast( "Maximum limit reached: 10 files", "error" );
                           return;
                         }
 
                         // Check file size limit (1MB = 10,04,85,760 bytes)
                         const filteredFiles = newFiles.filter((file) => {
                           if (file.size > 10485760) {
-                            toastAndNavigate(
-                              dispatch,
-                              true,
-                              "error",
-                              `${file.name} exceeds the 10MB limit`
-                            );
+                            handleToast( `${ file.name } exceeds the 10MB limit`, "error" );
                             return false;
                           }
                           return true;
@@ -274,15 +283,15 @@ const Step3Form: React.FC<Step3FormProps> = ({
                 <Box
                   sx={{
                     display: "flex",
-                    justifyContent: "flex-end",
-                    ml: "16vw",
-                    mb: "13vh"
+                    justifyContent: "center",
+                    mb: "13vh",
+                    flexDirection: "column",
                   }}
                 >
                   <Button
                     color="primary"
                     disabled={
-                      !dirty || isSubmitting || selectedFiles.length === 0
+                      !dirty || isSubmitting || selectedFiles.length === 0 || isUploading
                     }
                     type="submit"
                     variant="contained"
@@ -293,18 +302,32 @@ const Step3Form: React.FC<Step3FormProps> = ({
                       fontSize: "1rem",
                       lineHeight: "1.5rem",
                       mt: 2,
-                      mr: 20,
+                      position: "relative", // Ensure the button's content is positioned correctly
                       "&:hover": {
                         backgroundColor: "transparent", // Transparent color on hover
                       },
                     }}
                   >
-                    Upload
+                    {isUploading ? (
+                      <CircularProgress
+                        size={24}
+                        sx={{
+                          color: "black",
+                          position: "absolute",
+                          top: "50%",
+                          left: "50%",
+                          marginTop: "-12px", // Adjust positioning so it stays centered
+                          marginLeft: "-12px", // Adjust positioning so it stays centered
+                          zIndex: 1, // Ensure it's displayed on top of the button text
+                        }}
+                      />
+                    ) : (
+                      "Upload"
+                    )}
                   </Button>
 
                   <Button
                     sx={{
-                      mr: 4,
                       mt: 2,
                       fontFamily: "Poppins",
                       fontSize: ".9rem",
@@ -322,12 +345,22 @@ const Step3Form: React.FC<Step3FormProps> = ({
           </Form>
         )}
       </Formik>
-      <Toast
-        alerting={toastInfo.toastAlert}
-        message={toastInfo.toastMessage}
-        severity={toastInfo.toastSeverity}
+      {/* MUI Snackbar for toast messages */}
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={2000}
+        onClose={() => setToast( ( prev ) => ( { ...prev, open: false } ) )}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      />
+      >
+        <Alert
+          onClose={() => setToast( ( prev ) => ( { ...prev, open: false } ) )}
+          severity={toast.severity}
+          sx={{ width: "100%" }}
+          variant="filled"
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
     </>
   );
 };

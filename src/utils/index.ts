@@ -214,7 +214,7 @@ export const Utility = () => {
       dispatch(
         setToast({
           toastAlert: !display,
-          toastSeverity: "info",
+          toastSeverity: "",
           toastMessage: "",
         })
       );
