@@ -121,7 +121,7 @@ export const Utility = () => {
 
   const formatTenure = ( tenure: number ) => {
     let months = tenure * 12
-    if ( months >= 60 )
+    if ( months > 60 )
     {
       const years = ( months / 12 ).toFixed( 1 ); // convert to years with one decimal place if needed
       return `${ years } years`;
