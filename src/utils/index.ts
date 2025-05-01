@@ -120,13 +120,14 @@ export const Utility = () => {
   };
 
   const formatTenure = ( tenure: number ) => {
-    if ( tenure <= 5 )
+    let months = tenure * 12
+    if ( months >= 60 )
     {
-      const months = tenure * 12;
-      return `${ months } months`;
+      const years = ( months / 12 ).toFixed( 1 ); // convert to years with one decimal place if needed
+      return `${ years } years`;
     } else
     {
-      return `${ tenure.toFixed( 1 ) } years`;
+      return `${ months } months`;
     }
   };
 
