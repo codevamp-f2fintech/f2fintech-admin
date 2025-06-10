@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Autocomplete, Box, TextField } from "@mui/material";
 
 import { User, UserData } from "@/types/user";
+import { TicketDetail } from "@/app/ticket/[ticketId]/MainPage";
 
 interface UserAutocompleteProps {
   isMobile: boolean;
@@ -14,6 +15,7 @@ interface UserAutocompleteProps {
   ticketId: string | number;
   userId: string | number;
   isForwarded: number | null;
+  ticketDetailData: TicketDetail;
 }
 
 const UserAutocomplete: React.FC<UserAutocompleteProps> = ({
@@ -26,7 +28,8 @@ const UserAutocomplete: React.FC<UserAutocompleteProps> = ({
   handleForwardAutocomplete,
   ticketId,
   userId,
-  isForwarded
+  isForwarded,
+  ticketDetailData
 }) => {
   const [allUsers, setAllUsers] = useState<UserData[]>([]);
 
@@ -34,8 +37,9 @@ const UserAutocomplete: React.FC<UserAutocompleteProps> = ({
     if (userData?.data?.results) {
       setAllUsers(userData?.data.results);
       try {
+        const ticketUser = isForwarded ? ticketDetailData?.forwardedTo : userId;
         const selectedUserObj = userData?.data?.results?.find(
-          (user) => user.id == userId
+          ( user ) => user.id == ticketUser
         );
         setSelectedUser(selectedUserObj || []);
       } catch (error) {

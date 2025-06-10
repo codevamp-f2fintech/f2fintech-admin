@@ -155,7 +155,7 @@ const Progress: React.FC = () => {
 
   const { createTicketHistory } = useCreateTicketHistory("create-ticket-history");
   const { modifyTicket } = useModifyTicket("update-ticket");
-  const { value: userData } = useGetUsers({} as User, "get-users", 1, 100);
+  const { value: userData } = useGetUsers({} as User, "get-users", 1, 200);
   const { value: workLog, refetch } = useGetTicketLogs(
     {} as TicketLogs,
     hasFetched ? `get-ticket-logs/${ticketId}` : ''
@@ -537,6 +537,7 @@ const Progress: React.FC = () => {
                     ticketId={ticketId}
                     userId={ticketDetailData?.userId}
                     isForwarded={ticketDetailData?.isForwarded}
+                    ticketDetailData={ticketDetailData}
                   />
                 )}
                 <Divider sx={{ my: 1 }} />
