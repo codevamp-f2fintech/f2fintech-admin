@@ -17,20 +17,19 @@ import { useDispatch, useSelector } from "react-redux";
 import { setTickets, resetTickets } from "@/redux/features/ticketSlice";
 
 const Ticket = () => {
-  const [ filter, setFilter ] = useState<string>( "" );
-  const [ selectedUser, setSelectedUser ] = useState<any | null>( null );
-  const [ sortBy, setSortBy ] = useState<string>( "all" );
-  const [ startDate, setStartDate ] = useState<string | null>( null );
-  const [ endDate, setEndDate ] = useState<string | null>( null );
+  const [filter, setFilter] = useState<string>("");
+  const [selectedUser, setSelectedUser] = useState<any | null>(null);
+  const [sortBy, setSortBy] = useState<string>("all");
+  const [startDate, setStartDate] = useState<string | null>(null);
+  const [endDate, setEndDate] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [hasMoreData, setHasMoreData] = useState<boolean>(true);
 
-  const [ currentPage, setCurrentPage ] = useState<number>( 1 );
-  const [ hasMoreData, setHasMoreData ] = useState<boolean>( true );
-
-  const { ticket } = useSelector( ( state: RootState ) => state.tickets );
-  const { deleteTicket, error, loading } = useDeleteTicket()
-  const isMobile = useMediaQuery( "(max-width:600px)" );
-  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
-  const ITEMS_PER_PAGE = 6; // Number of tickets per page
+  const { ticket } = useSelector((state: RootState) => state.tickets);
+  const { deleteTicket, error, loading } = useDeleteTicket();
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const ITEMS_PER_PAGE = 6;
 
   const dispatch: AppDispatch = useDispatch();
   const router = useRouter();
@@ -38,23 +37,56 @@ const Ticket = () => {
   const { debounceScroll, decodedToken } = Utility();
   const userRole = decodedToken()?.role;
 
-  const apiEndpoint = selectedUser
-    ? `get-all-tickets/${ selectedUser.id }`
-    : userRole === "admin"
-      ? sortBy === "all"
-        ? `get-all-tickets`
-        : `get-all-tickets?status=${ sortBy == 'forwarded to me' || sortBy == 'forwarded by me' ? sortBy.replace( /\s+/g, "" ) : sortBy }`
-      : userRole === "agent"
-        ? sortBy === "all"
-          ? `get-all-tickets/${ decodedToken()?.id }?isAgent=true`
-          : `get-all-tickets/${ decodedToken()?.id }?isAgent=true&status=${ sortBy == 'forwarded to me' || sortBy == 'forwarded by me' ? sortBy.replace( /\s+/g, "" ) : sortBy }`
-        : userRole === "sales"
-          ? sortBy === "all"
-            ? `get-all-tickets?appliedBy=${ decodedToken()?.id }`
-            : `get-all-tickets?appliedBy=${ decodedToken()?.id }&status=${ sortBy == 'forwarded to me' || sortBy == 'forwarded by me' ? sortBy.replace( /\s+/g, "" ) : sortBy }`
-          : `get-all-tickets`;
+  // Memoize the API endpoint to prevent unnecessary re-renders
+  const apiEndpoint = React.useMemo(() => {
+    const formatStatus = (status: string) => {
+      if (status === 'forwarded to me' || status === 'forwarded by me') {
+        return status.replace(/\s+/g, "");
+      }
+      return status;
+    };
 
-  const { value: ticketData, swrLoading } = useGetTickets(
+    if (selectedUser) {
+      return `get-all-tickets/${selectedUser.id}`;
+    }
+
+    const baseParams = new URLSearchParams();
+    
+    switch (userRole) {
+      case "admin":
+        if (sortBy !== "all") {
+          baseParams.set("status", formatStatus(sortBy));
+        }
+        return `get-all-tickets${baseParams.toString() ? `?${baseParams.toString()}` : ''}`;
+      
+      case "agent":
+        const agentUrl = `get-all-tickets/${decodedToken()?.id}`;
+        baseParams.set("isAgent", "true");
+        if (sortBy !== "all") {
+          baseParams.set("status", formatStatus(sortBy));
+        }
+        return `${agentUrl}?${baseParams.toString()}`;
+      
+      case "sales":
+        baseParams.set("appliedBy", decodedToken()?.id?.toString() || "");
+        if (sortBy !== "all") {
+          baseParams.set("status", formatStatus(sortBy));
+        }
+        return `get-all-tickets?${baseParams.toString()}`;
+      
+      default:
+        return "get-all-tickets";
+    }
+  }, [selectedUser, userRole, sortBy, decodedToken]);
+
+  // Add debug logging
+  useEffect(() => {
+    console.log("API Endpoint changed:", apiEndpoint);
+    console.log("Current sortBy:", sortBy);
+    console.log("User role:", userRole);
+  }, [apiEndpoint, sortBy, userRole]);
+
+  const { value: ticketData, swrLoading, mutate } = useGetTickets(
     apiEndpoint,
     currentPage,
     ITEMS_PER_PAGE,
@@ -63,98 +95,122 @@ const Ticket = () => {
     endDate
   );
 
-  const [ userData, setUserData ] = useState( {} );
-  useEffect( () => {
-    if ( userRole === "admin" )
-    {
-      // Fetch user data only if user is admin
+  const [userData, setUserData] = useState({});
+
+  useEffect(() => {
+    if (userRole === "admin") {
       const fetchUsers = async () => {
-        try
-        {
-          const response = await fetcher( `get-users?page=${ 1 }&limit=${ 500 }` );
-          setUserData( response || [] );
-        } catch ( error )
-        {
-          console.error( "Error fetching users:", error );
+        try {
+          const response = await fetcher(`get-users?page=1&limit=500`);
+          setUserData(response || []);
+        } catch (error) {
+          console.error("Error fetching users:", error);
         }
       };
       fetchUsers();
     }
-  }, [ userRole ] );
+  }, [userRole]);
 
-  useEffect( () => {
-    const queryStatus = searchParams.get( "status" );
-    if ( queryStatus )
-    {
-      setSortBy( queryStatus );
-    } else
-    {
-      setSortBy( "all" );
+  // Handle URL search params
+  useEffect(() => {
+    const queryStatus = searchParams.get("status");
+    console.log("Query status from URL:", queryStatus);
+    
+    if (queryStatus && queryStatus !== sortBy) {
+      setSortBy(queryStatus);
+    } else if (!queryStatus && sortBy !== "all") {
+      setSortBy("all");
     }
-  }, [ searchParams ] );
+  }, [searchParams]);
 
-  // Reset ticket state and fetch when sortBy or other filters change
-  useEffect( () => {
-    setCurrentPage( 1 );
-    dispatch( resetTickets() );
-  }, [ sortBy, filter, selectedUser, startDate, endDate, dispatch ] );
+  // Reset state when filters change
+  useEffect(() => {
+    console.log("Resetting tickets due to filter change");
+    setCurrentPage(1);
+    setHasMoreData(true);
+    dispatch(resetTickets());
+  }, [sortBy, filter, selectedUser, startDate, endDate, dispatch]);
 
-  // Fetch and update state with new data
-  useEffect( () => {
-    if ( ticketData.results.length > 0 )
-    {
-      dispatch( setTickets( ticketData ) );
-      setHasMoreData( ticketData.results.length === ITEMS_PER_PAGE );
-    } else
-    {
-      setHasMoreData( false );
+  // Update tickets in state
+  useEffect(() => {
+    if (ticketData?.results?.length > 0) {
+      console.log("Updating tickets with new data:", ticketData.results.length);
+      dispatch(setTickets(ticketData));
+      setHasMoreData(ticketData.results.length === ITEMS_PER_PAGE);
+    } else if (ticketData?.results?.length === 0) {
+      console.log("No tickets found");
+      setHasMoreData(false);
     }
-  }, [ ticketData?.results, dispatch ] );
+  }, [ticketData, dispatch]);
 
-  // Handle infinite scrolling
+  // Infinite scroll handler
   const handleScroll = useCallback(
-    debounceScroll( () => {
+    debounceScroll(() => {
       const nearBottom =
-        window.innerHeight + window.scrollY >= document.body.offsetHeight - 400; // 400px threshold
-      if ( nearBottom && !swrLoading && hasMoreData )
-      {
-        setCurrentPage( ( prevPage ) => prevPage + 1 ); // Increment page only once
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 400;
+      if (nearBottom && !swrLoading && hasMoreData) {
+        console.log("Loading more tickets...");
+        setCurrentPage((prevPage) => prevPage + 1);
       }
-    }, 200 ), // Debounce delay: 200ms
-    [ swrLoading, hasMoreData ]
+    }, 200),
+    [swrLoading, hasMoreData, debounceScroll]
   );
 
-  useEffect( () => {
-    window.addEventListener( "scroll", handleScroll );
-    return () => window.removeEventListener( "scroll", handleScroll );
-  }, [ handleScroll ] );
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
 
-  const handleFilterChange = useCallback( () => {
-    setCurrentPage( 1 );
-    dispatch( resetTickets() );
-  }, [ dispatch ] );
+  const handleFilterChange = useCallback(() => {
+    console.log("Filter change triggered");
+    setCurrentPage(1);
+    setHasMoreData(true);
+    dispatch(resetTickets());
+    
+    // Force SWR to revalidate
+    if (mutate) {
+      mutate();
+    }
+  }, [dispatch, mutate]);
 
-  const handleSortChange = ( value: string ) => {
+  const handleSortChange = useCallback((value: string) => {
+    console.log("Sort change triggered:", value);
     const sortValue = value.toLowerCase();
-    setSortBy( sortValue );
+    
+    // Update state
+    setSortBy(sortValue);
+    
+    // Update URL
+    const params = new URLSearchParams(searchParams.toString());
+    if (sortValue === "all") {
+      params.delete("status");
+    } else {
+      params.set("status", sortValue);
+    }
+    
+    const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
+    router.replace(newUrl, { scroll: false });
+    
+    // Reset and trigger refetch
     handleFilterChange();
-    // Update query parameters in the URL
-    const params = new URLSearchParams( searchParams );
-    params.set( "status", sortValue );
+  }, [searchParams, router, handleFilterChange]);
 
-    router.push( `?${ params.toString() }`, undefined, { shallow: true } );
+  const handleDeleteTicket = async (ticketId: number) => {
+    try {
+      const deleteTicketResp = await deleteTicket('delete-ticket', ticketId);
+      dispatch(resetTickets());
+      
+      // Force refetch after deletion
+      if (mutate) {
+        mutate();
+      }
+      
+      return deleteTicketResp;
+    } catch (error) {
+      console.error("Error deleting ticket:", error);
+      throw error;
+    }
   };
-
-  const handleDeleteTicket = async ( ticketId: number ) => {
-    const deleteTicketResp = await deleteTicket( 'delete-ticket', ticketId );
-    dispatch( resetTickets() );
-    return deleteTicketResp;
-  }
-  // useEffect( () => {
-  //   return () => { 
-  //     dispatch( resetTickets() ) as unknown as void;
-  //   };
-  // }, [ dispatch ] );
 
   return (
     <Box
@@ -165,7 +221,6 @@ const Ticket = () => {
         flexDirection: "column",
       }}
     >
-
       <FilterPanel
         searchLabel="Search Tickets"
         sortBy={sortBy}
@@ -193,7 +248,6 @@ const Ticket = () => {
           justifyContent: "space-between",
           paddingTop: "20px",
           marginBottom: "0",
-
         }}
       >
         <Grid
@@ -225,19 +279,19 @@ const Ticket = () => {
             </Typography>
           ) : (
             <>
-              {ticket.results.map( ( ticket, index ) => (
+              {ticket.results.map((ticket, index) => (
                 <ApplicationCard
-                  key={index}
+                  key={`${ticket.ticketId}-${index}`}
                   customerApplication={ticket}
                   userRole={userRole}
                   handleStartClick={() =>
-                    router.push( `ticket/${ ticket.ticketId }` )
+                    router.push(`ticket/${ticket.ticketId}`)
                   }
                   handleDeleteTicket={handleDeleteTicket}
                 />
-              ) )}
+              ))}
 
-              {!hasMoreData && !swrLoading && (
+              {!hasMoreData && !swrLoading && ticket?.results?.length > 0 && (
                 <Typography
                   sx={{
                     width: "100%",
