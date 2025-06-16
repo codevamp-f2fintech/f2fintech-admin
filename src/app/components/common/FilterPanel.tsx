@@ -75,7 +75,7 @@ const statusOptions = [
   'drop',
   "rejected"
 ];
-
+console.log( "statusOptions", statusOptions )
 const FilterPanel: React.FC<FilterPanelProps> = ( {
   sortBy,
   filter,
@@ -93,40 +93,34 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
   searchLabel,
   handleFilterChange,
 } ) => {
-  console.log( "FilterPanel rendered with:", { sortBy, filter, userRole, ticketCount } );
-
-  // Menu anchor states
+  console.log( "userRole", userRole )
+  // anchorEl for the main "status" menu
   const [ anchorEl, setAnchorEl ] = useState<null | HTMLElement>( null );
+  // anchorEl for the forwarded submenu
   const [ forwardedAnchorEl, setForwardedAnchorEl ] = useState<null | HTMLElement>( null );
   const [ userAnchorEl, setUserAnchorEl ] = useState<null | HTMLElement>( null );
   const [ dateModalOpen, setDateModalOpen ] = useState<boolean>( false );
   const [ tempInputValue, setTempInputValue ] = useState<string>( filter );
 
-  // Sync tempInputValue with filter prop
-  useEffect( () => {
-    setTempInputValue( filter );
-  }, [ filter ] );
-
-  const router = useRouter();
-
   const getStatusColor = ( status: string ): string => {
     const colors: { [ key: string ]: string } = {
-      "under credit review": "#ff9800", // Orange
+      "under credit review": "#ff9800", // Orange ----
       "operations": "#2196f3", // Blue
-      "pendency in file": "#f44336", // Red
+      "pendency in file": "#f44336", // Red   ----
       "file send to banker": "#3f51b5", // Indigo
       "hold": "#ffeb3b", // Yellow
-      "to be approved": "#4caf50", // Green
+      "to be approved": "#4caf50", // Green   ----
       "to be disbursed": "#9c27b0", // Purple
-      "approved": "#8bc34a", // Light Green
-      "disbursed": "#00bcd4", // Cyan
+      "approved": "#8bc34a", // Light Green   ----
+      "disbursed": "#00bcd4", // Cyan   ----
       "carry forward": "#9e9e9e", // Grey
-      "rejected": "#f44336", // Red
+      "rejected": "#f44336", // Red   ----
       "drop": "#ff5722", // Orange-Red
       forwarded: "#ffc107", // Amber for Forwarded
       "forwarded to me": "#ff7043", // Deep Orange
       "forwarded by me": "#26c6da", // cyan
       all: "#757575", // Grey
+      // relook: "#ff5722", // Orange-Red
     };
     return colors[ status ] || colors.all;
   };
@@ -153,95 +147,48 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
     return icons[ status ] || icons.all;
   };
 
-  // Enhanced debounced search with better error handling
   const debouncedSearch = useCallback(
     _.debounce( ( value: string ) => {
-      console.log( "Debounced search triggered with:", value );
-      try
-      {
-        setFilter( value );
-        handleFilterChange( { name: value, page: 1 } );
-      } catch ( error )
-      {
-        console.error( "Error in debounced search:", error );
-      }
+      setFilter( value );
+      handleFilterChange( { name: value, page: 1 } );
     }, 800 ),
-    [ setFilter, handleFilterChange ]
+    []
   );
 
-  // Enhanced input change handler
   const handleInputChange = ( e: React.ChangeEvent<HTMLInputElement> ) => {
-    try
-    {
-      const value = e.target.value;
-      console.log( "Search input changed:", value );
-      setTempInputValue( value );
-      debouncedSearch( value );
-    } catch ( error )
-    {
-      console.error( "Error in input change:", error );
-    }
+    const value = e.target.value;
+    setTempInputValue( value );
+    debouncedSearch( value );
   };
 
-  // Cleanup debounced function
   useEffect( () => {
     return () => {
-      if ( debouncedSearch?.cancel )
-      {
-        debouncedSearch.cancel();
-      }
+      debouncedSearch.cancel();
     };
   }, [ debouncedSearch ] );
 
-  // Enhanced status change handler
+  // Handle the status change
   const handleStatusChange = ( status: string ) => {
-    console.log( "FilterPanel: Status changing to", status );
-
-    try
-    {
-      // Close menus first
-      setAnchorEl( null );
-      setForwardedAnchorEl( null );
-
-      // Call parent handler
-      handleSortChange( status );
-    } catch ( error )
-    {
-      console.error( "Error in status change:", error );
-    }
+    handleSortChange( status ); // Update the status in parent component
+    handleFilterChange( { status, page: 1 } ); // Reset page to 1 and update filter
   };
-
-  // Enhanced user change handler
+  // Handle the user change
   const handleUserChange = ( user: User ) => {
-    console.log( "FilterPanel: User changing to", user?.username );
-
-    try
-    {
-      setSelectedUser( user );
-      setUserAnchorEl( null );
-      handleFilterChange( { user, page: 1 } );
-    } catch ( error )
-    {
-      console.error( "Error in user change:", error );
-    }
+    setSelectedUser( user ); // Update selected user
+    handleFilterChange( { user, page: 1 } ); // Reset page to 1 and update user filter
   };
 
-  // Date modal handlers
-  const handleDateModalOpen = () => {
-    console.log( "Opening date modal" );
-    setDateModalOpen( true );
-  };
-
-  const handleDateModalClose = () => {
-    console.log( "Closing date modal" );
-    setDateModalOpen( false );
-  };
+  // Handler for opening the modal
+  const handleDateModalOpen = () => setDateModalOpen( true );
+  const router = useRouter();
 
   // Format the date range to be displayed on the chip
   const formatDateRange = () => {
     if ( startDate && endDate )
     {
-      return `${ dayjs( startDate ).format( "MM/DD/YYYY" ) } - ${ dayjs( endDate ).format( "MM/DD/YYYY" ) }`;
+      return `${ dayjs( startDate ).format( "MM/DD/YYYY" ) } - ${ dayjs(
+        endDate
+      ).format( "MM/DD/YYYY" ) }`;
     } else if ( startDate )
     {
       return `From ${ dayjs( startDate ).format( "MM/DD/YYYY" ) }`;
@@ -254,76 +201,22 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
     }
   };
 
-  // Enhanced date range handler
+  // Handle the date range change
   const handleDateModalApply = ( start: string | null, end: string | null ) => {
-    console.log( "Date range applied:", { start, end } );
-
-    try
-    {
-      const formattedStart = start ? dayjs( start ).format( 'YYYY-MM-DD HH:mm:ss' ) : null;
-      const formattedEnd = end ? dayjs( end ).format( 'YYYY-MM-DD HH:mm:ss' ) : null;
-
-      setStartDate( formattedStart );
-      setEndDate( formattedEnd );
-      setDateModalOpen( false );
-
-      handleFilterChange( {
-        startDate: formattedStart,
-        endDate: formattedEnd,
-        page: 1
-      } );
-    } catch ( error )
-    {
-      console.error( "Error applying date range:", error );
-    }
+    const formattedStart = start ? dayjs( start ).format( 'YYYY-MM-DD HH:mm:ss' ) : null;
+    const formattedEnd = end ? dayjs( end ).format( 'YYYY-MM-DD HH:mm:ss' ) : null;
+    setStartDate( formattedStart );
+    setEndDate( formattedEnd );
+    handleFilterChange( { startDate: formattedStart, endDate: formattedEnd, page: 1 } ); // Reset page to 1 and update date range
   };
 
-  // Forwarded submenu handlers
+  // Submenu open/close for "Forwarded"
   const handleForwardedMenuOpen = ( event: React.MouseEvent<HTMLElement> ) => {
-    console.log( "Opening forwarded submenu" );
     setForwardedAnchorEl( event.currentTarget );
   };
 
   const handleForwardedMenuClose = () => {
-    console.log( "Closing forwarded submenu" );
     setForwardedAnchorEl( null );
-  };
-
-  // Enhanced clear filters handler
-  const handleClearFilters = () => {
-    console.log( "Clearing all filters" );
-
-    try
-    {
-      // Reset all local state
-      setTempInputValue( "" );
-      setFilter( "" );
-      setStartDate( null );
-      setEndDate( null );
-      setSelectedUser( null );
-
-      // Cancel any pending debounced searches
-      if ( debouncedSearch?.cancel )
-      {
-        debouncedSearch.cancel();
-      }
-
-      // Reset filters in parent component
-      handleFilterChange( {
-        name: "",
-        status: "all",
-        user: null,
-        startDate: null,
-        endDate: null,
-        page: 1
-      } );
-
-      // Also trigger sort change to reset URL
-      handleSortChange( "all" );
-    } catch ( error )
-    {
-      console.error( "Error clearing filters:", error );
-    }
   };
 
   return (
@@ -370,8 +263,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
             endAdornment: tempInputValue && (
               <InputAdornment position="end">
                 <IconButton size="small" onClick={() => {
-                  setTempInputValue("");
-                  setFilter("");
+                  setTempInputValue( "" );
+                  setFilter( "" );
                 }}>
                   <ClearRounded sx={{ fontSize: 16 }} />
                 </IconButton>
@@ -383,12 +276,12 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
         {/* Status Filter */}
         <Tooltip title="Filter by Status">
           <Chip
-            icon={getStatusIcon(sortBy)}
-            label={`${sortBy.charAt(0).toUpperCase() + sortBy.slice(1)
-              } (${ticketCount})`}
-            onClick={(e) => setAnchorEl(e.currentTarget)}
+            icon={getStatusIcon( sortBy )}
+            label={`${ sortBy.charAt( 0 ).toUpperCase() + sortBy.slice( 1 )
+              } (${ ticketCount })`}
+            onClick={( e ) => setAnchorEl( e.currentTarget )}
             sx={{
-              backgroundColor: getStatusColor(sortBy),
+              backgroundColor: getStatusColor( sortBy ),
               color: "#fff",
               "&:hover": { opacity: 0.9 },
               fontWeight: 500,
@@ -400,8 +293,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
         </Tooltip>
         <Menu
           anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={() => setAnchorEl(null)}
+          open={Boolean( anchorEl )}
+          onClose={() => setAnchorEl( null )}
           PaperProps={{
             sx: {
               mt: 1,
@@ -411,26 +304,26 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
           }}
         >
           {/* Normal statuses (excluding "forwarded") */}
-          {statusOptions.map((status) => (
+          {statusOptions.map( ( status ) => (
             <MenuItem
               key={status}
               onClick={() => {
-                handleStatusChange(status);
-                setAnchorEl(null);
+                handleStatusChange( status );
+                setAnchorEl( null );
               }}
               sx={{
                 gap: 1,
                 minWidth: 180,
-                color: getStatusColor(status),
+                color: getStatusColor( status ),
                 "&:hover": {
-                  backgroundColor: `${getStatusColor(status)}10`,
+                  backgroundColor: `${ getStatusColor( status ) }10`,
                 },
               }}
             >
-              {getStatusIcon(status)}
-              {status.charAt(0).toUpperCase() + status.slice(1)}
+              {getStatusIcon( status )}
+              {status.charAt( 0 ).toUpperCase() + status.slice( 1 )}
             </MenuItem>
-          ))}
+          ) )}
 
           {/* "Forwarded" with nested submenu */}
           <MenuItem
@@ -439,9 +332,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
             sx={{
               gap: 1,
               minWidth: 180,
-              color: getStatusColor("forwarded"),
+              color: getStatusColor( "forwarded" ),
               "&:hover": {
-                backgroundColor: `${getStatusColor("forwarded")}10`,
+                backgroundColor: `${ getStatusColor( "forwarded" ) }10`,
               },
             }}
           >
@@ -454,45 +347,45 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
             {/* Nested Submenu */}
             <Menu
               anchorEl={forwardedAnchorEl}
-              open={Boolean(forwardedAnchorEl)}
+              open={Boolean( forwardedAnchorEl )}
               onClose={handleForwardedMenuClose}
               anchorOrigin={{ vertical: "top", horizontal: "right" }}
               transformOrigin={{ vertical: "top", horizontal: "left" }}
             >
               <MenuItem
                 onClick={() => {
-                  handleStatusChange("forwarded To Me");
+                  handleStatusChange( "forwarded To Me" );
                   handleForwardedMenuClose();
-                  setAnchorEl(null);
+                  setAnchorEl( null );
                 }}
                 sx={{
                   gap: 1,
                   minWidth: 180,
-                  color: getStatusColor("forwarded to me"),
+                  color: getStatusColor( "forwarded to me" ),
                   "&:hover": {
-                    backgroundColor: `${getStatusColor("forwarded to me")}22`
+                    backgroundColor: `${ getStatusColor( "forwarded to me" ) }22`
                   },
                 }}
               >
-                {getStatusIcon("forwarded to me")}
+                {getStatusIcon( "forwarded to me" )}
                 Forwarded To Me
               </MenuItem>
               <MenuItem
                 onClick={() => {
-                  handleStatusChange("forwarded by me");
+                  handleStatusChange( "forwarded by me" );
                   handleForwardedMenuClose();
-                  setAnchorEl(null);
+                  setAnchorEl( null );
                 }}
                 sx={{
                   gap: 1,
                   minWidth: 180,
-                  color: getStatusColor("forwarded by me"),
+                  color: getStatusColor( "forwarded by me" ),
                   "&:hover": {
-                    backgroundColor: `${getStatusColor("forwarded by me")}22`
+                    backgroundColor: `${ getStatusColor( "forwarded by me" ) }22`
                   },
                 }}
               >
-                {getStatusIcon("forwarded by me")}
+                {getStatusIcon( "forwarded by me" )}
                 Forwarded By Me
               </MenuItem>
             </Menu>
@@ -522,7 +415,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
             <Chip
               icon={<PersonRounded sx={{ fontSize: 20 }} />}
               label={selectedUser?.username || "Select User"}
-              onClick={(e) => setUserAnchorEl(e.currentTarget)}
+              onClick={( e ) => setUserAnchorEl( e.currentTarget )}
               sx={{
                 backgroundColor: selectedUser ? "#9c27b0" : "#e0e0e0",
                 color: selectedUser ? "#fff" : "inherit",
@@ -536,40 +429,40 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
         )}
         <Menu
           anchorEl={userAnchorEl}
-          open={Boolean(userAnchorEl)}
-          onClose={() => setUserAnchorEl(null)}
+          open={Boolean( userAnchorEl )}
+          onClose={() => setUserAnchorEl( null )}
           PaperProps={{
             style: {
               maxHeight: 200,
             },
           }}
         >
-          {(userData?.results || []).map((user: any) => (
+          {( userData?.results || [] ).map( ( user: any ) => (
             <MenuItem
               key={user.id}
               onClick={() => {
-                handleUserChange(user);
-                setUserAnchorEl(null);
+                handleUserChange( user );
+                setUserAnchorEl( null );
               }}
               sx={{ minWidth: 150 }}
             >
               {user.username}
             </MenuItem>
-          ))}
+          ) )}
         </Menu>
 
         {/* Clear Filters */}
-        {(tempInputValue || startDate || selectedUser) && (
+        {( tempInputValue || startDate || selectedUser ) && (
           <Tooltip title="Clear All Filters">
             <IconButton
               size="small"
               onClick={() => {
-                setFilter("");
-                setTempInputValue("");
-                setStartDate(null);
-                setEndDate(null);
-                setSelectedUser(null);
-                handleFilterChange({});
+                setFilter( "" );
+                setTempInputValue( "" );
+                setStartDate( null );
+                setEndDate( null );
+                setSelectedUser( null );
+                handleFilterChange( {} );
               }}
               sx={{
                 color: "#f44336",
@@ -590,7 +483,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
       {/* Date Selection Modal */}
       <DateRangeModal
         open={dateModalOpen}
-        handleClose={() => setDateModalOpen(false)}
+        handleClose={() => setDateModalOpen( false )}
         startDate={startDate}
         endDate={endDate}
         onApply={handleDateModalApply}
