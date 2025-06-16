@@ -40,7 +40,7 @@ const Ticket = () => {
 
   const apiEndpoint = selectedUser
     ? `get-all-tickets/${ selectedUser.id }`
-    : userRole === "admin"
+    : userRole === "admin" || userRole === "sub admin"
       ? sortBy === "all"
         ? `get-all-tickets`
         : `get-all-tickets?status=${ sortBy == 'forwarded to me' || sortBy == 'forwarded by me' ? sortBy.replace( /\s+/g, "" ) : sortBy }`
