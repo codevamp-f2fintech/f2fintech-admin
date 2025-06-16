@@ -37,6 +37,7 @@ const Ticket = () => {
   const searchParams = useSearchParams();
   const { debounceScroll, decodedToken } = Utility();
   const userRole = decodedToken()?.role;
+  const formattedStatus = sortBy.toLowerCase().replace( /\s+/g, "" );
 
   const apiEndpoint = selectedUser
     ? `get-all-tickets/${ selectedUser.id }`
@@ -54,7 +55,7 @@ const Ticket = () => {
             : `get-all-tickets?appliedBy=${ decodedToken()?.id }&status=${ sortBy == 'forwarded to me' || sortBy == 'forwarded by me' ? sortBy.replace( /\s+/g, "" ) : sortBy }`
           : `get-all-tickets`;
 
-  const { value: ticketData, swrLoading } = useGetTickets(
+  const { value: ticketData, error: swrError, swrLoading } = useGetTickets(
     apiEndpoint,
     currentPage,
     ITEMS_PER_PAGE,
@@ -65,6 +66,7 @@ const Ticket = () => {
 
   const [ userData, setUserData ] = useState( {} );
   useEffect( () => {
+    console.error( "API Error:", swrError );
     if ( userRole === "admin" )
     {
       // Fetch user data only if user is admin
@@ -108,6 +110,10 @@ const Ticket = () => {
     } else
     {
       setHasMoreData( false );
+      if ( ticketData?.errorMessage )
+      {
+        console.error( "API Error:", ticketData.errorMessage );
+      }
     }
   }, [ ticketData?.results, dispatch ] );
 
