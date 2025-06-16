@@ -150,12 +150,11 @@ const Ticket = () => {
     dispatch( resetTickets() );
     return deleteTicketResp;
   }
-
-  useEffect( () => {
-    return () => {
-      dispatch( resetTickets() ) as unknown as void;
-    };
-  }, [ dispatch ] );
+  // useEffect( () => {
+  //   return () => { 
+  //     dispatch( resetTickets() ) as unknown as void;
+  //   };
+  // }, [ dispatch ] );
 
   return (
     <Box
