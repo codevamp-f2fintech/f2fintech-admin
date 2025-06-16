@@ -55,9 +55,9 @@ interface FilterPanelProps {
   setEndDate: React.Dispatch<React.SetStateAction<string | null>>;
   userData: { data: User | null };
   userRole: string;
-  handleSortChange: (event: string | null) => void;
+  handleSortChange: ( event: string | null ) => void;
   ticketCount: number;
-  handleFilterChange: (newFilterState: any) => void;
+  handleFilterChange: ( newFilterState: any ) => void;
 }
 
 const statusOptions = [
@@ -75,7 +75,8 @@ const statusOptions = [
   'drop',
   "rejected"
 ];
-const FilterPanel: React.FC<FilterPanelProps> = ({
+
+const FilterPanel: React.FC<FilterPanelProps> = ( {
   sortBy,
   filter,
   startDate,
@@ -91,41 +92,47 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   ticketCount,
   searchLabel,
   handleFilterChange,
-}) => {
-  console.log("userRole",userRole)
-  // anchorEl for the main "status" menu
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  // anchorEl for the forwarded submenu
-  const [forwardedAnchorEl, setForwardedAnchorEl] = useState<null | HTMLElement>(null);
-  const [userAnchorEl, setUserAnchorEl] = useState<null | HTMLElement>(null);
-  const [dateModalOpen, setDateModalOpen] = useState<boolean>(false);
-  const [tempInputValue, setTempInputValue] = useState<string>(filter);
+} ) => {
+  console.log( "FilterPanel rendered with:", { sortBy, filter, userRole, ticketCount } );
 
-  const getStatusColor = (status: string): string => {
-    const colors: { [key: string]: string } = {
-      "under credit review": "#ff9800", // Orange ----
+  // Menu anchor states
+  const [ anchorEl, setAnchorEl ] = useState<null | HTMLElement>( null );
+  const [ forwardedAnchorEl, setForwardedAnchorEl ] = useState<null | HTMLElement>( null );
+  const [ userAnchorEl, setUserAnchorEl ] = useState<null | HTMLElement>( null );
+  const [ dateModalOpen, setDateModalOpen ] = useState<boolean>( false );
+  const [ tempInputValue, setTempInputValue ] = useState<string>( filter );
+
+  // Sync tempInputValue with filter prop
+  useEffect( () => {
+    setTempInputValue( filter );
+  }, [ filter ] );
+
+  const router = useRouter();
+
+  const getStatusColor = ( status: string ): string => {
+    const colors: { [ key: string ]: string } = {
+      "under credit review": "#ff9800", // Orange
       "operations": "#2196f3", // Blue
-      "pendency in file": "#f44336", // Red   ----
+      "pendency in file": "#f44336", // Red
       "file send to banker": "#3f51b5", // Indigo
       "hold": "#ffeb3b", // Yellow
-      "to be approved": "#4caf50", // Green   ----
+      "to be approved": "#4caf50", // Green
       "to be disbursed": "#9c27b0", // Purple
-      "approved": "#8bc34a", // Light Green   ----
-      "disbursed": "#00bcd4", // Cyan   ----
+      "approved": "#8bc34a", // Light Green
+      "disbursed": "#00bcd4", // Cyan
       "carry forward": "#9e9e9e", // Grey
-      "rejected": "#f44336", // Red   ----
+      "rejected": "#f44336", // Red
       "drop": "#ff5722", // Orange-Red
       forwarded: "#ffc107", // Amber for Forwarded
       "forwarded to me": "#ff7043", // Deep Orange
       "forwarded by me": "#26c6da", // cyan
       all: "#757575", // Grey
-      // relook: "#ff5722", // Orange-Red
     };
-    return colors[status] || colors.all;
+    return colors[ status ] || colors.all;
   };
 
-  const getStatusIcon = (status: string): JSX.Element => {
-    const icons: { [key: string]: JSX.Element } = {
+  const getStatusIcon = ( status: string ): JSX.Element => {
+    const icons: { [ key: string ]: JSX.Element } = {
       "under credit review": <AssignmentRounded sx={{ fontSize: 20 }} />,
       "operations": <LoginRounded sx={{ fontSize: 20 }} />,
       "pendency in file": <PendingActionsRounded sx={{ fontSize: 20 }} />,
@@ -143,75 +150,180 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       "forwarded by me": <ArrowUpwardRounded sx={{ fontSize: 20 }} />,
       all: <FilterListRounded sx={{ fontSize: 20 }} />,
     };
-    return icons[status] || icons.all;
+    return icons[ status ] || icons.all;
   };
 
+  // Enhanced debounced search with better error handling
   const debouncedSearch = useCallback(
-    _.debounce((value: string) => {
-      setFilter(value);
-      handleFilterChange({ name: value, page: 1 });
-    }, 800),
-    []
+    _.debounce( ( value: string ) => {
+      console.log( "Debounced search triggered with:", value );
+      try
+      {
+        setFilter( value );
+        handleFilterChange( { name: value, page: 1 } );
+      } catch ( error )
+      {
+        console.error( "Error in debounced search:", error );
+      }
+    }, 800 ),
+    [ setFilter, handleFilterChange ]
   );
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setTempInputValue(value);
-    debouncedSearch(value);
+  // Enhanced input change handler
+  const handleInputChange = ( e: React.ChangeEvent<HTMLInputElement> ) => {
+    try
+    {
+      const value = e.target.value;
+      console.log( "Search input changed:", value );
+      setTempInputValue( value );
+      debouncedSearch( value );
+    } catch ( error )
+    {
+      console.error( "Error in input change:", error );
+    }
   };
 
-  useEffect(() => {
+  // Cleanup debounced function
+  useEffect( () => {
     return () => {
-      debouncedSearch.cancel();
+      if ( debouncedSearch?.cancel )
+      {
+        debouncedSearch.cancel();
+      }
     };
-  }, [debouncedSearch]);
+  }, [ debouncedSearch ] );
 
-  // Handle the status change
-  const handleStatusChange = (status: string) => {
-    handleSortChange(status); // Update the status in parent component
-    handleFilterChange({ status, page: 1 }); // Reset page to 1 and update filter
-  };
-  // Handle the user change
-  const handleUserChange = (user: User) => {
-    setSelectedUser(user); // Update selected user
-    handleFilterChange({ user, page: 1 }); // Reset page to 1 and update user filter
+  // Enhanced status change handler
+  const handleStatusChange = ( status: string ) => {
+    console.log( "FilterPanel: Status changing to", status );
+
+    try
+    {
+      // Close menus first
+      setAnchorEl( null );
+      setForwardedAnchorEl( null );
+
+      // Call parent handler
+      handleSortChange( status );
+    } catch ( error )
+    {
+      console.error( "Error in status change:", error );
+    }
   };
 
-  // Handler for opening the modal
-  const handleDateModalOpen = () => setDateModalOpen(true);
-  const router = useRouter();
+  // Enhanced user change handler
+  const handleUserChange = ( user: User ) => {
+    console.log( "FilterPanel: User changing to", user?.username );
+
+    try
+    {
+      setSelectedUser( user );
+      setUserAnchorEl( null );
+      handleFilterChange( { user, page: 1 } );
+    } catch ( error )
+    {
+      console.error( "Error in user change:", error );
+    }
+  };
+
+  // Date modal handlers
+  const handleDateModalOpen = () => {
+    console.log( "Opening date modal" );
+    setDateModalOpen( true );
+  };
+
+  const handleDateModalClose = () => {
+    console.log( "Closing date modal" );
+    setDateModalOpen( false );
+  };
 
   // Format the date range to be displayed on the chip
   const formatDateRange = () => {
-    if (startDate && endDate) {
-      return `${dayjs(startDate).format("MM/DD/YYYY")} - ${dayjs(
-        endDate
-      ).format("MM/DD/YYYY")}`;
-    } else if (startDate) {
-      return `From ${dayjs(startDate).format("MM/DD/YYYY")}`;
-    } else if (endDate) {
-      return `Until ${dayjs(endDate).format("MM/DD/YYYY")}`;
-    } else {
+    if ( startDate && endDate )
+    {
+      return `${ dayjs( startDate ).format( "MM/DD/YYYY" ) } - ${ dayjs( endDate ).format( "MM/DD/YYYY" ) }`;
+    } else if ( startDate )
+    {
+      return `From ${ dayjs( startDate ).format( "MM/DD/YYYY" ) }`;
+    } else if ( endDate )
+    {
+      return `Until ${ dayjs( endDate ).format( "MM/DD/YYYY" ) }`;
+    } else
+    {
       return "Select Dates";
     }
   };
 
-  // Handle the date range change
-  const handleDateModalApply = (start: string | null, end: string | null) => {
-    const formattedStart = start ? dayjs(start).format('YYYY-MM-DD HH:mm:ss') : null;
-    const formattedEnd = end ? dayjs(end).format('YYYY-MM-DD HH:mm:ss') : null;
-    setStartDate(formattedStart);
-    setEndDate(formattedEnd);
-    handleFilterChange({ startDate: formattedStart, endDate: formattedEnd, page: 1 }); // Reset page to 1 and update date range
+  // Enhanced date range handler
+  const handleDateModalApply = ( start: string | null, end: string | null ) => {
+    console.log( "Date range applied:", { start, end } );
+
+    try
+    {
+      const formattedStart = start ? dayjs( start ).format( 'YYYY-MM-DD HH:mm:ss' ) : null;
+      const formattedEnd = end ? dayjs( end ).format( 'YYYY-MM-DD HH:mm:ss' ) : null;
+
+      setStartDate( formattedStart );
+      setEndDate( formattedEnd );
+      setDateModalOpen( false );
+
+      handleFilterChange( {
+        startDate: formattedStart,
+        endDate: formattedEnd,
+        page: 1
+      } );
+    } catch ( error )
+    {
+      console.error( "Error applying date range:", error );
+    }
   };
 
-  // Submenu open/close for "Forwarded"
-  const handleForwardedMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setForwardedAnchorEl(event.currentTarget);
+  // Forwarded submenu handlers
+  const handleForwardedMenuOpen = ( event: React.MouseEvent<HTMLElement> ) => {
+    console.log( "Opening forwarded submenu" );
+    setForwardedAnchorEl( event.currentTarget );
   };
 
   const handleForwardedMenuClose = () => {
-    setForwardedAnchorEl(null);
+    console.log( "Closing forwarded submenu" );
+    setForwardedAnchorEl( null );
+  };
+
+  // Enhanced clear filters handler
+  const handleClearFilters = () => {
+    console.log( "Clearing all filters" );
+
+    try
+    {
+      // Reset all local state
+      setTempInputValue( "" );
+      setFilter( "" );
+      setStartDate( null );
+      setEndDate( null );
+      setSelectedUser( null );
+
+      // Cancel any pending debounced searches
+      if ( debouncedSearch?.cancel )
+      {
+        debouncedSearch.cancel();
+      }
+
+      // Reset filters in parent component
+      handleFilterChange( {
+        name: "",
+        status: "all",
+        user: null,
+        startDate: null,
+        endDate: null,
+        page: 1
+      } );
+
+      // Also trigger sort change to reset URL
+      handleSortChange( "all" );
+    } catch ( error )
+    {
+      console.error( "Error clearing filters:", error );
+    }
   };
 
   return (
