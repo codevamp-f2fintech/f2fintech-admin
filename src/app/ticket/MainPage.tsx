@@ -37,7 +37,6 @@ const Ticket = () => {
   const searchParams = useSearchParams();
   const { debounceScroll, decodedToken } = Utility();
   const userRole = decodedToken()?.role;
-  const formattedStatus = sortBy.toLowerCase().replace( /\s+/g, "" );
 
   const apiEndpoint = selectedUser
     ? `get-all-tickets/${ selectedUser.id }`
@@ -54,6 +53,8 @@ const Ticket = () => {
             ? `get-all-tickets?appliedBy=${ decodedToken()?.id }`
             : `get-all-tickets?appliedBy=${ decodedToken()?.id }&status=${ sortBy == 'forwarded to me' || sortBy == 'forwarded by me' ? sortBy.replace( /\s+/g, "" ) : sortBy }`
           : `get-all-tickets`;
+  console.log( "apiEndpoint", apiEndpoint );
+  console.log( "selectedUser", selectedUser )
 
   const { value: ticketData, error: swrError, swrLoading } = useGetTickets(
     apiEndpoint,
@@ -142,6 +143,7 @@ const Ticket = () => {
 
   const handleSortChange = ( value: string ) => {
     const sortValue = value.toLowerCase();
+    console.log( "sortValue", sortValue )
     setSortBy( sortValue );
     handleFilterChange();
     // Update query parameters in the URL
@@ -150,7 +152,6 @@ const Ticket = () => {
 
     router.push( `?${ params.toString() }`, undefined, { shallow: true } );
   };
-
   const handleDeleteTicket = async ( ticketId: number ) => {
     const deleteTicketResp = await deleteTicket( 'delete-ticket', ticketId );
     dispatch( resetTickets() );
