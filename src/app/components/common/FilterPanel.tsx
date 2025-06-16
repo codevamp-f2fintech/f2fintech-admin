@@ -74,11 +74,7 @@ const statusOptions = [
   "carry forward",
   'drop',
   "rejected"
-  // "tvr done",
-  // "cam report done",
-  // "relook",
 ];
-
 const FilterPanel: React.FC<FilterPanelProps> = ({
   sortBy,
   filter,
@@ -96,13 +92,14 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   searchLabel,
   handleFilterChange,
 }) => {
+  console.log("userRole",userRole)
   // anchorEl for the main "status" menu
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   // anchorEl for the forwarded submenu
   const [forwardedAnchorEl, setForwardedAnchorEl] = useState<null | HTMLElement>(null);
   const [userAnchorEl, setUserAnchorEl] = useState<null | HTMLElement>(null);
-  const [dateModalOpen, setDateModalOpen] = useState<boolean>(false); // State to control modal
-  const [tempInputValue, setTempInputValue] = useState<string>(filter); // Temporary input value
+  const [dateModalOpen, setDateModalOpen] = useState<boolean>(false);
+  const [tempInputValue, setTempInputValue] = useState<string>(filter);
 
   const getStatusColor = (status: string): string => {
     const colors: { [key: string]: string } = {
@@ -174,7 +171,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     handleSortChange(status); // Update the status in parent component
     handleFilterChange({ status, page: 1 }); // Reset page to 1 and update filter
   };
-
   // Handle the user change
   const handleUserChange = (user: User) => {
     setSelectedUser(user); // Update selected user
