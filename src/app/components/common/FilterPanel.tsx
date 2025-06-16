@@ -73,7 +73,9 @@ const statusOptions = [
   "disbursed",
   "carry forward",
   'drop',
-  "rejected"
+  "rejected",
+  "forwardedtome",
+  "forwardedbyme"
 ];
 console.log( "statusOptions", statusOptions )
 const FilterPanel: React.FC<FilterPanelProps> = ( {
