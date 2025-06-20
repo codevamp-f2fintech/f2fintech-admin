@@ -74,8 +74,8 @@ const statusOptions = [
   "carry forward",
   'drop',
   "rejected",
-  "forwardedtome",
-  "forwardedbyme"
+  // "forwardedtome",
+  // "forwardedbyme"
 ];
 console.log( "statusOptions", statusOptions )
 const FilterPanel: React.FC<FilterPanelProps> = ( {
@@ -95,7 +95,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
   searchLabel,
   handleFilterChange,
 } ) => {
-  console.log( "userRole", userRole )
+  console.log( "ticketCount", ticketCount )
   // anchorEl for the main "status" menu
   const [ anchorEl, setAnchorEl ] = useState<null | HTMLElement>( null );
   // anchorEl for the forwarded submenu
