@@ -19,7 +19,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { Utility } from "@/utils";
 
-import { formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import Toast from "../../components/common/Toast";
 import {
   useGetTicketActivities,
@@ -629,7 +629,7 @@ const Comments = ( { storedTicketId, userData }: CommentsProps ) => {
                       color="#FFFFFF"
                       sx={{ ml: "20vw" }}
                     >
-                      {formatDistanceToNow( new Date( comment.created_at ) )} ago
+                       {format(new Date(comment.created_at), "MMM dd, yyyy 'at' hh:mm a")}
                     </Typography>
                   </Box>
 

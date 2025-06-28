@@ -11,6 +11,11 @@ import {
   useMediaQuery,
   InputAdornment,
   IconButton,
+  DialogActions,
+  DialogContentText,
+  DialogContent,
+  DialogTitle,
+  Dialog,
 } from "@mui/material";
 
 import ApplicationCard from "../components/common/ApplicationCard";
@@ -31,6 +36,12 @@ const Home: React.FC = () => {
   const [ searchTerm, setSearchTerm ] = useState<string>( "" );
   const [ currentPage, setCurrentPage ] = useState<number>( 1 );
   const [ hasMoreData, setHasMoreData ] = useState<boolean>( true );
+  const [ deleteDialog, setDeleteDialog ] = useState( {
+    open: false,
+    applicationId: null,
+    customerName: "",
+  } );
+  const [ isDeleting, setIsDeleting ] = useState<boolean>( false );
 
   const { customerApplication } = useSelector(
     ( state: RootState ) => state.customerApplications
@@ -40,6 +51,9 @@ const Home: React.FC = () => {
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
   const salesUserId = decodedToken()?.role === "sales" ? decodedToken()?.id : null;
+
+  const userRole = decodedToken()?.role;
+  const isAdmin = userRole === "admin";
 
   const {
     value: data,
@@ -51,6 +65,67 @@ const Home: React.FC = () => {
     ITEMS_PER_PAGE,
     salesUserId
   );
+
+  // Delete application function
+  const handleDeleteApplication = async ( applicationId: string ) => {
+    setIsDeleting( true );
+    try
+    {
+      const token = localStorage.getItem( 'token' );
+      const response = await fetch(
+        `${ process.env.NEXT_PUBLIC_API_URL }/delete-loan-application/${ applicationId }`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${ token }`,
+          },
+        }
+      );
+
+      if ( !response.ok )
+      {
+        const errorData = await response.json();
+        throw new Error( errorData.message || 'Failed to delete application' );
+      }
+
+      // Close dialog first
+      setDeleteDialog( { open: false, applicationId: null, customerName: "" } );
+
+      // Reload the page to ensure fresh data
+      window.location.reload();
+      // Optionally show success message
+      console.log( 'Application deleted successfully' );
+    } catch ( error )
+    {
+      console.error( 'Error deleting application:', error );
+      // You might want to show an error toast/notification here
+    } finally
+    {
+      setIsDeleting( false );
+      setDeleteDialog( { open: false, applicationId: null, customerName: "" } );
+    }
+  };
+
+  // Open delete confirmation dialog
+  const openDeleteDialog = ( applicationId: string, customerName: string ) => {
+    if ( !isAdmin )
+    {
+      console.warn( 'Only admin users can delete applications' );
+      return;
+    }
+
+    setDeleteDialog( {
+      open: true,
+      applicationId,
+      customerName,
+    } );
+  };
+
+  // Close delete dialog
+  const closeDeleteDialog = () => {
+    setDeleteDialog( { open: false, applicationId: null, customerName: "" } );
+  };
 
   // Fetch and update state with new data
   useEffect( () => {
@@ -258,9 +333,11 @@ const Home: React.FC = () => {
             <>
               {filteredCustomers.map( ( customerApplication ) => (
                 <ApplicationCard
-                  key={customerApplication.customerId}
+                  key={customerApplication.applicationId}
                   customerApplication={customerApplication}
                   refetch={refetch}
+                  showDeleteButton={isAdmin}
+                  onDelete={openDeleteDialog}
                 />
               ) )}
 
@@ -283,6 +360,36 @@ const Home: React.FC = () => {
         </Grid>
         {swrLoading && <Loader />}
       </Box>
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialog.open}
+        onClose={closeDeleteDialog}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">
+          Confirm Delete
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            Are you sure you want to delete the application for{" "}
+            <strong>{deleteDialog.customerName}</strong>? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeDeleteDialog} color="primary">
+            Cancel
+          </Button>
+          <Button
+            onClick={() => handleDeleteApplication( deleteDialog.applicationId )}
+            color="error"
+            variant="contained"
+            disabled={isDeleting}
+          >
+            {isDeleting ? "Deleting..." : "Delete"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

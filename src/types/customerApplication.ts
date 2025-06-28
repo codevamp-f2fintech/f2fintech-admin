@@ -11,6 +11,7 @@ export interface CustomerApplicationData {
   customerDesignation: string;
   customerProfileImage: string;
   customerLocation: string;
+  customerState: string;
   is_picked: number;
 }
 

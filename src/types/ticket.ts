@@ -20,6 +20,7 @@ export interface JoinedTicketData {
   customerContact: string;
   customerProfileImage: string;
   customerLocation: string;
+  customerState: string;
   loanStatus: string;
 }
 

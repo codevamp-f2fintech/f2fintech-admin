@@ -95,7 +95,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
   searchLabel,
   handleFilterChange,
 } ) => {
-  console.log( "ticketCount", ticketCount )
+  console.log( "userRole", userRole )
   // anchorEl for the main "status" menu
   const [ anchorEl, setAnchorEl ] = useState<null | HTMLElement>( null );
   // anchorEl for the forwarded submenu
