@@ -54,6 +54,7 @@ const Ticket = () => {
             : `get-all-tickets?appliedBy=${ decodedToken()?.id }&status=${ sortBy == 'forwarded to me' || sortBy == 'forwarded by me' ? sortBy.replace( /\s+/g, "" ) : sortBy }`
           : `get-all-tickets`;
   console.log( "apiEndpoint", apiEndpoint );
+  console.log( "selectedUser", selectedUser );
   console.log( "userRole", userRole );
 
   const { value: ticketData, error: swrError, swrLoading } = useGetTickets(

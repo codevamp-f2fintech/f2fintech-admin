@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+
 import {
   Grid,
   Button,
@@ -17,6 +18,7 @@ import {
   DialogContentText,
   DialogActions,
   Dialog,
+  IconButton,
 } from "@mui/material";
 import {
   MailRounded,
@@ -26,6 +28,7 @@ import {
   DeleteOutlined,
   Close,
   DeleteForever,
+  DeleteOutline,
 } from "@mui/icons-material";
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
@@ -37,8 +40,6 @@ import { fetcher } from "@/apis/apiClient";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { resetCustomerApplications } from "@/redux/features/customerApplicationSlice";
-import Toast from "../../components/common/Toast";
-// import SendOTP from "./SendOTP";
 
 interface ApplicationCardProps {
   customerApplication: {
@@ -48,6 +49,8 @@ interface ApplicationCardProps {
     customerContact?: string;
     customerProfileImage?: string;
     customerLocation?: string;
+    customerState?: string;
+    state?:string;
     applicationAmount: string;
     applicationTenure: number;
     applicationDate: string;
@@ -57,6 +60,8 @@ interface ApplicationCardProps {
     loanStatus?: string;
     userRole?: string;
     applicationProvider?: string;
+    showDeleteButton?: boolean;
+    onDelete: ( applicationId: string, customerName: string ) => void;
   };
   handleStartClick?: ( ticketId: number ) => void;
   refetch?: () => Promise<void>;
@@ -106,7 +111,9 @@ function InfoRow ( {
 const ApplicationCard: React.FC<ApplicationCardProps> = ( {
   customerApplication,
   handleStartClick = null,
+  showDeleteButton = false,
   refetch = null,
+  onDelete,
   userRole,
   handleDeleteTicket,
 } ) => {
@@ -126,6 +133,10 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
   const [ showOtpComponent, setShowOtpComponent ] = useState<boolean>( false );
   const isMobile = useMediaQuery( "(max-width:600px)" );
   const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
+  const handleDeleteClick = ( e: React.MouseEvent ) => {
+    e.stopPropagation(); // Prevent card click event
+    onDelete( customerApplication.applicationId, customerApplication.customerName );
+  };
 
   const { createTicket } = useCreateTicket( "create-ticket" );
   // Hook for modifying loan application is_picked column
@@ -249,6 +260,27 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
           mt: 5,
         }}
       >
+        {/* Delete Button */}
+        {showDeleteButton && (
+          <IconButton
+            onClick={handleDeleteClick}
+            sx={{
+              position: "absolute",
+              top: 8,
+              right: 8,
+              color: "#f44336",
+              backgroundColor: "rgba(255, 255, 255, 0.9)",
+              "&:hover": {
+                backgroundColor: "rgba(244, 67, 54, 0.1)",
+                color: "#d32f2f",
+              },
+              zIndex: 1,
+            }}
+            size="small"
+          >
+            <DeleteOutline fontSize="small" />
+          </IconButton>
+        )}
         <CardContent sx={{ pt: 0, pb: 3 }}>
           <Box
             sx={{
@@ -364,6 +396,14 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                   icon={<LocationOnRounded />}
                   text={capitalizeFirstLetter(
                     customerApplication.customerLocation
+                  )}
+                />
+              )}
+              {customerApplication.customerState && (
+                <InfoRow
+                  icon={<LocationOnRounded />}
+                  text={capitalizeFirstLetter(
+                    customerApplication.customerState
                   )}
                 />
               )}

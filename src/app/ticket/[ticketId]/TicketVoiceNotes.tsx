@@ -72,7 +72,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
       try {
         const formData = new FormData();
         formData.append("document", selectedAudioFile);
-        formData.append("folder", `voice-note/${selectedAudioFile.name}`);
+        formData.append("folder", `voice-note/${selectedAudioFile?.name}`);
 
         const uploadResponse = await axios.post(
           `${process.env.NEXT_PUBLIC_WEB_URL}/upload-to-s3`,

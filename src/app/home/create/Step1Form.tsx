@@ -41,6 +41,7 @@ import { Utility } from "@/utils";
 import Toast from "@/app/components/common/Toast";
 
 const initialValues = {
+  title: "",
   name: "",
   email: "",
   contact: "",
@@ -52,6 +53,7 @@ const initialValues = {
   current_address: "",
   dob: null,
   city: "",
+  state: "",
   pan: "",
   occupation_type: "",
 };
@@ -73,12 +75,14 @@ const Step1Form: React.FC<Step1FormProps> = ( {
 } ) => {
   const [ amount, setAmount ] = useState<string>( "" );
   const [ tenure, setTenure ] = useState<string>( "" );
+  const [ loanType, setLoanType ] = useState( "" );
   const [ provider, setProvider ] = useState<string>( "" );
   const [ loading, setLoading ] = useState<boolean>( false );
   const [ errors, setErrors ] = useState<{ amount: string; tenure: string; provider: string }>( {
     amount: "",
     tenure: "",
     provider: "",
+    loanType: "",
   } );
   const [ loanStatus, setLoanStatus ] = useState<string | null>( null );
   const toastInfo = useSelector( ( state: any ) => state.toast );
@@ -164,12 +168,21 @@ const Step1Form: React.FC<Step1FormProps> = ( {
     fetchCustomerData();
   }, [ storedCustomerId ] );
 
+
+
   // Function to register the customer
   async function registerCustomer ( customer ) {
+    // Combine title and name before sending
+    const customerData = {
+      ...customer,
+      name: `${ customer.title } ${ customer.name }`.trim() // Combine title and name
+    };
+
     const { data: res } = await axios.post(
       `${ process.env.NEXT_PUBLIC_WEB_URL }/create-customer`,
-      customer
-    )
+      customerData
+    );
+
     if ( res.status !== "Success" )
     {
       throw new Error( `Registration failed: ${ res.message }` );
@@ -193,7 +206,8 @@ const Step1Form: React.FC<Step1FormProps> = ( {
     applicationNumber,
     amount,
     tenure,
-    provider
+    provider,
+    loanType,
   ) {
     const { data: applicationResponse } =
       await axios.post(
@@ -204,7 +218,8 @@ const Step1Form: React.FC<Step1FormProps> = ( {
           application_no: applicationNumber,
           amount,
           tenure,
-          provider
+          provider,
+          loan_type: loanType,
         } )
     return applicationResponse.data.applicationId;
   }
@@ -235,7 +250,8 @@ const Step1Form: React.FC<Step1FormProps> = ( {
         contact,
         dob,
         email,
-        name,
+        title: values.title,
+        name: values.name,
         password: `${ name.replace( /\s/g, "" ) }@${ randomFourDigitNumber }`,
         status,
       };
@@ -249,7 +265,8 @@ const Step1Form: React.FC<Step1FormProps> = ( {
           applicationNumberGenerated,
           amount,
           tenure,
-          provider
+          provider,
+          loanType,
         );
         await createLoanTracking( applicationId );
         !storedCustomerId
@@ -265,7 +282,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
       } catch ( err )
       {
         toastAndNavigate( dispatch, true, "error", err?.response?.data?.msg || "Error Occurred. Please Try Again" );
-        setLoading( false ); 
+        setLoading( false );
         console.log(
           "Error during customer creation:",
           err?.response?.data?.msg
@@ -275,8 +292,29 @@ const Step1Form: React.FC<Step1FormProps> = ( {
         setLoading( false );
       }
     },
-    [ amount, tenure, provider ]
+    [ amount, tenure, provider, loanType ]
   );
+
+  const PROVIDER_OPTIONS = [
+    "Bajaj Finance",
+    "Bajaj Market",
+    "Chola",
+    "LNT",
+    "Tata",
+    "ABFL",
+    "Godrej",
+    "IDFC",
+    "HDFC Bank",
+    "ICICI Bank",
+    "Indusind Bank",
+    "Lending Cart",
+    "Incred",
+    "Credit Saison",
+    "PaySense",
+    "Shriram"
+  ];
+
+  const LOAN_TYPES = [ "Term Loan", "Personal Loan", "Business Loan" ];
 
   // If application number and loan status exists, display success message without making user to fill the form again
   if ( applicationNumber )
@@ -396,72 +434,203 @@ const Step1Form: React.FC<Step1FormProps> = ( {
           Get the loan best suited for your wish
         </Typography>
 
-        <Box
+        <FormControl
+          autoComplete="off"
+          variant="filled"
+          error={!!errors.provider}
           sx={{
-            // width: "45%",
             width: {
               xs: "80%",
               md: "45%",
               sm: "45%",
             },
+            fontSize: "13px",
             marginBottom: 3,
           }}
         >
-          <TextField
-            autoComplete="off"
-            fullWidth
+          <InputLabel sx={{ color: "#bdbdbd" }}>Provider Name*</InputLabel>
+          <Select
             variant="filled"
             name="provider"
-            label="Provider Name*"
-            placeholder="Any Loan Provider preference?"
             value={provider}
             onChange={( e ) => {
               setProvider( e.target.value );
               validateProvider( e.target.value );
             }}
             onBlur={() => validateProvider( provider )}
-            error={!!errors.provider}
-            helperText={errors.provider}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <AccountBalanceIcon />
-                </InputAdornment>
-              ),
-              style: {
-                color: "white", // This sets the text color to white
-              },
-            }}
             sx={{
-              fontSize: "13px",
-              borderRadius: "10px",
-              overflow: "hidden",
-              marginBottom: 1,
-              "& .MuiInputBase-root": {
-                backgroundColor: "transparent !important", // Makes the input background transparent
+              "& .MuiFilledInput-root": {
+                borderRadius: "10px",
+                border: "1px solid transparent",
+                transition: "border-color 0.3s, border-width 0.3s",
+                "&:hover": {
+                  borderColor: "#0000ff",
+                },
+                "&.Mui-focused": {
+                  borderColor: "#0000ff",
+                  borderWidth: "2px",
+                },
               },
-              "& .MuiFormLabel-root": {
-                color: "#9e9e9e", // Label color
+              "& .MuiSelect-icon": {
+                color: "white",
               },
-              "& .MuiFormLabel-focus": {
-                color: "#ffffff", // Label color
-              },
-              "& .MuiFilledInput-underline:before": {
-                borderBottomColor: "rgba(255, 255, 255, 0.5)", // Underline color
-              },
-              "& .MuiFilledInput-underline:hover:before": {
-                borderBottomColor: "#ffffff", // Underline color on hover
-              },
-              "& .MuiFilledInput-underline:after": {
-                borderBottomColor: "#039be5", // Underline color when focused
-              },
-              "& .MuiFormLabel-root.Mui-focused": {
-                color: "#e0e0e0 !important", // Ensure label color stays white when focused
-                fontSize: "1rem",
+              color: "white",
+            }}
+            MenuProps={{
+              PaperProps: {
+                sx: {
+                  bgcolor: "#121212",
+                  "& .MuiMenuItem-root": {
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "#333",
+                    },
+                    "&.Mui-selected": {
+                      backgroundColor: "#1976d2",
+                      color: "white",
+                    },
+                    "&.Mui-selected:hover": {
+                      backgroundColor: "#1976d2",
+                    },
+                  },
+                },
               },
             }}
-          />
-        </Box>
+            startAdornment={
+              <InputAdornment position="start" sx={{ color: "white !important" }}>
+                <AccountBalanceIcon />
+              </InputAdornment>
+            }
+          >
+            {PROVIDER_OPTIONS.map( ( provider ) => (
+              <MenuItem
+                key={provider}
+                value={provider}
+                sx={{
+                  padding: "8px 16px",
+                  "&:first-of-type": {  // Specific fix for first item
+                    marginTop: 0,
+                  },
+                }}
+              >
+                {provider}
+              </MenuItem>
+            ) )}
+          </Select>
+          {errors.provider && (
+            <Typography
+              color="error"
+              sx={{
+                marginLeft: 1,
+                margin: "3px 14px",
+                fontSize: "10.2857px",
+                fontFamily: "Verdana, sans-serif",
+                fontWeight: "400",
+              }}
+            >
+              {errors.provider}
+            </Typography>
+          )}
+        </FormControl>
+
+        <FormControl
+          autoComplete="off"
+          variant="filled"
+          error={!!errors.loanType}
+          sx={{
+            width: {
+              xs: "80%",
+              md: "45%",
+              sm: "45%",
+            },
+            fontSize: "13px",
+            marginBottom: 3,
+          }}
+        >
+          <InputLabel sx={{ color: "#bdbdbd" }}>Loan Type*</InputLabel>
+          <Select
+            variant="filled"
+            name="loanType"
+            value={loanType}
+            onChange={( e ) => {
+              setLoanType( e.target.value );
+              validateLoanType( e.target.value );
+            }}
+            onBlur={() => validateLoanType( loanType )}
+            sx={{
+              "& .MuiFilledInput-root": {
+                borderRadius: "10px",
+                border: "1px solid transparent",
+                transition: "border-color 0.3s, border-width 0.3s",
+                "&:hover": {
+                  borderColor: "#0000ff",
+                },
+                "&.Mui-focused": {
+                  borderColor: "#0000ff",
+                  borderWidth: "2px",
+                },
+              },
+              "& .MuiSelect-icon": {
+                color: "white",
+              },
+              color: "white",
+            }}
+            MenuProps={{
+              PaperProps: {
+                sx: {
+                  bgcolor: "#121212",
+                  "& .MuiMenuItem-root": {
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "#333",
+                    },
+                    "&.Mui-selected": {
+                      backgroundColor: "#1976d2",
+                      color: "white",
+                    },
+                    "&.Mui-selected:hover": {
+                      backgroundColor: "#1976d2",
+                    },
+                  },
+                },
+              },
+            }}
+            startAdornment={
+              <InputAdornment position="start" sx={{ color: "white !important" }}>
+                <AccountBalanceIcon />
+              </InputAdornment>
+            }
+          >
+            {LOAN_TYPES.map( ( type ) => (
+              <MenuItem
+                key={type}
+                value={type?.toLowerCase()}
+                sx={{
+                  padding: "8px 16px",
+                  "&:first-of-type": {
+                    marginTop: 0,
+                  },
+                }}
+              >
+                {type}
+              </MenuItem>
+            ) )}
+          </Select>
+          {errors.loanType && (
+            <Typography
+              color="error"
+              sx={{
+                marginLeft: 1,
+                margin: "3px 14px",
+                fontSize: "10.2857px",
+                fontFamily: "Verdana, sans-serif",
+                fontWeight: "400",
+              }}
+            >
+              {errors.loanType}
+            </Typography>
+          )}
+        </FormControl>
         <Box
           sx={{
             // width: "45%",
@@ -729,34 +898,97 @@ const Step1Form: React.FC<Step1FormProps> = ( {
 
                 }}
               >
-                <TextField
-                  autoComplete="off"
-                  variant="filled"
-                  type="text"
-                  name="name"
-                  label="Name*"
-                  value={values.name}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  error={!!touched.name && !!errors.name}
-                  helperText={touched.name && errors.name}
-                  InputLabelProps={{
-                    style: { color: "#9e9e9e" },
-                  }}
+                <Box
                   sx={{
+                    display: "flex",
                     width: {
                       xs: "80%",
                       md: "75%",
                       sm: "75%",
                     },
-                    height: "50px",
-                    fontSize: "16px",
                     marginBottom: 3,
-                    "& .MuiInputBase-input": {
-                      color: "white", // This sets the text color inside the input field to white
-                    },
                   }}
-                />
+                >
+                  {/* Title Dropdown */}
+                  <FormControl
+                    variant="filled"
+                    sx={{
+                      minWidth: 80,
+                      marginRight: 1,
+                      "& .MuiInputBase-input": {
+                        color: "white",
+                      },
+                    }}
+                    error={!!touched.title && !!errors.title}
+                  >
+                    <InputLabel sx={{ color: "#9e9e9e" }}>Title*</InputLabel>
+                    <Select
+                      name="title"
+                      value={values.title}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      MenuProps={{
+                        PaperProps: {
+                          sx: {
+                            bgcolor: "black",
+                            color: "white",
+                          },
+                        },
+                      }}
+                      sx={{
+                        color: "white",
+                        "& .MuiSelect-icon": {
+                          color: "white",
+                        },
+                      }}
+                    >
+                      <MenuItem value="Mr">Mr</MenuItem>
+                      <MenuItem value="Mrs">Mrs</MenuItem>
+                      <MenuItem value="Ms">Ms</MenuItem>
+                      <MenuItem value="Dr">Dr</MenuItem>
+                      <MenuItem value="Ca">Ca</MenuItem>
+                    </Select>
+                    {touched.title && errors.title && (
+                      <Typography
+                        color="error"
+                        sx={{
+                          marginLeft: 1,
+                          margin: "3px 14px",
+                          fontSize: "10.2857px",
+                          fontFamily: "Verdana, sans-serif",
+                          fontWeight: "400",
+                        }}
+                      >
+                        {errors.title}
+                      </Typography>
+                    )}
+                  </FormControl>
+
+                  {/* Name TextField */}
+                  <TextField
+                    autoComplete="off"
+                    variant="filled"
+                    type="text"
+                    name="name"
+                    label="Name*"
+                    value={values.name}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={!!touched.name && !!errors.name}
+                    helperText={touched.name && errors.name}
+                    InputLabelProps={{
+                      style: { color: "#9e9e9e" },
+                    }}
+                    sx={{
+                      flex: 1,
+                      height: "50px",
+                      fontSize: "16px",
+                      "& .MuiInputBase-input": {
+                        color: "white",
+                      },
+                    }}
+                  />
+                </Box>
 
                 <TextField
                   autoComplete="off"
@@ -1012,6 +1244,34 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     marginBottom: 3,
                     "& .MuiInputBase-input": {
                       color: "white", // This sets the text color inside the input field to white
+                    },
+                  }}
+                />
+
+                <TextField
+                  autoComplete="off"
+                  variant="filled"
+                  name="state"
+                  label="State*"
+                  value={values.state}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  error={touched.state && Boolean( errors.state )}
+                  helperText={touched.state && errors.state}
+                  InputLabelProps={{
+                    style: { color: "#9e9e9e" },
+                  }}
+                  sx={{
+                    width: {
+                      xs: "80%",
+                      md: "75%",
+                      sm: "75%",
+                    },
+                    height: "50px",
+                    fontSize: "16px",
+                    marginBottom: 3,
+                    "& .MuiInputBase-input": {
+                      color: "white",
                     },
                   }}
                 />

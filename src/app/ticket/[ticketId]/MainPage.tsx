@@ -19,7 +19,7 @@ import {
   useMediaQuery,
   Button,
 } from "@mui/material";
-import { ArrowBackRounded, ArrowForwardRounded } from "@mui/icons-material";
+import { ArrowForwardRounded } from "@mui/icons-material";
 import { ThemeProvider } from "@mui/material/styles";
 
 import Loader from "../../components/common/Loader";
@@ -61,10 +61,6 @@ const employeeStatusObj = [
   { value: "rejected", label: "Rejected" },
   { value: "drop", label: "Drop" },
   { value: "hold", label: "Hold" },
-  // { value: "to be login", label: "To Be Login" },
-  // { value: "tvr done", label: "TVR Done" },
-  // { value: "cam report done", label: "CAM Report Done" },
-  // { value: "relook", label: "Relook" },
 ];
 
 export interface TicketDetail {
@@ -88,6 +84,7 @@ export interface TicketDetail {
   customerDocuments: string[];
   customerDesignation: string;
   customerLocation: string;
+  customerState: string;
   loanStatus: string;
 }
 
