@@ -22,13 +22,13 @@ export const useGetTickets = (
   endDate: string | null = null
 ) => {
   const params = new URLSearchParams();
-  if ( filter ) params.set( "name", filter );
-  if ( startDate ) params.set( "startDate", startDate );
-  if ( endDate ) params.set( "endDate", endDate );
+  if (filter) params.set("name", filter);
+  if (startDate) params.set("startDate", startDate);
+  if (endDate) params.set("endDate", endDate);
 
-  const fullPath = pathKey.includes( '?' )
-    ? `${ pathKey }&page=${ page }&limit=${ limit }&${ params.toString() }`
-    : `${ pathKey }?page=${ page }&limit=${ limit }&${ params.toString() }`;
+  const fullPath = pathKey.includes('?')
+    ? `${pathKey}&page=${page}&limit=${limit}&${params.toString()}`
+    : `${pathKey}?page=${page}&limit=${limit}&${params.toString()}`;
 
   const {
     data: swrData,
@@ -37,7 +37,12 @@ export const useGetTickets = (
   } = useSWR<{
     statusCode: number;
     message: string;
-    data: Ticket;
+    data: {
+      results: Ticket;
+      count: number;
+      pages: number;
+      totalDisbursedAmount?: number;
+    };
   }>(
     fullPath,
     fetcher,
@@ -49,7 +54,7 @@ export const useGetTickets = (
   );
 
   const refetcher = async () => {
-    await mutate( fullPath );
+    await mutate(fullPath);
   };
 
   return {
@@ -57,6 +62,7 @@ export const useGetTickets = (
       results: [],
       count: 0,
       pages: 0,
+      totalDisbursedAmount: 0
     },
     swrLoading: !error && !swrData && isValidating,
     error,
@@ -70,24 +76,21 @@ export const useGetTickets = (
  * @param pathKey - The API path key used to create a new ticket.
  * @returns An object containing the created ticket, loading state, error state, and the createTicket function.
  */
-export const useCreateTicket = ( pathKey: string ) => {
-  const [ loading, setLoading ] = useState( false );
-  const [ error, setError ] = useState<Error | null>( null );
+export const useCreateTicket = (pathKey: string) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  const createTicket = async ( dataObj: object ) => {
-    setLoading( true );
-    setError( null );
-    try
-    {
-      const response = await creator( pathKey, dataObj );
+  const createTicket = async (dataObj: object) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await creator(pathKey, dataObj);
       return response;
-    } catch ( err )
-    {
-      setError( err as Error );
+    } catch (err) {
+      setError(err as Error);
       return null;
-    } finally
-    {
-      setLoading( false );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -100,31 +103,28 @@ export const useCreateTicket = ( pathKey: string ) => {
  * @param pathKey - The API path key used to modify a ticket.
  * @returns An object containing the updated ticket, loading state, error state, and the modifyTicket function.
  */
-export const useModifyTicket = ( pathKey: string ) => {
-  const [ loading, setLoading ] = useState( false );
-  const [ error, setError ] = useState<Error | null>( null );
+export const useModifyTicket = (pathKey: string) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   const modifyTicket = async (
     ticketId: number,
     updatedTicketData: Partial<JoinedTicketData>
   ) => {
-    setLoading( true );
-    setError( null );
-    try
-    {
-      console.log( 'updatedTicketData', updatedTicketData );
-      const apiPath = `${ pathKey }/${ ticketId }`;
+    setLoading(true);
+    setError(null);
+    try {
+      console.log('updatedTicketData', updatedTicketData);
+      const apiPath = `${pathKey}/${ticketId}`;
       const ticket = await modifier<JoinedTicketData, Partial<JoinedTicketData>>(
         apiPath,
         updatedTicketData
       );
       return ticket;
-    } catch ( err )
-    {
-      setError( err as Error );
-    } finally
-    {
-      setLoading( false );
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -132,27 +132,24 @@ export const useModifyTicket = ( pathKey: string ) => {
 };
 
 export const useDeleteTicket = () => {
-  const [ loading, setLoading ] = useState( false );
-  const [ error, setError ] = useState<Error | null>( null );
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  const deleteTicket = async ( pathKey: string,
+  const deleteTicket = async (pathKey: string,
     ticketId: number
   ) => {
-    setLoading( true );
-    setError( null );
-    try
-    {
-      const apiPath = `${ pathKey }/${ ticketId }`;
+    setLoading(true);
+    setError(null);
+    try {
+      const apiPath = `${pathKey}/${ticketId}`;
       const ticket = await deleter(
         apiPath
       );
       return ticket;
-    } catch ( err )
-    {
-      setError( err as Error );
-    } finally
-    {
-      setLoading( false );
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
     }
   };
 
