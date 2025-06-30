@@ -314,7 +314,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
     "Shriram"
   ];
 
-  const LOAN_TYPES = [ "Term Loan", "Personal Loan", "Business Loan" ];
+  const LOAN_TYPES = [ "Term Loan", "Personal Loan", "Business Loan","Professional Loan","Home Loan","Education Loan","LAP","Machinery Loan","Auto Loan" ];
 
   // If application number and loan status exists, display success message without making user to fill the form again
   if ( applicationNumber )
