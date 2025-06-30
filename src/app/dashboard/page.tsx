@@ -13,6 +13,8 @@ import {
   ThumbUpRounded,
   LoginRounded,
   ForwardRounded,
+  ExpandLess,
+  ExpandMore,
 } from "@mui/icons-material";
 import Grid from "@mui/material/Unstable_Grid2";
 import ArchiveIcon from '@mui/icons-material/Archive';
@@ -28,7 +30,7 @@ import { LatestApplications } from "@/app/components/dashboard/overview/latest-a
 import { Sales } from "@/app/components/dashboard/overview/sales";
 import { Traffic } from "@/app/components/dashboard/overview/traffic";
 import { Utility } from "@/utils";
-import { Box, Paper, TextField, FormControl, Select, MenuItem, InputLabel } from "@mui/material";
+import { Box, Paper, TextField, FormControl, Select, MenuItem, InputLabel, Button } from "@mui/material";
 
 interface Ticket {
   month: string;
@@ -195,6 +197,30 @@ export default function Page (): React.JSX.Element {
   const [ allCounts, setAllCounts ] = React.useState<any>( {} );
   const [ totalAgents, setTotalAgents ] = React.useState<number | null>( null );
   const currentYear = new Date().getFullYear();
+  const [ currentDateTime, setCurrentDateTime ] = React.useState( new Date() );
+  const [ showFilters, setShowFilters ] = React.useState( false );
+
+  React.useEffect( () => {
+    const timer = setInterval( () => {
+      setCurrentDateTime( new Date() );
+    }, 1000 );
+
+    return () => clearInterval( timer );
+  }, [] );
+
+  const formatDateTime = ( date: Date ) => {
+    return date.toLocaleString( 'en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZoneName: 'short'
+    } );
+  };
+
 
   async function fetchAgentCount () {
     const response = await fetch(
@@ -424,83 +450,106 @@ export default function Page (): React.JSX.Element {
 
   return (
     <>
-      <Box sx={{ display: "flex", flexDirection: "row", justifyContent: "flex-end", width: "30%", ml: "68%" }}>
-        <Box sx={{ mb: "1.3rem", mr: "2rem" }}>
-          {/* Month selection dropdown */}
-          <FormControl sx={{ width: 150 }}>
-            <InputLabel id="month-select-label">Month</InputLabel>
-            <Select
-              labelId="month-select-label"
-              value={selectedMonth}
-              onChange={( e ) => setSelectedMonth( e.target.value )}
-              label="Month"
+      <Box sx={{
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "flex-end",
+        alignItems: "center",
+        gap: 2,
+        mb: 2,
+        p: 2,
+        backgroundColor: "#f5f7fa",
+        borderRadius: 2,
+        boxShadow: 1
+      }}>
+        <Button
+          variant="contained"
+          onClick={() => setShowFilters( !showFilters )}
+          startIcon={showFilters ? <ExpandLess /> : <ExpandMore />}
+          sx={{
+            backgroundColor: "#3f51b5",
+            '&:hover': {
+              backgroundColor: "#303f9f",
+            },
+            minWidth: 150,
+            height: 40,
+            textTransform: 'none',
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            borderRadius: 1
+          }}
+        >
+          {showFilters ? "Hide Filters" : "Show Filters"}
+        </Button>
+
+        {showFilters && (
+          <>
+            <FormControl sx={{ minWidth: 180 }} size="small">
+              <InputLabel id="month-select-label" sx={{ color: "#5c6bc0" }}>Month</InputLabel>
+              <Select
+                labelId="month-select-label"
+                value={selectedMonth}
+                onChange={( e ) => setSelectedMonth( e.target.value )}
+                label="Month"
+                sx={{
+                  backgroundColor: "#ffffff",
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: "#c5cae9",
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: "#7986cb",
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: "#3f51b5",
+                    borderWidth: 1,
+                  },
+                  borderRadius: 1
+                }}
+              >
+                <MenuItem value="">All Months</MenuItem>
+                <MenuItem value="January">January</MenuItem>
+                <MenuItem value="February">February</MenuItem>
+                <MenuItem value="March">March</MenuItem>
+                <MenuItem value="April">April</MenuItem>
+                <MenuItem value="May">May</MenuItem>
+                <MenuItem value="June">June</MenuItem>
+                <MenuItem value="July">July</MenuItem>
+                <MenuItem value="August">August</MenuItem>
+                <MenuItem value="September">September</MenuItem>
+                <MenuItem value="October">October</MenuItem>
+                <MenuItem value="November">November</MenuItem>
+                <MenuItem value="December">December</MenuItem>
+              </Select>
+            </FormControl>
+
+            <TextField
+              label="Date"
+              type="date"
+              onChange={( e ) => setDate( e.target.value )}
+              InputLabelProps={{
+                shrink: true,
+                sx: { color: "#5c6bc0" }
+              }}
               sx={{
-                width: 150,
-                borderRadius: 2, // Rounded corners
-                backgroundColor: "#ffffff", // Light gray background
+                minWidth: 180,
                 '& .MuiOutlinedInput-root': {
-                  borderRadius: 2, // Rounded input field
-                  backgroundColor: "#ffffff", // White background for input field
-                },
-                '& .MuiInputLabel-root': {
-                  color: "#3f51b5", // Label color
-                },
-                '& .MuiInput-underline:after': {
-                  borderBottomColor: "#3f51b5", // Color when focused
-                },
-                '&:hover .MuiOutlinedInput-root': {
-                  borderColor: "#3f51b5", // Border color on hover
-                },
-                '&:focus-within .MuiOutlinedInput-root': {
-                  borderColor: "#3f51b5", // Border color on focus
+                  backgroundColor: "#ffffff",
+                  borderRadius: 1,
+                  '& fieldset': {
+                    borderColor: "#c5cae9",
+                  },
+                  '&:hover fieldset': {
+                    borderColor: "#7986cb",
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: "#3f51b5",
+                  },
                 },
               }}
-            >
-              <MenuItem value="">Select Month</MenuItem>
-              <MenuItem value="January">January</MenuItem>
-              <MenuItem value="February">February</MenuItem>
-              <MenuItem value="March">March</MenuItem>
-              <MenuItem value="April">April</MenuItem>
-              <MenuItem value="May">May</MenuItem>
-              <MenuItem value="June">June</MenuItem>
-              <MenuItem value="July">July</MenuItem>
-              <MenuItem value="August">August</MenuItem>
-              <MenuItem value="September">September</MenuItem>
-              <MenuItem value="October">October</MenuItem>
-              <MenuItem value="November">November</MenuItem>
-              <MenuItem value="December">December</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
-        <Box sx={{ mb: "1.3rem" }}>
-          <TextField
-            label="Date"
-            type="date"
-            onChange={( e ) => setDate( e.target.value )}
-            InputLabelProps={{ shrink: true }}
-            sx={{
-              width: 150,
-              borderRadius: 2, // Rounded corners
-              backgroundColor: "#f3f3f3", // Light gray background
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2, // Rounded input field
-                backgroundColor: "#ffffff", // White background for input field
-              },
-              '& .MuiInputLabel-root': {
-                color: "#3f51b5", // Label color
-              },
-              '& .MuiInput-underline:after': {
-                borderBottomColor: "#3f51b5", // Color when focused
-              },
-              '&:hover .MuiOutlinedInput-root': {
-                borderColor: "#3f51b5", // Border color on hover
-              },
-              '&:focus-within .MuiOutlinedInput-root': {
-                borderColor: "#3f51b5", // Border color on focus
-              },
-            }}
-          />
-        </Box>
+              size="small"
+            />
+          </>
+        )}
       </Box>
 
       <Grid lg={12.2} sm={12.3} container spacing={3} sx={{ width: "100%" }}>
