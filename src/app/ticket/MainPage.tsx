@@ -108,7 +108,7 @@ const Ticket = () => {
     if (ticketData.results.length > 0) {
       dispatch(setTickets(ticketData));
       setHasMoreData(ticketData.results.length === ITEMS_PER_PAGE);
-      console.log(ticketData, 'ticketdata')
+      
       // Set disbursed amount only if status is 'disbursed'
       if (sortBy === 'disbursed' && ticketData.totalDisbursedAmount) {
         setDisbursedAmount(ticketData.totalDisbursedAmount);
@@ -191,11 +191,6 @@ const Ticket = () => {
     dispatch(resetTickets());
     return deleteTicketResp;
   }
-  // useEffect( () => {
-  //   return () => { 
-  //     dispatch( resetTickets() ) as unknown as void;
-  //   };
-  // }, [ dispatch ] );
 
   return (
     <Box
