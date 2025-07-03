@@ -67,7 +67,7 @@ const Home: React.FC = () => {
   );
 
   // Delete application function
-  const handleDeleteApplication = async ( applicationId: string ) => {
+  const handleDeleteApplication = async ( applicationId: string, customerName: string, reason: string ) => {
     setIsDeleting( true );
     try
     {
@@ -338,6 +338,7 @@ const Home: React.FC = () => {
                   refetch={refetch}
                   showDeleteButton={isAdmin}
                   onDelete={openDeleteDialog}
+                  handleDeleteApplication={handleDeleteApplication}
                 />
               ) )}
 
@@ -360,36 +361,6 @@ const Home: React.FC = () => {
         </Grid>
         {swrLoading && <Loader />}
       </Box>
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialog.open}
-        onClose={closeDeleteDialog}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">
-          Confirm Delete
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description">
-            Are you sure you want to delete the application for{" "}
-            <strong>{deleteDialog.customerName}</strong>? This action cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeDeleteDialog} color="primary">
-            Cancel
-          </Button>
-          <Button
-            onClick={() => handleDeleteApplication( deleteDialog.applicationId )}
-            color="error"
-            variant="contained"
-            disabled={isDeleting}
-          >
-            {isDeleting ? "Deleting..." : "Delete"}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 };

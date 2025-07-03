@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import Link from "next/link";
 import {
   AccountBalanceRounded,
@@ -31,6 +30,7 @@ import { Sales } from "@/app/components/dashboard/overview/sales";
 import { Traffic } from "@/app/components/dashboard/overview/traffic";
 import { Utility } from "@/utils";
 import { Box, Paper, TextField, FormControl, Select, MenuItem, InputLabel, Button } from "@mui/material";
+import { useEffect, useState } from "react";
 
 interface Ticket {
   month: string;
@@ -43,11 +43,21 @@ async function fetchTotalApplications ( month?: string, year?: number, date?: st
   {
     let url = `${ process.env.NEXT_PUBLIC_API_URL }/application/count`;
 
-    // Add query parameters if month and year are provided
     const params = new URLSearchParams();
-    if ( month ) params.append( 'month', month );
-    if ( year ) params.append( 'year', year.toString() );
-    if ( date ) params.append( 'date', date );
+
+    // Only add month if it's provided and not empty
+    if ( month && month !== "" )
+    {
+      params.append( 'month', month );
+      // Always include the current year when month is provided
+      params.append( 'year', new Date().getFullYear().toString() );
+    }
+
+    // Only add date if it's provided and not empty
+    if ( date && date !== "" )
+    {
+      params.append( 'date', date );
+    }
 
     if ( params.toString() )
     {
@@ -55,7 +65,7 @@ async function fetchTotalApplications ( month?: string, year?: number, date?: st
     }
 
     const response = await fetch( url, {
-      cache: "no-store", // To Prevent caching
+      cache: "no-store",
     } );
 
     if ( !response.ok )
@@ -71,8 +81,32 @@ async function fetchTotalApplications ( month?: string, year?: number, date?: st
   }
 }
 
+// Month Select onChange handler
+const handleMonthChange = ( e ) => {
+  const newMonth = e.target.value;
+  setSelectedMonth( newMonth );
+
+  // If a month is selected, clear the date filter
+  if ( newMonth && newMonth !== "" )
+  {
+    setDate( null );
+  }
+};
+
+// Date TextField onChange handler
+const handleDateChange = ( e ) => {
+  const newDate = e.target.value;
+  setDate( newDate );
+
+  // If a date is selected, clear the month filter
+  if ( newDate && newDate !== "" )
+  {
+    setSelectedMonth( "" );
+  }
+};
+
 // Server-side function to fetch total new applications count
-async function fetchTotalNewApplication ( month?: string, year?: number, date?: string ): Promise<number | null> {
+async function fetchTotalNewApplication ( month?: string, year?: number, date?: string ): Promise<{ count: number, amount: number } | null> {
   try
   {
     let url = `${ process.env.NEXT_PUBLIC_API_URL }/application/new-count`;
@@ -96,7 +130,10 @@ async function fetchTotalNewApplication ( month?: string, year?: number, date?: 
       throw new Error( `HTTP error! status: ${ response.status }` );
     }
     const resData = await response.json();
-    return resData.data;
+    return {
+      count: resData.data.count || resData.data, // handles both old and new response formats
+      amount: resData.data.amount || 0 // default to 0 if amount doesn't exist
+    };
   } catch ( error )
   {
     console.error( "Failed to fetch total new applications:", error );
@@ -192,21 +229,34 @@ export default function Page (): React.JSX.Element {
   const userToken = cookies.token;
   const { id, role } = decodedToken( userToken?.value );
 
-  const [ date, setDate ] = React.useState<string | null>( null );
-  const [ selectedMonth, setSelectedMonth ] = React.useState<string>( "" );
-  const [ allCounts, setAllCounts ] = React.useState<any>( {} );
-  const [ totalAgents, setTotalAgents ] = React.useState<number | null>( null );
+  const [ date, setDate ] = useState<string | null>( null );
+  const [ selectedMonth, setSelectedMonth ] = useState<string>( "" );
+  const [ allCounts, setAllCounts ] = useState<any>( {} );
+  const [ totalAgents, setTotalAgents ] = useState<number | null>( null );
   const currentYear = new Date().getFullYear();
-  const [ currentDateTime, setCurrentDateTime ] = React.useState( new Date() );
-  const [ showFilters, setShowFilters ] = React.useState( false );
+  const [ currentDateTime, setCurrentDateTime ] = useState( new Date() );
+  const currentDate = new Date().toLocaleDateString( 'en-CA' );
+  // const [ showFilters, setShowFilters ] = React.useState( false );
 
-  React.useEffect( () => {
+  useEffect( () => {
     const timer = setInterval( () => {
       setCurrentDateTime( new Date() );
     }, 1000 );
 
     return () => clearInterval( timer );
   }, [] );
+
+  useEffect( () => {
+    const now = new Date();
+    const currentMonth = now.toLocaleString( 'default', { month: 'long' } );
+
+    // setSelectedMonth( currentMonth );
+    setDate( new Date().toISOString().split( 'T' )[ 0 ] );
+
+    console.log( "currentMonth:", currentMonth );
+    console.log( "currentDateTime:", new Date().toLocaleDateString() );
+  }, [] );
+
 
   const formatDateTime = ( date: Date ) => {
     return date.toLocaleString( 'en-US', {
@@ -217,8 +267,30 @@ export default function Page (): React.JSX.Element {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
-      timeZoneName: 'short'
     } );
+  };
+
+  const handleMonthChange = ( e ) => {
+    const newMonth = e.target.value;
+    setSelectedMonth( newMonth );
+
+    // If a month is selected, clear the date filter
+    if ( newMonth && newMonth !== "" )
+    {
+      setDate( "" );  // Changed from null to empty string for consistency
+    }
+  };
+
+  // Date TextField onChange handler
+  const handleDateChange = ( e ) => {
+    const newDate = e.target.value;
+    setDate( newDate );
+
+    // If a date is selected, clear the month filter
+    if ( newDate && newDate !== "" )
+    {
+      setSelectedMonth( "" );
+    }
   };
 
 
@@ -238,11 +310,11 @@ export default function Page (): React.JSX.Element {
     setTotalAgents( resData.data );
   }
 
-  React.useEffect( () => {
+  useEffect( () => {
     getAllCounts();
   }, [ date, selectedMonth ] );  // Added selectedMonth dependency
 
-  React.useEffect( () => {
+  useEffect( () => {
     fetchAgentCount();
   }, [] );
 
@@ -290,9 +362,13 @@ export default function Page (): React.JSX.Element {
       ? totalDisbursed
       : { count: totalDisbursed, amount: null };
 
+    const normalizedNewApplications = totalNewApplications
+      ? { count: totalNewApplications.count, amount: totalNewApplications.amount || null }
+      : { count: null, amount: null };
+
     setAllCounts( {
       totalApplications,
-      totalNewApplications,
+      totalNewApplications: normalizedNewApplications,
       totalTickets,
       totalUnderCreditReview,
       totalOperations,
@@ -310,7 +386,7 @@ export default function Page (): React.JSX.Element {
       doneTicketsByMonth,
     } );
   };
-  console.log( allCounts, 'disbursed' )
+  console.log( allCounts, 'disbursed11111' )
   const dashboardItems = [
     {
       icon: ArchiveIcon,
@@ -325,7 +401,8 @@ export default function Page (): React.JSX.Element {
       label: "Fresh Applications",
       key: "totalNewApplications",
       color: "#ffd600",
-      count: allCounts?.totalNewApplications,
+      count: allCounts?.totalNewApplications?.count,
+      amount: allCounts?.totalNewApplications?.amount,
       link: "/",
     },
     {
@@ -453,7 +530,7 @@ export default function Page (): React.JSX.Element {
       <Box sx={{
         display: "flex",
         flexDirection: "row",
-        justifyContent: "flex-end",
+        justifyContent: "space-between", // Changed from "flex-end" to "space-between"
         alignItems: "center",
         gap: 2,
         mb: 2,
@@ -462,34 +539,43 @@ export default function Page (): React.JSX.Element {
         borderRadius: 2,
         boxShadow: 1
       }}>
-        <Button
-          variant="contained"
-          onClick={() => setShowFilters( !showFilters )}
-          startIcon={showFilters ? <ExpandLess /> : <ExpandMore />}
-          sx={{
-            backgroundColor: "#3f51b5",
-            '&:hover': {
-              backgroundColor: "#303f9f",
-            },
-            minWidth: 150,
-            height: 40,
-            textTransform: 'none',
-            fontSize: '0.875rem',
-            fontWeight: 500,
-            borderRadius: 1
-          }}
-        >
-          {showFilters ? "Hide Filters" : "Show Filters"}
-        </Button>
+        {/* Added date/time display */}
+        <Box sx={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "flex-start",
+          minWidth: 300
+        }}>
+          <Box component="span" sx={{
+            fontSize: '1.2rem',
+            fontWeight: 'bold',
+            color: '#3f51b5'
+          }}>
+            {formatDateTime( currentDateTime ).split( ',' )[ 0 ]}, {formatDateTime( currentDateTime ).split( ',' )[ 1 ]}
+          </Box>
+          <Box component="span" sx={{
+            fontSize: '0.9rem',
+            color: '#607d8b'
+          }}>
+            {formatDateTime( currentDateTime ).split( ',' )[ 2 ]}
+          </Box>
+        </Box>
 
-        {showFilters && (
+        <Box sx={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 2
+        }}>
           <>
             <FormControl sx={{ minWidth: 180 }} size="small">
               <InputLabel id="month-select-label" sx={{ color: "#5c6bc0" }}>Month</InputLabel>
               <Select
                 labelId="month-select-label"
                 value={selectedMonth}
-                onChange={( e ) => setSelectedMonth( e.target.value )}
+                // onChange={( e ) => setSelectedMonth( e.target.value )}
+                onChange={handleMonthChange} 
                 label="Month"
                 sx={{
                   backgroundColor: "#ffffff",
@@ -525,7 +611,17 @@ export default function Page (): React.JSX.Element {
             <TextField
               label="Date"
               type="date"
-              onChange={( e ) => setDate( e.target.value )}
+              value={date || ""}
+              onChange={( e ) => {
+                console.log( 'current date change', e.target.value );
+                setDate( e.target.value );
+
+                // If a date is selected, clear the month filter
+                if ( e.target.value && e.target.value !== "" )
+                {
+                  setSelectedMonth( "" );
+                }
+              }}
               InputLabelProps={{
                 shrink: true,
                 sx: { color: "#5c6bc0" }
@@ -549,25 +645,66 @@ export default function Page (): React.JSX.Element {
               size="small"
             />
           </>
-        )}
+        </Box>
       </Box>
 
       <Grid lg={12.2} sm={12.3} container spacing={3} sx={{ width: "100%" }}>
         {dashboardItems.map( ( item, index ) => (
-          <Grid lg={3} sm={6} xs={12} key={index}>
-            <Link href={item.link || ""} style={{ textDecoration: "none", color: "inherit" }}>
+          <Grid
+            xl={3}
+            lg={3}
+            md={3}
+            sm={6}
+            xs={12}
+            key={index}
+            sx={{
+              minHeight: { xs: "120px", sm: "140px", md: "160px" }, // Responsive minimum heights
+              display: "flex"
+            }}
+          >
+            <Link
+              href={item.link || ""}
+              style={{
+                textDecoration: "none",
+                color: "inherit",
+                width: "100%",
+                display: "flex"
+              }}
+            >
               <Budget
                 Icon={item.icon}
                 name={item.label}
                 sx={{
                   height: "100%",
+                  width: "100%",
                   backgroundColor: item.color,
-                  borderRadius: "20px",
-                  maxHeight: "25vh",
+                  borderRadius: "12px", // Slightly smaller border radius
+                  // minHeight: { xs: "120px", sm: "140px", md: "160px" }, // Consistent with Grid
+                  // maxHeight: { xs: "140px", sm: "160px", md: "180px", lg: "200px" }, // Responsive max heights
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  padding: { xs: "12px", sm: "2px", md: "2px" }, // Responsive padding
                   ":hover": {
-                    transform: "scale(1.1)",
+                    transform: "scale(1.02)", // Smaller scale for better UX
                     transition: "all 300ms ease-in-out",
                   },
+                  // Ensure text doesn't overflow
+                  "& .MuiTypography-root": {
+                    fontSize: { xs: "0.75rem", sm: "0.875rem", md: "1rem" }, // Responsive font sizes
+                    lineHeight: 1.2,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap"
+                  },
+                  // Special handling for amount text
+                  "& .amount-text": {
+                    fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.9rem" },
+                    fontWeight: "bold",
+                    whiteSpace: "normal", // Allow wrapping for amounts
+                    wordBreak: "break-word",
+                    textOverflow: "unset"
+                  }
                 }}
                 value={item.count}
                 amount={item.amount !== null ? item.amount : null}

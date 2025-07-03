@@ -73,6 +73,13 @@ const step1ValidationSchema = yup.object().shape({
     .max(30, "Name is too long")
     .required("This field is required"),
 
+  state: yup
+    .string()
+    .matches( /^[a-zA-Z\s]+$/, "State name should only contain letters" )
+    .min( 2, "Name is too short" )
+    .max( 30, "Name is too long" )
+    .required( "This field is required" ),
+
   occupation_type: yup.string().required("This field is required"),
 
   dob: yup

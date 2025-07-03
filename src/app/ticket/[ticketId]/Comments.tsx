@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 /* eslint-disable react-hooks/exhaustive-deps */
 import axios from "axios";
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useCallback, useRef, useEffect, memo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import {
@@ -80,12 +80,7 @@ const Comments = ( { storedTicketId, userData }: CommentsProps ) => {
       setHasFetched( true );
     }
   }, [ isVisible, hasFetched ] );
-
-  // Helper function to check if file is Excel
-  const isExcelFile = ( filename: string ) => {
-    const excelExtensions = [ '.xlsx', '.xls', '.csv', '.xlsm', '.xlsb' ];
-    return excelExtensions.some( ext => filename.toLowerCase().includes( ext ) );
-  };
+  
 
   // Helper function to get file extension from URL
   const getFileExtensionFromUrl = ( url: string ) => {
@@ -99,6 +94,12 @@ const Comments = ( { storedTicketId, userData }: CommentsProps ) => {
     {
       return '';
     }
+  };
+
+   // Helper function to check if attachment is PDF
+  const isPdfAttachment = (attachmentUrl: string) => {
+    const extension = getFileExtensionFromUrl(attachmentUrl);
+    return extension === 'pdf';
   };
 
   // Helper function to check if attachment is Excel based on URL
@@ -291,8 +292,11 @@ const Comments = ( { storedTicketId, userData }: CommentsProps ) => {
           document.body.removeChild( link );
         }
       }
-    } else
-    {
+    } else if ( isPdfAttachment( attachmentUrl ) ) {
+      window.open( attachmentUrl, "_blank" );
+
+    }
+    else {
       // For images and other files, use existing modal behavior
       setShowAttachment( ( prev ) => ( {
         ...prev,
@@ -301,57 +305,7 @@ const Comments = ( { storedTicketId, userData }: CommentsProps ) => {
     }
   };
 
-  // Solution 2: Add a dropdown menu for different viewing options
-  const handleExcelFileOptions = ( attachmentUrl ) => {
-    const options = [
-      {
-        label: "Open in Microsoft Office Online",
-        url: `https://view.officeapps.live.com/op/embed.aspx?src=${ encodeURIComponent( attachmentUrl ) }`
-      },
-      {
-        label: "Open in Google Sheets",
-        url: `https://docs.google.com/viewer?url=${ encodeURIComponent( attachmentUrl ) }`
-      },
-      {
-        label: "Download File",
-        url: attachmentUrl,
-        download: true
-      }
-    ];
 
-    return (
-      <Box>
-        {options.map( ( option, index ) => (
-          <Button
-            key={index}
-            onClick={() => {
-              if ( option.download )
-              {
-                const link = document.createElement( 'a' );
-                link.href = option.url;
-                link.download = '';
-                document.body.appendChild( link );
-                link.click();
-                document.body.removeChild( link );
-              } else
-              {
-                window.open( option.url, '_blank' );
-              }
-            }}
-            variant="outlined"
-            sx={{
-              display: 'block',
-              mb: 1,
-              textTransform: 'none',
-              width: '200px'
-            }}
-          >
-            {option.label}
-          </Button>
-        ) )}
-      </Box>
-    );
-  };
 
   // Solution 3: Client-side Excel parsing using XLSX library
   // Add this to your component imports
@@ -896,4 +850,4 @@ const Comments = ( { storedTicketId, userData }: CommentsProps ) => {
   );
 };
 
-export default React.memo( Comments );
+export default memo( Comments );
