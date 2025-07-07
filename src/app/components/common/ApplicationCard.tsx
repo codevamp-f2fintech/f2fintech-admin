@@ -221,7 +221,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
         // Create new Ticket
         customer_application_id: applicationId,
         user_id: decodedToken()?.id,
-        status: "under credit review",
+        status: "operations",
       } );
       await modifyiedCustomerApplication( applicationId, {
         // Mark the Card as picked
