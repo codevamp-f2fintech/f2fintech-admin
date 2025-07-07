@@ -139,6 +139,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   const [userAnchorEl, setUserAnchorEl] = useState<null | HTMLElement>(null);
   const [dateModalOpen, setDateModalOpen] = useState<boolean>(false);
   const [tempInputValue, setTempInputValue] = useState<string>(filter);
+  
 
   const getStatusColor = (status: string): string => {
     const colors: { [key: string]: string } = {
@@ -191,7 +192,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     const colors: { [key: string]: string } = {
       admin: "#d32f2f", // Red - highest authority
       "sub admin": "#f57c00", // Orange - secondary authority  
-      agent: "#1976d2", // Blue - operational role
+      operations: "#1976d2", // Blue - operational role
+      credit: "#1976d2", // Blue - operational role
       sales: "#388e3c", // Green - revenue generation
       default: "#757575", // Grey for unknown roles
     };
@@ -225,7 +227,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     const icons: { [key: string]: JSX.Element } = {
       admin: <AdminPanelSettingsRounded sx={{ fontSize: 18 }} />,
       "sub admin": <SupervisorAccountRounded sx={{ fontSize: 18 }} />,
-      agent: <SupportAgentRounded sx={{ fontSize: 18 }} />,
+      operations: <SupportAgentRounded sx={{ fontSize: 18 }} />,
+      credit: <SupportAgentRounded sx={{ fontSize: 18 }} />,
       sales: <TrendingUpRounded sx={{ fontSize: 18 }} />,
       default: <PersonRounded sx={{ fontSize: 18 }} />,
     };
@@ -478,7 +481,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           }}
         >
           {/* Normal statuses (excluding "forwarded") */}
-          {statusOptions.map((status) => (
+          {userRole !== "credit" && statusOptions.map((status) => (
             <MenuItem
               key={status}
               onClick={() => {

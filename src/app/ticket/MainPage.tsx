@@ -46,10 +46,10 @@ const Ticket = () => {
       ? sortBy === "all" && loanProvider === "all"
         ? `get-all-tickets`
         : `get-all-tickets?status=${sortBy == 'forwarded to me' || sortBy == 'forwarded by me' ? sortBy.replace(/\s+/g, "") : sortBy}&provider=${loanProvider}`
-      : userRole === "agent"
+      : userRole === "operations" || userRole === "credit"
         ? sortBy === "all" && loanProvider === "all"
-          ? `get-all-tickets/${decodedToken()?.id}?isAgent=true`
-          : `get-all-tickets/${decodedToken()?.id}?isAgent=true&status=${sortBy == 'forwarded to me' || sortBy == 'forwarded by me' ? sortBy.replace(/\s+/g, "") : sortBy}&provider=${loanProvider}`
+          ? `get-all-tickets/${decodedToken()?.id}`
+          : `get-all-tickets/${decodedToken()?.id}?status=${sortBy == 'forwarded to me' || sortBy == 'forwarded by me' ? sortBy.replace(/\s+/g, "") : sortBy}&provider=${loanProvider}`
         : userRole === "sales"
           ? sortBy === "all" && loanProvider === "all"
             ? `get-all-tickets?appliedBy=${decodedToken()?.id}`

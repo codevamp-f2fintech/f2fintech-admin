@@ -10,15 +10,16 @@ interface UserAutocompleteProps {
   newEmployeeStatus: string;
   userData: User;
   selectedUser: UserData | null;
-  setSelectedUser: (user: UserData | null) => void;
-  handleForwardAutocomplete: (value: UserData | null) => void;
+  setSelectedUser: ( user: UserData | null ) => void;
+  handleForwardAutocomplete: ( value: UserData | null ) => void;
   ticketId: string | number;
   userId: string | number;
   isForwarded: number | null;
   ticketDetailData: TicketDetail;
+  currentUserRole?: string;
 }
 
-const UserAutocomplete: React.FC<UserAutocompleteProps> = ({
+const UserAutocomplete: React.FC<UserAutocompleteProps> = ( {
   isMobile,
   isTab,
   newEmployeeStatus,
@@ -29,24 +30,43 @@ const UserAutocomplete: React.FC<UserAutocompleteProps> = ({
   ticketId,
   userId,
   isForwarded,
-  ticketDetailData
-}) => {
-  const [allUsers, setAllUsers] = useState<UserData[]>([]);
+  ticketDetailData,
+  currentUserRole
+} ) => {
+  const [ allUsers, setAllUsers ] = useState<UserData[]>( [] );
+  const [ filteredUsers, setFilteredUsers ] = useState<UserData[]>( [] );
 
-  useEffect(() => {
-    if (userData?.data?.results) {
-      setAllUsers(userData?.data.results);
-      try {
+  useEffect( () => {
+    if ( userData?.data?.results )
+    {
+      setAllUsers( userData?.data.results );
+      try
+      {
         const ticketUser = isForwarded ? ticketDetailData?.forwardedTo : userId;
         const selectedUserObj = userData?.data?.results?.find(
           ( user ) => user.id == ticketUser
         );
-        setSelectedUser(selectedUserObj || []);
-      } catch (error) {
-        console.error("Error fetching users:", error);
+        setSelectedUser( selectedUserObj || [] );
+      } catch ( error )
+      {
+        console.error( "Error fetching users:", error );
       }
     };
-  }, [userData?.data?.results, ticketId]);
+  }, [ userData?.data?.results, ticketId ] );
+
+  // Filter users based on current user's role
+  useEffect( () => {
+    if ( currentUserRole === 'credit' )
+    {
+      setFilteredUsers( allUsers.filter( user => user.role === 'operations' ) );
+    } else if ( currentUserRole === 'operations' )
+    {
+      setFilteredUsers( allUsers.filter( user => user.role === 'credit' ) );
+    } else
+    {
+      setFilteredUsers( allUsers );
+    }
+  }, [ allUsers, currentUserRole ] );
 
   return (
     <Box
@@ -59,11 +79,12 @@ const UserAutocomplete: React.FC<UserAutocompleteProps> = ({
     >
       {newEmployeeStatus === "forwarded" && (
         <Autocomplete
-          options={allUsers || []}
-          getOptionLabel={(option) => option.username}
+          // options={allUsers || []}
+          options={filteredUsers || []}
+          getOptionLabel={( option ) => `${ option.username } (${ option.role })`}
           value={selectedUser || null}
-          onChange={(event, value) => handleForwardAutocomplete(value)}
-          renderInput={(params) => (
+          onChange={( event, value ) => handleForwardAutocomplete( value )}
+          renderInput={( params ) => (
             <TextField
               {...params}
               label="Select User"

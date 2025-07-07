@@ -120,7 +120,7 @@ function renderNavItems({
         return acc;
       }
 
-      // If the user is an agent, hide the "Loan Provider" link
+      // If the user is an operations or credit, hide the "Loan Provider" link
       if ( item.title === "Loan Provider" && userRole !== "admin" )
       {
         return acc;

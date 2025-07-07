@@ -29,6 +29,7 @@ import {
   DeleteRounded,
   PersonRounded,
 } from "@mui/icons-material";
+import WcIcon from '@mui/icons-material/Wc';
 
 import FormComponent from "./FormInModal";
 import type { AppDispatch, RootState } from "@/redux/store";
@@ -237,6 +238,44 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
                             }}
                           >
                             {user.email}
+                          </Typography>
+                        </Box>
+
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <PersonAddRounded
+                            sx={{
+                              color: "rgba(255,255,255,0.8)",
+                              fontSize: 18,
+                            }}
+                          />
+                          <Typography
+                            sx={{
+                              color: "rgba(255,255,255,0.8)",
+                              fontSize: "0.9rem",
+                            }}
+                          >
+                            {user.role}
+                          </Typography>
+                        </Box>
+
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <WcIcon
+                            sx={{
+                              color: "rgba(255,255,255,0.8)",
+                              fontSize: 18,
+                            }}
+                          />
+                          <Typography
+                            sx={{
+                              color: "rgba(255,255,255,0.8)",
+                              fontSize: "0.9rem",
+                            }}
+                          >
+                            {user.gender}
                           </Typography>
                         </Box>
                       </Box>

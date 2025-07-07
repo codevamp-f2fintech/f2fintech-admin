@@ -86,7 +86,9 @@ export interface TicketDetail {
   customerLocation: string;
   customerState: string;
   loanStatus: string;
+  userRole: string;
 }
+
 
 interface TicketDetailResponse {
   statusCode: string | number;
@@ -288,19 +290,18 @@ const Progress: React.FC = () => {
         ticket_id: ticketId,
         action: historyMessage,
       });
-
+      
       toastAndNavigate(dispatch, true, "info", "Ticket Forwarded Successfully");
       await refetch();
     } catch (error) {
       toastAndNavigate(dispatch, true, "error", "Error Forwarding Ticket");
     }
   };
-
+  
   const showComments = () => setActiveSection("Comments");
   const showHistory = () => setActiveSection("History");
   const showWorkLog = () => setActiveSection("WorkLog");
-
-
+  
   return (
     <ThemeProvider theme={theme}>
       <ColorModeContext.Provider value={colorMode}>
@@ -535,11 +536,13 @@ const Progress: React.FC = () => {
                     userId={ticketDetailData?.userId}
                     isForwarded={ticketDetailData?.isForwarded}
                     ticketDetailData={ticketDetailData}
+                    currentUserRole={decodedToken()?.role}
                   />
                 )}
                 <Divider sx={{ my: 1 }} />
 
                 {/* Employee Status FormControl */}
+                {decodedToken()?.role !== "credit" && (
                 <Box
                   display="flex"
                   justifyContent="space-between"
@@ -569,7 +572,7 @@ const Progress: React.FC = () => {
                       },
                     }}
                   >
-                    Employee Status:
+                    File Status:
                   </Typography>
 
                   {/* Right side: FormControl in Grid */}
@@ -591,7 +594,8 @@ const Progress: React.FC = () => {
                         },
                       }}
                     >
-                      <InputLabel>Employee Status</InputLabel>
+
+                      <InputLabel>File Status</InputLabel>
                       <Select
                         label="Employee Status"
                         variant="filled"
@@ -611,6 +615,7 @@ const Progress: React.FC = () => {
                     </FormControl>
                   </Grid>
                 </Box>
+                )}
 
                 <Box
                   display="flex"
