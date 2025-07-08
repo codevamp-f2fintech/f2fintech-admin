@@ -139,7 +139,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   const [userAnchorEl, setUserAnchorEl] = useState<null | HTMLElement>(null);
   const [dateModalOpen, setDateModalOpen] = useState<boolean>(false);
   const [tempInputValue, setTempInputValue] = useState<string>(filter);
-  
+
 
   const getStatusColor = (status: string): string => {
     const colors: { [key: string]: string } = {
@@ -685,6 +685,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 handleFilterChange({});
                 handleStatusChange('all');
                 handleBankChange('all');
+                router.replace('/ticket', undefined, { shallow: true });
               }}
               sx={{
                 color: "#f44336",

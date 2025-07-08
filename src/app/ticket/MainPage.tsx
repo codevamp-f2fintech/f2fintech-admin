@@ -81,21 +81,26 @@ const Ticket = () => {
     }
   }, [userRole]);
 
+  // Initialize state from URL params
   useEffect(() => {
     const queryStatus = searchParams.get("status");
     const queryProvider = searchParams.get("provider");
-    if (queryStatus) {
-      setSortBy(queryStatus);
-    } else {
-      setSortBy("all");
-    }
+    const queryStartDate = searchParams.get("startDate");
+    const queryEndDate = searchParams.get("endDate");
+    const queryUserId = searchParams.get("userId");
 
-    if (queryProvider) {
-      setLoanProvider(queryProvider);
-    } else {
-      setLoanProvider("all");
+    // Set all filters from URL
+    setSortBy(queryStatus || "all");
+    setLoanProvider(queryProvider || "all");
+    setStartDate(queryStartDate || null);
+    setEndDate(queryEndDate || null);
+
+    // Set user (only for admin)
+    if (queryUserId && userRole === "admin" && userData?.results) {
+      const foundUser = userData.results.find(user => user.id === parseInt(queryUserId));
+      setSelectedUser(foundUser || null);
     }
-  }, [searchParams]);
+  }, [searchParams, userData?.results, userRole])
 
   // Reset ticket state and fetch when sortBy or other filters change
   useEffect(() => {
@@ -108,7 +113,7 @@ const Ticket = () => {
     if (ticketData.results.length > 0) {
       dispatch(setTickets(ticketData));
       setHasMoreData(ticketData.results.length === ITEMS_PER_PAGE);
-      
+
       // Set disbursed amount only if status is 'disbursed'
       if (sortBy === 'disbursed' && ticketData.totalDisbursedAmount) {
         setDisbursedAmount(ticketData.totalDisbursedAmount);
@@ -122,7 +127,7 @@ const Ticket = () => {
         console.error("API Error:", ticketData.errorMessage);
       }
     }
-  }, [ticketData?.results, sortBy, dispatch]);
+  }, [ticketData?.results, sortBy]);
 
   // Reset disbursed amount when status changes away from 'disbursed'
   useEffect(() => {
@@ -148,42 +153,113 @@ const Ticket = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
 
+  // persist the filters in URL
   const handleFilterChange = useCallback((filterParams: any = {}) => {
     setCurrentPage(1);
     dispatch(resetTickets());
+
     // Reset disbursed amount if status is changing away from 'disbursed'
     if (filterParams.status && filterParams.status !== 'disbursed') {
       setDisbursedAmount(0);
     }
-  }, [dispatch]);
+
+    // Update query parameters in the URL
+    const params = new URLSearchParams(searchParams);
+
+    // Handle status parameter - preserve existing if not being updated
+    if (filterParams.status !== undefined) {
+      if (filterParams.status && filterParams.status !== 'all') {
+        params.set('status', filterParams.status);
+      } else {
+        params.delete('status');
+      }
+    }
+    // If status is not being updated, preserve existing value
+    else if (sortBy && sortBy !== 'all') {
+      params.set('status', sortBy);
+    }
+
+    // Handle provider parameter - preserve existing if not being updated
+    if (filterParams.provider !== undefined) {
+      if (filterParams.provider && filterParams.provider !== 'all') {
+        params.set('provider', filterParams.provider);
+      } else {
+        params.delete('provider');
+      }
+    }
+    // If provider is not being updated, preserve existing value
+    else if (loanProvider && loanProvider !== 'all') {
+      params.set('provider', loanProvider);
+    }
+
+    // Handle startDate parameter - preserve existing if not being updated
+    if (filterParams.startDate !== undefined) {
+      if (filterParams.startDate) {
+        params.set('startDate', filterParams.startDate);
+      } else {
+        params.delete('startDate');
+      }
+    }
+    // If startDate is not being updated, preserve existing value
+    else if (startDate) {
+      params.set('startDate', startDate);
+    }
+
+    // Handle endDate parameter - preserve existing if not being updated
+    if (filterParams.endDate !== undefined) {
+      if (filterParams.endDate) {
+        params.set('endDate', filterParams.endDate);
+      } else {
+        params.delete('endDate');
+      }
+    }
+    // If endDate is not being updated, preserve existing value
+    else if (endDate) {
+      params.set('endDate', endDate);
+    }
+
+    // Handle user parameter - preserve existing if not being updated
+    if (filterParams.user !== undefined) {
+      if (filterParams.user) {
+        params.set('userId', filterParams.user.id.toString());
+      } else {
+        params.delete('userId');
+      }
+    }
+    // If user is not being updated, preserve existing value
+    else if (selectedUser) {
+      params.set('userId', selectedUser.id.toString());
+    }
+
+    // Handle clear all filters case
+    if (Object.keys(filterParams).length === 0) {
+      params.delete('status');
+      params.delete('provider');
+      params.delete('startDate');
+      params.delete('endDate');
+      params.delete('userId');
+    }
+
+    router.push(`?${params.toString()}`, { shallow: true });
+  }, [searchParams, router, dispatch, sortBy, loanProvider, startDate, endDate, selectedUser]);
+
 
   const handleProviderChange = (value: string) => {
     const providerValue = value.toLowerCase();
-    console.log("providerValue", providerValue)
     setLoanProvider(providerValue);
     handleFilterChange({ provider: providerValue });
-    // Update query parameters in the URL
-    const params = new URLSearchParams(searchParams);
-    params.set("provider", providerValue);
-
-    router.push(`?${params.toString()}`, undefined, { shallow: true });
   };
 
   const handleSortChange = (value: string) => {
     const sortValue = value.toLowerCase();
     console.log("sortValue", sortValue)
     setSortBy(sortValue);
+
     // Reset disbursed amount immediately if not disbursed status
     if (sortValue !== 'disbursed') {
       setDisbursedAmount(0);
     }
     handleFilterChange({ status: sortValue });
-
-    // Update query parameters in the URL
-    const params = new URLSearchParams(searchParams);
-    params.set("status", sortValue);
-
-    router.push(`?${params.toString()}`, undefined, { shallow: true });
   };
 
   const handleDeleteTicket = async (ticketId: number) => {
