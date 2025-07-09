@@ -66,7 +66,7 @@ const Login = (): JSX.Element => {
         const role = decodedToken(response.data.access_token)?.role;
         if (role === "admin" || role === "sub admin") {
           router.push("/dashboard");
-        } else if (role === "agent" || role === "sales") {
+        } else if (role === "operations" || role === "credit" || role === "sales") {
           router.push("/home");
         }
       }

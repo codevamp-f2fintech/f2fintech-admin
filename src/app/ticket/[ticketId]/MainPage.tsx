@@ -86,7 +86,9 @@ export interface TicketDetail {
   customerLocation: string;
   customerState: string;
   loanStatus: string;
+  userRole: string;
 }
+
 
 interface TicketDetailResponse {
   statusCode: string | number;
@@ -117,30 +119,30 @@ interface TicketDetailResponse {
 }
 
 const Progress: React.FC = () => {
-  const [ticketDetailData, setTicketDetailData] = useState<TicketDetail>();
-  const [loading, setLoading] = useState<boolean>(false);
-  const [openDialog, setOpenDialog] = useState<boolean>(false);
-  const [activeSection, setActiveSection] = useState<string>("Comments");
-  const [selectedUser, setSelectedUser] = useState<User>();
-  const [theme, colorMode] = useMode();
+  const [ ticketDetailData, setTicketDetailData ] = useState<TicketDetail>();
+  const [ loading, setLoading ] = useState<boolean>( false );
+  const [ openDialog, setOpenDialog ] = useState<boolean>( false );
+  const [ activeSection, setActiveSection ] = useState<string>( "Comments" );
+  const [ selectedUser, setSelectedUser ] = useState<User>();
+  const [ theme, colorMode ] = useMode();
 
-  const [progress, setProgress] = useState(0); // State to store progress percentage
-  const [overage, setOverage] = useState(0); // Orange part (exceeding estimated time)
-  const [newLoanStatus, setNewLoanStatus] = useState("");
-  const [newEmployeeStatus, setNewEmployeeStatus] = useState("");
-  const [timeLoggingEstimate, setTimeLoggingEstimate] = useState({
+  const [ progress, setProgress ] = useState( 0 ); // State to store progress percentage
+  const [ overage, setOverage ] = useState( 0 ); // Orange part (exceeding estimated time)
+  const [ newLoanStatus, setNewLoanStatus ] = useState( "" );
+  const [ newEmployeeStatus, setNewEmployeeStatus ] = useState( "" );
+  const [ timeLoggingEstimate, setTimeLoggingEstimate ] = useState( {
     originalEstimate: '',
     timeSpent: '0',
-  });
-  const { toast } = useSelector((state: RootState) => state.toast);
-  const [hasFetched, setHasFetched] = useState(false);   // New state to track if data is already fetched
-  const workLogRef = useRef(null);
-  const isVisible = useIntersectionObserver(workLogRef);
+  } );
+  const { toast } = useSelector( ( state: RootState ) => state.toast );
+  const [ hasFetched, setHasFetched ] = useState( false );   // New state to track if data is already fetched
+  const workLogRef = useRef( null );
+  const isVisible = useIntersectionObserver( workLogRef );
 
   const dispatch: AppDispatch = useDispatch();
   const params = useParams();
-  const isMobile = useMediaQuery("(max-width:600px)");
-  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const isMobile = useMediaQuery( "(max-width:600px)" );
+  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
   const ticketId = params?.ticketId;
   const {
     capitalizeFirstLetter,
@@ -150,156 +152,181 @@ const Progress: React.FC = () => {
     toastAndNavigate,
   } = Utility();
 
-  const { createTicketHistory } = useCreateTicketHistory("create-ticket-history");
-  const { modifyTicket } = useModifyTicket("update-ticket");
-  const { value: userData } = useGetUsers({} as User, "get-users", 1, 200);
+  const { createTicketHistory } = useCreateTicketHistory( "create-ticket-history" );
+  const { modifyTicket } = useModifyTicket( "update-ticket" );
+  const { value: userData } = useGetUsers( {} as User, "get-users", 1, 200 );
   const { value: workLog, refetch } = useGetTicketLogs(
     {} as TicketLogs,
-    hasFetched ? `get-ticket-logs/${ticketId}` : ''
+    hasFetched ? `get-ticket-logs/${ ticketId }` : ''
   );
 
-  useEffect(() => {
-    if (isVisible && !hasFetched) {
+  useEffect( () => {
+    if ( isVisible && !hasFetched )
+    {
       refetch();
-      setHasFetched(true);
+      setHasFetched( true );
     }
-  }, [isVisible, hasFetched]);
+  }, [ isVisible, hasFetched ] );
 
-  useEffect(() => {
-    if (ticketId) {
-      setLoading(true);
+  useEffect( () => {
+    if ( ticketId )
+    {
+      setLoading( true );
       const fetchTicketDetails = async () => {
-        try {
+        try
+        {
           const response: TicketDetailResponse = await fetcher(
-            `get-ticket-with-detail/${ticketId}`
+            `get-ticket-with-detail/${ ticketId }`
           );
-          if (response.statusCode === 200) {
-            setTicketDetailData(response.data);
-            setTimeLoggingEstimate({
+          if ( response.statusCode === 200 )
+          {
+            setTicketDetailData( response.data );
+            setTimeLoggingEstimate( {
               ...timeLoggingEstimate,
               originalEstimate: response.data.originalEstimate,
-            });
-            setNewLoanStatus(response.data.loanStatus);
-            setNewEmployeeStatus(response.data.employeeStatus);
-            setLoading(false);
+            } );
+            setNewLoanStatus( response.data.loanStatus );
+            setNewEmployeeStatus( response.data.employeeStatus );
+            setLoading( false );
           }
-        } catch (error) {
-          setLoading(false);
-          console.log("Error fetching users:", error);
+        } catch ( error )
+        {
+          setLoading( false );
+          console.log( "Error fetching users:", error );
         }
       };
       fetchTicketDetails();
     }
-  }, [ticketId]);
+  }, [ ticketId ] );
 
-  useEffect(() => {
-    if (workLog?.data) {
+  useEffect( () => {
+    if ( workLog?.data )
+    {
       const totalHours = workLog?.data?.reduce(
-        (acc: number, ticket: any) => {
-          return acc + parseTimeSpent(ticket.time_spent ?? 0);
-        }, 0);
+        ( acc: number, ticket: any ) => {
+          return acc + parseTimeSpent( ticket.time_spent ?? 0 );
+        }, 0 );
 
-      const finalTime = convertHoursToDaysAndHours(totalHours);
-      setTimeLoggingEstimate({
+      const finalTime = convertHoursToDaysAndHours( totalHours );
+      setTimeLoggingEstimate( {
         ...timeLoggingEstimate,
         timeSpent: finalTime,
-      });
+      } );
       const originalEstimate = parseTimeSpent(
         timeLoggingEstimate.originalEstimate
       );
 
-      if (originalEstimate > 0) {
+      if ( originalEstimate > 0 )
+      {
         const calculatedProgress = Math.min(
-          (totalHours / originalEstimate) * 100,
+          ( totalHours / originalEstimate ) * 100,
           100
         );
         const calculatedOverage =
           totalHours > originalEstimate
-            ? ((totalHours - originalEstimate) / originalEstimate) * 100
+            ? ( ( totalHours - originalEstimate ) / originalEstimate ) * 100
             : 0;
 
-        setProgress(calculatedProgress);
-        setOverage(calculatedOverage);
+        setProgress( calculatedProgress );
+        setOverage( calculatedOverage );
       }
     }
-  }, [workLog?.data, timeLoggingEstimate.originalEstimate]);
+  }, [ workLog?.data, timeLoggingEstimate.originalEstimate ] );
 
-  const handleChangeLoanStatus = async (event: any) => {
+  const handleChangeLoanStatus = async ( event: any ) => {
     const oldStatus = newLoanStatus;
     const newStatus = event.target.value;
-    setNewLoanStatus(newStatus);
+    setNewLoanStatus( newStatus );
 
-    try {
+    try
+    {
       await axios.patch(
-        `${process.env.NEXT_PUBLIC_WEB_URL}/update-loan-tracking`,
+        `${ process.env.NEXT_PUBLIC_WEB_URL }/update-loan-tracking`,
         {
           customer_application_id: ticketDetailData?.applicationId,
           status: newStatus,
         }
       );
       const loggedInUser = decodedToken()?.username;
-      const historyMessage = `${loggedInUser} changed 'Loan Status' from ${oldStatus} to ${newStatus}`;
+      const historyMessage = `${ loggedInUser } changed Loan Status from ${ oldStatus } to ${ newStatus }`;
 
-      await createTicketHistory({
+      await createTicketHistory( {
         ticket_id: ticketId,
         action: historyMessage,
-      });
+      } );
 
-      toastAndNavigate(dispatch, true, "info", "Status Changed Successfully");
+      toastAndNavigate( dispatch, true, "info", "Status Changed Successfully" );
       await refetch();
-    } catch (error) {
-      toastAndNavigate(dispatch, true, "error", "Error Changing Status");
+    } catch ( error )
+    {
+      toastAndNavigate( dispatch, true, "error", "Error Changing Status" );
     }
   };
 
-  const handleChangeEmployeeStatus = async (event: any) => {
+  const handleChangeEmployeeStatus = async ( event: any ) => {
     const oldStatus = newEmployeeStatus;
     const newStatus = event.target.value;
-    setNewEmployeeStatus(newStatus);
+    setNewEmployeeStatus( newStatus );
 
-    try {
-      await modifyTicket(+ticketId, { status: newStatus });
+    try
+    {
+      await modifyTicket( +ticketId, { status: newStatus } );
 
       const loggedInUser = decodedToken()?.username;
-      const historyMessage = `${loggedInUser} changed 'Employee Status' from ${oldStatus} to ${newStatus}`;
-      await createTicketHistory({
+      const historyMessage = `${ loggedInUser } changed File Status from ${ oldStatus } to ${ newStatus }`;
+      await createTicketHistory( {
         ticket_id: ticketId,
         action: historyMessage,
-      });
-      toastAndNavigate(dispatch, true, "info", "Status Changed Successfully");
+      } );
+      toastAndNavigate( dispatch, true, "info", "Status Changed Successfully" );
       await refetch();
-    } catch (error) {
-      toastAndNavigate(dispatch, true, "error", "Error Changing Status");
+    } catch ( error )
+    {
+      toastAndNavigate( dispatch, true, "error", "Error Changing Status" );
     }
   };
 
-  const handleForwardAutocomplete = async (value: any) => {
-    setSelectedUser(value);
-    try {
-      await modifyTicket(+ticketId, {
+  const handleForwardAutocomplete = async ( value: any ) => {
+    setSelectedUser( value );
+    try
+    {
+      const employeeRole = decodedToken()?.role;
+      const loggedInUser = decodedToken()?.username;
+      const userId = decodedToken()?.id;
+
+      let updatePayload: any = {
         forwarded_to: value.id,
-        forwarded_by: decodedToken()?.id,
+        forwarded_by: userId,
         is_forwarded: 1,
-      });
+      };
 
-      const loggedInUser = decodedToken()?.username;
-      const historyMessage = `${loggedInUser} forwarded the ticket to ${value.username}`;
-      await createTicketHistory({
+      let historyMessage = `${ loggedInUser } forwarded the ticket to ${ value.username }`;
+
+      if ( employeeRole === "credit" )
+      {
+        updatePayload.status = "operations";
+        historyMessage += " and status is set to operations";
+      } else if ( employeeRole === "operations" )
+      {
+        updatePayload.status = "under credit review";
+      }
+      await modifyTicket( +ticketId, updatePayload );
+
+      await createTicketHistory( {
         ticket_id: ticketId,
         action: historyMessage,
-      });
-
-      toastAndNavigate(dispatch, true, "info", "Ticket Forwarded Successfully");
+      } );
+      toastAndNavigate( dispatch, true, "info", "File Forwarded Successfully" );
       await refetch();
-    } catch (error) {
-      toastAndNavigate(dispatch, true, "error", "Error Forwarding Ticket");
+    } catch ( error )
+    {
+      toastAndNavigate( dispatch, true, "error", "Error Forwarding File" );
     }
   };
 
-  const showComments = () => setActiveSection("Comments");
-  const showHistory = () => setActiveSection("History");
-  const showWorkLog = () => setActiveSection("WorkLog");
-
+  const showComments = () => setActiveSection( "Comments" );
+  const showHistory = () => setActiveSection( "History" );
+  const showWorkLog = () => setActiveSection( "WorkLog" );
 
   return (
     <ThemeProvider theme={theme}>
@@ -507,7 +534,7 @@ const Progress: React.FC = () => {
                     endIcon={<ArrowForwardRounded />}
                     size="small"
                     variant="contained"
-                    onClick={() => setNewEmployeeStatus("forwarded")}
+                    onClick={() => setNewEmployeeStatus( "forwarded" )}
                     sx={{
                       bgcolor: "#f06292",
                       textAlign: "center",
@@ -535,82 +562,86 @@ const Progress: React.FC = () => {
                     userId={ticketDetailData?.userId}
                     isForwarded={ticketDetailData?.isForwarded}
                     ticketDetailData={ticketDetailData}
+                    currentUserRole={decodedToken()?.role}
                   />
                 )}
                 <Divider sx={{ my: 1 }} />
 
                 {/* Employee Status FormControl */}
-                <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="center"
-                  sx={{
-                    padding: 2,
-                    border: "1px solid white",
-                    borderRadius: "15px",
-                    fontSize: "1rem",
-                    bgcolor: "#9575cd",
-                    "&:hover": {
-                      transform: "scale(1.02)",
-                      transition: "transform 0.3s ease",
-                    },
-                  }}
-                >
-                  {/* Left side: Typography */}
-                  <Typography
-                    variant="subtitle1"
-                    color="text.primary"
+                {decodedToken()?.role !== "credit" && (
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
                     sx={{
-                      color: "white",
-                      fontWeight: "bold",
+                      padding: 2,
+                      border: "1px solid white",
+                      borderRadius: "15px",
+                      fontSize: "1rem",
+                      bgcolor: "#9575cd",
                       "&:hover": {
                         transform: "scale(1.02)",
                         transition: "transform 0.3s ease",
                       },
                     }}
                   >
-                    Employee Status:
-                  </Typography>
-
-                  {/* Right side: FormControl in Grid */}
-                  <Grid item xs={6} md={5} mt={0}>
-                    <FormControl
-                      variant="filled"
+                    {/* Left side: Typography */}
+                    <Typography
+                      variant="subtitle1"
+                      color="text.primary"
                       sx={{
-                        background: "white",
-                        borderRadius: "15px",
-                        "& .MuiFilledInput-underline:before": {
-                          borderBottom: "none", // Removes the underline in normal state
-                        },
-                        "& .MuiFilledInput-underline:after": {
-                          borderBottom: "none", // Removes the underline in focused state
-                        },
-
-                        "& .MuiFilledInput-underline:hover:before": {
-                          borderBottom: "none !important", // Remove underline on hover
+                        color: "white",
+                        fontWeight: "bold",
+                        "&:hover": {
+                          transform: "scale(1.02)",
+                          transition: "transform 0.3s ease",
                         },
                       }}
                     >
-                      <InputLabel>Employee Status</InputLabel>
-                      <Select
-                        label="Employee Status"
+                      File Status:
+                    </Typography>
+
+                    {/* Right side: FormControl in Grid */}
+                    <Grid item xs={6} md={5} mt={0}>
+                      <FormControl
                         variant="filled"
-                        value={newEmployeeStatus}
-                        onChange={handleChangeEmployeeStatus}
                         sx={{
+                          background: "white",
                           borderRadius: "15px",
-                          width: isMobile ? "30vw" : "8vw",
+                          "& .MuiFilledInput-underline:before": {
+                            borderBottom: "none", // Removes the underline in normal state
+                          },
+                          "& .MuiFilledInput-underline:after": {
+                            borderBottom: "none", // Removes the underline in focused state
+                          },
+
+                          "& .MuiFilledInput-underline:hover:before": {
+                            borderBottom: "none !important", // Remove underline on hover
+                          },
                         }}
                       >
-                        {employeeStatusObj.map((status) => (
-                          <MenuItem key={status.value} value={status.value}>
-                            {status.label}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                </Box>
+
+                        <InputLabel>File Status</InputLabel>
+                        <Select
+                          label="Employee Status"
+                          variant="filled"
+                          value={newEmployeeStatus}
+                          onChange={handleChangeEmployeeStatus}
+                          sx={{
+                            borderRadius: "15px",
+                            width: isMobile ? "30vw" : "8vw",
+                          }}
+                        >
+                          {employeeStatusObj.map( ( status ) => (
+                            <MenuItem key={status.value} value={status.value}>
+                              {status.label}
+                            </MenuItem>
+                          ) )}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                  </Box>
+                )}
 
                 <Box
                   display="flex"
@@ -719,7 +750,7 @@ const Progress: React.FC = () => {
                       variant="body2"
                       sx={{ mr: "1vw", color: "white" }}
                     >
-                      {capitalizeFirstLetter(decodedToken()?.username)}
+                      {capitalizeFirstLetter( decodedToken()?.username )}
                     </Typography>
                     <Avatar
                       sx={{
@@ -728,8 +759,8 @@ const Progress: React.FC = () => {
 
                         color: theme.palette.primary.main,
                       }}
-                      alt={capitalizeFirstLetter(decodedToken()?.username)}
-                      src={capitalizeFirstLetter(decodedToken()?.username)}
+                      alt={capitalizeFirstLetter( decodedToken()?.username )}
+                      src={capitalizeFirstLetter( decodedToken()?.username )}
                     />
                   </Box>
                 </Box>
@@ -798,4 +829,4 @@ const Progress: React.FC = () => {
   );
 };
 
-export default React.memo(Progress);
+export default React.memo( Progress );

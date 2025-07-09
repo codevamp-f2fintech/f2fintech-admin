@@ -152,7 +152,7 @@ async function fetchTotalTickets (
 ): Promise<number | { count: number, amount: number }> {
   let url = `${ process.env.NEXT_PUBLIC_API_URL }/dashboard/tickets/count`;
 
-  if ( role === "agent" && id !== null )
+  if ( role === "operations" && id !== null )
   {
     url += `/${ id }`;
   }
@@ -386,7 +386,6 @@ export default function Page (): React.JSX.Element {
       doneTicketsByMonth,
     } );
   };
-  console.log( allCounts, 'disbursed11111' )
   const dashboardItems = [
     {
       icon: ArchiveIcon,
@@ -574,7 +573,6 @@ export default function Page (): React.JSX.Element {
               <Select
                 labelId="month-select-label"
                 value={selectedMonth}
-                // onChange={( e ) => setSelectedMonth( e.target.value )}
                 onChange={handleMonthChange} 
                 label="Month"
                 sx={{
@@ -658,7 +656,7 @@ export default function Page (): React.JSX.Element {
             xs={12}
             key={index}
             sx={{
-              minHeight: { xs: "120px", sm: "140px", md: "160px" }, // Responsive minimum heights
+              minHeight: { xs: "120px", sm: "140px", md: "160px" },
               display: "flex"
             }}
           >
@@ -678,20 +676,18 @@ export default function Page (): React.JSX.Element {
                   height: "100%",
                   width: "100%",
                   backgroundColor: item.color,
-                  borderRadius: "12px", // Slightly smaller border radius
-                  // minHeight: { xs: "120px", sm: "140px", md: "160px" }, // Consistent with Grid
-                  // maxHeight: { xs: "140px", sm: "160px", md: "180px", lg: "200px" }, // Responsive max heights
+                  borderRadius: "12px",
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "space-between",
-                  padding: { xs: "12px", sm: "2px", md: "2px" }, // Responsive padding
+                  padding: { xs: "12px", sm: "2px", md: "2px" },
                   ":hover": {
-                    transform: "scale(1.02)", // Smaller scale for better UX
+                    transform: "scale(1.02)",
                     transition: "all 300ms ease-in-out",
                   },
                   // Ensure text doesn't overflow
                   "& .MuiTypography-root": {
-                    fontSize: { xs: "0.75rem", sm: "0.875rem", md: "1rem" }, // Responsive font sizes
+                    fontSize: { xs: "0.75rem", sm: "0.875rem", md: "1rem" },
                     lineHeight: 1.2,
                     overflow: "hidden",
                     textOverflow: "ellipsis",
@@ -701,7 +697,7 @@ export default function Page (): React.JSX.Element {
                   "& .amount-text": {
                     fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.9rem" },
                     fontWeight: "bold",
-                    whiteSpace: "normal", // Allow wrapping for amounts
+                    whiteSpace: "normal",
                     wordBreak: "break-word",
                     textOverflow: "unset"
                   }

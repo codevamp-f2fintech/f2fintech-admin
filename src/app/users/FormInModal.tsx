@@ -59,7 +59,7 @@ const initialValues: UserFormValues = {
   email: "",
   password: "",
   gender: "",
-  role: "agent",
+  role: "sales",
 };
 let editFormValues: UserFormValues;
 
@@ -380,10 +380,11 @@ const UserForm: React.FC<FormComponentProps> = ({
                   <MenuItem value="">
                     <em>None</em>
                   </MenuItem>
-                  <MenuItem value="admin">Admin</MenuItem>
+                  {/* <MenuItem value="admin">Admin</MenuItem> */}
                   <MenuItem value="sub admin">Sub Admin</MenuItem>
-                  <MenuItem value="agent">Agent</MenuItem>
                   <MenuItem value="sales">Sales</MenuItem>
+                  <MenuItem value="operations">Operations</MenuItem>
+                  <MenuItem value="credit">Credit</MenuItem>
                 </Field>
               </Box>
               <Box display="flex" justifyContent="center" p="20px">

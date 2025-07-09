@@ -85,9 +85,14 @@ const statusOptions = [
   "disbursed",
   "carry forward",
   'drop',
-  "rejected",
-  // "forwardedtome",
-  // "forwardedbyme"
+  "rejected"
+];
+
+// Credit role specific options
+const creditStatusOptions = [
+  'forwarded',
+  "forwardedtome",
+  "forwardedbyme"
 ];
 
 const bankOptions = [
@@ -140,7 +145,26 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   const [dateModalOpen, setDateModalOpen] = useState<boolean>(false);
   const [tempInputValue, setTempInputValue] = useState<string>(filter);
 
+  const normalizeStatusForApi = (status: string): string => {
+    if (status === "forwarded to me") return "forwardedtome";
+    if (status === "forwarded by me") return "forwardedbyme";
+    return status;
+  };
+
+  // Helper function to normalize status for display
+  const normalizeStatusForDisplay = (status: string): string => {
+    if (status === "forwardedtome") return "forwarded to me";
+    if (status === "forwardedbyme") return "forwarded by me";
+    return status;
+  };
+
+  const getStatusDisplayLabel = (status: string): string => {
+    const displayStatus = normalizeStatusForDisplay(status);
+    return `${displayStatus.charAt(0).toUpperCase() + displayStatus.slice(1)} (${ticketCount})`;
+  };
+
   const getStatusColor = (status: string): string => {
+    const normalizedStatus = normalizeStatusForDisplay(status);
     const colors: { [key: string]: string } = {
       "under credit review": "#ff9800", // Orange ----
       "operations": "#2196f3", // Blue
@@ -160,7 +184,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       all: "#757575", // Grey
       // relook: "#ff5722", // Orange-Red
     };
-    return colors[status] || colors.all;
+    return colors[normalizedStatus] || colors.all;
   };
 
   const getBankColor = (bank: string): string => {
@@ -186,12 +210,12 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     return colors[bank] || colors.all;
   };
 
-  // Role-based color function
   const getRoleColor = (role: string): string => {
     const colors: { [key: string]: string } = {
       admin: "#d32f2f", // Red - highest authority
       "sub admin": "#f57c00", // Orange - secondary authority  
-      agent: "#1976d2", // Blue - operational role
+      operations: "#1976d2", // Blue - operational role
+      credit: "#1976d2", // Blue - operational role
       sales: "#388e3c", // Green - revenue generation
       default: "#757575", // Grey for unknown roles
     };
@@ -199,6 +223,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   };
 
   const getStatusIcon = (status: string): JSX.Element => {
+    const normalizedStatus = normalizeStatusForDisplay(status);
     const icons: { [key: string]: JSX.Element } = {
       "under credit review": <AssignmentRounded sx={{ fontSize: 20 }} />,
       "operations": <LoginRounded sx={{ fontSize: 20 }} />,
@@ -217,7 +242,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       "forwarded by me": <ArrowUpwardRounded sx={{ fontSize: 20 }} />,
       all: <FilterListRounded sx={{ fontSize: 20 }} />,
     };
-    return icons[status] || icons.all;
+    return icons[normalizedStatus] || icons.all;
   };
 
   // Role-based icon function
@@ -225,7 +250,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     const icons: { [key: string]: JSX.Element } = {
       admin: <AdminPanelSettingsRounded sx={{ fontSize: 18 }} />,
       "sub admin": <SupervisorAccountRounded sx={{ fontSize: 18 }} />,
-      agent: <SupportAgentRounded sx={{ fontSize: 18 }} />,
+      operations: <SupportAgentRounded sx={{ fontSize: 18 }} />,
+      credit: <SupportAgentRounded sx={{ fontSize: 18 }} />,
       sales: <TrendingUpRounded sx={{ fontSize: 18 }} />,
       default: <PersonRounded sx={{ fontSize: 18 }} />,
     };
@@ -269,8 +295,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
   // Handle the status change
   const handleStatusChange = (status: string) => {
-    handleSortChange(status); // Update the status in parent component
-    handleFilterChange({ status, page: 1 }); // Reset page to 1 and update filter
+    const normalizedStatus = normalizeStatusForApi(status);
+    handleSortChange(normalizedStatus);  // Update the status in parent component
+    handleFilterChange({ status: normalizedStatus, page: 1 });   // Reset page to 1 and update filter
   };
 
   // Handle the bank change
@@ -311,6 +338,21 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     setStartDate(formattedStart);
     setEndDate(formattedEnd);
     handleFilterChange({ startDate: formattedStart, endDate: formattedEnd, page: 1 }); // Reset page to 1 and update date range
+  };
+
+  // Get the appropriate status options based on user role
+  const getStatusOptions = () => {
+    if (userRole === "credit") {
+      return creditStatusOptions;
+    }
+    return statusOptions;
+  };
+
+  const getDefaultStatus = () => {
+    if (userRole === "credit") {
+      return "forwarded"; // Default to "forwarded" for credit users
+    }
+    return "all";
   };
 
   // Submenu open/close for "Forwarded"
@@ -477,93 +519,114 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             },
           }}
         >
-          {/* Normal statuses (excluding "forwarded") */}
-          {statusOptions.map((status) => (
+          {userRole === "credit" ? (
+            // Credit role: Only show forwarded options
+            creditStatusOptions.map((status) => (
+              <MenuItem
+                key={status}
+                onClick={() => {
+                  handleStatusChange(status);
+                  setAnchorEl(null);
+                }}
+                sx={{
+                  gap: 1,
+                  minWidth: 180,
+                  color: getStatusColor(status),
+                  "&:hover": {
+                    backgroundColor: `${getStatusColor(status)}10`,
+                  },
+                }}
+              >
+                {getStatusIcon(status)}
+                {normalizeStatusForDisplay(status).charAt(0).toUpperCase() + normalizeStatusForDisplay(status).slice(1)}
+              </MenuItem>
+            ))
+          ) : [
+            // Other roles: Show all status options
+            ...statusOptions.map((status) => (
+              <MenuItem
+                key={status}
+                onClick={() => {
+                  handleStatusChange(status);
+                  setAnchorEl(null);
+                }}
+                sx={{
+                  gap: 1,
+                  minWidth: 180,
+                  color: getStatusColor(status),
+                  "&:hover": {
+                    backgroundColor: `${getStatusColor(status)}10`,
+                  },
+                }}
+              >
+                {getStatusIcon(status)}
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </MenuItem>
+            )),
             <MenuItem
-              key={status}
-              onClick={() => {
-                handleStatusChange(status);
-                setAnchorEl(null);
-              }}
+              key="forwarded-submenu"
+              onMouseEnter={handleForwardedMenuOpen}
+              onMouseLeave={handleForwardedMenuClose}
               sx={{
                 gap: 1,
                 minWidth: 180,
-                color: getStatusColor(status),
+                color: getStatusColor("forwarded"),
                 "&:hover": {
-                  backgroundColor: `${getStatusColor(status)}10`,
+                  backgroundColor: `${getStatusColor("forwarded")}10`,
                 },
               }}
             >
-              {getStatusIcon(status)}
-              {status.charAt(0).toUpperCase() + status.slice(1)}
+              <ForwardToInboxRounded sx={{ fontSize: 20 }} />
+              Forwarded
+              <ArrowRightIcon fontSize="small" sx={{ marginLeft: "auto" }} />
+
+              {/* Nested Submenu */}
+              <Menu
+                anchorEl={forwardedAnchorEl}
+                open={Boolean(forwardedAnchorEl)}
+                onClose={handleForwardedMenuClose}
+                anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                transformOrigin={{ vertical: "top", horizontal: "left" }}
+              >
+                <MenuItem
+                  onClick={() => {
+                    handleStatusChange("forwarded to me");
+                    handleForwardedMenuClose();
+                    setAnchorEl(null);
+                  }}
+                  sx={{
+                    gap: 1,
+                    minWidth: 180,
+                    color: getStatusColor("forwarded to me"),
+                    "&:hover": {
+                      backgroundColor: `${getStatusColor("forwarded to me")}22`
+                    },
+                  }}
+                >
+                  {getStatusIcon("forwarded to me")}
+                  Forwarded To Me
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    handleStatusChange("forwarded by me");
+                    handleForwardedMenuClose();
+                    setAnchorEl(null);
+                  }}
+                  sx={{
+                    gap: 1,
+                    minWidth: 180,
+                    color: getStatusColor("forwarded by me"),
+                    "&:hover": {
+                      backgroundColor: `${getStatusColor("forwarded by me")}22`
+                    },
+                  }}
+                >
+                  {getStatusIcon("forwarded by me")}
+                  Forwarded By Me
+                </MenuItem>
+              </Menu>
             </MenuItem>
-          ))}
-
-          {/* "Forwarded" with nested submenu */}
-          <MenuItem
-            onMouseEnter={handleForwardedMenuOpen}
-            onMouseLeave={handleForwardedMenuClose}
-            sx={{
-              gap: 1,
-              minWidth: 180,
-              color: getStatusColor("forwarded"),
-              "&:hover": {
-                backgroundColor: `${getStatusColor("forwarded")}10`,
-              },
-            }}
-          >
-            {/** If you want a special icon for "Forwarded": */}
-            {/** Or just reuse getStatusIcon("forwarded") if you like */}
-            <ForwardToInboxRounded sx={{ fontSize: 20 }} />
-            Forwarded
-            <ArrowRightIcon fontSize="small" sx={{ marginLeft: "auto" }} />
-
-            {/* Nested Submenu */}
-            <Menu
-              anchorEl={forwardedAnchorEl}
-              open={Boolean(forwardedAnchorEl)}
-              onClose={handleForwardedMenuClose}
-              anchorOrigin={{ vertical: "top", horizontal: "right" }}
-              transformOrigin={{ vertical: "top", horizontal: "left" }}
-            >
-              <MenuItem
-                onClick={() => {
-                  handleStatusChange("forwarded To Me");
-                  handleForwardedMenuClose();
-                  setAnchorEl(null);
-                }}
-                sx={{
-                  gap: 1,
-                  minWidth: 180,
-                  color: getStatusColor("forwarded to me"),
-                  "&:hover": {
-                    backgroundColor: `${getStatusColor("forwarded to me")}22`
-                  },
-                }}
-              >
-                {getStatusIcon("forwarded to me")}
-                Forwarded To Me
-              </MenuItem>
-              <MenuItem
-                onClick={() => {
-                  handleStatusChange("forwarded by me");
-                  handleForwardedMenuClose();
-                  setAnchorEl(null);
-                }}
-                sx={{
-                  gap: 1,
-                  minWidth: 180,
-                  color: getStatusColor("forwarded by me"),
-                  "&:hover": {
-                    backgroundColor: `${getStatusColor("forwarded by me")}22`
-                  },
-                }}
-              >
-                {getStatusIcon("forwarded by me")}
-                Forwarded By Me
-              </MenuItem>
-            </Menu>
-          </MenuItem>
+          ]}
         </Menu>
 
         {/* Disbursed Amount Chip - Only show when status is 'disbursed' and amount exists */}
@@ -680,8 +743,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 setEndDate(null);
                 setSelectedUser(null);
                 handleFilterChange({});
-                handleStatusChange('all');
+                handleStatusChange(getDefaultStatus());
                 handleBankChange('all');
+                router.replace('/ticket', undefined, { shallow: true });
               }}
               sx={{
                 color: "#f44336",
@@ -707,7 +771,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         endDate={endDate}
         onApply={handleDateModalApply}
       />
-    </Paper>
+    </Paper >
   );
 };
 

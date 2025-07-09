@@ -16,6 +16,7 @@ interface UserAutocompleteProps {
   userId: string | number;
   isForwarded: number | null;
   ticketDetailData: TicketDetail;
+  currentUserRole?: string;
 }
 
 const UserAutocomplete: React.FC<UserAutocompleteProps> = ({
@@ -29,9 +30,11 @@ const UserAutocomplete: React.FC<UserAutocompleteProps> = ({
   ticketId,
   userId,
   isForwarded,
-  ticketDetailData
+  ticketDetailData,
+  currentUserRole
 }) => {
   const [allUsers, setAllUsers] = useState<UserData[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<UserData[]>([]);
 
   useEffect(() => {
     if (userData?.data?.results) {
@@ -39,7 +42,7 @@ const UserAutocomplete: React.FC<UserAutocompleteProps> = ({
       try {
         const ticketUser = isForwarded ? ticketDetailData?.forwardedTo : userId;
         const selectedUserObj = userData?.data?.results?.find(
-          ( user ) => user.id == ticketUser
+          (user) => user.id == ticketUser
         );
         setSelectedUser(selectedUserObj || []);
       } catch (error) {
@@ -47,6 +50,15 @@ const UserAutocomplete: React.FC<UserAutocompleteProps> = ({
       }
     };
   }, [userData?.data?.results, ticketId]);
+
+  // Filter users based on current user's role
+  useEffect(() => {
+    if (currentUserRole === 'credit') {
+      setFilteredUsers(allUsers.filter(user => user.role === 'operations'));
+    } else {
+      setFilteredUsers(allUsers);
+    }
+  }, [allUsers, currentUserRole]);
 
   return (
     <Box
@@ -59,8 +71,9 @@ const UserAutocomplete: React.FC<UserAutocompleteProps> = ({
     >
       {newEmployeeStatus === "forwarded" && (
         <Autocomplete
-          options={allUsers || []}
-          getOptionLabel={(option) => option.username}
+          // options={allUsers || []}
+          options={filteredUsers || []}
+          getOptionLabel={(option) => `${option.username} (${option.role})`}
           value={selectedUser || null}
           onChange={(event, value) => handleForwardAutocomplete(value)}
           renderInput={(params) => (

@@ -38,14 +38,23 @@ export async function middleware(request: NextRequest) {
           return NextResponse.redirect(new URL("/unauthorised", request.url));
         }
 
-        // Check if the route is restricted for agents
-        if ((role === "agent" || role === "sub admin") && request.nextUrl.pathname.startsWith("/user")) {
-          // Redirect agents trying to access /user or its subroutes
+        // Restrict credit users to only /ticket page
+        if ( role === "credit" )
+        {
+          if ( !request.nextUrl.pathname.startsWith( "/ticket" ) )
+          {
+            return NextResponse.redirect( new URL( "/ticket", request.url ) );
+          }
+        }
+
+        // Check if the route is restricted for operations and credit
+        if ((role === "operations" || role === "sub admin") && request.nextUrl.pathname.startsWith("/user")) {
+          // Redirect operations and credit trying to access /user or its subroutes
           return NextResponse.redirect(new URL("/unauthorised", request.url));
         }
 
-        // Check if role is admin or agent
-        if (role !== "admin" && role !== "agent" && role !== "sales" && role !== "sub admin") {
+        // Check if role is admin or operations and credit
+        if (role !== "admin" && role !== "operations" && role !== "credit" && role !== "sales" && role !== "sub admin") {
           return NextResponse.redirect(new URL("/unauthorised", request.url));
         }
         if (role === "sales" && !request.nextUrl.pathname.startsWith("/home") && !request.nextUrl.pathname.startsWith("/ticket")) {
