@@ -1,7 +1,7 @@
 import { useState } from "react";
 import useSWR, { mutate } from "swr";
 
-import { creator, fetcher, modifier } from "@/apis/apiClient";
+import { creator, deleter, fetcher, modifier } from "@/apis/apiClient";
 import { CustomerApplication, CustomerApplicationData } from "@/types/customerApplication";
 
 /**
@@ -96,6 +96,39 @@ export const useCreateCustomerApplication = ( pathKey: string ) => {
   };
 
   return { loading, error, createCustomerApplication };
+};
+
+/**
+ * Hook for deleting an existing customer application.
+ *
+ * @param pathKey - The API path key used to delete a customer application.
+ * @returns An object containing the loading state, error state, and the deleteCustomerApplication function.
+ */
+export const useDeleteCustomerApplication = () => {
+  const [ loading, setLoading ] = useState( false );
+  const [ error, setError ] = useState<Error | null>( null );
+
+  const deleteCustomerApplication = async ( pathKey: string, id: number ) => {
+    setLoading( true );
+    setError( null );
+    try
+    {
+      const apiPath = `${ pathKey }/${ id }`;
+
+      // Assuming you have a deleter function in your apiClient
+      // If not, you can use fetcher with DELETE method or create a deleter function
+      const response = await deleter( apiPath);
+      return response;
+    } catch ( err )
+    {
+      setError( err as Error );
+    } finally
+    {
+      setLoading( false );
+    }
+  };
+
+  return { loading, error, deleteCustomerApplication };
 };
 
 /**

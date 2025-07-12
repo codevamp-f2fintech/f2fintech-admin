@@ -72,7 +72,7 @@ export interface TicketDetail {
   forwardedBy: number | string;
   isForwarded: number | null;
   originalEstimate: string;
-  applicationProvider: string;
+  provider: string;
   applicationAmount: string | number;
   applicationTenure: number | string;
   applicationDate: Date | string;
@@ -102,7 +102,7 @@ interface TicketDetailResponse {
     forwardedBy: number | string;
     isForwarded: number | null;
     originalEstimate: string;
-    applicationProvider: string;
+    provider: string;
     applicationAmount: string | number;
     applicationTenure: number | string;
     applicationDate: Date | string;
