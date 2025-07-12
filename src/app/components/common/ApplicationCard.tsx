@@ -40,6 +40,7 @@ import { fetcher } from "@/apis/apiClient";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { resetCustomerApplications } from "@/redux/features/customerApplicationSlice";
+import { resetTickets } from "@/redux/features/ticketSlice";
 
 interface ApplicationCardProps {
   customerApplication: {
@@ -50,7 +51,7 @@ interface ApplicationCardProps {
     customerProfileImage?: string;
     customerLocation?: string;
     customerState?: string;
-    state?:string;
+    state?: string;
     applicationAmount: string;
     applicationTenure: number;
     applicationDate: string;
@@ -67,6 +68,7 @@ interface ApplicationCardProps {
   refetch?: () => Promise<void>;
   userRole?: string;
   handleDeleteTicket?: ( ticketId: number ) => void;
+  isApplication?: boolean;
 }
 
 function InfoRow ( {
@@ -116,6 +118,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
   onDelete,
   userRole,
   handleDeleteTicket,
+  handleDeleteApplication,
+  isApplication = false,
 } ) => {
   const [ showHistory, setShowHistory ] = useState<boolean>( false );
   const [ historyData, setHistoryData ] = useState<any[]>( [] );
@@ -157,13 +161,13 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
 
   // Inside the confirmDelete function
   const confirmDelete = async () => {
-    if ( handleDeleteTicket )
+    if ( handleDeleteTicket && !isApplication )
     {
       try
       {
         // Perform the delete action
         await handleDeleteTicket( customerApplication.ticketId );
-
+        
         // Display success toast message
         toastAndNavigate(
           dispatch,
@@ -172,7 +176,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
           "Ticket deleted successfully",
           null,
           null,
-          true
+          false
         );
 
         // Close the delete dialog after successful deletion
@@ -191,6 +195,10 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
           true
         );
       }
+    }
+    if ( isApplication && handleDeleteApplication )
+    {
+      handleDeleteApplication( customerApplication.applicationId )
     }
   };
 
@@ -223,6 +231,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
         user_id: decodedToken()?.id,
         status: "operations",
       } );
+      dispatch( resetTickets() );
       await modifyiedCustomerApplication( applicationId, {
         // Mark the Card as picked
         is_picked: 1,
@@ -260,10 +269,10 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
           mt: 5,
         }}
       >
-        {/* Delete Button */}
+        {/*Application Delete Button */}
         {showDeleteButton && (
           <IconButton
-            onClick={handleDeleteClick}
+            onClick={openConfirmDialog}
             sx={{
               position: "absolute",
               top: 8,
@@ -522,7 +531,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                   "& .MuiChip-label": { color: "#6E44FF" },
                 }}
               />
-              {( decodedToken()?.role === "admin" || decodedToken()?.role === "sales" ) ? null : (
+              {( decodedToken()?.role === "sales" ) ? null : (
                 <Box sx={{ display: "flex", alignItems: "center" }}>
                   <Typography
                     variant="body2"

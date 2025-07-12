@@ -1,4 +1,4 @@
-import { Avatar, Box, Button, Grid, Typography, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@mui/material";
+import { Avatar, Box, Button, Grid, Typography, Dialog, DialogActions, DialogContent, DialogTitle, TextField, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import { ArrowBackRounded, EditRounded } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -9,85 +9,114 @@ import { AppDispatch, RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import { useCreateTicketHistory } from "@/hooks/tickethistory";
 
-const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
+const TicketDetail = ( { ticketDetailData, isMobile, isTab } ) => {
   const router = useRouter();
   const dispatch: AppDispatch = useDispatch();
-  const { toast } = useSelector((state: RootState) => state.toast);
+  const { toast } = useSelector( ( state: RootState ) => state.toast );
   const { capitalizeFirstLetter, formatTenure, formatDate, formatAmount, decodedToken, toastAndNavigate } = Utility();
 
-  const [openEditModal, setOpenEditModal] = useState(false);
-  const [editedTicketData, setEditedTicketData] = useState(ticketDetailData);
-  const { createTicketHistory } = useCreateTicketHistory("create-ticket-history");
+  const [ openEditModal, setOpenEditModal ] = useState( false );
+  const [ editedTicketData, setEditedTicketData ] = useState( ticketDetailData );
+  const { createTicketHistory } = useCreateTicketHistory( "create-ticket-history" );
+  const userRole = decodedToken()?.role;
+
+  const bankOptions = [
+    "Bajaj Finance",
+    "Bajaj Market",
+    "Chola",
+    "LNT",
+    "Tata",
+    "ABFL",
+    "Godrej",
+    "IDFC",
+    "HDFC Bank",
+    "ICICI Bank",
+    "INDUSIND",
+    "Lending Cart",
+    "Incred",
+    "Credit Saison",
+    "PaySence",
+    "Shriram"
+  ];
 
   // Update editedTicketData when ticketDetailData changes
-  useEffect(() => {
-    if (ticketDetailData) {
-      setEditedTicketData(ticketDetailData);
+  useEffect( () => {
+    if ( ticketDetailData )
+    {
+      console.log( "details", ticketDetailData )
+      setEditedTicketData( ticketDetailData );
     }
-  }, [ticketDetailData]);
+  }, [ ticketDetailData ] );
 
   const handleOpenEditModal = () => {
-    setOpenEditModal(true);
+    setOpenEditModal( true );
   };
 
   const handleCloseEditModal = () => {
-    setOpenEditModal(false);
+    setOpenEditModal( false );
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = ( e ) => {
     const { name, value } = e.target;
-    const updatedTicketData = { ...editedTicketData, [name]: value };
-    setEditedTicketData(updatedTicketData);
+    const updatedTicketData = { ...editedTicketData, [ name ]: value };
+    setEditedTicketData( updatedTicketData );
+    console.log( "updatedTicketData", updatedTicketData )
   };
-
   // A helper function to compare the original and edited ticket details
-  const getChangedFields = (original, edited) => {
+  const getChangedFields = ( original, edited ) => {
     const changes: string[] = [];
-    Object.keys(original).forEach((key) => {
-      if (original[key] !== edited[key]) {
-        changes.push(`${key} changed from "${original[key]}" to "${edited[key]}"`);
+    Object.keys( original ).forEach( ( key ) => {
+      if ( original[ key ] !== edited[ key ] )
+      {
+        changes.push( `${ key } changed from "${ original[ key ] }" to "${ edited[ key ] }"` );
       }
-    });
+    } );
     return changes;
   };
 
   const handleSaveEdit = async () => {
-    try {
+    try
+    {
       // Call the update API on Save
       const { data: response } = await axios.patch(
-        `${process.env.NEXT_PUBLIC_API_URL}/update-loan-application/${editedTicketData?.applicationId}`,
+        `${ process.env.NEXT_PUBLIC_API_URL }/update-loan-application/${ editedTicketData?.applicationId }`,
         editedTicketData
       );
-      if (response?.statusCode === 200) {
+      if ( response?.statusCode === 200 )
+      {
         const loggedInUser = decodedToken()?.username;
-        const changes = getChangedFields(ticketDetailData, editedTicketData);
+        const changes = getChangedFields( ticketDetailData, editedTicketData );
 
-        const formattedChanges = changes.map((change) => {
-          const [key, rest] = change.split(" changed from ");
-          return `${key} changed from ${rest}`;
-        });
+        const formattedChanges = changes.map( ( change ) => {
+          const [ key, rest ] = change.split( " changed from " );
+          return `${ key } changed from ${ rest }`;
+        } );
 
         const historyMessage = changes.length > 0
-          ? `${loggedInUser} edited the following Ticket Details:
-               ${formattedChanges}`
-          : `${loggedInUser} did not change any details.`;
+          ? `${ loggedInUser } edited the following Ticket Details:
+               ${ formattedChanges }`
+          : `${ loggedInUser } did not change any details.`;
 
-        const createdHistory = await createTicketHistory({
+        const createdHistory = await createTicketHistory( {
           ticket_id: ticketDetailData?.ticketId,
           action: historyMessage,
-        });
-        if (createdHistory?.statusCode === 200) {
-          toastAndNavigate(dispatch, true, "info", "Ticket Details Edited Successfully");
-          setOpenEditModal(false); // Close the modal after saving
-        } else {
-          setOpenEditModal(false); // Close the modal after saving
+        } );
+        if ( createdHistory?.statusCode === 200 )
+        {
+          toastAndNavigate( dispatch, true, "info", "Ticket Details Edited Successfully" );
+          setOpenEditModal( false ); // Close the modal after saving
+        } else
+        {
+          setOpenEditModal( false ); // Close the modal after saving
         }
-      } else {
-        setOpenEditModal(false); // Close the modal after saving
+      } else
+      {
+        setOpenEditModal( false ); // Close the modal after saving
       }
-    } catch (error) {
-      console.error("Error saving the ticket:", error);
-      setOpenEditModal(false); // Close the modal after saving
+    } catch ( error )
+    {
+      console.error( "Error saving the ticket:", error );
+      setOpenEditModal( false ); // Close the modal after saving
     }
   };
 
@@ -145,7 +174,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
           flexDirection: isMobile ? "column" : isTab ? "" : "",
         }}
       >
-        <Box>
+        {/* <Box>
           <Avatar
             src={ticketDetailData?.customerName}
             sx={{
@@ -153,7 +182,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
               height: isMobile ? "2rem" : isTab ? "4vh" : "4rem",
             }}
           />
-        </Box>
+        </Box> */}
         <Box
           sx={{
             flex: 1,
@@ -168,7 +197,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
             {/* Ticket Details */}
             <Grid item xs={12} sm={6}>
               <Typography sx={{ mb: 1, color: "white", fontSize: "1rem" }}>
-                <strong>Name:</strong> {capitalizeFirstLetter(editedTicketData?.customerName)}
+                <strong>Name:</strong> {capitalizeFirstLetter( editedTicketData?.customerName )}
               </Typography>
               <Typography
                 sx={{
@@ -187,28 +216,28 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
                 <strong>Contact:</strong> +91 {editedTicketData?.customerContact}
               </Typography>
               <Typography sx={{ color: "white", fontSize: "1rem", mb: 1 }}>
-                <strong>Designation:</strong> {capitalizeFirstLetter(editedTicketData?.customerDesignation)}
+                <strong>Designation:</strong> {capitalizeFirstLetter( editedTicketData?.customerDesignation )}
               </Typography>
             </Grid>
             <Grid item xs={12} sm={6}>
               <Typography sx={{ color: "white", fontSize: "1rem", mb: 1 }}>
-                <strong>Location:</strong> {capitalizeFirstLetter(editedTicketData?.customerLocation)}
+                <strong>Location:</strong> {capitalizeFirstLetter( editedTicketData?.customerLocation )}
               </Typography>
               <Typography sx={{ color: "white", fontSize: "1rem", mb: 1 }}>
-                <strong>Tenure:</strong> {formatTenure(editedTicketData?.applicationTenure)}
+                <strong>Tenure:</strong> {formatTenure( editedTicketData?.applicationTenure )}
               </Typography>
             </Grid>
             <Grid item xs={12} sm={6}>
               <Typography sx={{ color: "white", fontSize: "1rem", mb: 1 }}>
-                <strong>Amount:</strong> {formatAmount(editedTicketData?.applicationAmount)}
+                <strong>Amount:</strong> {formatAmount( editedTicketData?.applicationAmount )}
               </Typography>
               <Typography sx={{ color: "white", fontSize: "1rem" }}>
-                <strong>Application Date:</strong> {formatDate(editedTicketData?.applicationDate)}
+                <strong>Application Date:</strong> {formatDate( editedTicketData?.applicationDate )}
               </Typography>
             </Grid>
             <Grid item xs={12} sm={6}>
               <Typography sx={{ color: "white", fontSize: "1rem", mb: 1 }}>
-                <strong>Loan Provider:</strong> {capitalizeFirstLetter(editedTicketData?.applicationProvider) || "No provider available"}
+                <strong>Loan Provider:</strong> {capitalizeFirstLetter( editedTicketData?.provider ) || "No provider available"}
               </Typography>
             </Grid>
           </Grid>
@@ -257,6 +286,28 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
                 autoComplete="off"
               />
             </Grid>
+            {( userRole === "admin" || userRole === "sub admin" ) && (
+              <Grid item xs={12}>
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel id="provider-select-label">Loan Provider</InputLabel>
+                  <Select
+                    labelId="provider-select-label"
+                    id="provider-select"
+                    name="provider"
+                    value={editedTicketData?.provider || ""}
+                    label="Loan Provider"
+                    onChange={handleInputChange}
+                  >
+                    {bankOptions.map( ( bank ) => (
+                      <MenuItem key={bank} value={bank}>
+                        {bank}
+                      </MenuItem>
+                    ) )}
+                  </Select>
+                </FormControl>
+              </Grid>
+            )}
+
             <Grid item xs={12}>
               <TextField
                 label="Email"

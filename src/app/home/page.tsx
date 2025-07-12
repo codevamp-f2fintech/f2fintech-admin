@@ -338,6 +338,7 @@ const Home: React.FC = () => {
                   refetch={refetch}
                   showDeleteButton={isAdmin}
                   onDelete={openDeleteDialog}
+                  isApplication={true}
                   handleDeleteApplication={handleDeleteApplication}
                 />
               ) )}

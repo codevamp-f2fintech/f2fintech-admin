@@ -152,7 +152,7 @@ async function fetchTotalTickets (
 ): Promise<number | { count: number, amount: number }> {
   let url = `${ process.env.NEXT_PUBLIC_API_URL }/dashboard/tickets/count`;
 
-  if ( role === "operations" && id !== null )
+  if ( role !== "admin" && role !== 'sub admin' && id !== null )
   {
     url += `/${ id }`;
   }
@@ -573,7 +573,7 @@ export default function Page (): React.JSX.Element {
               <Select
                 labelId="month-select-label"
                 value={selectedMonth}
-                onChange={handleMonthChange} 
+                onChange={handleMonthChange}
                 label="Month"
                 sx={{
                   backgroundColor: "#ffffff",
