@@ -11,11 +11,7 @@ import {
   useMediaQuery,
   InputAdornment,
   IconButton,
-  DialogActions,
-  DialogContentText,
-  DialogContent,
-  DialogTitle,
-  Dialog,
+  Tooltip,
 } from "@mui/material";
 
 import ApplicationCard from "../components/common/ApplicationCard";
@@ -29,6 +25,8 @@ import {
 import { useGetCustomerApplications } from "@/hooks/customerApplication";
 import { Utility } from "@/utils";
 import { ClearRounded, SearchRounded } from "@mui/icons-material";
+import GridViewIcon from "@mui/icons-material/GridView";
+import ViewListIcon from "@mui/icons-material/ViewList";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -42,15 +40,17 @@ const Home: React.FC = () => {
     customerName: "",
   } );
   const [ isDeleting, setIsDeleting ] = useState<boolean>( false );
+  const [ toggleListView, setToggleListView ] = useState( true );
 
   const { customerApplication } = useSelector(
     ( state: RootState ) => state.customerApplications
   );
   const dispatch: AppDispatch = useDispatch();
   const { debounceScroll, decodedToken, remLocalStorage } = Utility();
-  const isMobile = useMediaQuery("(max-width:600px)");
-  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const isMobile = useMediaQuery( "(max-width:600px)" );
+  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
   const salesUserId = decodedToken()?.role === "sales" ? decodedToken()?.id : null;
+
 
   const userRole = decodedToken()?.role;
   const isAdmin = userRole === "admin";
@@ -222,7 +222,7 @@ const Home: React.FC = () => {
             width: isMobile ? "61vw" : isTab ? "50vw" : "70%",
             display: "flex",
             flexDirection: "row",
-            justifyContent: "space-evenly",
+            justifyContent: "space-between",
             alignItems: "center",
             ml: isMobile ? "" : isTab ? "" : "3vw",
           }}
@@ -277,6 +277,47 @@ const Home: React.FC = () => {
                 : "Show My Tickets"}
             </Button>
           </Link>
+          {/* toggle button */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              border: "2px solid #e0e0e0",
+              borderRadius: "8px",
+              padding: "6px 12px",
+              backgroundColor: "#fafafa",
+              boxShadow: "0 1px 4px rgba(0, 0, 0, 0.08)",
+              width: "fit-content",
+              height: "7vh"
+              
+            }}
+          >
+            <Tooltip title="Grid View">
+              <IconButton
+                onClick={() => setToggleListView( false )}
+                sx={{
+                  color: !toggleListView ? "#1d86ff" : "#9e9e9e",
+                  backgroundColor: !toggleListView ? "#e3f2fd" : "transparent",
+                  borderRadius: "8px",
+                }}
+              >
+                <GridViewIcon />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="List View">
+              <IconButton
+                onClick={() => setToggleListView( true )}
+                sx={{
+                  color: toggleListView ? "#1d86ff" : "#9e9e9e",
+                  backgroundColor: toggleListView ? "#e3f2fd" : "transparent",
+                  borderRadius: "8px",
+                }}
+              >
+                <ViewListIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
 
           {decodedToken()?.role === "sales" ?
             <Link href="/home/create" passHref>
@@ -340,6 +381,9 @@ const Home: React.FC = () => {
                   onDelete={openDeleteDialog}
                   isApplication={true}
                   handleDeleteApplication={handleDeleteApplication}
+                  toggleListView={toggleListView}
+                  userRole={userRole}
+
                 />
               ) )}
 

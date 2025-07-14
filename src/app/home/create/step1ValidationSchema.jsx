@@ -8,6 +8,11 @@ const emailRegExp = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
 
 // Validation schema
 const step1ValidationSchema = yup.object().shape({
+
+  title: yup.string()
+    .required( "Title is required" )
+    .oneOf( [ "Mr", "Mrs", "Ms", "Dr", "Ca" ], "Please select a valid title" ),
+
   name: yup
     .string()
     .min(2, "Name is too short!")

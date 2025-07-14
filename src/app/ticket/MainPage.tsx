@@ -3,7 +3,7 @@
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import React, { useCallback, useEffect, useState } from "react";
-import { Box, Grid, Typography, useMediaQuery } from "@mui/material";
+import { Box, Button, Grid, IconButton, Tooltip, Typography, useMediaQuery } from "@mui/material";
 
 import ApplicationCard from "../components/common/ApplicationCard";
 import FilterPanel from "../components/common/FilterPanel";
@@ -16,6 +16,8 @@ import type { AppDispatch, RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import { setTickets, resetTickets, removeTicket } from "@/redux/features/ticketSlice";
 import { useDeleteCustomerApplication } from "@/hooks/customerApplication";
+import GridViewIcon from "@mui/icons-material/GridView";
+import ViewListIcon from "@mui/icons-material/ViewList";
 
 const Ticket = () => {
   const [ filter, setFilter ] = useState<string>( "" );
@@ -25,6 +27,7 @@ const Ticket = () => {
   const [ startDate, setStartDate ] = useState<string | null>( null );
   const [ endDate, setEndDate ] = useState<string | null>( null );
   const [ disbursedAmount, setDisbursedAmount ] = useState<number>( 0 );
+  const [ toggleListView, setToggleListView ] = useState( true );
 
   const [ currentPage, setCurrentPage ] = useState<number>( 1 );
   const [ hasMoreData, setHasMoreData ] = useState<boolean>( true );
@@ -346,28 +349,68 @@ const Ticket = () => {
         flexDirection: "column",
       }}
     >
+      <Box sx={{ display: "flex", flexDirection: "row" }}>
+        <FilterPanel
+          searchLabel="Search Tickets"
+          sortBy={sortBy}
+          loanProvider={loanProvider}
+          filter={filter}
+          setFilter={setFilter}
+          startDate={startDate}
+          setStartDate={setStartDate}
+          endDate={endDate}
+          setEndDate={setEndDate}
+          selectedUser={selectedUser}
+          setSelectedUser={setSelectedUser}
+          handleSortChange={handleSortChange}
+          handleProviderChange={handleProviderChange}
+          userData={userData}
+          userRole={userRole}
+          ticketCount={ticketData?.count}
+          // bankCount={ticketData?.}
+          disbursedAmount={disbursedAmount}
+          handleFilterChange={handleFilterChange}
+        />
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            border: "2px solid #e0e0e0",
+            borderRadius: "8px",
+            padding: "6px 12px",
+            backgroundColor: "#fafafa",
+            boxShadow: "0 1px 4px rgba(0, 0, 0, 0.08)",
+            width: "fit-content",
+            ml: ".5rem"
+          }}
+        >
+          <Tooltip title="Grid View">
+            <IconButton
+              onClick={() => setToggleListView( false )}
+              sx={{
+                color: !toggleListView ? "#1d86ff" : "#9e9e9e",
+                backgroundColor: !toggleListView ? "#e3f2fd" : "transparent",
+                borderRadius: "8px",
+              }}
+            >
+              <GridViewIcon />
+            </IconButton>
+          </Tooltip>
 
-      <FilterPanel
-        searchLabel="Search Tickets"
-        sortBy={sortBy}
-        loanProvider={loanProvider}
-        filter={filter}
-        setFilter={setFilter}
-        startDate={startDate}
-        setStartDate={setStartDate}
-        endDate={endDate}
-        setEndDate={setEndDate}
-        selectedUser={selectedUser}
-        setSelectedUser={setSelectedUser}
-        handleSortChange={handleSortChange}
-        handleProviderChange={handleProviderChange}
-        userData={userData}
-        userRole={userRole}
-        ticketCount={ticketData?.count}
-        // bankCount={ticketData?.}
-        disbursedAmount={disbursedAmount}
-        handleFilterChange={handleFilterChange}
-      />
+          <Tooltip title="List View">
+            <IconButton
+              onClick={() => setToggleListView( true )}
+              sx={{
+                color: toggleListView ? "#1d86ff" : "#9e9e9e",
+                backgroundColor: toggleListView ? "#e3f2fd" : "transparent",
+                borderRadius: "8px",
+              }}
+            >
+              <ViewListIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </Box>
 
       <Box
         sx={{
@@ -419,6 +462,7 @@ const Ticket = () => {
                     router.push( `ticket/${ ticket.ticketId }` )
                   }
                   handleDeleteTicket={handleDeleteTicket}
+                  toggleListView={toggleListView}
                 />
               ) )}
 
