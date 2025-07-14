@@ -529,7 +529,7 @@ export default function Page (): React.JSX.Element {
       <Box sx={{
         display: "flex",
         flexDirection: "row",
-        justifyContent: "space-between", // Changed from "flex-end" to "space-between"
+        justifyContent: "space-between",
         alignItems: "center",
         gap: 2,
         mb: 2,
@@ -538,7 +538,6 @@ export default function Page (): React.JSX.Element {
         borderRadius: 2,
         boxShadow: 1
       }}>
-        {/* Added date/time display */}
         <Box sx={{
           display: "flex",
           flexDirection: "column",
