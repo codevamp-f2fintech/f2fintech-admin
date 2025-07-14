@@ -34,7 +34,7 @@ const Ticket = () => {
   const { deleteCustomerApplication } = useDeleteCustomerApplication()
   const isMobile = useMediaQuery( "(max-width:600px)" );
   const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
-  const ITEMS_PER_PAGE = 6; // Number of tickets per page
+  const ITEMS_PER_PAGE = 12; // Number of tickets per page
 
   const dispatch: AppDispatch = useDispatch();
   const router = useRouter();
