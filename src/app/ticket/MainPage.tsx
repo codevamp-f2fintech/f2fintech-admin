@@ -330,15 +330,15 @@ const Ticket = () => {
     handleFilterChange( { status: sortValue } );
   };
 
-  const handleDeleteTicket = async ( ticketId: number ) => {
-    const deleteTicketResp = await deleteTicket( 'delete-ticket', ticketId );
+  const handleDeleteTicket = async ( ticketId: number, reason: string ) => {
+    const currentUserId = decodedToken()?.id;
+    const deleteTicketResp = await deleteTicket( 'delete-ticket', ticketId, reason, currentUserId );
     setCurrentPage( 1 );
     window.location.reload();
 
     // dispatch( removeTicket( ticketId ) );
     return deleteTicketResp;
   }
-
 
   return (
     <Box

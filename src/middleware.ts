@@ -38,6 +38,12 @@ export async function middleware(request: NextRequest) {
           return NextResponse.redirect(new URL("/unauthorised", request.url));
         }
 
+        // Check if the user is trying to access /tickets-archive
+        if ( request.nextUrl.pathname === "/tickets-archive" && role !== "admin" )
+        {
+          return NextResponse.redirect( new URL( "/unauthorised", request.url ) );
+        }
+
         // Restrict credit users to only /ticket page
         if ( role === "credit" )
         {
