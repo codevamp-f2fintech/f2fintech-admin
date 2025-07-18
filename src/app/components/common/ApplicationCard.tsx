@@ -22,6 +22,7 @@ import {
   Paper,
   CardContent,
   Card,
+  TextField,
 } from "@mui/material"
 import {
   MailRounded,
@@ -170,6 +171,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
   const [ showOtpComponent, setShowOtpComponent ] = useState<boolean>( false )
   const isMobile = useMediaQuery( "(max-width:600px)" )
   const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" )
+  const [ deleteReason, setDeleteReason ] = useState<string>( "" );
 
   const handleDeleteClick = ( e: React.MouseEvent ) => {
     e.stopPropagation()
@@ -193,11 +195,17 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
   }
 
   const confirmDelete = async () => {
+    if ( !deleteReason.trim() )
+    {
+      toastAndNavigate( dispatch, true, "error", "Please provide a reason for deletion", null, null, true );
+      return;
+    }
+
     if ( handleDeleteTicket && !isApplication )
     {
       try
       {
-        await handleDeleteTicket( customerApplication.ticketId )
+        await handleDeleteTicket( customerApplication.ticketId, deleteReason )
         toastAndNavigate( dispatch, true, "success", "Ticket deleted successfully", null, null, false )
         closeConfirmDialog()
       } catch ( error )
@@ -297,8 +305,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                   // Extract name after title (e.g., "Mr. John Doe" → "John Doe")
                   capitalizeFirstLetter(
                     customerApplication.customerName
-                      .split( '.' )[ 1 ]?.trim() || // If name has a "." (e.g., "Mr. John Doe")
-                    customerApplication.customerName.split( ' ' ).slice( 1 ).join( ' ' ) // If name has a space (e.g., "Dr John Doe")
+                      .split( '.' )[ 1 ]?.trim() ||
+                    customerApplication.customerName.split( ' ' ).slice( 1 ).join( ' ' ) 
                   )
                 }
                 src={customerApplication.customerProfileImage}
@@ -600,7 +608,7 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
           {/* Delete Button */}
           {showDeleteButton && (
             <IconButton
-              onClick={handleDeleteClick}
+              onClick={openConfirmDialog}
               sx={{
                 position: "absolute",
                 top: 8,
@@ -911,7 +919,7 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
         sx={{
-          borderRadius: "20px", // Rounded corners for the dialog
+          borderRadius: "20px",
           boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
           padding: "20px",
         }}
@@ -942,7 +950,6 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
             fontSize: "1rem",
             lineHeight: "1.5",
             bgcolor: "lightcyan"
-
           }}
         >
           <DialogContentText
@@ -952,30 +959,32 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
               color: "#555",
               marginBottom: "20px",
               textAlign: "center",
-              padding: "2rem"
             }}
           >
             Are you sure you want to delete this ticket? This action cannot be undone.
           </DialogContentText>
 
-          {/* OTP Component if required */}
-          {showOtpComponent && (
-            <Box
-              sx={{
-                padding: "16px",
-                backgroundColor: "#fafafa",
-                borderRadius: "8px",
-                boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                marginBottom: "16px",
-              }}
-            >
-              <SendOTP
-                handleDeleteTicket={handleDeleteTicket}
-                ticketId={customerApplication.ticketId}
-                email={localStorage.getItem( "email" ) || ""}
-              />
-            </Box>
-          )}
+          <TextField
+            fullWidth
+            multiline
+            rows={3}
+            variant="outlined"
+            label="Reason for deletion"
+            value={deleteReason}
+            onChange={( e ) => setDeleteReason( e.target.value )}
+            sx={{
+              mt: 2,
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: "#6E44FF",
+                },
+                "&:hover fieldset": {
+                  borderColor: "#6E44FF",
+                },
+              },
+            }}
+            required
+          />
         </DialogContent>
         <DialogActions
           sx={{
@@ -1007,6 +1016,7 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
             onClick={confirmDelete}
             color="error"
             variant="contained"
+            disabled={!deleteReason.trim()} // Disable if no reason provided
             sx={{
               backgroundColor: "#FF3B30",
               color: "white",
@@ -1015,6 +1025,10 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
               fontWeight: "bold",
               "&:hover": {
                 backgroundColor: "#D32F2F",
+              },
+              "&:disabled": {
+                backgroundColor: "#cccccc",
+                color: "#666666",
               },
             }}
             startIcon={<DeleteForever />}

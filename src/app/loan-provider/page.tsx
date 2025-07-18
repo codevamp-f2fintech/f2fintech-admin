@@ -145,9 +145,9 @@ const handleScroll = useCallback(
                 </Box>
 
                 {/* Loan Provider Grid */}
-                <Grid container spacing={3}>
-                    {filteredLoanProviders.length &&
-                        filteredLoanProviders.map( ( provider ) => (
+                {filteredLoanProviders.length > 0 ? (
+                    <Grid container spacing={3}>
+                        {filteredLoanProviders.map( ( provider ) => (
                             <Grid item xs={12} md={6} key={provider.id}>
                                 <Card sx={{ borderRadius: 4, boxShadow: "0 10px 20px rgba(0,0,0,0.1)", transition: "all 0.3s ease", "&:hover": { transform: "translateY(-4px)", boxShadow: "0 12px 24px rgba(0,0,0,0.15)" } }}>
                                     <CardContent sx={{ p: 3, minHeight: "30vh" }}>
@@ -187,13 +187,25 @@ const handleScroll = useCallback(
                             </Grid>
                         ) )}
 
-                    {/* Show "No more data" message */}
-                    {!hasMoreData && !swrLoading && (
-                        <Typography sx={{ width: "100%", textAlign: "center", mt: 4, color: "black" }}>
-                            No more loan providers to load...
-                        </Typography>
-                    )}
-                </Grid>
+                        {/* Show "No more data" message */}
+                        {!hasMoreData && !swrLoading && (
+                            <Grid item xs={12}>
+                                <Typography sx={{ width: "100%", textAlign: "center", mt: 4, color: "black" }}>
+                                    No more loan providers to load...
+                                </Typography>
+                            </Grid>
+                        )}
+                    </Grid>
+                ) : (
+                    // Show when no loan providers exist
+                    !swrLoading && (
+                        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "40vh" }}>
+                            <Typography variant="h6" sx={{ color: "gray", textAlign: "center" }}>
+                                No loan providers found
+                            </Typography>
+                        </Box>
+                    )
+                )}
             </Container>
 
             {/* Show loading spinner */}

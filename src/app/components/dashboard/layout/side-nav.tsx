@@ -125,6 +125,10 @@ function renderNavItems({
       {
         return acc;
       }
+      if ( item.title === "Archived Tickets" && userRole !== "admin" )
+      {
+        return acc;
+        }
 
       acc.push(
         <NavItem

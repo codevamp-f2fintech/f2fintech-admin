@@ -4,6 +4,7 @@ import useSWR, { mutate } from "swr";
 
 import { fetcher, creator, modifier, deleter } from "@/apis/apiClient";
 import { Ticket, JoinedTicketData } from "@/types/ticket";
+import axios from "axios";
 
 /**
  * Hook for fetching tickets with SWR (stale-while-revalidate) strategy.
@@ -136,15 +137,24 @@ export const useDeleteTicket = () => {
   const [error, setError] = useState<Error | null>(null);
 
   const deleteTicket = async (pathKey: string,
-    ticketId: number
+    ticketId: number,
+    reason: string,
+    archivedByUserId: number
   ) => {
     setLoading(true);
     setError(null);
     try {
-      const apiPath = `${pathKey}/${ticketId}`;
-      const ticket = await deleter(
-        apiPath
+      const apiPath = `${ process.env.NEXT_PUBLIC_API_URL}/${pathKey}/${ticketId}`;
+      const ticket = await axios.post(
+        apiPath,
+        { ticketId, reason, archivedBy: archivedByUserId }, 
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
       );
+      
       return ticket;
     } catch (err) {
       setError(err as Error);

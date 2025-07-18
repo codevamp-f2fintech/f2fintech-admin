@@ -18,5 +18,11 @@ export const navItems = [
     title: "Loan Provider",
     href: "/loan-provider",
     icon: "users",
+  },
+  {
+    key: "archived",
+    title: "Archived Tickets",
+    href: "/tickets-archive",
+    icon: "users",
   }
 ] satisfies NavItemConfig[];
