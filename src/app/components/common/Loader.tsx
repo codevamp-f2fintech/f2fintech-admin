@@ -44,7 +44,7 @@ const BackgroundContainer = styled(Box)({
   left: "50%",
   transform: "translateX(-50%)",
   width: "100%",
-  zIndex: 9999
+  zIndex: 9999,
 });
 
 const Loader: React.FC = () => {

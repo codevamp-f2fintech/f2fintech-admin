@@ -29,7 +29,7 @@ import {
   DeleteRounded,
   PersonRounded,
 } from "@mui/icons-material";
-import WcIcon from '@mui/icons-material/Wc';
+import WcIcon from "@mui/icons-material/Wc";
 
 import FormComponent from "./FormInModal";
 import type { AppDispatch, RootState } from "@/redux/store";
@@ -40,7 +40,7 @@ import { UserAPI } from "@/apis/UserAPI";
 import { Utility } from "@/utils";
 
 interface UsersPageProps {
-  initialData: User
+  initialData: User;
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -117,19 +117,21 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
     <Box
       sx={{
         minHeight: "100vh",
-        px: { xs: 2, sm: 4 },
+        width: "100%",
+        // px: { xs: 2, sm: 4 },
       }}
     >
-      <Container maxWidth="xl">
+      <Container sx={{ p: 0 }}>
         {/* Header */}
         <Box
           sx={{
             display: "flex",
-            flexDirection: { xs: "column", md: "row" },
-            alignItems: "center",
+            flexDirection: { xs: "column", sm: "row" }, // Stack vertically on mobile
+            alignItems: { xs: "stretch", sm: "center" }, // Stretch on mobile
             justifyContent: "space-between",
             gap: 2,
             mb: 4,
+            width: "100%",
           }}
         >
           <TextField
@@ -159,6 +161,14 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
               },
             }}
             InputLabelProps={{
+              sx: {
+                borderRadius: "100px",
+                backgroundColor: "rgba(255, 255, 255, 0.9)",
+                "& fieldset": { border: "none" },
+                width: { xs: "100%", sm: "280px", md: "320px" }, // Responsive width
+              },
+            }}
+            InputLabelProps={{
               style: {
                 color: "black",
               },
@@ -174,10 +184,10 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
               textTransform: "none",
               fontWeight: 600,
               boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-              bgcolor: "#f06292",
+              bgcolor: "#0c66e4",
               color: "white",
               "&:hover": {
-                bgcolor: "#9D50BB",
+                bgcolor: "#0c66e4",
                 color: "white",
               },
             }}
@@ -194,9 +204,8 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
                 <Card
                   sx={{
                     borderRadius: 4,
-                    backgroundImage: `
-      linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
-    `,
+                    backgroundImage:
+                      "linear-gradient(135deg, #fff 0%, #fff 100%)",
                     backgroundBlendMode: "multiply, screen, normal",
                     boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
                     transition: "all 0.3s ease",
@@ -206,7 +215,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
                     },
                   }}
                 >
-                  <CardContent sx={{ p: 3 }}>
+                  <CardContent sx={{ p: 3, color: "red" }}>
                     <Box
                       sx={{
                         display: "flex",
@@ -218,7 +227,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
                       <Box>
                         <Typography
                           variant="h5"
-                          sx={{ color: "white", fontWeight: 600, mb: 1 }}
+                          sx={{ color: "black", fontWeight: 600, mb: 1 }}
                         >
                           {capitalizeFirstLetter(user.username)}
                         </Typography>
@@ -227,13 +236,14 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
                         >
                           <MailRounded
                             sx={{
-                              color: "rgba(255,255,255,0.8)",
+                              color: "#33415c",
                               fontSize: 18,
                             }}
                           />
                           <Typography
                             sx={{
-                              color: "rgba(255,255,255,0.8)",
+                              color: "#33415c",
+
                               fontSize: "0.9rem",
                             }}
                           >
@@ -246,13 +256,13 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
                         >
                           <PersonAddRounded
                             sx={{
-                              color: "rgba(255,255,255,0.8)",
+                              color: "#33415c",
                               fontSize: 18,
                             }}
                           />
                           <Typography
                             sx={{
-                              color: "rgba(255,255,255,0.8)",
+                              color: "#33415c",
                               fontSize: "0.9rem",
                             }}
                           >
@@ -265,13 +275,13 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
                         >
                           <WcIcon
                             sx={{
-                              color: "rgba(255,255,255,0.8)",
+                              color: "#33415c",
                               fontSize: 18,
                             }}
                           />
                           <Typography
                             sx={{
-                              color: "rgba(255,255,255,0.8)",
+                              color: "#33415c",
                               fontSize: "0.9rem",
                             }}
                           >
@@ -284,12 +294,12 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
                       >
                         <Chip
                           icon={
-                            <PersonRounded sx={{ color: "white !important" }} />
+                            <PersonRounded sx={{ color: "#fff !important" }} />
                           }
                           label={capitalizeFirstLetter(user.gender)}
                           sx={{
-                            bgcolor: "rgba(255,255,255,0.2)",
-                            color: "white",
+                            bgcolor: "#0c66e4",
+                            color: "#fff",
                             borderRadius: "100px",
                             "& .MuiChip-icon": { color: "white" },
                           }}
@@ -310,7 +320,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
                     >
                       <Avatar
                         sx={{
-                          bgcolor: "rgba(255,255,255,0.2)",
+                          bgcolor: "#adb5bd",
                           width: 48,
                           height: 48,
                         }}
@@ -323,8 +333,8 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
                             size="small"
                             sx={{
                               color: "white",
-                              bgcolor: "rgba(255,255,255,0.1)",
-                              "&:hover": { bgcolor: "rgba(255,255,255,0.2)" },
+                              bgcolor: "#adb5bd",
+                              "&:hover": { bgcolor: "#33415c" },
                             }}
                             onClick={() => handleOpenDialog(user.id)}
                           >
@@ -336,8 +346,8 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
                             size="small"
                             sx={{
                               color: "white",
-                              bgcolor: "rgba(255,255,255,0.1)",
-                              "&:hover": { bgcolor: "rgba(255,255,255,0.2)" },
+                              bgcolor: "#adb5bd",
+                              "&:hover": { bgcolor: "#33415c" },
                             }}
                             onClick={() => handleUserDelete(user.id)}
                           >

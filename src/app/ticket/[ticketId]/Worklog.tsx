@@ -27,8 +27,10 @@ const WorkLogList: React.FC<WorkLogListProps> = ({ userData, workLog }) => {
       }}
     >
       {workLog?.length ? (
-        workLog.map(log => {
-          const loggedBy = userData?.data?.results.find(user => user.id == log.user_id);
+        workLog.map((log) => {
+          const loggedBy = userData?.data?.results.find(
+            (user) => user.id == log.user_id
+          );
           return (
             <Paper
               key={log.id}
@@ -85,7 +87,7 @@ const WorkLogList: React.FC<WorkLogListProps> = ({ userData, workLog }) => {
                 {capitalizeFirstLetter(log.work_description)}
               </Typography>
             </Paper>
-          )
+          );
         })
       ) : (
         <Box

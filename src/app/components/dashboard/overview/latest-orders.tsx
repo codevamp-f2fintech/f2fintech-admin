@@ -37,14 +37,18 @@ export interface LatestUsersProps {
   sx?: SxProps;
 }
 
-export function LatestOrders ( { sx }: LatestUsersProps ): React.JSX.Element {
+export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
   const { value: users, swrLoading: usersLoading } = useGetUsers(
     {} as User,
     "get-users",
     1,
     6
   );
-  const { value: tickets, swrLoading: ticketsLoading } = useGetTickets(`get-all-tickets`, 1, 500);
+  const { value: tickets, swrLoading: ticketsLoading } = useGetTickets(
+    `get-all-tickets`,
+    1,
+    500
+  );
 
   const router = useRouter();
   const { capitalizeFirstLetter } = Utility();
@@ -70,7 +74,7 @@ export function LatestOrders ( { sx }: LatestUsersProps ): React.JSX.Element {
   };
 
   const handleViewAllClick = () => {
-    router.push( "/users" );
+    router.push("/users");
   };
 
   return (
@@ -79,18 +83,23 @@ export function LatestOrders ( { sx }: LatestUsersProps ): React.JSX.Element {
       sx={{
         bgcolor: "#fff",
         background: "linear-gradient(145deg, #ffffff 0%, #f8f9ff 100%)",
-        width: isMobile ? "100%" : isTab ? "95vw" : "100%",
-        ml: isMobile ? "" : isTab ? "" : "",
-        maxHeight: isMobile ? "92vh" : isTab ? "100vh" : "130vh",
+        width: { xs: "100%", sm: "95vw", md: "100%" }, // Responsive width
+        maxHeight: { xs: "92vh", sm: "100vh", md: "130vh" }, // Responsive max-height
+        mx: "auto", // Center on mobile
+        overflow: "hidden", // Prevent content overflow
+        display: "flex",
+        flexDirection: "column",
       }}
     >
+      {/* Header */}
       <Box
         sx={{
           display: "flex",
           alignItems: "center",
           justifyContent: "flex-start",
-          mb: isMobile ? "" : isTab ? "" : 3,
-          height: isMobile ? "5vh" : isTab ? "5vh" : "9vh",
+          mb: { md: 3 }, // Desktop margin-bottom
+          height: { xs: "8vh", sm: "5vh", md: "9vh" }, // Responsive height
+          mt: { md: "4vh" }, // Desktop margin-top
         }}
       >
         <Typography
@@ -101,51 +110,73 @@ export function LatestOrders ( { sx }: LatestUsersProps ): React.JSX.Element {
             color: "#1a237e",
             textTransform: "uppercase",
             letterSpacing: "0.5px",
-            ml: isMobile ? "3vw" : "1vw",
-            mt: isTab ? "" : "4vh",
+            ml: { xs: "3vw", sm: "1vw" }, // Responsive left margin
+            fontSize: { xs: "1.2rem", sm: "1.3rem", md: "1.5rem" }, // Responsive font
           }}
         >
           Agent List
         </Typography>
       </Box>
+
       <Divider />
-      <Box sx={{ height: isTab ? "34.5vh" : "103vh" }}>
-        <TableContainer sx={{ width: "100%" }}>
+
+      {/* Table Container */}
+      <Box
+        sx={{
+          height: { xs: "65vh", sm: "34.5vh", md: "103vh" }, // Responsive height
+          overflow: "auto", // Enable scroll
+          flex: 1, // Take remaining space
+        }}
+      >
+        <TableContainer>
           <Table
             sx={{
               minHeight: "auto",
               maxHeight:
                 users?.data?.results?.length <= 1
                   ? "fit-content"
-                  : isMobile
-                    ? "85vh"
-                    : isTab
-                      ? "100vh"
-                      : "103vh",
+                  : { xs: "65vh", sm: "34.5vh", md: "103vh" },
             }}
           >
+            {/* Table Header */}
             <TableHead
               sx={{
-                height: isMobile ? "5vh" : isTab ? "5vh" : "12vh",
+                height: { xs: "8vh", sm: "5vh", md: "12vh" }, // Responsive height
+                position: "sticky",
+                top: 0,
+                bgcolor: "background.paper",
+                zIndex: 1,
               }}
             >
               <TableRow sx={{ bgcolor: "grey.50" }}>
-                <TableCell>Sr.</TableCell>
-                <TableCell align="center">Username</TableCell>
-                <TableCell align="center">Email</TableCell>
-                <TableCell align="center">Relook</TableCell>
-                <TableCell align="center">In Progress</TableCell>
-                <TableCell align="center">Disbursed</TableCell>
-                <TableCell sortDirection="desc">Joined On</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Sr.</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600 }}>
+                  Username
+                </TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600 }}>
+                  Email
+                </TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600 }}>
+                  Relook
+                </TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600 }}>
+                  In Progress
+                </TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600 }}>
+                  Disbursed
+                </TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Joined On</TableCell>
               </TableRow>
             </TableHead>
+
+            {/* Table Body */}
             <TableBody>
               {usersLoading || ticketsLoading ? (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={7}
                     align="center"
-                    sx={{ height: isTab ? "34.5vh" : "90vh" }}
+                    sx={{ height: { xs: "60vh", sm: "30vh", md: "90vh" } }}
                   >
                     No Users Found
                   </TableCell>
@@ -158,114 +189,170 @@ export function LatestOrders ( { sx }: LatestUsersProps ): React.JSX.Element {
                     <TableRow
                       key={agent.id}
                       sx={{
-                        height: "15vh",
+                        height: { xs: "12vh", sm: "10vh", md: "15vh" }, // Responsive row height
                         "&:hover": { bgcolor: "primary.50" },
                         transition: "background-color 0.2s",
                       }}
                     >
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            minWidth: { xs: "120px", sm: "auto" }, // Prevent squeezing
+                          }}
+                        >
+                          <Person
+                            sx={{
+                              color: "primary.main",
+                              fontSize: { xs: "1rem", sm: "1.2rem" },
+                            }}
+                          />
+                          <Typography
+                            sx={{
+                              fontSize: {
+                                xs: "0.8rem",
+                                sm: "0.9rem",
+                                md: "1rem",
+                              },
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
+                            {capitalizeFirstLetter(agent.username)}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            minWidth: { xs: "150px", sm: "auto" },
+                          }}
+                        >
+                          <Email
+                            sx={{
+                              color: "text.secondary",
+                              fontSize: { xs: "1rem", sm: "1.2rem" },
+                            }}
+                          />
+                          <Typography
+                            sx={{
+                              fontSize: {
+                                xs: "0.8rem",
+                                sm: "0.9rem",
+                                md: "1rem",
+                              },
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
+                            {agent.email}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <ConfirmationNumber
+                            sx={{
+                              color: "warning.main",
+                              fontSize: { xs: "1rem", sm: "1.2rem" },
+                            }}
+                          />
+                          <Typography sx={{ ml: 1 }}>{open}</Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Refresh
+                            sx={{
+                              color: "primary.main",
+                              fontSize: { xs: "1rem", sm: "1.2rem" },
+                            }}
+                          />
+                          <Typography sx={{ ml: 1 }}>{inProgress}</Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <CheckCircle
+                            sx={{
+                              color: "success.main",
+                              fontSize: { xs: "1rem", sm: "1.2rem" },
+                            }}
+                          />
+                          <Typography sx={{ ml: 1 }}>{done}</Typography>
+                        </Box>
+                      </TableCell>
                       <TableCell
-                        sx={{ width: isMobile ? "2vw" : isTab ? "" : "" }}
+                        sx={{
+                          fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" },
+                        }}
                       >
-                        {index + 1}
-                      </TableCell>
-                      <TableCell>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 1,
-                            width: isMobile ? "30vw" : "6vw",
-                          }}
-                        >
-                          <Person sx={{ color: "primary.main" }} />
-                          {capitalizeFirstLetter( agent.username )}
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                          <Email sx={{ color: "text.secondary" }} />
-                          {agent.email}
-                        </Box>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 1,
-                          }}
-                        >
-                          <ConfirmationNumber sx={{ color: "warning.main" }} />
-                          {open}
-                        </Box>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 1,
-                          }}
-                        >
-                          <Refresh sx={{ color: "primary.main" }} />
-                          {inProgress}
-                        </Box>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 1,
-                          }}
-                        >
-                          <CheckCircle sx={{ color: "success.main" }} />
-                          {done}
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        {dayjs( agent.created_at ).format( "MMM D, YYYY" )}
+                        {dayjs(agent.created_at).format("MMM D, YYYY")}
                       </TableCell>
                     </TableRow>
                   );
-                } )
+                })
               )}
             </TableBody>
           </Table>
         </TableContainer>
       </Box>
-      {/* <Divider /> */}
+
+      {/* Footer Button */}
       <Box
         sx={{
-          height: isMobile ? "8vh" : isTab ? "5vh" : "9vh",
-          mb: isMobile ? "1vh" : "",
+          height: { xs: "8vh", sm: "5vh", md: "9vh" },
+          mb: { xs: "1vh", sm: 0 },
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          p: { xs: 1, sm: 2 },
         }}
       >
-        <CardActions sx={{ justifyContent: "flex-end", mt: "3vh" }}>
-          <Button
-            color="inherit"
-            endIcon={<ArrowRightIcon />}
-            size="small"
-            variant="text"
-            onClick={handleViewAllClick}
-            sx={{
-              width: isMobile ? "30vw" : isTab ? "15vw" : "8vw",
-              fontSize: ".9rem",
-              mr: "1vw",
-              bgcolor: "#f06292",
+        <Button
+          color="inherit"
+          endIcon={<ArrowRightIcon />}
+          size="small"
+          variant="text"
+          onClick={handleViewAllClick}
+          sx={{
+            width: { xs: "140px", sm: "15vw", md: "8vw" }, // Fixed width on mobile
+            fontSize: { xs: "0.8rem", sm: "0.9rem" },
+            mr: "1vw",
+            bgcolor: "#0c66e4",
+            color: "white",
+            "&:hover": {
+              bgcolor: "#0c66e4",
               color: "white",
-              "&:hover": {
-                bgcolor: "#9D50BB",
-                color: "white",
-              },
-            }}
-          >
-            View all
-          </Button>
-        </CardActions>
+            },
+            whiteSpace: "nowrap", // Prevent text wrapping
+          }}
+        >
+          View all
+        </Button>
       </Box>
     </Paper>
   );

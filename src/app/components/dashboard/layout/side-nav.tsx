@@ -52,9 +52,7 @@ export function SideNav(): React.JSX.Element {
         "--NavItem-icon-active-color":
           "var(--mui-palette-primary-contrastText)",
         "--NavItem-icon-disabled-color": "var(--mui-palette-neutral-600)",
-        backgroundImage: `
-      linear-gradient(64.5deg, rgba(245,116,185,1) 20.7%, rgba(89,97,223,1) 68.7%)
-    `,
+        backgroundImage: "linear-gradient(135deg, #fff 0%, #fff 100%)",
         backgroundBlendMode: "multiply, screen, normal",
         color: "var(--SideNav-color)",
         display: { xs: "none", lg: "flex" },
@@ -76,7 +74,7 @@ export function SideNav(): React.JSX.Element {
           sx={{
             width: "2rem",
             height: "2rem",
-            color: "white",
+            color: "black",
             alignSelf: collapsed ? "center" : "end",
             top: "0",
           }}
@@ -121,8 +119,7 @@ function renderNavItems({
       }
 
       // If the user is an operations or credit, hide the "Loan Provider" link
-      if ( item.title === "Loan Provider" && userRole !== "admin" )
-      {
+      if (item.title === "Loan Provider" && userRole !== "admin") {
         return acc;
       }
       if ( item.title === "Archived Tickets" && userRole !== "admin" )
@@ -189,33 +186,34 @@ function NavItem({
         sx={{
           alignItems: "center",
           borderRadius: "0px 20px 20px 0px",
-          color: "white",
+          color: "red !important",
           cursor: "pointer",
           display: "flex",
           flexDirection: "row",
           flex: "0 0 auto",
           gap: 1,
-          padding: "1rem 0rem 1rem .5rem",
+          width: "92% !important",
+          padding: "2px 0px 2px 1px",
           position: "relative",
+          // mr: "3px",
           textDecoration: "none",
           justifyContent: collapsed ? "center" : "flex-start",
           backgroundImage: `
-      linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
+   linear-gradient(#deebff, #deebff)
     `,
           backgroundBlendMode: "multiply, screen, normal",
           transition: "all 0.3s ease",
           "&:hover": {
             backgroundImage: `
-      linear-gradient(64.5deg, rgba(255,138,185,1) 14.7%, rgba(89,150,223,1) 88.7%)
+      linear-gradient(#c8d4e6, #c8d4e6)
     `,
             transform: "scale(1)",
-            boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)",
           },
         }}
       >
         <Box
           sx={{
-            backgroundColor: "white",
+            backgroundColor: "#fff",
             alignItems: "center",
             display: "flex",
             justifyContent: "center",
@@ -223,8 +221,6 @@ function NavItem({
             height: "5vh",
             width: "3vw",
             borderRadius: "50px",
-            boxShadow:
-              "rgba(0, 0, 0, 0) 0px -23px 25px 0px inset, rgba(0, 0, 0, 0.15) 0px -36px 30px 0px inset, rgba(0, 0, 0, 0.1) 0px -79px 40px 0px inset, rgba(0, 0, 0, 0.06) 0px 2px 1px, rgba(0, 0, 0, 0.09) 0px 4px 2px, rgba(0, 0, 0, 0.09) 0px 8px 4px, rgba(0, 0, 0, 0.09) 0px 16px 8px, rgba(0, 0, 0, 0.09) 0px 32px 16px",
             "&:hover": {
               transform: "scale(1.1)",
               background:
@@ -249,7 +245,7 @@ function NavItem({
           <Box
             component="span"
             sx={{
-              color: active ? "white" : "white",
+              color: active ? "#0c66e4" : "black",
               fontFamily: "monospace",
               fontSize: "1rem",
               fontWeight: "600",

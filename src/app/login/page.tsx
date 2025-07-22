@@ -54,8 +54,9 @@ const Login = (): JSX.Element => {
     try {
       const { data: response } = await UserAPI.login(values);
       if (response.statusCode === 200) {
-        document.cookie = `token=${response.data.access_token
-          }; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
+        document.cookie = `token=${
+          response.data.access_token
+        }; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
         toastAndNavigate(
           dispatch,
           true,
@@ -66,7 +67,11 @@ const Login = (): JSX.Element => {
         const role = decodedToken(response.data.access_token)?.role;
         if (role === "admin" || role === "sub admin") {
           router.push("/dashboard");
-        } else if (role === "operations" || role === "credit" || role === "sales") {
+        } else if (
+          role === "operations" ||
+          role === "credit" ||
+          role === "sales"
+        ) {
           router.push("/home");
         }
       }
@@ -99,70 +104,73 @@ const Login = (): JSX.Element => {
           justifyContent: "center",
           alignItems: "center",
           borderBottom: "1px solid var(--mui-palette-divider)",
-          background:
-            "linear-gradient(125deg, #ECFCFF 0%, #ECFCFF 40%, #B2FCFF calc(40% + 1px), #B2FCFF 60%, #5EDFFF calc(60% + 1px), #5EDFFF 72%, #3E64FF calc(72% + 1px), #3E64FF 100%)",
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
         }}
       >
         <CssBaseline />
+        <Box
+          sx={{
+            width: "100%",
+            height: { xs: "40vh", sm: "50vh", md: "60vh" },
+            position: "relative",
+            borderBottomLeftRadius: { xs: "20%", sm: "30%", md: "40%" },
+            borderBottomRightRadius: { xs: "20%", sm: "30%", md: "40%" },
+            mb: { xs: 45, sm: 45, md: 20 },
+            backgroundColor: "#deebff",
+          }}
+        ></Box>
         <Grid
           item
           component={Paper}
           elevation={6}
           square
           sx={{
-            height: "80vh",
-            width: "70vw",
-            borderRadius: "80px",
-            background:
-              "linear-gradient(235deg, #FFFFFF 0%, #000F25 100%), linear-gradient(180deg, #6100FF 0%, #000000 100%), linear-gradient(235deg, #FFA3AC 0%, #FFA3AC 40%, #00043C calc(40% + 1px), #00043C 60%, #005D6C calc(60% + 1px), #005D6C 70%, #00C9B1 calc(70% + 1px), #00C9B1 100%), linear-gradient(125deg, #FFA3AC 0%, #FFA3AC 40%, #00043C calc(40% + 1px), #00043C 60%, #005D6C calc(60% + 1px), #005D6C 70%, #00C9B1 calc(70% + 1px), #00C9B1 100%)",
+            position: "absolute",
+            top: { xs: "5%", sm: "0%" },
+            left: { xs: "5%", sm: "20%", md: "30%" },
+            height: { xs: "85vh", sm: "80vh" },
+            width: { xs: "90vw", sm: "60vw", md: "40vw" },
+            mt: { xs: 5, sm: 10, md: 15 },
+            borderRadius: "10px 10px 0px 0px",
+            background: "linear-gradient(135deg, #fff 0%, #fff 100%)",
+            boxShadow:
+              "0px 3px 6px rgba(0,0,0,0.16), 0px 3px 6px rgba(0,0,0,0.23)",
             backgroundBlendMode: "soft-light, screen, darken, normal",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             "&:hover": {
-              background:
-                "linear-gradient(235deg, #FFFFFF 0%, #000F25 100%), linear-gradient(180deg, #6100FF 0%, #000000 100%), linear-gradient(235deg, #FFA3AC 0%, #FFA3AC 40%, #00043C calc(40% + 1px), #00043C 60%, #005D6C calc(60% + 1px), #005D6C 70%, #00C9B1 calc(70% + 1px), #00C9B1 100%), linear-gradient(125deg, #FFA3AC 0%, #FFA3AC 40%, #00043C calc(40% + 1px), #00043C 60%, #005D6C calc(60% + 1px), #005D6C 70%, #00C9B1 calc(70% + 1px), #00C9B1 100%)",
               backgroundBlendMode: "soft-light, screen, darken, normal",
-              transform: "scale(1.02)",
             },
           }}
         >
           <Box
             sx={{
-              my: 8,
-              mx: 4,
+              my: { xs: 8, sm: 12, md: 18 },
+              mx: { xs: 4, sm: 8, md: 15 },
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              height: "50vh",
+              height: { xs: "65vh", sm: "60vh", md: "55vh" },
             }}
           >
             <Avatar
-              src="/img/f2Fintechlogo.png" // Path relative to the public folder
+              src="/img/f2Fintechlogo.png"
               sx={{
-                height: "20vh",
-                width: "20vh",
-                top: "-7vh",
+                height: { xs: "15vh", sm: "18vh", md: "20vh" },
+                width: { xs: "15vh", sm: "18vh", md: "20vh" },
+                top: { xs: "-5vh", sm: "-6vh", md: "-7vh" },
                 bgcolor: "white",
-                boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.3)",
-                "&:hover": {
-                  bgcolor: "#f06292",
-                  transform: "scale(1.05)",
-                  boxShadow: "0px 6px 14px rgba(0, 0, 0, 0.4)",
-                  // color: "white",
-                },
               }}
             />
 
             <Typography
               sx={{
-                fontFamily: "monospace",
-                fontSize: "2.3rem",
+                fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
                 fontWeight: "400",
-                color: "white",
+                color: "black",
               }}
               component="h1"
               variant="h5"
@@ -197,10 +205,23 @@ const Login = (): JSX.Element => {
                           <Email sx={{ color: "black" }} />
                         </InputAdornment>
                       ),
+
                       sx: { color: "white" },
+                      sx: {
+                        color: "black", // 🟢 text inside input
+                        "& input::placeholder": {
+                          color: "black", // 🟢 placeholder (if any)
+                        },
+                      },
                     }}
                     InputLabelProps={{
-                      style: { color: "white" },
+                      style: { color: "black" }, // 🟢 label color
+                    }}
+                    FormHelperTextProps={{
+                      sx: { color: "black" }, // 🟢 helper/error text color
+                    }}
+                    InputLabelProps={{
+                      style: { color: "black" },
                     }}
                     error={touched.email && Boolean(errors.email)}
                     helperText={touched.email && errors.email}
@@ -220,11 +241,11 @@ const Login = (): JSX.Element => {
                           <Lock sx={{ color: "black" }} />
                         </InputAdornment>
                       ),
-                      sx: { color: "white" },
+                      sx: { color: "black" }, // Changed from "white" to "black"
                       endAdornment: (
                         <InputAdornment position="end">
                           <IconButton
-                            sx={{ color: "white" }}
+                            sx={{ color: "black" }}
                             aria-label="toggle password visibility"
                             onClick={handleClickShowPassword}
                             onMouseDown={handleMouseDownPassword}
@@ -236,10 +257,15 @@ const Login = (): JSX.Element => {
                       ),
                     }}
                     InputLabelProps={{
-                      style: { color: "white" },
+                      style: { color: "black" },
                     }}
                     error={touched.password && Boolean(errors.password)}
                     helperText={touched.password && errors.password}
+                    sx={{
+                      "& .MuiFormHelperText-root": {
+                        color: "black", // Added to make helper text black
+                      },
+                    }}
                   />
                   <Button
                     type="submit"

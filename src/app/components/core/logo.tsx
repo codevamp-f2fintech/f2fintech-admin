@@ -29,14 +29,8 @@ LogoProps): React.JSX.Element {
         height: collapsed ? "7vh" : "16vh",
         width: collapsed ? "7vw" : "50vw",
         objectFit: "contain",
-        background:
-          "linear-gradient(125deg, #ECFCFF 0%, #ECFCFF 40%, #B2FCFF calc(40% + 1px), #B2FCFF 60%, #5EDFFF calc(60% + 1px), #5EDFFF 72%, #3E64FF calc(72% + 1px), #3E64FF 100%)",
         borderRadius: "10px",
-        "&:hover": {
-          transform: "scale(1.1)",
-          background:
-            "linear-gradient(125deg, #ECFCFF 0%, #ECFCFF 40%, #B2FCFF calc(40% + 1px), #B2FCFF 60%, #5EDFFF calc(60% + 1px), #5EDFFF 72%, #3E64FF calc(72% + 1px), #3E64FF 100%)",
-        },
+        backgroundColor: "#deebff",
       }}
     />
   );

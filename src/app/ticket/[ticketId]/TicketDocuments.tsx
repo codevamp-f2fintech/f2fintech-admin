@@ -29,26 +29,32 @@ const TicketDocuments = ({ isMobile, isTab, documents }) => {
       <Paper
         elevation={5}
         sx={{
-          padding: 2,
-          marginTop: isMobile ? "2vh" : isTab ? "2rem" : "5vh",
+          p: { xs: 2, md: 3 },
+          my: { xs: 1, md: 3 },
+          mx: "auto",
+
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          borderRadius: "10px",
-          width: isMobile ? "73vw" : isTab ? "52vw" : "43.5vw",
-          bgcolor: "#9575cd",
+          borderRadius: "12px",
+          backgroundColor: "#fff",
+          width: { xs: "90%", sm: "95%", md: "85%" },
+          maxWidth: "800px",
+          boxShadow: "0px 4px 20px rgba(149, 117, 205, 0.3)",
         }}
       >
         <Typography
           variant="h6"
           sx={{
             mb: 2,
-            mt: 0,
-            color: "white",
-            fontSize: isMobile ? ".7rem" : isTab ? "1rem" : "1.1rem",
+            color: "#172B4D",
+            fontWeight: 600,
+            fontSize: { xs: "1.2rem", md: "1.3rem" },
+            width: "100%",
+            textAlign: "center",
           }}
         >
-          Documents:
+          Documents
         </Typography>
         {documents.length > 0 ? (
           <Box
@@ -184,7 +190,14 @@ const TicketDocuments = ({ isMobile, isTab, documents }) => {
             ))}
           </Box>
         ) : (
-          <Typography>No documents available.</Typography>
+          <Typography
+            sx={{
+              color: "#5E6C84",
+              fontFamily: "",
+            }}
+          >
+            No documents available.
+          </Typography>
         )}
         {documents.length > itemsPerPage && (
           <Box

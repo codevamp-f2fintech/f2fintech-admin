@@ -41,8 +41,7 @@ export function AppBarNav(): React.JSX.Element {
           display: "flex",
           justifyContent: "center",
           borderBottom: "1px solid var(--mui-palette-divider)",
-          background:
-            "linear-gradient(125deg, #ECFCFF 0%, #ECFCFF 40%, #B2FCFF calc(40% + 1px), #B2FCFF 60%, #5EDFFF calc(60% + 1px), #5EDFFF 72%, #3E64FF calc(72% + 1px), #3E64FF 100%)",
+          backgroundImage: "linear-gradient(#c4d5eb, #c4d5eb)",
           top: 0,
           zIndex: "6",
           height: "12vh",

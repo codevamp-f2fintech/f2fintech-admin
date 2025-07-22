@@ -43,7 +43,7 @@ export function UserPopover({
             400, // Max width
             Math.max(230, longestTextLength * 10) // Min width and dynamic scaling
           );
-          localStorage.setItem("email", response.data.email)
+          localStorage.setItem("email", response.data.email);
 
           if (popoverRef.current) {
             popoverRef.current.style.width = `${requiredWidth}px`;
@@ -94,7 +94,7 @@ export function UserPopover({
         sx={{
           p: "16px 20px",
           background: (theme) =>
-            `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
+            `linear-gradient(135deg, #0c66e4 0%, #0c66e4 100%)`,
           borderTopLeftRadius: (theme) => theme.shape.borderRadius * 2,
           borderTopRightRadius: (theme) => theme.shape.borderRadius * 2,
           color: "white",
@@ -112,6 +112,7 @@ export function UserPopover({
             height: 44,
             borderRadius: "50%",
             backgroundColor: "gray",
+            color: "white",
           }}
         />
 
@@ -158,10 +159,9 @@ export function UserPopover({
               width: "100%",
             }}
           >
-            {userProfile?.role === 'sub admin'
+            {userProfile?.role === "sub admin"
               ? capitalizeFirstLetter(userProfile?.designation)
-              : capitalizeFirstLetter(userProfile?.role)
-            }
+              : capitalizeFirstLetter(userProfile?.role)}
           </Typography>
         </Box>
       </Box>
@@ -170,6 +170,7 @@ export function UserPopover({
       <MenuList
         disablePadding
         sx={{
+          backgroundColor: "#deebff",
           p: "8px",
           "& .MuiMenuItem-root": {
             borderRadius: 1,
