@@ -30,7 +30,7 @@ const TicketDocuments = ({ isMobile, isTab, documents }) => {
         elevation={5}
         sx={{
           p: { xs: 2, md: 3 },
-          my: { xs: 1, md: 3 },
+          my: { xs: 4, md: 4 },
           mx: "auto",
 
           display: "flex",
@@ -38,7 +38,7 @@ const TicketDocuments = ({ isMobile, isTab, documents }) => {
           alignItems: "center",
           borderRadius: "12px",
           backgroundColor: "#fff",
-          width: { xs: "90%", sm: "95%", md: "85%" },
+          width: { xs: "100%", sm: "100%", md: "150%" },
           maxWidth: "800px",
           boxShadow: "0px 4px 20px rgba(149, 117, 205, 0.3)",
         }}

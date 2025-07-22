@@ -190,7 +190,6 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
 
       <Box
         mt={2}
-        p={2}
         display="flex"
         alignItems="center"
         justifyContent={"center"}
