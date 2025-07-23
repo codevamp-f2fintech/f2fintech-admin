@@ -38,7 +38,7 @@ const History: React.FC<HistoryProps> = ({ ticketId, activeSection }) => {
         padding: "10px",
         borderRadius: "8px",
         "&::-webkit-scrollbar": {
-          display: "none", // This hides the scrollbar
+          display: "none",
         },
       }}
     >
@@ -65,7 +65,7 @@ const History: React.FC<HistoryProps> = ({ ticketId, activeSection }) => {
                   sx={{
                     fontSize: isMobile ? ".6rem" : isTab ? ".8rem" : "",
                     width: isMobile ? "90vw" : isTab ? "80vh" : "50vw",
-                    color: "white",
+                    color: "black",
                   }}
                 >
                   {capitalizedAction}
@@ -75,7 +75,7 @@ const History: React.FC<HistoryProps> = ({ ticketId, activeSection }) => {
                   color="textSecondary"
                   sx={{
                     ml: "3vw",
-                    color: "cyan",
+                    color: "red",
                     fontSize: isMobile ? ".6rem" : "",
                     width: isMobile ? "30vw" : "32vw",
                   }}

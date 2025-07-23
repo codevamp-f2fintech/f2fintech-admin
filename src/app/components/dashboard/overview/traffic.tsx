@@ -17,50 +17,34 @@ import { Utility } from "@/utils";
 export interface TrafficProps {
   chartSeries: number[];
   labels: string[];
-  date?: string;
+  date?: string,
   setDate?: () => {};
 }
 
-export function Traffic({
+export function Traffic ( {
   chartSeries,
   labels,
   date,
   setDate,
-}: TrafficProps): React.JSX.Element {
-  const chartOptions = useChartOptions(labels);
+}: TrafficProps ): React.JSX.Element {
+  const chartOptions = useChartOptions( labels );
   const { capitalizeFirstLetter } = Utility();
-  const isMobile = useMediaQuery("(max-width:600px)");
-  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const isMobile = useMediaQuery( "(max-width:600px)" );
+  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
 
   return (
     <Card
       sx={{
         width: "100%",
-        height: {
-          xs: "auto", // Mobile - auto height
-          sm: "auto", // Tablet - auto height
-          md: "90vh", // Desktop - unchanged (your original value)
-        },
-        minHeight: {
-          xs: "75vh", // Mobile min-height
-          sm: "44.5vh", // Tablet min-height
-          md: "none", // Desktop - no min-height (original behavior)
-        },
+        height: isMobile ? "75vh" : isTab ? "44.5vh" : "90vh",
       }}
     >
-      {/* Header (Only adjust mobile/tablet) */}
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          height: {
-            xs: "8vh", // Mobile
-            sm: "5vh", // Tablet
-            md: "12vh", // Desktop - unchanged
-          },
-          // Keep desktop margins intact
-          ml: { xs: "2vw", sm: "1.5vw", md: "1vw" },
+          height: isMobile ? "8vh" : isTab ? "5vh" : "12vh",
         }}
       >
         <Typography
@@ -71,72 +55,42 @@ export function Traffic({
             color: "#1a237e",
             textTransform: "uppercase",
             letterSpacing: "0.5px",
-            ml: "1vw", // Desktop unchanged
-            fontSize: {
-              xs: "1.1rem", // Mobile
-              sm: "1.3rem", // Tablet
-              md: "inherit", // Desktop - original size
-            },
+            ml: "1vw",
           }}
         >
           Tickets
         </Typography>
       </Box>
-      <Divider /> {/* Unchanged */}
-      {/* Card Content (Only adjust mobile/tablet) */}
-      <CardContent
-        sx={{
-          height: {
-            xs: "auto", // Mobile - flexible height
-            sm: "auto", // Tablet - flexible height
-            md: "77vh", // Desktop - unchanged
-          },
-          p: { xs: 1, sm: 1.5, md: "inherit" }, // Padding tweaks only for mobile/tablet
-        }}
-      >
-        <Stack sx={{ height: "100%" }}>
-          {/* Chart (Only adjust mobile/tablet height) */}
-          <Box
+      <Divider />
+      <CardContent sx={{ height: "77vh" }}>
+        <Stack sx={{ display: "flex" }}>
+          <Chart
+            height={200}
+            options={chartOptions}
+            series={chartSeries}
+            type="donut"
+            width="100%"
             sx={{
-              height: {
-                xs: "30vh", // Mobile
-                sm: "25vh", // Tablet
-                md: "200px", // Desktop - unchanged
+              transition: "color 0.3s ease, transform 0.3s ease",
+              "&:hover": {
+                color: "red",
+                transform: "scale(1.1)",
               },
             }}
-          >
-            <Chart
-              options={chartOptions}
-              series={chartSeries}
-              type="donut"
-              width="100%"
-              sx={{
-                transition: "color 0.3s ease, transform 0.3s ease",
-                "&:hover": {
-                  color: "red",
-                  transform: "scale(1.1)", // Original desktop effect
-                },
-              }}
-            />
-          </Box>
-
-          {/* Labels Grid (Only adjust mobile/tablet) */}
+          />
           <Stack
-            direction="row" // Desktop unchanged
+            direction="row"
             sx={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               flexWrap: "wrap",
-              height: {
-                xs: "auto", // Mobile - flexible height
-                sm: "38vh", // Tablet
-                md: "38vh", // Desktop - unchanged
-              },
-              gap: { xs: "8px", sm: "12px", md: "inherit" }, // Mobile/tablet gap only
+              // padding: "1rem",
+              height: "38vh",
+              borderRadius: "20px",
             }}
           >
-            {chartSeries.map((item, index) => {
+            {chartSeries.map( ( item, index ) => {
               const colors = [
                 "#009688",
                 "#827717",
@@ -149,25 +103,20 @@ export function Traffic({
                 "#64dd17",
                 "#90a4ae",
               ];
-              const color = colors[index % colors.length];
+              const color = colors[ index % colors.length ];
 
               return (
                 <Stack
-                  key={labels[index]}
+                  key={labels[ index ]}
                   sx={{
                     display: "flex",
                     alignItems: "center",
-                    width: {
-                      xs: "45%", // Mobile - 2 columns
-                      sm: "30%", // Tablet - 3 columns
-                      md: "10vw", // Desktop - unchanged
-                    },
-                    // Rest of styles remain original for desktop
+                    width: "10vw",
                     height: "5vh",
                     transition: "color 0.3s ease, transform 0.3s ease",
                     "&:hover": {
                       color: "black",
-                      transform: "scale(0.9)",
+                      transform: "scale(.9)",
                     },
                   }}
                 >
@@ -179,10 +128,9 @@ export function Traffic({
                       textAlign: "center",
                       height: "10vh",
                       color: color,
-                      fontSize: { xs: "0.9rem", sm: "0.95rem", md: "inherit" }, // Mobile/tablet only
                     }}
                   >
-                    {capitalizeFirstLetter(labels[index])}
+                    {capitalizeFirstLetter( labels[ index ] )}
                   </Typography>
                   <Typography
                     color="text.secondary"
@@ -193,12 +141,11 @@ export function Traffic({
                       height: "5vh",
                       marginBottom: "2vh",
                       color: "black",
-                      fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" }, // Mobile/tablet only
+                      fontSize: "1rem",
+                      transition: "color 0.3s ease, transform 0.3s ease",
                       "&:hover": {
-                        transform: {
-                          xs: "none", // Disable hover scale on mobile
-                          sm: "scale(1.8)",
-                        },
+                        color: "black",
+                        transform: "scale(1.8)",
                       },
                     }}
                   >
@@ -206,7 +153,7 @@ export function Traffic({
                   </Typography>
                 </Stack>
               );
-            })}
+            } )}
           </Stack>
         </Stack>
       </CardContent>
@@ -214,7 +161,7 @@ export function Traffic({
   );
 }
 
-function useChartOptions(labels: string[]): ApexOptions {
+function useChartOptions ( labels: string[] ): ApexOptions {
   const theme = useTheme();
 
   return {

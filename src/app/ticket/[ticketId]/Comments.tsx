@@ -544,7 +544,7 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
                   height: "auto",
                 }}
               >
-                <Avatar sx={{ bgcolor: "white", mr: 2, color: "black" }}>
+                <Avatar sx={{ bgcolor: "#eeeeee", mr: 2, color: "black" }}>
                   {commentedBy?.username?.charAt(0).toUpperCase()}
                 </Avatar>
 
@@ -561,7 +561,7 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
                     </Typography>
                     <Typography
                       variant="body2"
-                      color="#000"
+                      color="red"
                       sx={{ ml: "20vw" }}
                     >
                       {format(

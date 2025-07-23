@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Utility } from "@/utils";
 import { TicketLogsData } from "@/types/ticketLogs";
 import { User } from "@/types/user";
+import { format } from "date-fns";
 
 interface WorkLogListProps {
   userData: User;
@@ -22,7 +23,7 @@ const WorkLogList: React.FC<WorkLogListProps> = ({ userData, workLog }) => {
         padding: "10px",
         borderRadius: "8px",
         "&::-webkit-scrollbar": {
-          display: "none", // This hides the scrollbar
+          display: "none",
         },
       }}
     >
@@ -40,7 +41,7 @@ const WorkLogList: React.FC<WorkLogListProps> = ({ userData, workLog }) => {
                 marginBottom: "1vh",
                 display: "flex",
                 flexDirection: "column",
-                backgroundColor: "#f5f8fa", // Light Gray
+                backgroundColor: "#f5f8fa",
               }}
             >
               <Box
@@ -61,15 +62,16 @@ const WorkLogList: React.FC<WorkLogListProps> = ({ userData, workLog }) => {
                     mr: "20VW",
                   }}
                 >
-                  logged <b>{log.time_spent}</b>
+                  logged {log.time_spent}
                 </Typography>
                 <Typography
                   sx={{
                     fontWeight: "500",
                     fontSize: ".8rem",
+                    color: "red"
                   }}
                 >
-                  {formatDistanceToNow(new Date(log.created_at))} ago
+                  {format( new Date( log.created_at ), "PPpp" )}
                 </Typography>
               </Box>
 
