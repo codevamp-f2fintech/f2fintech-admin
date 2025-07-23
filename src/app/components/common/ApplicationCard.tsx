@@ -1,5 +1,5 @@
-"use client"
-import React, { useEffect, useState } from "react"
+"use client";
+import React, { useEffect, useState } from "react";
 import {
   Grid,
   Button,
@@ -23,7 +23,7 @@ import {
   CardContent,
   Card,
   TextField,
-} from "@mui/material"
+} from "@mui/material";
 import {
   MailRounded,
   PhoneRounded,
@@ -35,55 +35,55 @@ import {
   ExpandMore,
   ExpandLess,
   DeleteOutlined,
-} from "@mui/icons-material"
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance"
-import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee"
-import { useCreateTicket } from "@/hooks/ticket"
-import { Utility } from "@/utils"
-import { useModifyCustomerApplication } from "@/hooks/customerApplication"
-import { fetcher } from "@/apis/apiClient"
-import { useDispatch, useSelector } from "react-redux"
-import type { AppDispatch, RootState } from "@/redux/store"
-import { resetCustomerApplications } from "@/redux/features/customerApplicationSlice"
-import { resetTickets } from "@/redux/features/ticketSlice"
+} from "@mui/icons-material";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
+import { useCreateTicket } from "@/hooks/ticket";
+import { Utility } from "@/utils";
+import { useModifyCustomerApplication } from "@/hooks/customerApplication";
+import { fetcher } from "@/apis/apiClient";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "@/redux/store";
+import { resetCustomerApplications } from "@/redux/features/customerApplicationSlice";
+import { resetTickets } from "@/redux/features/ticketSlice";
 
 interface ApplicationCardProps {
   customerApplication: {
-    customerId: number
-    customerName: string
-    customerEmail: string
-    customerContact?: string
-    customerProfileImage?: string
-    customerLocation?: string
-    customerState?: string
-    state?: string
-    applicationAmount: string
-    applicationTenure: number
-    applicationDate: string
-    applicationId: number
-    ticketId?: number
-    ticketStatus?: string
-    loanStatus?: string
-    userRole?: string
-    applicationProvider?: string
-    showDeleteButton?: boolean
-    onDelete: ( applicationId: string, customerName: string ) => void
-  }
-  handleStartClick?: ( ticketId: number ) => void
-  refetch?: () => Promise<void>
-  userRole?: string
-  handleDeleteTicket?: ( ticketId: number ) => void
-  isApplication?: boolean
-  toggleListView?: boolean
+    customerId: number;
+    customerName: string;
+    customerEmail: string;
+    customerContact?: string;
+    customerProfileImage?: string;
+    customerLocation?: string;
+    customerState?: string;
+    state?: string;
+    applicationAmount: string;
+    applicationTenure: number;
+    applicationDate: string;
+    applicationId: number;
+    ticketId?: number;
+    ticketStatus?: string;
+    loanStatus?: string;
+    userRole?: string;
+    applicationProvider?: string;
+    showDeleteButton?: boolean;
+    onDelete: (applicationId: string, customerName: string) => void;
+  };
+  handleStartClick?: (ticketId: number) => void;
+  refetch?: () => Promise<void>;
+  userRole?: string;
+  handleDeleteTicket?: (ticketId: number) => void;
+  isApplication?: boolean;
+  toggleListView?: boolean;
 }
 
-function InfoRow ( {
+function InfoRow({
   icon,
   text,
 }: {
   icon: React.ReactNode;
   text: string | undefined;
-} ) {
+}) {
   return (
     <Box
       sx={{
@@ -99,15 +99,13 @@ function InfoRow ( {
           alignItems: "center",
           justifyContent: "center",
           backgroundColor: "rgba(110, 68, 255, 0.1)",
-          background:
-            "linear-gradient(125deg, #ECFCFF 0%, #ECFCFF 40%, #B2FCFF calc(40% + 1px), #B2FCFF 60%, #5EDFFF calc(60% + 1px), #5EDFFF 72%, #3E64FF calc(72% + 1px), #3E64FF 100%)",
           borderRadius: "50%",
           padding: "8px",
         }}
       >
-        {React.cloneElement( icon as React.ReactElement, {
+        {React.cloneElement(icon as React.ReactElement, {
           fontSize: "small",
-        } )}
+        })}
       </Box>
       <Typography variant="body2" sx={{ color: "#333", fontWeight: "medium" }}>
         {text}
@@ -116,38 +114,38 @@ function InfoRow ( {
   );
 }
 
-function InfoChip ( {
+function InfoChip({
   icon,
   text,
   color = "#6E44FF",
 }: {
-  icon: React.ReactNode
-  text: string | undefined
-  color?: string
-} ) {
+  icon: React.ReactNode;
+  text: string | undefined;
+  color?: string;
+}) {
   return (
     <Chip
-      icon={React.cloneElement( icon as React.ReactElement, {
+      icon={React.cloneElement(icon as React.ReactElement, {
         fontSize: "small",
         sx: { color: color },
-      } )}
+      })}
       label={text}
       variant="outlined"
       size="small"
       sx={{
         borderColor: color,
         color: color,
-        backgroundColor: `${ color }10`,
+        backgroundColor: `${color}10`,
         fontWeight: "medium",
         "& .MuiChip-icon": {
           color: color,
         },
       }}
     />
-  )
+  );
 }
 
-const ApplicationCard: React.FC<ApplicationCardProps> = ( {
+const ApplicationCard: React.FC<ApplicationCardProps> = ({
   customerApplication,
   handleStartClick = null,
   showDeleteButton = false,
@@ -157,163 +155,208 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
   handleDeleteTicket,
   handleDeleteApplication,
   isApplication = false,
-  toggleListView
-} ) => {
-  console.log( "userRole12121", userRole )
-  const [ showHistory, setShowHistory ] = useState<boolean>( false )
-  const [ historyData, setHistoryData ] = useState<any[]>( [] )
-  const [ openDeleteDialog, setOpenDeleteDialog ] = useState<boolean>( false )
-  const [ expanded, setExpanded ] = useState<boolean>( false )
-  const dispatch: AppDispatch = useDispatch()
-  const { toast } = useSelector( ( state: RootState ) => state.toast )
-  const { toastAndNavigate } = Utility()
-  const { calculateDaysAgo, capitalizeFirstLetter, decodedToken, formatTenure } = Utility()
-  const [ showOtpComponent, setShowOtpComponent ] = useState<boolean>( false )
-  const isMobile = useMediaQuery( "(max-width:600px)" )
-  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" )
-  const [ deleteReason, setDeleteReason ] = useState<string>( "" );
+  toggleListView,
+}) => {
+  console.log("userRole12121", userRole);
+  const [showHistory, setShowHistory] = useState<boolean>(false);
+  const [historyData, setHistoryData] = useState<any[]>([]);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false);
+  const [expanded, setExpanded] = useState<boolean>(false);
+  const dispatch: AppDispatch = useDispatch();
+  const { toast } = useSelector((state: RootState) => state.toast);
+  const { toastAndNavigate } = Utility();
+  const {
+    calculateDaysAgo,
+    capitalizeFirstLetter,
+    decodedToken,
+    formatTenure,
+  } = Utility();
+  const [showOtpComponent, setShowOtpComponent] = useState<boolean>(false);
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const [deleteReason, setDeleteReason] = useState<string>("");
 
-  const handleDeleteClick = ( e: React.MouseEvent ) => {
-    e.stopPropagation()
-    onDelete( customerApplication.applicationId, customerApplication.customerName )
-  }
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDelete(
+      customerApplication.applicationId,
+      customerApplication.customerName
+    );
+  };
 
-  const { createTicket } = useCreateTicket( "create-ticket" )
+  const { createTicket } = useCreateTicket("create-ticket");
   const { modifyCustomerApplication: modifyiedCustomerApplication } =
-    useModifyCustomerApplication( "update-loan-application" )
+    useModifyCustomerApplication("update-loan-application");
 
-  const toggleHistory = () => setShowHistory( ( prev ) => !prev )
-  const toggleExpanded = () => setExpanded( ( prev ) => !prev )
+  const toggleHistory = () => setShowHistory((prev) => !prev);
+  const toggleExpanded = () => setExpanded((prev) => !prev);
 
-  const openConfirmDialog = ( e ) => {
-    e.stopPropagation()
-    setOpenDeleteDialog( true )
-  }
+  const openConfirmDialog = (e) => {
+    e.stopPropagation();
+    setOpenDeleteDialog(true);
+  };
 
   const closeConfirmDialog = () => {
-    setOpenDeleteDialog( false )
-  }
+    setOpenDeleteDialog(false);
+  };
 
   const confirmDelete = async () => {
-    if ( !deleteReason.trim() )
-    {
-      toastAndNavigate( dispatch, true, "error", "Please provide a reason for deletion", null, null, true );
+    if (!deleteReason.trim()) {
+      toastAndNavigate(
+        dispatch,
+        true,
+        "error",
+        "Please provide a reason for deletion",
+        null,
+        null,
+        true
+      );
       return;
     }
 
-    if ( handleDeleteTicket && !isApplication )
-    {
-      try
-      {
-        await handleDeleteTicket( customerApplication.ticketId, deleteReason )
-        toastAndNavigate( dispatch, true, "success", "Ticket deleted successfully", null, null, false )
-        closeConfirmDialog()
-      } catch ( error )
-      {
-        console.log( "Error deleting ticket:", error )
-        toastAndNavigate( dispatch, true, "error", "Failed to delete ticket. Please try again.", null, null, true )
+    if (handleDeleteTicket && !isApplication) {
+      try {
+        await handleDeleteTicket(customerApplication.ticketId, deleteReason);
+        toastAndNavigate(
+          dispatch,
+          true,
+          "success",
+          "Ticket deleted successfully",
+          null,
+          null,
+          false
+        );
+        closeConfirmDialog();
+      } catch (error) {
+        console.log("Error deleting ticket:", error);
+        toastAndNavigate(
+          dispatch,
+          true,
+          "error",
+          "Failed to delete ticket. Please try again.",
+          null,
+          null,
+          true
+        );
       }
     }
-    if ( isApplication && handleDeleteApplication )
-    {
-      handleDeleteApplication( customerApplication.applicationId )
+    if (isApplication && handleDeleteApplication) {
+      handleDeleteApplication(customerApplication.applicationId);
     }
-  }
+  };
 
-  useEffect( () => {
-    if ( showHistory && customerApplication.ticketId )
-    {
+  useEffect(() => {
+    if (showHistory && customerApplication.ticketId) {
       const fetchHistoryData = async () => {
-        try
-        {
-          const { data } = await fetcher( `get-ticket-histories/${ customerApplication.ticketId }` )
-          setHistoryData( data )
-        } catch ( error )
-        {
-          console.log( "Error fetching history data:", error )
+        try {
+          const { data } = await fetcher(
+            `get-ticket-histories/${customerApplication.ticketId}`
+          );
+          setHistoryData(data);
+        } catch (error) {
+          console.log("Error fetching history data:", error);
         }
-      }
-      fetchHistoryData()
+      };
+      fetchHistoryData();
     }
-  }, [ showHistory, customerApplication?.ticketId ] )
+  }, [showHistory, customerApplication?.ticketId]);
 
-  const handleCheckboxChange = async ( applicationId: number ) => {
-    try
-    {
-      await createTicket( {
+  const handleCheckboxChange = async (applicationId: number) => {
+    try {
+      await createTicket({
         customer_application_id: applicationId,
         user_id: decodedToken()?.id,
         status: "operations",
-      } )
-      dispatch( resetTickets() )
-      await modifyiedCustomerApplication( applicationId, {
+      });
+      dispatch(resetTickets());
+      await modifyiedCustomerApplication(applicationId, {
         is_picked: 1,
-      } )
-      dispatch( resetCustomerApplications( applicationId ) )
-    } catch ( error )
-    {
-      console.log( "Error in checkbox change:", error )
+      });
+      dispatch(resetCustomerApplications(applicationId));
+    } catch (error) {
+      console.log("Error in checkbox change:", error);
     }
-  }
+  };
 
-  useEffect( () => {
+  useEffect(() => {
     // Collapse when it's an application
-    if ( isApplication )
-    {
-      setExpanded( false );
+    if (isApplication) {
+      setExpanded(false);
     }
-  }, [ isApplication ] );
+  }, [isApplication]);
 
-  const formatRupees = ( value: number ) => {
-    return new Intl.NumberFormat( "en-IN", {
+  const formatRupees = (value: number) => {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    } ).format( value )
-  }
+    }).format(value);
+  };
 
   const ListView = () => {
     return (
-      <Grid item xs={12} key={customerApplication.customerId}>
+      <Grid item xs={20} key={customerApplication.customerId}>
         <Paper
           elevation={2}
           sx={{
             borderRadius: 2,
             overflow: "hidden",
-            mb: 1, // Further reduced from 1.5
+            height: {
+              xs: "14vh", // Fixed height for mobile
+              sm: "inherit", // Auto height on larger screens
+              md: "inherit",
+            },
+            mb: 1,
             transition: "all 0.3s ease",
             "&:hover": {
-              elevation: 4,
+              boxShadow: 4, // Corrected from elevation to boxShadow
               transform: "translateY(-2px)",
             },
+            // Mobile-only vertical scrollbar (always visible)
+            overflowY: { xs: "scroll", sm: "visible" }, // Force scrollbar on mobile
+            scrollbarWidth: { xs: "thin", sm: "none" }, // For Firefox
+            "&::-webkit-scrollbar": {
+              width: "6px",
+              display: { xs: "block", sm: "none" }, // Hide on desktop
+            },
+            "&::-webkit-scrollbar-thumb": {
+              backgroundColor: "rgba(0,0,0,0.2)",
+              borderRadius: "3px",
+            },
+            WebkitOverflowScrolling: { xs: "touch", sm: "auto" }, // iOS smooth scroll
           }}
         >
           <ListItem
             sx={{
-              flexDirection: isMobile ? "column" : "row",
+              flexDirection: isMobile ? "row" : "row",
               alignItems: isMobile ? "stretch" : "center",
               p: 1, // Further reduced from 1.5
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              backgroundImage:
+                "linear-gradient(135deg, #c4d5eb 0%, #c4d5eb 100%)",
               color: "white",
             }}
           >
             {/* Avatar Section */}
-            <ListItemAvatar sx={{ minWidth: isMobile ? "auto" : 60 }}> {/* Further reduced from 70 */}
+            <ListItemAvatar sx={{ minWidth: isMobile ? "auto" : 60 }}>
+              {" "}
+              {/* Further reduced from 70 */}
               <Avatar
                 alt={
                   // Extract name after title (e.g., "Mr. John Doe" → "John Doe")
                   capitalizeFirstLetter(
-                    customerApplication.customerName
-                      .split( '.' )[ 1 ]?.trim() ||
-                    customerApplication.customerName.split( ' ' ).slice( 1 ).join( ' ' ) 
+                    customerApplication.customerName.split(".")[1]?.trim() ||
+                      customerApplication.customerName
+                        .split(" ")
+                        .slice(1)
+                        .join(" ")
                   )
                 }
                 src={customerApplication.customerProfileImage}
                 sx={{
                   width: isMobile ? 40 : 32, // Further reduced from 50:35
                   height: isMobile ? 40 : 32, // Further reduced from 50:35
-                  bgcolor: "rgba(255,255,255,0.2)",
+                  bgcolor: "#adb5bd",
                   color: "white",
                   fontSize: isMobile ? 16 : 20, // Further reduced from 20:24
                   fontWeight: "bold",
@@ -335,8 +378,15 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                 <Typography
                   variant={isMobile ? "body1" : "subtitle1"} // Further reduced from subtitle1:h6
                   sx={{
-                    fontWeight: "bold",
-                    color: "white",
+                    fontWeight: "semibold",
+                    fontSize: {
+                      xs: "0.75rem",
+                      sm: "0.875rem",
+                      md: ".5rem",
+                      lg: "1.125rem",
+                      xl: "1.25rem",
+                    },
+                    color: "#000",
                     mb: 0.25, // Further reduced from 0.5
                   }}
                 >
@@ -348,56 +398,69 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                   sx={{
                     display: "flex",
                     flexDirection: isMobile ? "column" : "row",
-                    gap: .5, // Further reduced from 0.5
+                    gap: 0.5, // Further reduced from 0.5
                     flexWrap: "wrap",
                     alignItems: isMobile ? "center" : "flex-start",
                   }}
                 >
                   <InfoChip
                     icon={<CurrencyRupeeIcon />}
-                    text={formatRupees( customerApplication.applicationAmount )}
-                    color="#eeff41"
+                    text={formatRupees(customerApplication.applicationAmount)}
+                    color="#0c66e4"
                   />
                   {customerApplication.applicationProvider && (
                     <InfoChip
                       icon={<AccountBalanceIcon />}
                       text={customerApplication.applicationProvider}
-                      color="#eeff41"
+                      color="#0c66e4"
                     />
                   )}
                   <InfoChip
                     icon={<AccessTimeRounded />}
-                    text={formatTenure( customerApplication.applicationTenure )}
-                    color="#eeff41"
+                    text={formatTenure(customerApplication.applicationTenure)}
+                    color="#0c66e4"
                   />
-
 
                   {userRole !== "sales" && (
                     <>
-                      <InfoChip icon={<MailRounded />} text={customerApplication.customerEmail} color="white" />
-                      <InfoChip icon={<PhoneRounded />} text={customerApplication.customerContact} color="white" />
+                      <InfoChip
+                        icon={<MailRounded />}
+                        text={customerApplication.customerEmail}
+                        color="#33415c"
+                      />
+                      <InfoChip
+                        icon={<PhoneRounded />}
+                        text={customerApplication.customerContact}
+                        color="#33415c"
+                      />
                     </>
                   )}
                   {customerApplication.customerLocation && (
                     <InfoChip
                       icon={<LocationOnRounded />}
-                      text={capitalizeFirstLetter( customerApplication.customerLocation )}
-                      color="white"
+                      text={capitalizeFirstLetter(
+                        customerApplication.customerLocation
+                      )}
+                      color="#33415c"
                     />
                   )}
                   {customerApplication.customerState && (
                     <InfoChip
                       icon={<LocationOnRounded />}
-                      text={capitalizeFirstLetter( customerApplication.customerState )}
-                      color="white"
+                      text={capitalizeFirstLetter(
+                        customerApplication.customerState
+                      )}
+                      color="#33415c"
                     />
                   )}
                   <Chip
-                    label={`${ calculateDaysAgo( customerApplication.applicationDate ) } days ago`}
+                    label={`${calculateDaysAgo(
+                      customerApplication.applicationDate
+                    )} days ago`}
                     size="small"
                     sx={{
                       bgcolor: "rgba(255,255,255,0.2)",
-                      color: "white",
+                      color: "#33415c",
                       fontWeight: "bold",
                     }}
                   />
@@ -405,20 +468,19 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
               }
             />
 
-
-
             {/* Action Buttons */}
             <Box
               sx={{
                 display: "flex",
                 flexDirection: isMobile ? "row" : "column",
-                gap: .5, // Further reduced from 0.5
+                gap: 0.5, // Further reduced from 0.5
                 alignItems: "center",
                 mt: isMobile ? 0.5 : 0, // Further reduced from 1:0
               }}
             >
               {/* Delete Button */}
-              {( showDeleteButton || ( userRole === "admin" && handleDeleteTicket ) ) && (
+              {(showDeleteButton ||
+                (userRole === "admin" && handleDeleteTicket)) && (
                 <IconButton
                   onClick={openConfirmDialog}
                   sx={{
@@ -448,18 +510,29 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                   }}
                   size="small"
                 >
-                  {expanded ? <ExpandLess sx={{ fontSize: 18 }} /> : <ExpandMore sx={{ fontSize: 18 }} />}
+                  {expanded ? (
+                    <ExpandLess sx={{ fontSize: 18 }} />
+                  ) : (
+                    <ExpandMore sx={{ fontSize: 18 }} />
+                  )}
                 </IconButton>
               )}
 
               {/* Pick Checkbox */}
               {decodedToken()?.role !== "sales" && !handleStartClick && (
                 <Box sx={{ display: "flex", alignItems: "center" }}>
-                  <Typography variant="caption" sx={{ mr: 0.5, color: "white", fontWeight: "bold" }}> {/* Reduced from body2 and mr: 1 */}
+                  <Typography
+                    variant="caption"
+                    sx={{ mr: 0.5, color: "white", fontWeight: "bold" }}
+                  >
+                    {" "}
+                    {/* Reduced from body2 and mr: 1 */}
                     Pick
                   </Typography>
                   <Checkbox
-                    onChange={() => handleCheckboxChange( customerApplication.applicationId )}
+                    onChange={() =>
+                      handleCheckboxChange(customerApplication.applicationId)
+                    }
                     size="small"
                     sx={{
                       color: "white",
@@ -475,7 +548,9 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
 
           {/* Expanded Details */}
           <Collapse in={expanded} timeout="auto" unmountOnExit>
-            <Box sx={{ p: 1, bgcolor: "rgba(255,255,255,0.95)" }}> {/* Further reduced from 1.5 */}
+            <Box sx={{ p: 1, bgcolor: "#c4d5eb" }}>
+              {" "}
+              {/* Further reduced from 1.5 */}
               {!showHistory ? (
                 <Box
                   sx={{
@@ -483,13 +558,12 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                     flexDirection: "column",
                     gap: 1, // Further reduced from 1.5
                   }}
-                >
-
-
-                </Box>
+                ></Box>
               ) : (
                 <Box>
-                  <Typography variant="subtitle1" sx={{ color: "#333", mb: 1 }}> {/* Further reduced from h6 and mb: 1.5 */}
+                  <Typography variant="subtitle1" sx={{ color: "#333", mb: 1 }}>
+                    {" "}
+                    {/* Further reduced from h6 and mb: 1.5 */}
                     History
                   </Typography>
                   <Box
@@ -510,7 +584,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                     }}
                   >
                     {historyData.length > 0 ? (
-                      historyData.map( ( history, index ) => (
+                      historyData.map((history, index) => (
                         <Box
                           key={index}
                           sx={{
@@ -522,15 +596,33 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                             borderRadius: 1,
                           }}
                         >
-                          <Typography variant="body2" sx={{ color: "black", fontWeight: "medium", mb: 0.25 }}> {/* Further reduced from 0.5 */}
-                            <strong>{capitalizeFirstLetter( history.action.split( " " )[ 0 ] )}</strong>
-                            {` ${ history.action.substring( history.action.indexOf( " " ) + 1 ) }`}
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: "black",
+                              fontWeight: "medium",
+                              mb: 0.25,
+                            }}
+                          >
+                            {" "}
+                            {/* Further reduced from 0.5 */}
+                            <strong>
+                              {capitalizeFirstLetter(
+                                history.action.split(" ")[0]
+                              )}
+                            </strong>
+                            {` ${history.action.substring(
+                              history.action.indexOf(" ") + 1
+                            )}`}
                           </Typography>
-                          <Typography variant="caption" sx={{ color: "#1976d2" }}>
-                            {calculateDaysAgo( history.created_at )} days ago
+                          <Typography
+                            variant="caption"
+                            sx={{ color: "#1976d2" }}
+                          >
+                            {calculateDaysAgo(history.created_at)} days ago
                           </Typography>
                         </Box>
-                      ) )
+                      ))
                     ) : (
                       <Typography variant="body2" sx={{ color: "#666" }}>
                         No history data available.
@@ -539,7 +631,6 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                   </Box>
                 </Box>
               )}
-
               {/* Action Buttons */}
               {handleStartClick && customerApplication.ticketId && (
                 <Box
@@ -555,9 +646,9 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                       variant="contained"
                       onClick={handleStartClick}
                       sx={{
-                        bgcolor: "#667eea",
+                        bgcolor: "#0c66e4",
                         "&:hover": {
-                          bgcolor: "#5a6fd8",
+                          bgcolor: "#0c66e4",
                         },
                       }}
                     >
@@ -583,9 +674,9 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
             </Box>
           </Collapse>
         </Paper>
-      </Grid >
-    )
-  }
+      </Grid>
+    );
+  };
 
   const GridView = () => {
     return (
@@ -597,9 +688,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
             overflow: "visible",
             position: "relative",
             boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
-            backgroundImage: `
-linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
-`,
+            backgroundImage: "linear-gradient(135deg, #fff 0%, #fff 100%)",
+
             backgroundBlendMode: "multiply, screen, normal",
             pt: isMobile ? 3 : 5,
             mt: 5,
@@ -613,10 +703,10 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
                 position: "absolute",
                 top: 8,
                 right: 8,
-                color: "#f44336",
-                backgroundColor: "rgba(255, 255, 255, 0.9)",
+                color: "",
+                backgroundColor: "#adb5bd",
                 "&:hover": {
-                  backgroundColor: "rgba(244, 67, 54, 0.1)",
+                  backgroundColor: "#adb5bd",
                   color: "#d32f2f",
                 },
                 zIndex: 1,
@@ -639,16 +729,18 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
                 alt={
                   // Extract name after title (e.g., "Mr. John Doe" → "John Doe")
                   capitalizeFirstLetter(
-                    customerApplication.customerName
-                      .split( '.' )[ 1 ]?.trim() ||
-                    customerApplication.customerName.split( ' ' ).slice( 1 ).join( ' ' )
+                    customerApplication.customerName.split(".")[1]?.trim() ||
+                      customerApplication.customerName
+                        .split(" ")
+                        .slice(1)
+                        .join(" ")
                   )
                 }
                 src={customerApplication.customerProfileImage}
                 sx={{
                   width: 80,
                   height: 80,
-                  bgcolor: "black",
+                  bgcolor: "#33415c",
                   color: "white",
                   fontSize: 36,
                   fontWeight: "bold",
@@ -661,13 +753,19 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
                 }}
               />
             </Box>
-            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
               <Typography
                 variant="h5"
                 component="div"
                 sx={{
                   mb: 1,
-                  color: "white",
+                  color: "black",
                   fontWeight: "bold",
                   whiteSpace: "normal",
                   overflow: "hidden",
@@ -677,7 +775,6 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
                   fontSize: "1.3rem",
                   height: isMobile ? "7vh" : isTab ? "4vh" : "8vh",
                   width: isMobile ? "80vw" : isTab ? "25vw" : "30vw",
-
                 }}
               >
                 {customerApplication.customerName?.toUpperCase()}
@@ -687,22 +784,36 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
                 <Button
                   variant="contained"
                   sx={{
-                    width: "10%",
+                    // Layout
+                    position: "absolute",
+                    top: { xs: "1vh", sm: "2vh", md: "2.5vh" }, // Adjust vertical position
+                    ml: { xs: "40vw", sm: "25vw", md: "17vw" }, // Adjust horizontal margin
+                    width: { xs: "15%", sm: "12%", md: "10%" }, // Scale width for smaller screens
+
+                    // Styling
                     borderRadius: "50px",
                     backgroundColor: "transparent",
-                    position: "absolute",
-                    top: "2.5vh",
-                    ml: "17vw",
+                    color: "#e5383b",
+                    boxShadow: "none",
+                    minWidth: "auto", // Prevents button from stretching
+                    padding: { xs: "6px", sm: "8px", md: "10px" }, // Adjust padding
+
+                    // Hover
                     "&:hover": {
                       bgcolor: "#cc0000",
+                      color: "white",
+                    },
+
+                    // Mobile-specific tweaks
+                    "& .MuiButton-startIcon": {
+                      margin: { xs: 0, sm: 0, md: 0 }, // Adjust icon spacing
                     },
                   }}
                   onClick={openConfirmDialog}
                 >
-                  <DeleteOutlined />
+                  <DeleteOutlined fontSize="small" />
                 </Button>
-              )
-              }
+              )}
             </Box>
 
             {!showHistory ? (
@@ -714,11 +825,11 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
                   bgcolor: "rgba(255,255,255,0.9)",
                   borderRadius: "10px 10px 0px 0px",
                   p: 2,
-                  boxShadow: "inset 0 2px 4px rgba(0,0,0,0.1)",
+                  // boxShadow: "inset 0 2px 4px rgba(0,0,0,0.1)",
                   minHeight: isMobile ? "35vh" : isTab ? "20vh" : "40vh",
                 }}
               >
-                {userRole !== "sales" &&
+                {userRole !== "sales" && (
                   <>
                     <InfoRow
                       icon={<MailRounded />}
@@ -730,18 +841,21 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
                       text={customerApplication.customerContact}
                     />
                   </>
-                }
+                )}
                 <InfoRow
                   icon={<CurrencyRupeeIcon />}
-                  text={formatRupees( customerApplication.applicationAmount )}
+                  text={formatRupees(customerApplication.applicationAmount)}
                 />
                 <InfoRow
                   icon={<AccessTimeRounded />}
-                  text={formatTenure( customerApplication.applicationTenure )}
+                  text={formatTenure(customerApplication.applicationTenure)}
                 />
                 <InfoRow
                   icon={<AccountBalanceIcon />}
-                  text={( customerApplication.applicationProvider || "No provider available...." )}
+                  text={
+                    customerApplication.applicationProvider ||
+                    "No provider available...."
+                  }
                 />
                 {customerApplication.customerLocation && (
                   <InfoRow
@@ -759,7 +873,6 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
                     )}
                   />
                 )}
-
               </Box>
             ) : (
               <Box
@@ -780,7 +893,7 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
                 }}
               >
                 {historyData.length > 0 ? (
-                  historyData.map( ( history, index ) => (
+                  historyData.map((history, index) => (
                     <Box
                       key={index}
                       sx={{ display: "flex", flexDirection: "column", mb: 2 }}
@@ -790,17 +903,17 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
                         sx={{ color: "black", fontStyle: "normal", mb: 1 }}
                       >
                         <strong>
-                          {capitalizeFirstLetter( history.action.split( " " )[ 0 ] )}
+                          {capitalizeFirstLetter(history.action.split(" ")[0])}
                         </strong>
-                        {` ${ history.action.substring(
-                          history.action.indexOf( " " ) + 1
-                        ) }`}
+                        {` ${history.action.substring(
+                          history.action.indexOf(" ") + 1
+                        )}`}
                       </Typography>
                       <Typography variant="caption" sx={{ color: "blue" }}>
-                        {calculateDaysAgo( history.created_at )} days ago
+                        {calculateDaysAgo(history.created_at)} days ago
                       </Typography>
                     </Box>
-                  ) )
+                  ))
                 ) : (
                   <Typography variant="body2" sx={{ color: "#333" }}>
                     No history data available.
@@ -812,42 +925,69 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
               <Box
                 sx={{
                   display: "flex",
-                  borderRadius: "0px 0px 20px 20px",
+                  gap: 1.5,
+                  p: 1.5,
+                  borderRadius: "0px 0px 12px 12px",
+                  borderTop: "1px solid #e5e7eb",
+                  bgcolor: "#ffffff",
+                  boxShadow: "0 -2px 10px rgba(0, 0, 0, 0.05)",
                 }}
               >
-                {userRole !== "sales" &&
+                {userRole !== "sales" && (
                   <Button
+                    fullWidth
                     variant="contained"
-                    color="primary"
                     sx={{
-                      width: "100%",
-                      borderRadius: "0px 0px 0px 10px",
-                      bgcolor: "#f06292",
+                      py: 1.25,
+                      px: 2,
+                      height: "44px",
+                      borderRadius: "8px",
+                      bgcolor: "#0066cc",
                       color: "white",
+                      fontWeight: 600,
+                      fontSize: "0.875rem",
+                      textTransform: "none",
+                      boxShadow: "0 2px 8px rgba(0, 102, 204, 0.25)",
                       "&:hover": {
-                        bgcolor: "#f06292",
-                        color: "white",
+                        bgcolor: "#0052a3",
+                        boxShadow: "0 4px 12px rgba(0, 102, 204, 0.35)",
+                        transform: "translateY(-1px)",
                       },
+                      "&:active": {
+                        transform: "translateY(0px)",
+                      },
+                      transition: "all 0.2s ease",
                     }}
                     onClick={handleStartClick}
                   >
                     Visit Ticket
                   </Button>
-                }
-
-
+                )}
                 <Button
-                  variant="contained"
-                  color="primary"
+                  fullWidth
+                  variant="outlined"
                   sx={{
-                    width: "100%",
-                    borderRadius: "0px 0px 10px 0px",
-                    bgcolor: "#f06292",
-                    color: "white",
+                    py: 1.25,
+                    px: 2,
+                    height: "44px",
+                    borderRadius: "8px",
+                    borderWidth: "1.5px",
+                    borderColor: "#d1d5db",
+                    color: "#4b5563",
+                    fontWeight: 500,
+                    fontSize: "0.875rem",
+                    textTransform: "none",
+                    bgcolor: "white",
                     "&:hover": {
-                      bgcolor: "#f06292",
-                      color: "white",
+                      bgcolor: "#f9fafb",
+                      borderColor: "#0066cc",
+                      color: "#0066cc",
+                      transform: "translateY(-1px)",
                     },
+                    "&:active": {
+                      transform: "translateY(0px)",
+                    },
+                    transition: "all 0.2s ease",
                   }}
                   onClick={toggleHistory}
                 >
@@ -864,9 +1004,9 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
                 }}
               >
                 <Chip
-                  label={`${ calculateDaysAgo(
+                  label={`${calculateDaysAgo(
                     customerApplication.applicationDate
-                  ) } days ago`}
+                  )} days ago`}
                   size="small"
                   sx={{
                     bgcolor: "rgba(255,255,255,0.9)",
@@ -874,7 +1014,7 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
                     "& .MuiChip-label": { color: "#6E44FF" },
                   }}
                 />
-                {( decodedToken()?.role === "sales" ) ? null : (
+                {decodedToken()?.role === "sales" ? null : (
                   <Box sx={{ display: "flex", alignItems: "center" }}>
                     <Typography
                       variant="body2"
@@ -884,11 +1024,11 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
                     </Typography>
                     <Checkbox
                       onChange={() =>
-                        handleCheckboxChange( customerApplication.applicationId )
+                        handleCheckboxChange(customerApplication.applicationId)
                       }
                       size="small"
                       sx={{
-                        color: "white",
+                        color: "black",
                         "&.Mui-checked": {
                           color: "#FFD93D",
                         },
@@ -900,17 +1040,13 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
             )}
           </CardContent>
         </Card>
-      </Grid >
-    )
-  }
+      </Grid>
+    );
+  };
 
   return (
     <>
-      {toggleListView ? (
-        <ListView />
-      ) : (
-        <GridView />
-      )}
+      {toggleListView ? <ListView /> : <GridView />}
 
       {/* Delete Confirmation Dialog */}
       <Dialog
@@ -949,7 +1085,7 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
             marginBottom: "16px",
             fontSize: "1rem",
             lineHeight: "1.5",
-            bgcolor: "lightcyan"
+            bgcolor: "lightcyan",
           }}
         >
           <DialogContentText
@@ -959,9 +1095,11 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
               color: "#555",
               marginBottom: "20px",
               textAlign: "center",
+              padding: "2rem",
             }}
           >
-            Are you sure you want to delete this ticket? This action cannot be undone.
+            Are you sure you want to delete this ticket? This action cannot be
+            undone.
           </DialogContentText>
 
           <TextField
@@ -971,7 +1109,7 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
             variant="outlined"
             label="Reason for deletion"
             value={deleteReason}
-            onChange={( e ) => setDeleteReason( e.target.value )}
+            onChange={(e) => setDeleteReason(e.target.value)}
             sx={{
               mt: 2,
               "& .MuiOutlinedInput-root": {
@@ -991,7 +1129,7 @@ linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
             display: "flex",
             justifyContent: "center",
             padding: "10px",
-            bgcolor: "lightcyan"
+            bgcolor: "lightcyan",
           }}
         >
           <Button

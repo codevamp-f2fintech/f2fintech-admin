@@ -39,54 +39,57 @@ export interface LatestApplicationsProps {
   sx?: SxProps;
 }
 
-export function LatestApplications ( {
+export function LatestApplications({
   sx,
 }: LatestApplicationsProps): React.JSX.Element {
   const [paginationLoading, setPaginationLoading] = useState<boolean>(false);
-  const [applications, setApplications] = useState<CustomerApplicationData | []>([]);
+  const [applications, setApplications] = useState<
+    CustomerApplicationData | []
+  >([]);
   const router = useRouter();
-  const isMobile = useMediaQuery( "(max-width:600px)" );
-  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
   const {
     value: data,
     error: getApplicationsError,
     swrLoading,
-  } = useGetCustomerApplications( `get-customer-loan-applications`, 1, 6 );
+  } = useGetCustomerApplications(`get-customer-loan-applications`, 1, 6);
 
   // Handle API response
-  useEffect( () => {
-    if ( data?.results.length > 0 )
-    {
-      setApplications( data?.results );
-    } else
-    {
-      setApplications( [] );
+  useEffect(() => {
+    if (data?.results.length > 0) {
+      setApplications(data?.results);
+    } else {
+      setApplications([]);
     }
   }, [data?.results, getApplicationsError]);
 
   const handleViewAllClick = () => {
-    router.push( "/" );
+    router.push("/");
   };
 
   return (
     <Paper
       elevation={3}
       sx={{
-        width: isMobile ? "70%" : isTab ? "100%" : "100%",
-        maxHeight: isMobile ? "85vh" : isTab ? "100vh" : "130vh",
+        width: { xs: "90%", sm: "100%", md: "100%" }, // Responsive width
+        maxHeight: { xs: "85vh", sm: "100vh", md: "130vh" }, // Responsive max-height
         height: "100%",
         display: "flex",
         flexDirection: "column",
+        mx: "auto", // Center on mobile
       }}
     >
+      {/* Header */}
       <Box
         sx={{
           display: "flex",
           alignItems: "center",
           justifyContent: "flex-start",
-          mb: isMobile ? "" : isTab ? "" : 3,
-          height: isMobile ? "8vh" : isTab ? "5vh" : "9vh",
+          mb: { md: 3 }, // Desktop margin
+          height: { xs: "8vh", sm: "5vh", md: "9vh" }, // Responsive height
+          mt: { sm: "1vh", md: "4vh" }, // Responsive top margin
         }}
       >
         <Typography
@@ -98,48 +101,68 @@ export function LatestApplications ( {
             textTransform: "uppercase",
             letterSpacing: "0.5px",
             ml: "1vw",
-            mt: isTab ? "" : "4vh",
+            fontSize: { xs: "1.2rem", sm: "1.3rem", md: "1.5rem" }, // Responsive font
           }}
         >
           New Applications
         </Typography>
       </Box>
+
       <Divider />
-      <Box sx={{ height: isTab ? "34.5vh" : "103vh", width: "100%" }}>
-        <TableContainer sx={{width: "100%"}}>
+
+      {/* Table Container */}
+      <Box
+        sx={{
+          height: { xs: "60vh", sm: "34.5vh", md: "103vh" }, // Responsive height
+          width: "100%",
+          overflow: "auto", // Scroll for small screens
+        }}
+      >
+        <TableContainer sx={{ width: "100%" }}>
           <Table
             sx={{
               minHeight: "auto",
               maxHeight:
                 applications?.length <= 1
                   ? "fit-content"
-                  : isMobile
-                    ? "85vh"
-                    : isTab
-                      ? "100vh"
-                      : "103vh",
+                  : {
+                      xs: "60vh",
+                      sm: "34.5vh",
+                      md: "103vh",
+                    },
               width: "100%",
             }}
           >
+            {/* Table Header */}
             <TableHead
               sx={{
-                height: isMobile ? "8vh" : isTab ? "5vh" : "12vh"
+                height: { xs: "8vh", sm: "5vh", md: "12vh" }, // Responsive height
+                position: "sticky",
+                top: 0,
+                bgcolor: "background.paper",
+                zIndex: 1,
               }}
             >
-              <TableRow sx={{ bgcolor: "grey.50",width: "20vw" }}>
-                <TableCell>Sr.</TableCell>
-                <TableCell align="center">Name</TableCell>
-                <TableCell align="center">Amount</TableCell>
-                <TableCell>Application Date</TableCell>
+              <TableRow sx={{ bgcolor: "grey.50" }}>
+                <TableCell sx={{ fontWeight: 600 }}>Sr.</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600 }}>
+                  Name
+                </TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600 }}>
+                  Amount
+                </TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Application Date</TableCell>
               </TableRow>
             </TableHead>
+
+            {/* Table Body */}
             <TableBody>
               {!applications?.length || swrLoading || paginationLoading ? (
                 <TableRow>
                   <TableCell
-                    sx={{ height: isTab ? "34.5vh" : "90vh" }}
                     colSpan={6}
                     align="center"
+                    sx={{ height: { xs: "50vh", sm: "30vh", md: "90vh" } }}
                   >
                     {swrLoading || paginationLoading ? (
                       <Loader />
@@ -149,61 +172,100 @@ export function LatestApplications ( {
                   </TableCell>
                 </TableRow>
               ) : (
-                applications.map((application: CustomerApplicationData, index: number) => (
-                  <TableRow
-                    key={application.applicationId}
-                    sx={{
-                      height: isMobile ? "10vh" : isTab ? "5vh" : "15vh",
-                      "&:hover": { bgcolor: "primary.50" },
-                      transition: "background-color 0.2s",
-                    }}
-                  >
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell>
-                      <Box
+                applications.map(
+                  (application: CustomerApplicationData, index: number) => (
+                    <TableRow
+                      key={application.applicationId}
+                      sx={{
+                        height: { xs: "10vh", sm: "7vh", md: "15vh" }, // Responsive row height
+                        "&:hover": { bgcolor: "primary.50" },
+                        transition: "background-color 0.2s",
+                      }}
+                    >
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            justifyContent: { xs: "flex-start", sm: "center" }, // Mobile left-align
+                          }}
+                        >
+                          <Person
+                            sx={{
+                              color: "primary.main",
+                              fontSize: { xs: "1rem", sm: "1.2rem" },
+                            }}
+                          />
+                          <Typography
+                            sx={{
+                              fontSize: {
+                                xs: "0.8rem",
+                                sm: "0.9rem",
+                                md: "1rem",
+                              },
+                            }}
+                          >
+                            {application.customerName}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: { xs: "flex-start", sm: "center" },
+                            gap: 1,
+                          }}
+                        >
+                          <CurrencyRupeeIcon
+                            sx={{
+                              color: "primary.main",
+                              fontSize: { xs: "1rem", sm: "1.2rem" },
+                            }}
+                          />
+                          <Typography
+                            sx={{
+                              fontSize: {
+                                xs: "0.8rem",
+                                sm: "0.9rem",
+                                md: "1rem",
+                              },
+                            }}
+                          >
+                            {application.applicationAmount}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell
                         sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 1,
-                          justifyContent: "center",
+                          fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" },
                         }}
                       >
-                        <Person sx={{ color: "primary.main" }} />
-                        {application.customerName}
-                      </Box>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: 1,
-                        }}
-                      >
-                        <CurrencyRupeeIcon sx={{ color: "primary.main" }} />
-                        {application.applicationAmount}
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      {dayjs( application.applicationDate ).format( "MMM D, YYYY" )}
-                    </TableCell>
-                  </TableRow>
-                ) )
+                        {dayjs(application.applicationDate).format(
+                          "MMM D, YYYY"
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  )
+                )
               )}
             </TableBody>
           </Table>
         </TableContainer>
       </Box>
+
+      {/* Footer */}
       <Box
         sx={{
-          height: isMobile ? "8vh" : isTab ? "5vh" : "9vh",
-          mb: isMobile ? "1vh" : "",
+          height: { xs: "8vh", sm: "5vh", md: "9vh" },
+          mb: { xs: "1vh", sm: 0 },
+          mt: "auto", // Push to bottom
         }}
       >
-        <CardActions
-          sx={{ justifyContent: "flex-end", mt: isTab ? "1vh" : "3vh" }}
-        >
+        <CardActions sx={{ justifyContent: "flex-end", p: { xs: 1, sm: 2 } }}>
           <Button
             color="inherit"
             endIcon={<ArrowRightIcon />}
@@ -211,16 +273,16 @@ export function LatestApplications ( {
             variant="text"
             onClick={handleViewAllClick}
             sx={{
-              width: isMobile ? "30vw" : isTab ? "15vw" : "8vw",
-              fontSize: ".9rem",
+              width: { xs: "120px", sm: "15vw", md: "8vw" }, // Responsive width
+              fontSize: { xs: "0.8rem", sm: "0.9rem" },
               mr: ".6vw",
-              bgcolor: "#f06292",
-              position: "static",
+              bgcolor: "#0c66e4",
               color: "white",
               "&:hover": {
-                bgcolor: "#9D50BB",
+                bgcolor: "#0c66e4",
                 color: "white",
               },
+              whiteSpace: "nowrap", // Prevent text wrapping
             }}
           >
             View all

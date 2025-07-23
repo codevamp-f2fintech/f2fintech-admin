@@ -21,8 +21,8 @@ export const navItems = [
   },
   {
     key: "archived",
-    title: "Archived Tickets",
+    title: "Archived",
     href: "/tickets-archive",
     icon: "users",
-  }
+  },
 ] satisfies NavItemConfig[];

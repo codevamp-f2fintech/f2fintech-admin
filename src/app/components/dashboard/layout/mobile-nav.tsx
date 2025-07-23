@@ -53,9 +53,7 @@ export function MobileNav({
           bgcolor: "var(--MobileNav-background)",
           color: "var(--MobileNav-color)",
           display: "flex",
-          backgroundImage: `
-      linear-gradient(64.5deg, rgba(245,116,185,1) 20.7%, rgba(89,97,223,1) 68.7%)
-    `,
+          backgroundImage: "linear-gradient(135deg, #fff 0%, #fff 100%)",
           backgroundBlendMode: "multiply, screen, normal",
           flexDirection: "column",
           maxWidth: "100%",
@@ -155,7 +153,7 @@ function NavItem({
         sx={{
           alignItems: "center",
           borderRadius: 1,
-          color: "var(--NavItem-color)",
+          color: "black",
           cursor: "pointer",
           display: "flex",
           flex: "0 0 auto",
@@ -165,14 +163,14 @@ function NavItem({
           textDecoration: "none",
           whiteSpace: "nowrap",
           backgroundImage: `
-      linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
-    `,
+          linear-gradient(#deebff, #deebff)
+           `,
           backgroundBlendMode: "multiply, screen, normal",
-          transition: "all 0.3s ease", // Smooth transition for all properties
+          transition: "all 0.3s ease",
           "&:hover": {
             backgroundImage: `
-      linear-gradient(64.5deg, rgba(255,138,185,1) 14.7%, rgba(89,150,223,1) 88.7%)
-    `,
+             linear-gradient #c4d5eb, #c4d5eb)
+           `,
             transform: "scale(1)", // Slightly scale up the element on hover
             boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)", // Add shadow on hover
           },
@@ -202,7 +200,7 @@ function NavItem({
           <Typography
             component="span"
             sx={{
-              color: "white",
+              color: "black",
               fontSize: "1rem",
               fontWeight: 500,
               lineHeight: "1.2rem",
