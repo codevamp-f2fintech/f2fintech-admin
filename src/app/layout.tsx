@@ -28,7 +28,7 @@ const RootLayout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
                   "--MainNav-zIndex": 1000,
                   "--SideNav-width": "15vw",
                   "--SideNav-zIndex": 1100,
-                  "--MobileNav-width": "320px",
+                  "--MobileNav-width": "1000px",
                   "--MobileNav-zIndex": 1100,
                 },
               }}

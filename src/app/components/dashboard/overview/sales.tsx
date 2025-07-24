@@ -24,7 +24,7 @@ export function Sales({ chartSeries, sx }: SalesProps): React.JSX.Element {
   return (
     <Card
       sx={{
-        height: isTab ? "45vh" : isMobile ? "75vh" : "90vh",
+        height: isTab ? "55vh" : isMobile ? "75vh" : "90vh",
         width: "100%"
       }}
     >

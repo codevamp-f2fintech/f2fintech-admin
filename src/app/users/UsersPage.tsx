@@ -121,7 +121,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
         // px: { xs: 2, sm: 4 },
       }}
     >
-      <Container sx={{ p: 0 }}>
+      <Container sx={{ p: 4 }}>
         {/* Header */}
         <Box
           sx={{
