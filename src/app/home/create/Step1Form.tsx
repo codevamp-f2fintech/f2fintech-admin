@@ -1290,7 +1290,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                   }}
                 >
                   <InputLabel sx={{ color: "white" }}>
-                    Occupation Type*
+                    Employment Type*
                   </InputLabel>
                   <Select
                     variant="filled"
