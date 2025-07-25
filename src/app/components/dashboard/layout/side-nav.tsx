@@ -9,10 +9,8 @@ import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import Collapse from "@mui/material/Collapse";
 import IconButton from "@mui/material/IconButton";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import MenuIcon from "@mui/icons-material/Menu";
 import Tooltip from "@mui/material/Tooltip";
-import useMediaQuery from "@mui/material/useMediaQuery";
 
 import type { NavItemConfig } from "@/types/nav";
 import { isNavItemActive } from "@/utils/is-nav-item-active";
@@ -25,8 +23,6 @@ export function SideNav(): React.JSX.Element {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = React.useState(false); // Collapse state
   const { decodedToken } = Utility();
-  const isMobile = useMediaQuery("(max-width:600px)");
-  const isTab = useMediaQuery("(min-width:601px) and (max-width:1100px)");
 
   const userRole = decodedToken()?.role;
 
@@ -122,7 +118,7 @@ function renderNavItems({
       if (item.title === "Loan Provider" && userRole !== "admin") {
         return acc;
       }
-      if ( item.title === "Archived Tickets" && userRole !== "admin" )
+      if ( item.title === "Archived" && userRole !== "admin" )
       {
         return acc;
         }
