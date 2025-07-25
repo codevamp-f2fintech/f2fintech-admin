@@ -55,7 +55,7 @@ const initialValues = {
   city: "",
   state: "",
   pan: "",
-  occupation_type: "",
+  employment_type: "",
 };
 
 interface Step1FormProps {
@@ -944,7 +944,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     >
                       <MenuItem value="Mr">Mr</MenuItem>
                       <MenuItem value="Mrs">Mrs</MenuItem>
-                      <MenuItem value="Ms">Ms</MenuItem>
+                      <MenuItem value="Ms">Miss</MenuItem>
                       <MenuItem value="Dr">Dr</MenuItem>
                       <MenuItem value="Ca">Ca</MenuItem>
                     </Select>
@@ -1278,7 +1278,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                 <FormControl
                   autoComplete="off"
                   variant="filled"
-                  error={!!touched.occupation_type && !!errors.occupation_type}
+                  error={!!touched.employment_type && !!errors.employment_type}
                   sx={{
                     width: "75%",
                     height: "50px",
@@ -1294,8 +1294,8 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                   </InputLabel>
                   <Select
                     variant="filled"
-                    name="occupation_type"
-                    value={values.occupation_type}
+                    name="employment_type"
+                    value={values.employment_type}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     MenuProps={{
@@ -1313,7 +1313,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                   </Select>
 
                   <ErrorMessage
-                    name="occupation_type"
+                    name="employment_type"
                     component="div"
                     style={{
                       color: "#d32f2f",
