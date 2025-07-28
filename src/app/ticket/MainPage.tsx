@@ -171,7 +171,6 @@ const Ticket = () => {
   // Reset ticket state and fetch when sortBy or other filters change
   useEffect(() => {
     setCurrentPage(1);
-    console.log("RESET TICKETS");
     dispatch(resetTickets());
   }, [
     sortBy,

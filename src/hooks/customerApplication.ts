@@ -17,12 +17,20 @@ export const useGetCustomerApplications = (
   page: number = 1,
   limit: number = 6,
   salesUserId?: number | string | null,
+  searchTerm?: string,
   formattedStartDate?: string | null,
   formattedEndDate?: string | null
 ) => {
-  let url = salesUserId ?
-    `${ pathKey }?page=${ page }&limit=${ limit }&appliedBy=${ salesUserId }` :
-    `${ pathKey }?page=${ page }&limit=${ limit }`;
+  let url = `${ pathKey }?page=${ page }&limit=${ limit }`;
+
+  if ( salesUserId )
+  {
+    url += `&appliedBy=${ salesUserId }`;
+  }
+  if ( searchTerm && searchTerm.trim() !== '' )
+  {
+    url += `&search=${ encodeURIComponent( searchTerm ) }`;
+  }
   if ( formattedStartDate )
   {
     url += `&startDate=${ formattedStartDate }`;
@@ -31,6 +39,7 @@ export const useGetCustomerApplications = (
   {
     url += `&endDate=${ formattedEndDate }`;
   }
+
   const {
     data: swrData,
     error,

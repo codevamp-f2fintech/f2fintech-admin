@@ -39,13 +39,21 @@ const customerApplicationSlice = createSlice({
         state.customerApplication = { results: [], count: 0, pages: 0 };
       }
     },
+    appendCustomerApplications: ( state, action ) => {
+      const newData = action.payload;
+      state.customerApplication = {
+        results: [ ...state.customerApplication.results, ...newData.results ],
+        count: newData.count,
+        pages: newData.pages
+      };
+    },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.reduxLoading = action.payload;
     },
   },
 });
 
-export const { setCustomerApplications, resetCustomerApplications, setLoading } =
+export const { setCustomerApplications, resetCustomerApplications, appendCustomerApplications, setLoading } =
   customerApplicationSlice.actions;
 
 export default customerApplicationSlice.reducer;
