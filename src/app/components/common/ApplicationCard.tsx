@@ -157,7 +157,6 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
   isApplication = false,
   toggleListView,
 }) => {
-  console.log("userRole12121", userRole);
   const [showHistory, setShowHistory] = useState<boolean>(false);
   const [historyData, setHistoryData] = useState<any[]>([]);
   const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false);
