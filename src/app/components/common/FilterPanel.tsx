@@ -59,6 +59,7 @@ interface FilterPanelProps {
   endDate: string | null;
   selectedUser: User | null;
   selectedBank: string | null;
+  month?: string;
   setSelectedUser: React.Dispatch<React.SetStateAction<User | null>>;
   setFilter: React.Dispatch<React.SetStateAction<string>>;
   setStartDate: React.Dispatch<React.SetStateAction<string | null>>;
@@ -428,6 +429,27 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             ),
           }}
         />
+
+        {startDate && endDate && (
+          <Tooltip title="Selected Month">
+            <Chip
+              icon={<CalendarMonthRounded sx={{ fontSize: 20 }} />}
+              label={new Date( startDate ).toLocaleString( 'default', { month: 'long' } )}
+              onDelete={() => {
+                setStartDate( null );
+                setEndDate( null );
+                handleFilterChange( { startDate: null, endDate: null } );
+              }}
+              sx={{
+                backgroundColor: "#4caf50",
+                color: "#fff",
+                "& .MuiChip-deleteIcon": {
+                  color: "#fff",
+                },
+              }}
+            />
+          </Tooltip>
+        )}
 
         {/* Bank Filter */}
         <Tooltip title="Filter by Bank/Lender">
