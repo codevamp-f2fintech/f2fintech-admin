@@ -410,6 +410,7 @@ const Ticket = () => {
       <Box
         sx={{
           display: "flex",
+          width: '80%',
         }}
       >
         <Box
@@ -446,60 +447,61 @@ const Ticket = () => {
             handleFilterChange={handleFilterChange}
           />
         </Box>
-        <Box
-          sx={{
-            position: { xs: "relative", sm: "relative", md: "absolute" }, // Changed for mobile
-            right: { xs: "unset", sm: "unset", md: 0 },
-            top: { xs: "unset", sm: "unset", md: 0 },
-            display: "flex",
-            alignItems: "center",
-            border: "2px solid #e0e0e0",
-            borderRadius: "8px",
-            padding: "6px 12px",
-            backgroundColor: "#fafafa",
-            width: "fit-content",
-            marginLeft: { xs: "auto", sm: "auto", md: ".5rem" }, // Changed for mobile
-            marginRight: { xs: "auto", sm: "auto", md: "unset" }, // Added for mobile
-            marginBottom: { xs: "15px", sm: "15px", md: "0" }, // Added for mobile
-            height: {
-              xs: "6vh",
-              sm: "",
-              md: "7vh",
-            },
-            left: {
-              xs: 125,
-              sm: 260,
-              md: "inherit",
-              lg: "inherit",
-            },
-          }}
-        >
-          <Tooltip title="Grid View">
-            <IconButton
-              onClick={() => setToggleListView( false )}
-              sx={{
-                color: !toggleListView ? "#1d86ff" : "#9e9e9e",
-                backgroundColor: !toggleListView ? "#e3f2fd" : "transparent",
-                borderRadius: "8px",
-              }}
-            >
-              <GridViewIcon />
-            </IconButton>
-          </Tooltip>
 
-          <Tooltip title="List View">
-            <IconButton
-              onClick={() => setToggleListView( true )}
-              sx={{
-                color: toggleListView ? "#1d86ff" : "#9e9e9e",
-                backgroundColor: toggleListView ? "#e3f2fd" : "transparent",
-                borderRadius: "8px",
-              }}
-            >
-              <ViewListIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
+      </Box>
+      <Box
+        sx={{
+          position: { xs: "relative", sm: "relative", md: "absolute" }, // Changed for mobile
+          right: { xs: "unset", sm: "unset", md: 0 },
+          top: { xs: "unset", sm: "unset", md: 0 },
+          display: "flex",
+          alignItems: "center",
+          border: "2px solid #e0e0e0",
+          borderRadius: "8px",
+          padding: "6px 12px",
+          backgroundColor: "#fafafa",
+          width: "fit-content",
+          marginLeft: { xs: "auto", sm: "auto", md: ".5rem" }, // Changed for mobile
+          marginRight: { xs: "auto", sm: "auto", md: "unset" }, // Added for mobile
+          marginBottom: { xs: "15px", sm: "15px", md: "0" }, // Added for mobile
+          height: {
+            xs: "6vh",
+            sm: "",
+            md: "7vh",
+          },
+          left: {
+            xs: 125,
+            sm: 260,
+            md: "inherit",
+            lg: "inherit",
+          },
+        }}
+      >
+        <Tooltip title="Grid View">
+          <IconButton
+            onClick={() => setToggleListView( false )}
+            sx={{
+              color: !toggleListView ? "#1d86ff" : "#9e9e9e",
+              backgroundColor: !toggleListView ? "#e3f2fd" : "transparent",
+              borderRadius: "8px",
+            }}
+          >
+            <GridViewIcon />
+          </IconButton>
+        </Tooltip>
+
+        <Tooltip title="List View">
+          <IconButton
+            onClick={() => setToggleListView( true )}
+            sx={{
+              color: toggleListView ? "#1d86ff" : "#9e9e9e",
+              backgroundColor: toggleListView ? "#e3f2fd" : "transparent",
+              borderRadius: "8px",
+            }}
+          >
+            <ViewListIcon />
+          </IconButton>
+        </Tooltip>
       </Box>
 
       <Box
@@ -511,6 +513,7 @@ const Ticket = () => {
           justifyContent: "space-between",
           paddingTop: "20px",
           marginBottom: "0",
+
         }}
       >
         <Grid
