@@ -434,30 +434,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
           }}
         />
 
-        {startDate && endDate && (
-          <Tooltip title="Selected Month">
-            <Chip
-              icon={<CalendarMonthRounded sx={{ fontSize: 20 }} />}
-              label={new Date( startDate ).toLocaleString( 'default', { month: 'long' } )}
-              onDelete={() => {
-                setStartDate( null );
-                setEndDate( null );
-                handleFilterChange( { startDate: null, endDate: null } );
-              }}
-              sx={{
-                backgroundColor: startDate ? "#1976d2" : "#e0e0e0",
-                color: startDate ? "#fff" : "inherit",
-                "&:hover": { opacity: 0.9 },
-                "& .MuiChip-deleteIcon": {
-                  color: "#fff",
-                },
-                "& .MuiChip-icon": {
-                  color: "inherit",
-                },
-              }}
-            />
-          </Tooltip>
-        )}
 
         {/* Bank Filter */}
         <Tooltip title="Filter by Bank/Lender">
@@ -689,6 +665,49 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
                 backgroundColor: getStatusColor( "disbursed" ),
                 color: "#fff",
                 fontWeight: 500,
+                "& .MuiChip-icon": {
+                  color: "inherit",
+                },
+              }}
+            />
+          </Tooltip>
+        )}
+
+        {startDate && endDate && (
+          <Tooltip title="Selected Date Range">
+            <Chip
+              icon={<CalendarMonthRounded sx={{ fontSize: 20 }} />}
+              label={( () => {
+                const start = new Date( startDate );
+                const end = new Date( endDate );
+
+                // Check if it's the same month and year
+                if ( start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear() )
+                {
+                  return start.toLocaleString( 'default', { month: 'long', year: 'numeric' } );
+                }
+
+                // Check if it's the same year but different months
+                if ( start.getFullYear() === end.getFullYear() )
+                {
+                  return `${ start.toLocaleString( 'default', { month: 'short' } ) } - ${ end.toLocaleString( 'default', { month: 'short' } ) } ${ start.getFullYear() }`;
+                }
+
+                // Different years
+                return `${ start.toLocaleString( 'default', { month: 'short', year: 'numeric' } ) } - ${ end.toLocaleString( 'default', { month: 'short', year: 'numeric' } ) }`;
+              } )()}
+              onDelete={() => {
+                setStartDate( null );
+                setEndDate( null );
+                handleFilterChange( { startDate: null, endDate: null } );
+              }}
+              sx={{
+                backgroundColor: startDate ? "#1976d2" : "#e0e0e0",
+                color: startDate ? "#fff" : "inherit",
+                "&:hover": { opacity: 0.9 },
+                "& .MuiChip-deleteIcon": {
+                  color: "#fff",
+                },
                 "& .MuiChip-icon": {
                   color: "inherit",
                 },
