@@ -445,10 +445,14 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
                 handleFilterChange( { startDate: null, endDate: null } );
               }}
               sx={{
-                backgroundColor: "#4caf50",
-                color: "#fff",
+                backgroundColor: startDate ? "#1976d2" : "#e0e0e0",
+                color: startDate ? "#fff" : "inherit",
+                "&:hover": { opacity: 0.9 },
                 "& .MuiChip-deleteIcon": {
                   color: "#fff",
+                },
+                "& .MuiChip-icon": {
+                  color: "inherit",
                 },
               }}
             />
