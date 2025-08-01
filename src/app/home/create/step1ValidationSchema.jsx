@@ -11,7 +11,7 @@ const step1ValidationSchema = yup.object().shape({
 
   title: yup.string()
     .required( "Title is required" )
-    .oneOf( [ "Mr", "Mrs", "Ms", "Dr", "Ca" ], "Please select a valid title" ),
+    .oneOf( [ "Mr", "Mrs", "Miss", "Dr", "Ca" ], "Please select a valid title" ),
 
   name: yup
     .string()
