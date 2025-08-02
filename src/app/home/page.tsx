@@ -27,7 +27,7 @@ import { ClearRounded, SearchRounded } from "@mui/icons-material";
 import GridViewIcon from "@mui/icons-material/GridView";
 import ViewListIcon from "@mui/icons-material/ViewList";
 
-const ITEMS_PER_PAGE = 12;
+const ITEMS_PER_PAGE = 30;
 
 const Home: React.FC = () => {
   const [ searchTerm, setSearchTerm ] = useState<string>( "" );
