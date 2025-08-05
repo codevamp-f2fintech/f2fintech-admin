@@ -254,55 +254,57 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
               },
             }}
           />
+          <Box sx={{ display: "flex",justifyContent: "flex-end", width: "100%",gap: 2 }}>
+            {/* Show Create button only for active users */}
+            {!showInactive && (
+              <Button
+                variant="contained"
+                startIcon={<PersonAddRounded />}
+                onClick={() => handleOpenDialog( null )}
+                sx={{
+                  borderRadius: "100px",
+                  px: 3,
+                  textTransform: "none",
+                  fontWeight: 600,
+                  boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                  bgcolor: "#0c66e4",
+                  color: "white",
+                  ml: "20vw",
+                  "&:hover": {
+                    bgcolor: "#0c66e4",
+                    color: "white",
+                  },
+                }}
+              >
+                Create New User
+              </Button>
+            )}
 
-          {/* Show Create button only for active users */}
-          {!showInactive && (
             <Button
-              variant="contained"
-              startIcon={<PersonAddRounded />}
-              onClick={() => handleOpenDialog( null )}
+              variant="outlined"
+              startIcon={showInactive ? <PersonRounded /> : <PersonOffRounded />}
+              onClick={handleToggleUsers}
+              disabled={loadingInactive}
               sx={{
                 borderRadius: "100px",
                 px: 3,
                 textTransform: "none",
                 fontWeight: 600,
                 boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                bgcolor: "#0c66e4",
-                color: "white",
+                color: "#0c66e4",
+                borderColor: "#0c66e4",
                 "&:hover": {
-                  bgcolor: "#0c66e4",
-                  color: "white",
+                  bgcolor: "#f0f4ff",
+                  borderColor: "#0c66e4",
                 },
               }}
             >
-              Create New User
+              {loadingInactive ? (
+                <CircularProgress size={16} sx={{ mr: 1 }} />
+              ) : null}
+              {showInactive ? "View Active Users" : "View Inactive Users"}
             </Button>
-          )}
-
-          <Button
-            variant="outlined"
-            startIcon={showInactive ? <PersonRounded /> : <PersonOffRounded />}
-            onClick={handleToggleUsers}
-            disabled={loadingInactive}
-            sx={{
-              borderRadius: "100px",
-              px: 3,
-              textTransform: "none",
-              fontWeight: 600,
-              boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-              color: "#0c66e4",
-              borderColor: "#0c66e4",
-              "&:hover": {
-                bgcolor: "#f0f4ff",
-                borderColor: "#0c66e4",
-              },
-            }}
-          >
-            {loadingInactive ? (
-              <CircularProgress size={16} sx={{ mr: 1 }} />
-            ) : null}
-            {showInactive ? "View Active Users" : "View Inactive Users"}
-          </Button>
+          </Box>
 
         </Box>
 
