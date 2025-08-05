@@ -34,11 +34,10 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
-// import API from "../../apis";
-
 import step1ValidationSchema from "./step1ValidationSchema";
 import { Utility } from "@/utils";
 import Toast from "@/app/components/common/Toast";
+import { useGetLoanProviders } from "@/hooks/loanProvider";
 
 const initialValues = {
   title: "",
@@ -88,6 +87,10 @@ const Step1Form: React.FC<Step1FormProps> = ( {
   const toastInfo = useSelector( ( state: any ) => state.toast );
   const dispatch = useDispatch();
 
+  // Fetch loan providers
+  const { value: providersData, swrLoading: providersLoading } =
+    useGetLoanProviders( null, "get-all-loan-providers", 1, 100 );
+
   const { decodedToken, getLocalStorage, remLocalStorage, setLocalStorage, toastAndNavigate
   } = Utility();
   const storedCustomerId = getLocalStorage( "customerInfo" )?.id;
@@ -96,7 +99,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
   const randomNumberGenerator = (): number =>
     Math.floor( 10000000 + Math.random() * 90000000 );
 
-  const randomFourDigitNumber = Math.floor( 1000 + Math.random() * 9000 ); // Generate random 4-digit number
+  const randomFourDigitNumber = Math.floor( 1000 + Math.random() * 9000 );
 
   // Get the current date and calculate 20 years ago
   const minDate = dayjs( "1900-01-01" );
@@ -295,24 +298,9 @@ const Step1Form: React.FC<Step1FormProps> = ( {
     [ amount, tenure, provider, loanType ]
   );
 
-  const PROVIDER_OPTIONS = [
-    "Bajaj Finance",
-    "Bajaj Market",
-    "Chola",
-    "LNT",
-    "Tata",
-    "ABFL",
-    "Godrej",
-    "IDFC",
-    "HDFC Bank",
-    "ICICI Bank",
-    "Indusind Bank",
-    "Lending Cart",
-    "Incred",
-    "Credit Saison",
-    "PaySense",
-    "Shriram"
-  ];
+  const PROVIDER_OPTIONS = providersLoading
+    ? []
+    : providersData?.data?.results?.map( provider => provider.title ) || [];
 
   const LOAN_TYPES = [ "Term Loan", "Personal Loan", "Business Loan", "Professional Loan", "Home Loan", "Education Loan", "LAP", "Machinery Loan", "Auto Loan" ];
 
@@ -508,7 +496,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                 value={provider}
                 sx={{
                   padding: "8px 16px",
-                  "&:first-of-type": {  // Specific fix for first item
+                  "&:first-of-type": {
                     marginTop: 0,
                   },
                 }}
@@ -633,7 +621,6 @@ const Step1Form: React.FC<Step1FormProps> = ( {
         </FormControl>
         <Box
           sx={{
-            // width: "45%",
             width: {
               xs: "80%",
               md: "45%",
@@ -664,7 +651,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                 </InputAdornment>
               ),
               style: {
-                color: "white", // This sets the text color to white
+                color: "white",
               },
             }}
             sx={{
@@ -673,25 +660,25 @@ const Step1Form: React.FC<Step1FormProps> = ( {
               overflow: "hidden",
               marginBottom: 1,
               "& .MuiInputBase-root": {
-                backgroundColor: "transparent !important", // Makes the input background transparent
+                backgroundColor: "transparent !important",
               },
               "& .MuiFormLabel-root": {
-                color: "#9e9e9e", // Label color
+                color: "#9e9e9e",
               },
               "& .MuiFormLabel-focus": {
-                color: "#ffffff", // Label color
+                color: "#ffffff",
               },
               "& .MuiFilledInput-underline:before": {
-                borderBottomColor: "rgba(255, 255, 255, 0.5)", // Underline color
+                borderBottomColor: "rgba(255, 255, 255, 0.5)",
               },
               "& .MuiFilledInput-underline:hover:before": {
-                borderBottomColor: "#ffffff", // Underline color on hover
+                borderBottomColor: "#ffffff",
               },
               "& .MuiFilledInput-underline:after": {
-                borderBottomColor: "#039be5", // Underline color when focused
+                borderBottomColor: "#039be5",
               },
               "& .MuiFormLabel-root.Mui-focused": {
-                color: "#e0e0e0 !important", // Ensure label color stays white when focused
+                color: "#e0e0e0 !important",
                 fontSize: "1rem",
               },
             }}
@@ -750,17 +737,17 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                 key={label}
                 value={label}
                 sx={{
-                  backgroundColor: "white", // Default background color
-                  color: "black", // Default text color
+                  backgroundColor: "white",
+                  color: "black",
                   "&:hover": {
-                    backgroundColor: "#757575", // Slightly lighter black on hover
+                    backgroundColor: "#757575",
                   },
                   "&.Mui-selected": {
-                    backgroundColor: "black", // Background color when selected
-                    color: "white", // Text color when selected
+                    backgroundColor: "black",
+                    color: "white",
                   },
                   "&.Mui-selected:hover": {
-                    backgroundColor: "#757575", // Slightly lighter black on hover when selected
+                    backgroundColor: "#757575",
                   },
                 }}
               >
@@ -786,7 +773,6 @@ const Step1Form: React.FC<Step1FormProps> = ( {
         </FormControl>
 
         <Button
-          // color="primary"
           disabled={
             !!errors.amount ||
             !!errors.tenure ||
@@ -797,7 +783,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
           variant="contained"
           endIcon={<ArrowForwardIcon />}
           onClick={() => {
-            setGetStarted( true ); // This sets getStarted to true
+            setGetStarted( true );
           }}
           sx={{
             fontWeight: "500",
@@ -806,7 +792,6 @@ const Step1Form: React.FC<Step1FormProps> = ( {
             lineHeight: "1.5rem",
             mt: 2,
             backgroundColor: "#039be5",
-            // width: "45%",
             width: {
               xs: "80%",
               md: "45%",
@@ -863,9 +848,9 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                   sx={{
                     fontFamily: "DM Sans",
                     fontSize: {
-                      xs: "1.7rem", // Mobile
-                      sm: "2.5rem", // Tablet
-                      md: "2rem", // Desktop
+                      xs: "1.7rem",
+                      sm: "2.5rem",
+                      md: "2rem",
                     },
                     color: "white",
                     fontWeight: 500,
@@ -1014,7 +999,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     fontSize: "16px",
                     marginBottom: 3,
                     "& .MuiInputBase-input": {
-                      color: "white", // This sets the text color inside the input field to white
+                      color: "white",
                     },
                   }}
                 />
@@ -1042,7 +1027,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     fontSize: "16px",
                     marginBottom: 3,
                     "& .MuiInputBase-input": {
-                      color: "white", // This sets the text color inside the input field to white
+                      color: "white",
                     },
                   }}
                 />
@@ -1055,13 +1040,13 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                   onBlur={handleBlur}
                   onChange={( event ) => {
                     const uppercaseValue = event.target.value.toUpperCase();
-                    setFieldValue( "pan", uppercaseValue ); // Update the Formik field value in uppercase
+                    setFieldValue( "pan", uppercaseValue );
                   }}
                   error={touched.pan && Boolean( errors.pan )}
                   helperText={touched.pan && errors.pan}
                   inputProps={{
                     maxLength: 10,
-                    style: { textTransform: "uppercase" }, // Applies uppercase stylin
+                    style: { textTransform: "uppercase" },
                   }}
                   InputLabelProps={{
                     style: { color: "#9e9e9e" },
@@ -1072,7 +1057,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     fontSize: "16px",
                     marginBottom: 3,
                     "& .MuiInputBase-input": {
-                      color: "white", // This sets the text color inside the input field to white
+                      color: "white",
                     },
                   }}
                 />
@@ -1100,7 +1085,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     fontSize: "16px",
                     marginBottom: 3,
                     "& .MuiInputBase-input": {
-                      color: "white", // This sets the text color inside the input field to white
+                      color: "white",
                     },
                   }}
                 />
@@ -1128,7 +1113,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     fontSize: "16px",
                     marginBottom: 3,
                     "& .MuiInputBase-input": {
-                      color: "white", // This sets the text color inside the input field to white
+                      color: "white",
                     },
                   }}
                 />
@@ -1156,7 +1141,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     fontSize: "16px",
                     marginBottom: 3,
                     "& .MuiInputBase-input": {
-                      color: "white", // This sets the text color inside the input field to white
+                      color: "white",
                     },
                   }}
                 />
@@ -1188,7 +1173,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     fontSize: "16px",
                     marginBottom: 3,
                     "& .MuiInputBase-input": {
-                      color: "white", // This sets the text color inside the input field to white
+                      color: "white",
                     },
                   }}
                 />
@@ -1216,7 +1201,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     fontSize: "16px",
                     marginBottom: 3,
                     "& .MuiInputBase-input": {
-                      color: "white", // This sets the text color inside the input field to white
+                      color: "white",
                     },
                   }}
                 />
@@ -1243,7 +1228,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     fontSize: "16px",
                     marginBottom: 3,
                     "& .MuiInputBase-input": {
-                      color: "white", // This sets the text color inside the input field to white
+                      color: "white",
                     },
                   }}
                 />
@@ -1285,7 +1270,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     fontSize: "16px",
                     marginBottom: 3,
                     "& .MuiInputBase-input": {
-                      color: "white", // This sets the text color inside the input field to white
+                      color: "white",
                     },
                   }}
                 >
@@ -1302,7 +1287,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                       PaperProps: {
                         sx: {
                           bgcolor: "black",
-                          color: "white", // Optional: Set text color to white for better contrast
+                          color: "white",
                         },
                       },
                     }}
@@ -1340,8 +1325,8 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                       views={[ "year", "month", "day" ]}
                       label="Select Date Of Birth*"
                       name="dob"
-                      minDate={minDate} // Start at 1900
-                      maxDate={maxDate} // End at 20 years before today
+                      minDate={minDate}
+                      maxDate={maxDate}
                       error={touched.dob && !!errors.dob}
                       helperText={touched.dob && errors.dob}
                       value={values.dob}
@@ -1352,8 +1337,8 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                       )}
                       PopperProps={{
                         sx: {
-                          backgroundColor: "lightblue", // Change background color
-                          color: "black", // Adjust text color for readability
+                          backgroundColor: "lightblue",
+                          color: "black",
                         },
                       }}
                     />
@@ -1391,9 +1376,9 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                       <Typography
                         sx={{
                           fontSize: {
-                            xs: "0.75rem", // Mobile
-                            sm: "0.875rem", // Tablet
-                            md: "1rem", // Desktop
+                            xs: "0.75rem",
+                            sm: "0.875rem",
+                            md: "1rem",
                           },
                           color: "white",
                         }}
@@ -1431,20 +1416,20 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     fontWeight: "500",
                     borderRadius: "20px",
                     fontSize: {
-                      xs: "0.875rem", // Mobile
-                      sm: "1rem", // Tablet
-                      md: "1rem", // Desktop
+                      xs: "0.875rem",
+                      sm: "1rem",
+                      md: "1rem",
                     },
                     lineHeight: "1.5rem",
                     width: {
-                      xs: "50%", // Mobile
-                      sm: "30%", // Tablet
-                      md: "11vw", // Desktop
+                      xs: "50%",
+                      sm: "30%",
+                      md: "11vw",
                     },
                     padding: {
-                      xs: "8px 16px", // Mobile
-                      sm: "10px 20px", // Tablet
-                      md: "8px 16px", // Desktop
+                      xs: "8px 16px",
+                      sm: "10px 20px",
+                      md: "8px 16px",
                     },
                     mt: 2,
                     backgroundColor: "#039be5",
