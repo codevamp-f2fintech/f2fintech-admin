@@ -54,6 +54,21 @@ export const UserAPI = {
     });
   },
 
+  getInactiveUsers: async ( page = 1, limit = 10, cancel = false ) => {
+    return await axiosInstance.request( {
+      url: `/get-inactive-users`,
+      method: "GET",
+      params: {
+        page,
+        limit
+      },
+      signal: cancel
+        ? cancelApiObject[ UserAPI.getInactiveUsers.name ].handleRequestCancellation()
+          .signal
+        : undefined,
+    } );
+  },
+
   // upload document to S3 Bucket
   uploadDocument: async (document, cancel = false) => {
     return await axiosInstance.request({
