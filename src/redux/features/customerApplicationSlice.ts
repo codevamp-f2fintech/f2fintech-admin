@@ -15,14 +15,17 @@ const customerApplicationSlice = createSlice({
   name: "customerApplication",
   initialState,
   reducers: {
-    setCustomerApplications: (state, action: PayloadAction<CustomerApplication>) => {
-      state.customerApplication = {
-        ...action.payload,
-        results: [
-          ...(state.customerApplication?.results || []),
-          ...action.payload.results,
-        ],
-      };
+    setCustomerApplications: (state, action: PayloadAction<CustomerApplication & { currentPage: number }>) => {
+      const { currentPage, ...data } = action.payload;
+      state.customerApplication = currentPage === 1
+        ? data
+        : {
+          ...data,
+          results: [
+            ...(state.customerApplication?.results || []),
+            ...data.results,
+          ],
+        };
     },
     resetCustomerApplications: (state, action: PayloadAction<number | undefined>) => {
       const applicationIdToRemove = action.payload;
@@ -39,21 +42,13 @@ const customerApplicationSlice = createSlice({
         state.customerApplication = { results: [], count: 0, pages: 0 };
       }
     },
-    appendCustomerApplications: ( state, action ) => {
-      const newData = action.payload;
-      state.customerApplication = {
-        results: [ ...state.customerApplication.results, ...newData.results ],
-        count: newData.count,
-        pages: newData.pages
-      };
-    },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.reduxLoading = action.payload;
     },
   },
 });
 
-export const { setCustomerApplications, resetCustomerApplications, appendCustomerApplications, setLoading } =
+export const { setCustomerApplications, resetCustomerApplications, setLoading } =
   customerApplicationSlice.actions;
 
 export default customerApplicationSlice.reducer;

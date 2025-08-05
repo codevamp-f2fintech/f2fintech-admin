@@ -27,30 +27,30 @@ import { ClearRounded, SearchRounded } from "@mui/icons-material";
 import GridViewIcon from "@mui/icons-material/GridView";
 import ViewListIcon from "@mui/icons-material/ViewList";
 
-const ITEMS_PER_PAGE = 30;
+const ITEMS_PER_PAGE = 6;
 
 const Home: React.FC = () => {
-  const [ searchTerm, setSearchTerm ] = useState<string>( "" );
-  const [ debouncedSearchTerm, setDebouncedSearchTerm ] = useState<string>( "" );
-  const [ currentPage, setCurrentPage ] = useState<number>( 1 );
-  const [ hasMoreData, setHasMoreData ] = useState<boolean>( true );
-  const [ isSearching, setIsSearching ] = useState<boolean>( false );
-  const [ deleteDialog, setDeleteDialog ] = useState( {
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [hasMoreData, setHasMoreData] = useState<boolean>(true);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [deleteDialog, setDeleteDialog] = useState({
     open: false,
     applicationId: null,
     customerName: "",
-  } );
-  const [ isDeleting, setIsDeleting ] = useState<boolean>( false );
-  const [ toggleListView, setToggleListView ] = useState( true );
-  const [ prevSearchTerm, setPrevSearchTerm ] = useState<string>( "" );
+  });
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [toggleListView, setToggleListView] = useState(true);
+  const [prevSearchTerm, setPrevSearchTerm] = useState<string>("");
 
   const { customerApplication } = useSelector(
-    ( state: RootState ) => state.customerApplications
+    (state: RootState) => state.customerApplications
   );
   const dispatch: AppDispatch = useDispatch();
   const { debounceScroll, decodedToken, remLocalStorage } = Utility();
-  const isMobile = useMediaQuery( "(max-width:600px)" );
-  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
   const salesUserId =
     decodedToken()?.role === "sales" ? decodedToken()?.id : null;
 
@@ -58,18 +58,18 @@ const Home: React.FC = () => {
   const isAdmin = userRole === "admin";
 
   // Debounce search term
-  useEffect( () => {
-    setIsSearching( true );
-    const handler = setTimeout( () => {
-      setDebouncedSearchTerm( searchTerm );
-      setCurrentPage( 1 ); // Reset to first page when search term changes
-      setIsSearching( false );
-    }, 500 );
+  useEffect(() => {
+    setIsSearching(true);
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1); // Reset to first page when search term changes
+      setIsSearching(false);
+    }, 500);
 
     return () => {
-      clearTimeout( handler );
+      clearTimeout(handler);
     };
-  }, [ searchTerm ] );
+  }, [searchTerm]);
 
   const {
     value: data,
@@ -85,77 +85,57 @@ const Home: React.FC = () => {
   );
 
   // Fetch and update state with new data
-  useEffect( () => {
-    if ( !data || !data.results ) return;
+  useEffect(() => {
+    if (!data || !data.results) return;
 
     // Check if search term changed (new search)
     const isNewSearch = debouncedSearchTerm !== prevSearchTerm;
 
-    if ( isNewSearch )
-    {
+    if (isNewSearch) {
       // Reset data for new search
-      dispatch( resetCustomerApplications() );
-      setPrevSearchTerm( debouncedSearchTerm );
+      dispatch(resetCustomerApplications());
+      setPrevSearchTerm(debouncedSearchTerm);
     }
 
-    if ( data.results.length > 0 )
-    {
-      // Check if this is a new search (page 1) or pagination (page > 1)
-      if ( currentPage === 1 || isNewSearch )
-      {
-        // For new search or first page, replace the data
-        dispatch( setCustomerApplications( data ) );
-      } else
-      {
-        // For pagination, append to existing data
-        const existingData = customerApplication?.results || [];
-        const newData = {
-          ...data,
-          results: [ ...existingData, ...data.results ]
-        };
-        dispatch( setCustomerApplications( newData ) );
+    if (data.results.length > 0) {
+      dispatch(setCustomerApplications({ ...data, currentPage }))
+      setHasMoreData(data.results.length === ITEMS_PER_PAGE);
+    } else {
+      if (currentPage === 1 || isNewSearch) {
+        dispatch(resetCustomerApplications());
       }
-
-      setHasMoreData( data.results.length === ITEMS_PER_PAGE );
-    } else
-    {
-      // If no results and it's the first page, clear the data
-      if ( currentPage === 1 || isNewSearch )
-      {
-        dispatch( resetCustomerApplications() );
-      }
-      setHasMoreData( false );
+      setHasMoreData(false);
     }
-  }, [ data?.results?.length, currentPage, debouncedSearchTerm ] );
+  }, [data?.results?.length, currentPage, debouncedSearchTerm]);
 
   // Handle infinite scrolling
   const handleScroll = useCallback(
-    debounceScroll( () => {
+    debounceScroll(() => {
       const nearBottom =
         window.innerHeight + window.scrollY >= document.body.offsetHeight - 400;
-      if ( nearBottom && !swrLoading && hasMoreData && !debouncedSearchTerm ) // Disable infinite scroll during search
+      if (nearBottom && !swrLoading && hasMoreData && !debouncedSearchTerm) // Disable infinite scroll during search
       {
-        setCurrentPage( ( prevPage ) => prevPage + 1 );
+        setCurrentPage((prevPage) => prevPage + 1);
       }
-    }, 500 ),
-    [ swrLoading, hasMoreData, debouncedSearchTerm ]
+    }, 500),
+    [swrLoading, hasMoreData, debouncedSearchTerm]
   );
 
-  useEffect( () => {
-    window.addEventListener( "scroll", handleScroll );
-    return () => window.removeEventListener( "scroll", handleScroll );
-  }, [ handleScroll ] );
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
 
-  useEffect( () => {
+  useEffect(() => {
     return () => {
-      dispatch( resetCustomerApplications() ) as unknown as void;
+      dispatch(resetCustomerApplications()) as unknown as void;
     };
-  }, [ dispatch ] );
+  }, [dispatch]);
 
   // Remove client-side filtering since we're doing it on the backend now
-  const filteredCustomers = useMemo( () => {
+  const filteredCustomers = useMemo(() => {
     return customerApplication?.results || [];
-  }, [ customerApplication ] );
+  }, [customerApplication]);
 
   // Delete application function
   const handleDeleteApplication = async (
@@ -163,56 +143,48 @@ const Home: React.FC = () => {
     customerName: string,
     reason: string
   ) => {
-    setIsDeleting( true );
-    try
-    {
-      const token = localStorage.getItem( "token" );
+    setIsDeleting(true);
+    try {
+      const token = localStorage.getItem("token");
       const response = await fetch(
-        `${ process.env.NEXT_PUBLIC_API_URL }/delete-loan-application/${ applicationId }`,
+        `${process.env.NEXT_PUBLIC_API_URL}/delete-loan-application/${applicationId}`,
         {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${ token }`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
 
-      if ( !response.ok )
-      {
+      if (!response.ok) {
         const errorData = await response.json();
-        throw new Error( errorData.message || "Failed to delete application" );
+        throw new Error(errorData.message || "Failed to delete application");
       }
 
-      setDeleteDialog( { open: false, applicationId: null, customerName: "" } );
+      setDeleteDialog({ open: false, applicationId: null, customerName: "" });
       window.location.reload();
-    } catch ( error )
-    {
-      console.error( "Error deleting application:", error );
-    } finally
-    {
-      setIsDeleting( false );
-      setDeleteDialog( { open: false, applicationId: null, customerName: "" } );
+    } catch (error) {
+      console.error("Error deleting application:", error);
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialog({ open: false, applicationId: null, customerName: "" });
     }
   };
 
-  const openDeleteDialog = ( applicationId: string, customerName: string ) => {
-    if ( !isAdmin )
-    {
-      console.warn( "Only admin users can delete applications" );
+  const openDeleteDialog = (applicationId: string, customerName: string) => {
+    if (!isAdmin) {
+      console.warn("Only admin users can delete applications");
       return;
     }
 
-    setDeleteDialog( {
+    setDeleteDialog({
       open: true,
       applicationId,
       customerName,
-    } );
+    });
   };
 
-  const closeDeleteDialog = () => {
-    setDeleteDialog( { open: false, applicationId: null, customerName: "" } );
-  };
 
   return (
     <Box
@@ -273,7 +245,7 @@ const Home: React.FC = () => {
               label="Search by name, number or PAN..."
               size="small"
               value={searchTerm}
-              onChange={( e ) => setSearchTerm( e.target.value )}
+              onChange={(e) => setSearchTerm(e.target.value)}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -282,7 +254,7 @@ const Home: React.FC = () => {
                 ),
                 endAdornment: searchTerm && (
                   <InputAdornment position="end">
-                    <IconButton size="small" onClick={() => setSearchTerm( "" )}>
+                    <IconButton size="small" onClick={() => setSearchTerm("")}>
                       <ClearRounded sx={{ fontSize: 16 }} />
                     </IconButton>
                   </InputAdornment>
@@ -330,7 +302,7 @@ const Home: React.FC = () => {
               label="Search by name, number or PAN..."
               size="small"
               value={searchTerm}
-              onChange={( e ) => setSearchTerm( e.target.value )}
+              onChange={(e) => setSearchTerm(e.target.value)}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -339,7 +311,7 @@ const Home: React.FC = () => {
                 ),
                 endAdornment: searchTerm && (
                   <InputAdornment position="end">
-                    <IconButton size="small" onClick={() => setSearchTerm( "" )}>
+                    <IconButton size="small" onClick={() => setSearchTerm("")}>
                       <ClearRounded sx={{ fontSize: 16 }} />
                     </IconButton>
                   </InputAdornment>
@@ -404,7 +376,7 @@ const Home: React.FC = () => {
             >
               <Tooltip title="Grid View">
                 <IconButton
-                  onClick={() => setToggleListView( false )}
+                  onClick={() => setToggleListView(false)}
                   sx={{
                     color: !toggleListView ? "#1d86ff" : "#9e9e9e",
                     height: { sm: "3vh", md: "5vh", xs: "4vh" },
@@ -418,7 +390,7 @@ const Home: React.FC = () => {
 
               <Tooltip title="List View">
                 <IconButton
-                  onClick={() => setToggleListView( true )}
+                  onClick={() => setToggleListView(true)}
                   sx={{
                     color: toggleListView ? "#1d86ff" : "#9e9e9e",
                     height: { sm: "3vh", md: "5vh", xs: "4vh" },
@@ -444,7 +416,7 @@ const Home: React.FC = () => {
                   whiteSpace: "nowrap",
                   order: 4,
                 }}
-                onClick={() => remLocalStorage( "customerInfo" )}
+                onClick={() => remLocalStorage("customerInfo")}
                 variant="contained"
               >
                 Create Application
@@ -504,7 +476,7 @@ const Home: React.FC = () => {
             </Box>
           ) : (
             <>
-              {filteredCustomers.map( ( customerApplication ) => (
+              {filteredCustomers.map((customerApplication) => (
                 <ApplicationCard
                   key={customerApplication.applicationId}
                   customerApplication={customerApplication}
@@ -516,7 +488,7 @@ const Home: React.FC = () => {
                   toggleListView={toggleListView}
                   userRole={userRole}
                 />
-              ) )}
+              ))}
 
               {!hasMoreData && !swrLoading && (
                 <Typography
@@ -533,7 +505,7 @@ const Home: React.FC = () => {
             </>
           )}
         </Grid>
-        {( swrLoading || isDeleting ) && <Loader />}
+        {(swrLoading || isDeleting) && <Loader />}
       </Box>
     </Box>
   );
