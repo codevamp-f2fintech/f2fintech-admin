@@ -16,6 +16,7 @@ import {
   InputAdornment,
   IconButton,
 } from "@mui/material";
+import PercentIcon from '@mui/icons-material/Percent';
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ArrowBackRounded } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
@@ -181,16 +182,22 @@ const LoanFormPage = () => {
                 <Field
                   as={TextField}
                   fullWidth
-                  label="Interest Rate (%)"
+                  label="Interest Rate"
                   name="interest_rate"
-                  type="number"
                   error={touched.interest_rate && Boolean( errors.interest_rate )}
                   helperText={touched.interest_rate && errors.interest_rate}
                   required
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <CurrencyRupeeIcon sx={{ color: "action.active" }} />
+                        <PercentIcon sx={{ color: "action.active" }} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <Typography variant="body2" color="text.secondary">
+                          %
+                        </Typography>
                       </InputAdornment>
                     ),
                   }}
@@ -204,7 +211,6 @@ const LoanFormPage = () => {
                   fullWidth
                   label="Max Tenure"
                   name="max_tenure"
-                  type="number"
                   required
                   error={touched.max_tenure && Boolean( errors.max_tenure )}
                   helperText={touched.max_tenure && errors.max_tenure}
@@ -212,6 +218,13 @@ const LoanFormPage = () => {
                     startAdornment: (
                       <InputAdornment position="start">
                         <CalendarMonthIcon sx={{ color: "action.active" }} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <Typography variant="body2" color="text.secondary">
+                          years
+                        </Typography>
                       </InputAdornment>
                     ),
                   }}

@@ -17,8 +17,18 @@ const validationSchema = yup.object().shape( {
         .required( "This Field is Required" ),
     document_required: yup.string()
         .required( "This Field is Required" ),
-    interest_rate: yup.number()
-        .min( 0, 'Interest Rate cannot be negative' )
+    interest_rate: yup
+        .string()
+        .matches( /^\d{1,2}-\d{1,2}$/, "Enter a valid range like 2-20" )
+        .test(
+            "is-valid-range",
+            "Start value should be less than end value",
+            ( value ) => {
+                if ( !value ) return false;
+                const [ start, end ] = value.split( "-" ).map( Number );
+                return start < end;
+            }
+        )
         .required( "This Field is Required" ),
     max_amount: yup.number()
         .min( 1, 'Maximum Loan Amount must be greater than 0' )
@@ -26,8 +36,18 @@ const validationSchema = yup.object().shape( {
     min_amount: yup.number()
         .min( 1, 'Minimum Loan Amount must be greater than 0' )
         .required( "This Field is Required" ),
-    max_tenure: yup.number()
-        .min( 1, 'Max Tenure must be greater than 0' )
+    max_tenure: yup
+        .string()
+        .matches( /^\d{1,2}-\d{1,2}$/, "Enter a valid range like 2-20" )
+        .test(
+            "is-valid-range",
+            "Start value should be less than end value",
+            ( value ) => {
+                if ( !value ) return false;
+                const [ start, end ] = value.split( "-" ).map( Number );
+                return start < end;
+            }
+        )
         .required( "This Field is Required" ),
     country: yup.string()
         .required( "This Field is Required" ),

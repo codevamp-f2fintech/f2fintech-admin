@@ -109,7 +109,6 @@ const LoanProviderPage = () => {
           severity: 'success'
         } );
 
-        // Refetch data to keep it in sync
         refetch();
       } else
       {
@@ -141,7 +140,6 @@ const LoanProviderPage = () => {
     setSelectedProvider( null );
   };
 
-  // Infinite Scroll Logic
   const handleScroll = useCallback(
     debounceScroll( () => {
       const nearBottom =
@@ -291,7 +289,6 @@ const LoanProviderPage = () => {
               </Grid>
             ) )}
 
-            {/* Show "No more data" message */}
             {!hasMoreData && !swrLoading && (
               <Grid item xs={12}>
                 <Typography sx={{ width: "100%", textAlign: "center", mt: 4, color: "black" }}>
@@ -301,7 +298,6 @@ const LoanProviderPage = () => {
             )}
           </Grid>
         ) : (
-          // Show when no loan providers exist
           !swrLoading && (
             <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "40vh" }}>
               <Typography variant="h6" sx={{ color: "gray", textAlign: "center" }}>
@@ -312,14 +308,12 @@ const LoanProviderPage = () => {
         )}
       </Container>
 
-      {/* Show loading spinner */}
       {swrLoading && (
         <Box display="flex" justifyContent="center" mb={2}>
           <CircularProgress />
         </Box>
       )}
 
-      {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
         onClose={handleDeleteCancel}
@@ -350,7 +344,6 @@ const LoanProviderPage = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar for notifications */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
