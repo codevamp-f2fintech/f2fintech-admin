@@ -104,3 +104,44 @@ export const useModifyLoanProvider = (pathKey: string) => {
   };
   return { loading, error, modifyLoanProvider };
 };
+
+export const useUpdateLoanProvider = ( key: string ) => {
+  const [ loading, setLoading ] = useState( false );
+  const [ error, setError ] = useState<Error | null>( null );
+
+  const updateLoanProvider = async ( id: number, data: any ) => {
+    setLoading( true );
+    setError( null );
+    try
+    {
+      const response = await fetch(
+        `${ process.env.NEXT_PUBLIC_API_URL }/update-loan-provider/${ id }`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify( data ),
+        }
+      );
+
+      if ( !response.ok )
+      {
+        const errorData = await response.json();
+        throw new Error( errorData.message || 'Failed to update loan provider' );
+      }
+
+      mutate( key ); // Revalidate the SWR cache
+      return await response.json();
+    } catch ( error )
+    {
+      setError( error as Error );
+      throw error;
+    } finally
+    {
+      setLoading( false );
+    }
+  };
+
+  return { updateLoanProvider, loading, error };
+};
