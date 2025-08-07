@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
+
 import {
     Container,
     Box,
@@ -14,18 +15,15 @@ import {
     FormControl,
     InputLabel,
     InputAdornment,
-    IconButton,
 } from "@mui/material";
+
 import PercentIcon from '@mui/icons-material/Percent';
-import DeleteIcon from "@mui/icons-material/Delete";
 import { ArrowBackRounded } from "@mui/icons-material";
 import { useParams, useRouter } from "next/navigation";
 import { Formik, Field, Form, ErrorMessage } from "formik";
 import validationSchema from "../../validationSchema";
-import { useCreateLoanProvider } from "@/hooks/loanProvider";
 import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import { AddPhotoAlternate as AddPhotoAlternateIcon } from "@mui/icons-material";
 import axios from "axios";
 
 const initialValues = {
@@ -50,8 +48,6 @@ const LoanFormPage = () => {
     const [ dataLoading, setDataLoading ] = useState( false );
     const params = useParams();
     const loanProviderId = params?.loanProviderId;
-    const { createLoanProvider } = useCreateLoanProvider( "create-loan-provider" );
-
     // Fetch application number and loan status using stored customer ID
     useEffect( () => {
         const fetchLoanProviderData = async () => {
