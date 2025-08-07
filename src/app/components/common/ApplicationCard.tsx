@@ -67,23 +67,23 @@ interface ApplicationCardProps {
     userRole?: string;
     applicationProvider?: string;
     showDeleteButton?: boolean;
-    onDelete: (applicationId: string, customerName: string) => void;
+    onDelete: ( applicationId: string, customerName: string ) => void;
   };
-  handleStartClick?: (ticketId: number) => void;
+  handleStartClick?: ( ticketId: number ) => void;
   refetch?: () => Promise<void>;
   userRole?: string;
-  handleDeleteTicket?: (ticketId: number) => void;
+  handleDeleteTicket?: ( ticketId: number ) => void;
   isApplication?: boolean;
   toggleListView?: boolean;
 }
 
-function InfoRow({
+function InfoRow ( {
   icon,
   text,
 }: {
   icon: React.ReactNode;
   text: string | undefined;
-}) {
+} ) {
   return (
     <Box
       sx={{
@@ -103,9 +103,9 @@ function InfoRow({
           padding: "8px",
         }}
       >
-        {React.cloneElement(icon as React.ReactElement, {
+        {React.cloneElement( icon as React.ReactElement, {
           fontSize: "small",
-        })}
+        } )}
       </Box>
       <Typography variant="body2" sx={{ color: "#333", fontWeight: "medium" }}>
         {text}
@@ -114,7 +114,7 @@ function InfoRow({
   );
 }
 
-function InfoChip({
+function InfoChip ( {
   icon,
   text,
   color = "#6E44FF",
@@ -122,20 +122,20 @@ function InfoChip({
   icon: React.ReactNode;
   text: string | undefined;
   color?: string;
-}) {
+} ) {
   return (
     <Chip
-      icon={React.cloneElement(icon as React.ReactElement, {
+      icon={React.cloneElement( icon as React.ReactElement, {
         fontSize: "small",
         sx: { color: color },
-      })}
+      } )}
       label={text}
       variant="outlined"
       size="small"
       sx={{
         borderColor: color,
         color: color,
-        backgroundColor: `${color}10`,
+        backgroundColor: `${ color }10`,
         fontWeight: "medium",
         "& .MuiChip-icon": {
           color: color,
@@ -145,7 +145,7 @@ function InfoChip({
   );
 }
 
-const ApplicationCard: React.FC<ApplicationCardProps> = ({
+const ApplicationCard: React.FC<ApplicationCardProps> = ( {
   customerApplication,
   handleStartClick = null,
   showDeleteButton = false,
@@ -156,13 +156,13 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
   handleDeleteApplication,
   isApplication = false,
   toggleListView,
-}) => {
-  const [showHistory, setShowHistory] = useState<boolean>(false);
-  const [historyData, setHistoryData] = useState<any[]>([]);
-  const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false);
-  const [expanded, setExpanded] = useState<boolean>(false);
+} ) => {
+  const [ showHistory, setShowHistory ] = useState<boolean>( false );
+  const [ historyData, setHistoryData ] = useState<any[]>( [] );
+  const [ openDeleteDialog, setOpenDeleteDialog ] = useState<boolean>( false );
+  const [ expanded, setExpanded ] = useState<boolean>( false );
   const dispatch: AppDispatch = useDispatch();
-  const { toast } = useSelector((state: RootState) => state.toast);
+  const { toast } = useSelector( ( state: RootState ) => state.toast );
   const { toastAndNavigate } = Utility();
   const {
     calculateDaysAgo,
@@ -170,12 +170,12 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
     decodedToken,
     formatTenure,
   } = Utility();
-  const [showOtpComponent, setShowOtpComponent] = useState<boolean>(false);
-  const isMobile = useMediaQuery("(max-width:600px)");
-  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
-  const [deleteReason, setDeleteReason] = useState<string>("");
+  const [ showOtpComponent, setShowOtpComponent ] = useState<boolean>( false );
+  const isMobile = useMediaQuery( "(max-width:600px)" );
+  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
+  const [ deleteReason, setDeleteReason ] = useState<string>( "" );
 
-  const handleDeleteClick = (e: React.MouseEvent) => {
+  const handleDeleteClick = ( e: React.MouseEvent ) => {
     e.stopPropagation();
     onDelete(
       customerApplication.applicationId,
@@ -183,24 +183,33 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
     );
   };
 
-  const { createTicket } = useCreateTicket("create-ticket");
+  const { createTicket } = useCreateTicket( "create-ticket" );
   const { modifyCustomerApplication: modifyiedCustomerApplication } =
-    useModifyCustomerApplication("update-loan-application");
+    useModifyCustomerApplication( "update-loan-application" );
 
-  const toggleHistory = () => setShowHistory((prev) => !prev);
-  const toggleExpanded = () => setExpanded((prev) => !prev);
+  const toggleHistory = () => setShowHistory( ( prev ) => !prev );
+  const toggleExpanded = () => setExpanded( ( prev ) => !prev );
 
-  const openConfirmDialog = (e) => {
+  const formattedCreatedAt = customerApplication?.applicationDate
+    ? `Created At: ${ new Date( customerApplication.applicationDate ).toLocaleDateString( 'en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    } ) }`
+    : "Created At: N/A";
+
+  const openConfirmDialog = ( e ) => {
     e.stopPropagation();
-    setOpenDeleteDialog(true);
+    setOpenDeleteDialog( true );
   };
 
   const closeConfirmDialog = () => {
-    setOpenDeleteDialog(false);
+    setOpenDeleteDialog( false );
   };
 
   const confirmDelete = async () => {
-    if (!deleteReason.trim()) {
+    if ( !deleteReason.trim() )
+    {
       toastAndNavigate(
         dispatch,
         true,
@@ -213,9 +222,11 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
       return;
     }
 
-    if (handleDeleteTicket && !isApplication) {
-      try {
-        await handleDeleteTicket(customerApplication.ticketId, deleteReason);
+    if ( handleDeleteTicket && !isApplication )
+    {
+      try
+      {
+        await handleDeleteTicket( customerApplication.ticketId, deleteReason );
         toastAndNavigate(
           dispatch,
           true,
@@ -226,8 +237,9 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
           false
         );
         closeConfirmDialog();
-      } catch (error) {
-        console.log("Error deleting ticket:", error);
+      } catch ( error )
+      {
+        console.log( "Error deleting ticket:", error );
         toastAndNavigate(
           dispatch,
           true,
@@ -239,58 +251,65 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
         );
       }
     }
-    if (isApplication && handleDeleteApplication) {
-      handleDeleteApplication(customerApplication.applicationId);
+    if ( isApplication && handleDeleteApplication )
+    {
+      handleDeleteApplication( customerApplication.applicationId );
     }
   };
 
-  useEffect(() => {
-    if (showHistory && customerApplication.ticketId) {
+  useEffect( () => {
+    if ( showHistory && customerApplication.ticketId )
+    {
       const fetchHistoryData = async () => {
-        try {
+        try
+        {
           const { data } = await fetcher(
-            `get-ticket-histories/${customerApplication.ticketId}`
+            `get-ticket-histories/${ customerApplication.ticketId }`
           );
-          setHistoryData(data);
-        } catch (error) {
-          console.log("Error fetching history data:", error);
+          setHistoryData( data );
+        } catch ( error )
+        {
+          console.log( "Error fetching history data:", error );
         }
       };
       fetchHistoryData();
     }
-  }, [showHistory, customerApplication?.ticketId]);
+  }, [ showHistory, customerApplication?.ticketId ] );
 
-  const handleCheckboxChange = async (applicationId: number) => {
-    try {
-      await createTicket({
+  const handleCheckboxChange = async ( applicationId: number ) => {
+    try
+    {
+      await createTicket( {
         customer_application_id: applicationId,
         user_id: decodedToken()?.id,
         status: "operations",
-      });
-      dispatch(resetTickets());
-      await modifyiedCustomerApplication(applicationId, {
+      } );
+      dispatch( resetTickets() );
+      await modifyiedCustomerApplication( applicationId, {
         is_picked: 1,
-      });
-      dispatch(resetCustomerApplications(applicationId));
-    } catch (error) {
-      console.log("Error in checkbox change:", error);
+      } );
+      dispatch( resetCustomerApplications( applicationId ) );
+    } catch ( error )
+    {
+      console.log( "Error in checkbox change:", error );
     }
   };
 
-  useEffect(() => {
+  useEffect( () => {
     // Collapse when it's an application
-    if (isApplication) {
-      setExpanded(false);
+    if ( isApplication )
+    {
+      setExpanded( false );
     }
-  }, [isApplication]);
+  }, [ isApplication ] );
 
-  const formatRupees = (value: number) => {
-    return new Intl.NumberFormat("en-IN", {
+  const formatRupees = ( value: number ) => {
+    return new Intl.NumberFormat( "en-IN", {
       style: "currency",
       currency: "INR",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    }).format(value);
+    } ).format( value );
   };
 
   const ListView = () => {
@@ -302,66 +321,64 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
             borderRadius: 2,
             overflow: "hidden",
             height: {
-              xs: "14vh", // Fixed height for mobile
-              sm: "inherit", // Auto height on larger screens
+              xs: "14vh",
+              sm: "inherit",
               md: "inherit",
             },
             mb: 1,
             transition: "all 0.3s ease",
             "&:hover": {
-              boxShadow: 4, // Corrected from elevation to boxShadow
+              boxShadow: 4,
               transform: "translateY(-2px)",
             },
             // Mobile-only vertical scrollbar (always visible)
-            overflowY: { xs: "scroll", sm: "visible" }, // Force scrollbar on mobile
-            scrollbarWidth: { xs: "thin", sm: "none" }, // For Firefox
+            overflowY: { xs: "scroll", sm: "visible" },
+            scrollbarWidth: { xs: "thin", sm: "none" },
             "&::-webkit-scrollbar": {
               width: "6px",
-              display: { xs: "block", sm: "none" }, // Hide on desktop
+              display: { xs: "block", sm: "none" },
             },
             "&::-webkit-scrollbar-thumb": {
               backgroundColor: "rgba(0,0,0,0.2)",
               borderRadius: "3px",
             },
-            WebkitOverflowScrolling: { xs: "touch", sm: "auto" }, // iOS smooth scroll
+            WebkitOverflowScrolling: { xs: "touch", sm: "auto" },
           }}
         >
           <ListItem
             sx={{
               flexDirection: isMobile ? "row" : "row",
               alignItems: isMobile ? "stretch" : "center",
-              p: 1, // Further reduced from 1.5
+              p: 1,
               backgroundImage:
                 "linear-gradient(135deg, #c4d5eb 0%, #c4d5eb 100%)",
               color: "white",
             }}
           >
-            {/* Avatar Section */}
             <ListItemAvatar sx={{ minWidth: isMobile ? "auto" : 60 }}>
               {" "}
-              {/* Further reduced from 70 */}
               <Avatar
                 alt={
                   // Extract name after title (e.g., "Mr. John Doe" → "John Doe")
                   capitalizeFirstLetter(
-                    customerApplication.customerName.split(".")[1]?.trim() ||
-                      customerApplication.customerName
-                        .split(" ")
-                        .slice(1)
-                        .join(" ")
+                    customerApplication.customerName.split( "." )[ 1 ]?.trim() ||
+                    customerApplication.customerName
+                      .split( " " )
+                      .slice( 1 )
+                      .join( " " )
                   )
                 }
                 src={customerApplication.customerProfileImage}
                 sx={{
-                  width: isMobile ? 40 : 32, // Further reduced from 50:35
-                  height: isMobile ? 40 : 32, // Further reduced from 50:35
+                  width: isMobile ? 40 : 32,
+                  height: isMobile ? 40 : 32,
                   bgcolor: "#adb5bd",
                   color: "white",
-                  fontSize: isMobile ? 16 : 20, // Further reduced from 20:24
+                  fontSize: isMobile ? 16 : 20,
                   fontWeight: "bold",
-                  border: "1px solid rgba(255,255,255,0.3)", // Further reduced from 2px
+                  border: "1px solid rgba(255,255,255,0.3)",
                   mx: isMobile ? "auto" : 0,
-                  mb: isMobile ? 0.25 : 0, // Further reduced from 0.5:0
+                  mb: isMobile ? 0.25 : 0,
                 }}
               />
             </ListItemAvatar>
@@ -370,12 +387,12 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
             <ListItemText
               sx={{
                 flex: 1,
-                ml: isMobile ? 0 : 1, // Further reduced from 1.5
+                ml: isMobile ? 0 : 1,
                 textAlign: isMobile ? "center" : "left",
               }}
               primary={
                 <Typography
-                  variant={isMobile ? "body1" : "subtitle1"} // Further reduced from subtitle1:h6
+                  variant={isMobile ? "body1" : "subtitle1"}
                   sx={{
                     fontWeight: "semibold",
                     fontSize: {
@@ -386,7 +403,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                       xl: "1.25rem",
                     },
                     color: "#000",
-                    mb: 0.25, // Further reduced from 0.5
+                    mb: 0.25,
                   }}
                 >
                   {customerApplication.customerName?.toUpperCase()}
@@ -397,14 +414,14 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   sx={{
                     display: "flex",
                     flexDirection: isMobile ? "column" : "row",
-                    gap: 0.5, // Further reduced from 0.5
+                    gap: 0.5,
                     flexWrap: "wrap",
                     alignItems: isMobile ? "center" : "flex-start",
                   }}
                 >
                   <InfoChip
                     icon={<CurrencyRupeeIcon />}
-                    text={formatRupees(customerApplication.applicationAmount)}
+                    text={formatRupees( customerApplication.applicationAmount )}
                     color="#0c66e4"
                   />
                   {customerApplication.applicationProvider && (
@@ -416,7 +433,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   )}
                   <InfoChip
                     icon={<AccessTimeRounded />}
-                    text={formatTenure(customerApplication.applicationTenure)}
+                    text={formatTenure( customerApplication.applicationTenure )}
                     color="#0c66e4"
                   />
 
@@ -453,9 +470,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                     />
                   )}
                   <Chip
-                    label={`${calculateDaysAgo(
-                      customerApplication.applicationDate
-                    )} days ago`}
+                    label={formattedCreatedAt}
                     size="small"
                     sx={{
                       bgcolor: "rgba(255,255,255,0.2)",
@@ -463,6 +478,17 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                       fontWeight: "bold",
                     }}
                   />
+                  {/* <Chip
+                    label={`${ calculateDaysAgo(
+                      customerApplication.applicationDate
+                    ) } days ago`}
+                    size="small"
+                    sx={{
+                      bgcolor: "rgba(255,255,255,0.2)",
+                      color: "#33415c",
+                      fontWeight: "bold",
+                    }}
+                  /> */}
                 </Box>
               }
             />
@@ -472,29 +498,29 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               sx={{
                 display: "flex",
                 flexDirection: isMobile ? "row" : "column",
-                gap: 0.5, // Further reduced from 0.5
+                gap: 0.5,
                 alignItems: "center",
-                mt: isMobile ? 0.5 : 0, // Further reduced from 1:0
+                mt: isMobile ? 0.5 : 0,
               }}
             >
               {/* Delete Button */}
-              {(showDeleteButton ||
-                (userRole === "admin" && handleDeleteTicket)) && (
-                <IconButton
-                  onClick={openConfirmDialog}
-                  sx={{
-                    color: "#f44336",
-                    backgroundColor: "rgba(255,255,255,0.9)",
-                    "&:hover": {
-                      backgroundColor: "rgba(244, 67, 54, 0.1)",
-                      color: "#d32f2f",
-                    },
-                  }}
-                  size="small"
-                >
-                  <DeleteOutline sx={{ fontSize: 16 }} />
-                </IconButton>
-              )}
+              {( showDeleteButton ||
+                ( userRole === "admin" && handleDeleteTicket ) ) && (
+                  <IconButton
+                    onClick={openConfirmDialog}
+                    sx={{
+                      color: "#f44336",
+                      backgroundColor: "rgba(255,255,255,0.9)",
+                      "&:hover": {
+                        backgroundColor: "rgba(244, 67, 54, 0.1)",
+                        color: "#d32f2f",
+                      },
+                    }}
+                    size="small"
+                  >
+                    <DeleteOutline sx={{ fontSize: 16 }} />
+                  </IconButton>
+                )}
 
               {/* Expand/Collapse Button */}
               {!isApplication && (
@@ -525,12 +551,11 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                     sx={{ mr: 0.5, color: "white", fontWeight: "bold" }}
                   >
                     {" "}
-                    {/* Reduced from body2 and mr: 1 */}
                     Pick
                   </Typography>
                   <Checkbox
                     onChange={() =>
-                      handleCheckboxChange(customerApplication.applicationId)
+                      handleCheckboxChange( customerApplication.applicationId )
                     }
                     size="small"
                     sx={{
@@ -549,25 +574,23 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
           <Collapse in={expanded} timeout="auto" unmountOnExit>
             <Box sx={{ p: 1, bgcolor: "#c4d5eb" }}>
               {" "}
-              {/* Further reduced from 1.5 */}
               {!showHistory ? (
                 <Box
                   sx={{
                     display: "flex",
                     flexDirection: "column",
-                    gap: 1, // Further reduced from 1.5
+                    gap: 1,
                   }}
                 ></Box>
               ) : (
                 <Box>
                   <Typography variant="subtitle1" sx={{ color: "#333", mb: 1 }}>
                     {" "}
-                    {/* Further reduced from h6 and mb: 1.5 */}
                     History
                   </Typography>
                   <Box
                     sx={{
-                      maxHeight: "120px", // Further reduced from 150px
+                      maxHeight: "120px",
                       overflowY: "auto",
                       "&::-webkit-scrollbar": {
                         width: "6px",
@@ -583,14 +606,14 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                     }}
                   >
                     {historyData.length > 0 ? (
-                      historyData.map((history, index) => (
+                      historyData.map( ( history, index ) => (
                         <Box
                           key={index}
                           sx={{
                             display: "flex",
                             flexDirection: "column",
-                            mb: 1, // Further reduced from 1.5
-                            p: 1, // Further reduced from 1.5
+                            mb: 1,
+                            p: 1,
                             bgcolor: "#f5f5f5",
                             borderRadius: 1,
                           }}
@@ -604,24 +627,27 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                             }}
                           >
                             {" "}
-                            {/* Further reduced from 0.5 */}
                             <strong>
                               {capitalizeFirstLetter(
-                                history.action.split(" ")[0]
+                                history.action.split( " " )[ 0 ]
                               )}
                             </strong>
-                            {` ${history.action.substring(
-                              history.action.indexOf(" ") + 1
-                            )}`}
+                            {` ${ history.action.substring(
+                              history.action.indexOf( " " ) + 1
+                            ) }`}
                           </Typography>
                           <Typography
                             variant="caption"
                             sx={{ color: "#1976d2" }}
                           >
-                            {calculateDaysAgo(history.created_at)} days ago
+                            {new Date( history.created_at ).toLocaleDateString( 'en-IN', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                            } )}
                           </Typography>
                         </Box>
-                      ))
+                      ) )
                     ) : (
                       <Typography variant="body2" sx={{ color: "#666" }}>
                         No history data available.
@@ -636,7 +662,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   sx={{
                     display: "flex",
                     gap: 1,
-                    mt: 1, // Further reduced from 1.5
+                    mt: 1,
                     flexDirection: isMobile ? "column" : "row",
                   }}
                 >
@@ -678,6 +704,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
   };
 
   const GridView = () => {
+    const isSalesUser = userRole === "sales" || decodedToken()?.role === "sales";
     return (
       <Grid item xs={12} sm={6} md={4} key={customerApplication.customerId}>
         <Card
@@ -688,10 +715,16 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
             position: "relative",
             boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
             backgroundImage: "linear-gradient(135deg, #fff 0%, #fff 100%)",
-
             backgroundBlendMode: "multiply, screen, normal",
             pt: isMobile ? 3 : 5,
             mt: 5,
+            // height: {
+            //   xs: "auto", // Fixed height for mobile
+            //   sm: "55vh", // Fixed height for tablet
+            //   md: "90vh"  // Fixed height for desktop
+            // },
+            // display: "flex",
+            // flexDirection: "column",
           }}
         >
           {/* Delete Button */}
@@ -726,13 +759,12 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
             >
               <Avatar
                 alt={
-                  // Extract name after title (e.g., "Mr. John Doe" → "John Doe")
                   capitalizeFirstLetter(
-                    customerApplication.customerName.split(".")[1]?.trim() ||
-                      customerApplication.customerName
-                        .split(" ")
-                        .slice(1)
-                        .join(" ")
+                    customerApplication.customerName.split( "." )[ 1 ]?.trim() ||
+                    customerApplication.customerName
+                      .split( " " )
+                      .slice( 1 )
+                      .join( " " )
                   )
                 }
                 src={customerApplication.customerProfileImage}
@@ -783,29 +815,22 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 <Button
                   variant="contained"
                   sx={{
-                    // Layout
                     position: "absolute",
-                    top: { xs: "1vh", sm: "2vh", md: "2.5vh" }, // Adjust vertical position
-                    ml: { xs: "40vw", sm: "25vw", md: "17vw" }, // Adjust horizontal margin
-                    width: { xs: "15%", sm: "12%", md: "10%" }, // Scale width for smaller screens
-
-                    // Styling
+                    top: { xs: "1vh", sm: "2vh", md: "2.5vh" },
+                    ml: { xs: "40vw", sm: "25vw", md: "17vw" },
+                    width: { xs: "15%", sm: "12%", md: "10%" },
                     borderRadius: "50px",
                     backgroundColor: "transparent",
                     color: "#e5383b",
                     boxShadow: "none",
-                    minWidth: "auto", // Prevents button from stretching
-                    padding: { xs: "6px", sm: "8px", md: "10px" }, // Adjust padding
-
-                    // Hover
+                    minWidth: "auto",
+                    padding: { xs: "6px", sm: "8px", md: "10px" },
                     "&:hover": {
                       bgcolor: "#cc0000",
                       color: "white",
                     },
-
-                    // Mobile-specific tweaks
                     "& .MuiButton-startIcon": {
-                      margin: { xs: 0, sm: 0, md: 0 }, // Adjust icon spacing
+                      margin: { xs: 0, sm: 0, md: 0 },
                     },
                   }}
                   onClick={openConfirmDialog}
@@ -819,13 +844,16 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               <Box
                 sx={{
                   display: "flex",
+                  gap: isSalesUser ? 1 : 1.5,
                   flexDirection: "column",
-                  gap: 1.5,
+                  // gap: 1.5,
                   bgcolor: "rgba(255,255,255,0.9)",
                   borderRadius: "10px 10px 0px 0px",
-                  p: 2,
-                  // boxShadow: "inset 0 2px 4px rgba(0,0,0,0.1)",
-                  minHeight: isMobile ? "35vh" : isTab ? "20vh" : "40vh",
+                  // p: 2,
+                  p: isSalesUser ? 1.5 : 2,
+                  height: isSalesUser ?
+                    ( isMobile ? "30vh" : isTab ? "28vh" : "40vh" ) :
+                    ( isMobile ? "42vh" : isTab ? "38vh" : "60vh" ),
                 }}
               >
                 {userRole !== "sales" && (
@@ -843,11 +871,11 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 )}
                 <InfoRow
                   icon={<CurrencyRupeeIcon />}
-                  text={formatRupees(customerApplication.applicationAmount)}
+                  text={formatRupees( customerApplication.applicationAmount )}
                 />
                 <InfoRow
                   icon={<AccessTimeRounded />}
-                  text={formatTenure(customerApplication.applicationTenure)}
+                  text={formatTenure( customerApplication.applicationTenure )}
                 />
                 <InfoRow
                   icon={<AccountBalanceIcon />}
@@ -878,21 +906,23 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 sx={{
                   display: "flex",
                   flexDirection: "column",
-                  gap: 1.5,
+                  gap: isSalesUser ? 1 : 1.5,
                   bgcolor: "rgba(255,255,255,0.9)",
                   borderRadius: 2,
-                  p: 2,
+                  p: isSalesUser ? 1.5 : 2,
                   boxShadow: "inset 0 2px 4px rgba(0,0,0,0.1)",
                   minHeight: isMobile ? "35vh" : isTab ? "20vh" : "40vh",
                   overflowY: "scroll",
-                  maxHeight: "40vh",
+                  height: isSalesUser ?
+                    ( isMobile ? "30vh" : isTab ? "28vh" : "35vh" ) :
+                    ( isMobile ? "42vh" : isTab ? "38vh" : "60vh" ),
                   "&::-webkit-scrollbar": {
                     display: "none",
                   },
                 }}
               >
                 {historyData.length > 0 ? (
-                  historyData.map((history, index) => (
+                  historyData.map( ( history, index ) => (
                     <Box
                       key={index}
                       sx={{ display: "flex", flexDirection: "column", mb: 2 }}
@@ -902,17 +932,24 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                         sx={{ color: "black", fontStyle: "normal", mb: 1 }}
                       >
                         <strong>
-                          {capitalizeFirstLetter(history.action.split(" ")[0])}
+                          {capitalizeFirstLetter( history.action.split( " " )[ 0 ] )}
                         </strong>
-                        {` ${history.action.substring(
-                          history.action.indexOf(" ") + 1
-                        )}`}
+                        {` ${ history.action.substring(
+                          history.action.indexOf( " " ) + 1
+                        ) }`}
                       </Typography>
                       <Typography variant="caption" sx={{ color: "blue" }}>
-                        {calculateDaysAgo(history.created_at)} days ago
+                        Created At: {new Date( history.created_at ).toLocaleDateString( 'en-IN', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        } )} ({calculateDaysAgo( history.created_at )} days ago)
                       </Typography>
+                      {/* <Typography variant="caption" sx={{ color: "blue" }}>
+                        {calculateDaysAgo( history.created_at )} days ago
+                      </Typography> */}
                     </Box>
-                  ))
+                  ) )
                 ) : (
                   <Typography variant="body2" sx={{ color: "#333" }}>
                     No history data available.
@@ -935,6 +972,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 {userRole !== "sales" && (
                   <Button
                     fullWidth
+                    position="fixed"
                     variant="contained"
                     sx={{
                       py: 1.25,
@@ -1003,9 +1041,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 }}
               >
                 <Chip
-                  label={`${calculateDaysAgo(
-                    customerApplication.applicationDate
-                  )} days ago`}
+                  label={formattedCreatedAt}
                   size="small"
                   sx={{
                     bgcolor: "rgba(255,255,255,0.9)",
@@ -1023,7 +1059,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                     </Typography>
                     <Checkbox
                       onChange={() =>
-                        handleCheckboxChange(customerApplication.applicationId)
+                        handleCheckboxChange( customerApplication.applicationId )
                       }
                       size="small"
                       sx={{
@@ -1047,7 +1083,6 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
     <>
       {toggleListView ? <ListView /> : <GridView />}
 
-      {/* Delete Confirmation Dialog */}
       <Dialog
         open={openDeleteDialog}
         onClose={closeConfirmDialog}
@@ -1108,7 +1143,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
             variant="outlined"
             label="Reason for deletion"
             value={deleteReason}
-            onChange={(e) => setDeleteReason(e.target.value)}
+            onChange={( e ) => setDeleteReason( e.target.value )}
             sx={{
               mt: 2,
               "& .MuiOutlinedInput-root": {
@@ -1153,7 +1188,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
             onClick={confirmDelete}
             color="error"
             variant="contained"
-            disabled={!deleteReason.trim()} // Disable if no reason provided
+            disabled={!deleteReason.trim()}
             sx={{
               backgroundColor: "#FF3B30",
               color: "white",

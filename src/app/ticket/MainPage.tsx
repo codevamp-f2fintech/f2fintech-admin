@@ -39,7 +39,16 @@ const Ticket = () => {
   const [ startDate, setStartDate ] = useState<string | null>( null );
   const [ endDate, setEndDate ] = useState<string | null>( null );
   const [ disbursedAmount, setDisbursedAmount ] = useState<number>( 0 );
-  const [ toggleListView, setToggleListView ] = useState( true );
+
+  // Initialize toggleListView from sessionStorage or default to true (list view)
+  const [ toggleListView, setToggleListView ] = useState( () => {
+    if ( typeof window !== 'undefined' )
+    {
+      const savedView = sessionStorage.getItem( 'ticketViewPreference' );
+      return savedView !== null ? JSON.parse( savedView ) : true;
+    }
+    return true; // Default to list view
+  } );
 
   const [ currentPage, setCurrentPage ] = useState<number>( 1 );
   const [ hasMoreData, setHasMoreData ] = useState<boolean>( true );
@@ -98,6 +107,29 @@ const Ticket = () => {
 
   const [ userData, setUserData ] = useState( [] );
   const pathname = usePathname();
+
+  // Function to handle view toggle and save to sessionStorage
+  const handleViewToggle = ( isListView: boolean ) => {
+    setToggleListView( isListView );
+    // Save the preference to sessionStorage
+    if ( typeof window !== 'undefined' )
+    {
+      sessionStorage.setItem( 'ticketViewPreference', JSON.stringify( isListView ) );
+    }
+  };
+
+  // Load view preference from sessionStorage on component mount
+  useEffect( () => {
+    if ( typeof window !== 'undefined' )
+    {
+      const savedView = sessionStorage.getItem( 'ticketViewPreference' );
+      if ( savedView !== null )
+      {
+        setToggleListView( JSON.parse( savedView ) );
+      }
+    }
+  }, [] );
+
   useEffect( () => {
     if ( pathname === "/ticket" && typeof window !== "undefined" )
     {
@@ -120,6 +152,7 @@ const Ticket = () => {
     if ( pathname !== "/ticket" )
     {
       sessionStorage.removeItem( "hasRefreshed" );
+      // Note: We don't remove 'ticketViewPreference' here because we want it to persist
     }
   }, [ pathname ] );
 
@@ -449,9 +482,11 @@ const Ticket = () => {
         </Box>
 
       </Box>
+
+      {/* Updated View Toggle Box with Session Storage */}
       <Box
         sx={{
-          position: { xs: "relative", sm: "relative", md: "absolute" }, // Changed for mobile
+          position: { xs: "relative", sm: "relative", md: "absolute" },
           right: { xs: "unset", sm: "unset", md: 0 },
           top: { xs: "unset", sm: "unset", md: 0 },
           display: "flex",
@@ -461,9 +496,9 @@ const Ticket = () => {
           padding: "6px 12px",
           backgroundColor: "#fafafa",
           width: "fit-content",
-          marginLeft: { xs: "auto", sm: "auto", md: ".5rem" }, // Changed for mobile
-          marginRight: { xs: "auto", sm: "auto", md: "unset" }, // Added for mobile
-          marginBottom: { xs: "15px", sm: "15px", md: "0" }, // Added for mobile
+          marginLeft: { xs: "auto", sm: "auto", md: ".5rem" },
+          marginRight: { xs: "auto", sm: "auto", md: "unset" },
+          marginBottom: { xs: "15px", sm: "15px", md: "0" },
           height: {
             xs: "6vh",
             sm: "",
@@ -479,7 +514,7 @@ const Ticket = () => {
       >
         <Tooltip title="Grid View">
           <IconButton
-            onClick={() => setToggleListView( false )}
+            onClick={() => handleViewToggle( false )}
             sx={{
               color: !toggleListView ? "#1d86ff" : "#9e9e9e",
               backgroundColor: !toggleListView ? "#e3f2fd" : "transparent",
@@ -492,7 +527,7 @@ const Ticket = () => {
 
         <Tooltip title="List View">
           <IconButton
-            onClick={() => setToggleListView( true )}
+            onClick={() => handleViewToggle( true )}
             sx={{
               color: toggleListView ? "#1d86ff" : "#9e9e9e",
               backgroundColor: toggleListView ? "#e3f2fd" : "transparent",

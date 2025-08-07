@@ -408,7 +408,7 @@ const Home: React.FC = () => {
             <Link href="/home/create" passHref>
               <Button
                 sx={{
-                  width: isTab ? "21vw" : "auto",
+                  width: isTab ? "auto" : "auto",
                   fontSize: isTab ? "1rem" : "",
                   bgcolor: "#0c66e4",
                   color: "white",
