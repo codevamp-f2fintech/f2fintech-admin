@@ -32,6 +32,7 @@ import {
   SearchRounded,
   PersonAddRounded,
   DeleteRounded,
+  EditRounded,
 } from "@mui/icons-material";
 import PublicIcon from '@mui/icons-material/Public';
 
@@ -249,6 +250,16 @@ const LoanProviderPage = () => {
                       }}
                     >
                       <DeleteRounded />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => router.push( `/loan-provider/edit/${ provider.id }` )}
+                      sx={{
+                        bgcolor: "rgba(255, 255, 255, 0.9)",
+                        "&:hover": { bgcolor: "rgba(255, 255, 255, 1)" }
+                      }}
+                    >
+                      <EditRounded />
                     </IconButton>
                   </Box>
 
