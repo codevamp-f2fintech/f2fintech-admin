@@ -46,6 +46,7 @@ import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { resetCustomerApplications } from "@/redux/features/customerApplicationSlice";
 import { resetTickets } from "@/redux/features/ticketSlice";
+import Toast from "./Toast";
 
 interface ApplicationCardProps {
   customerApplication: {
@@ -279,16 +280,32 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
   const handleCheckboxChange = async ( applicationId: number ) => {
     try
     {
-      await createTicket( {
+      const ticketResponse = await createTicket( {
         customer_application_id: applicationId,
         user_id: decodedToken()?.id,
         status: "operations",
       } );
-      dispatch( resetTickets() );
-      await modifyiedCustomerApplication( applicationId, {
-        is_picked: 1,
-      } );
-      dispatch( resetCustomerApplications( applicationId ) );
+      if ( ticketResponse?.statusCode === 409 )
+      {
+        toastAndNavigate(
+          dispatch,
+          true,
+          "error",
+          'This Application Is Already Picked By Another User.Please Pick Another Application.',
+          null,
+          null,
+          false
+        );
+        
+        dispatch( resetCustomerApplications( applicationId ) );
+      } else
+      {
+        dispatch( resetTickets() );
+        await modifyiedCustomerApplication( applicationId, {
+          is_picked: 1,
+        } );
+        dispatch( resetCustomerApplications( applicationId ) );
+      }
     } catch ( error )
     {
       console.log( "Error in checkbox change:", error );
@@ -1209,6 +1226,12 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Toast
+        alerting={toast.toastAlert}
+        severity={toast.toastSeverity}
+        message={toast.toastMessage}
+      />
     </>
   );
 };
