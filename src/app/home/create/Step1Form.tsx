@@ -929,7 +929,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     >
                       <MenuItem value="Mr">Mr</MenuItem>
                       <MenuItem value="Mrs">Mrs</MenuItem>
-                      <MenuItem value="Ms">Miss</MenuItem>
+                      <MenuItem value="Miss">Miss</MenuItem>
                       <MenuItem value="Dr">Dr</MenuItem>
                       <MenuItem value="Ca">Ca</MenuItem>
                     </Select>
