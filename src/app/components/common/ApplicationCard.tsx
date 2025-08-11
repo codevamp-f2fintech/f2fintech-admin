@@ -294,7 +294,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
           'This Application Is Already Picked By Another User.Please Pick Another Application.',
           null,
           null,
-          false
+          false,
+          true
         );
         
         dispatch( resetCustomerApplications( applicationId ) );
@@ -1231,6 +1232,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
         alerting={toast.toastAlert}
         severity={toast.toastSeverity}
         message={toast.toastMessage}
+        toastDuration={toast.toastDuration}
       />
     </>
   );

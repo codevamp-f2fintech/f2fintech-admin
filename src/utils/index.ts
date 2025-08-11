@@ -204,13 +204,15 @@ export const Utility = () => {
     msg: string,
     navigateTo: Function | null = null,
     path: string | null = null,
-    reload = false
+    reload = false,
+    longDuration = false
   ): void => {
     dispatch(
       setToast({
         toastAlert: display,
         toastSeverity: severity,
         toastMessage: msg,
+        toastDuration: longDuration ? 5000 : 2500,
       })
     );
     setTimeout(() => {
@@ -219,6 +221,7 @@ export const Utility = () => {
           toastAlert: !display,
           toastSeverity: "",
           toastMessage: "",
+          toastDuration: longDuration ? 5000 : 2500,
         })
       );
       if (path && navigateTo) {
@@ -227,7 +230,7 @@ export const Utility = () => {
       if (reload) {
         location.reload();
       }
-    }, 2500);
+    }, longDuration ? 5000 : 2500 );
   };
 
   /**

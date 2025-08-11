@@ -7,43 +7,45 @@ import Snackbar from "@mui/material/Snackbar";
 import Slide from "@mui/material/Slide";
 import MuiAlert, { AlertProps, AlertColor } from "@mui/material/Alert";
 
-const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(
+const Alert = forwardRef<HTMLDivElement, AlertProps>( function Alert (
   props,
   ref
 ) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
-});
+} );
 
 interface ToastProps {
   alerting: boolean;
   message: string;
   severity: AlertColor;
+  toastDuration?: number;
 }
 
-const Toast: React.FC<ToastProps> = ({ alerting, message, severity }) => {
-  const [state, setState] = React.useState({
+const Toast: React.FC<ToastProps> = ( { alerting, message, severity, toastDuration = 2000 } ) => {
+  const [ state, setState ] = React.useState( {
     open: alerting,
     Transition: Slide,
-  });
+  } );
 
-  React.useEffect(() => {
-    setState({
+  React.useEffect( () => {
+    setState( {
       ...state,
       open: alerting
-    });
-  }, [alerting]);
+    } );
+  }, [ alerting ] );
 
   const handleClose = (
     event?: React.SyntheticEvent | Event,
     reason?: string
   ) => {
-    if (reason === "clickaway") {
+    if ( reason === "clickaway" )
+    {
       return;
     }
-    setState({
+    setState( {
       ...state,
       open: false,
-    });
+    } );
   };
 
   const action = (
@@ -62,7 +64,7 @@ const Toast: React.FC<ToastProps> = ({ alerting, message, severity }) => {
       anchorOrigin={{ vertical: "top", horizontal: "center" }}
       open={state.open}
       onClose={handleClose}
-      autoHideDuration={2000}
+      autoHideDuration={toastDuration}
       TransitionComponent={state.Transition}
       key={state.Transition.name}
       action={action}
@@ -78,6 +80,7 @@ Toast.propTypes = {
   alerting: PropTypes.bool.isRequired,
   message: PropTypes.string.isRequired,
   severity: PropTypes.any.isRequired,
+  toastDuration: PropTypes.number,
 };
 
 export default Toast;
