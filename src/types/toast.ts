@@ -4,4 +4,5 @@ export interface Toast {
   toastAlert: boolean;
   toastSeverity: AlertColor;
   toastMessage: string;
+  toastDuration?: number;
 }

@@ -7,7 +7,7 @@ interface toastState {
 }
 
 const initialState: toastState = {
-  toast: { toastAlert: false, toastSeverity: "info", toastMessage: "" },
+  toast: { toastAlert: false, toastSeverity: "info", toastMessage: "", toastDuration: 2000 },
 };
 
 export const toastSlice = createSlice({
