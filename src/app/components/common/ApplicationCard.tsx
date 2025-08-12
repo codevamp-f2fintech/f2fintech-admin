@@ -23,6 +23,8 @@ import {
   CardContent,
   Card,
   TextField,
+  TableCell,
+  TableRow,
 } from "@mui/material";
 import {
   MailRounded,
@@ -75,7 +77,7 @@ interface ApplicationCardProps {
   userRole?: string;
   handleDeleteTicket?: ( ticketId: number ) => void;
   isApplication?: boolean;
-  toggleListView?: boolean;
+  toggleListView?: string;
 }
 
 function InfoRow ( {
@@ -297,7 +299,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
           false,
           true
         );
-        
+
         dispatch( resetCustomerApplications( applicationId ) );
       } else
       {
@@ -1097,9 +1099,255 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
     );
   };
 
+  const TableView = () => {
+    return (
+      <>
+        <TableRow key={customerApplication.customerId} sx={{
+          '&:nth-of-type(odd)': { backgroundColor: 'rgba(0, 0, 0, 0.04)' },
+          '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.08)' }
+        }}>
+          {/* Name */}
+          <TableCell>
+            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+              {customerApplication.customerName?.toUpperCase()}
+            </Typography>
+          </TableCell>
+
+          {/* Email */}
+          <TableCell>
+            <Typography variant="body2">
+              {customerApplication.customerEmail}
+            </Typography>
+          </TableCell>
+
+          {/* Contact */}
+          <TableCell>
+            <Typography
+              variant="body2"
+              sx={{
+                color: customerApplication.customerContact ? '#0c66e4' : 'inherit',
+                // Optional: add hover effect
+                '&:hover': {
+                  color: customerApplication.customerContact ? '#0052cc' : 'inherit',
+                  cursor: customerApplication.customerContact ? 'pointer' : 'default'
+                }
+              }}
+            >
+              +91 {customerApplication.customerContact || 'N/A'}
+            </Typography>
+          </TableCell>
+
+          {/* Amount */}
+          <TableCell>
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 'medium',
+                color: '#00796B', // Default color
+                '&:hover': {
+                  color: '#004D40', // Hover color
+                  cursor: 'pointer' // Optional: changes cursor to pointer on hover
+                }
+              }}
+              className="amount-link" // You can still add the class if needed
+            >
+              {formatRupees( customerApplication.applicationAmount )}
+            </Typography>
+          </TableCell>
+
+          {/* Provider */}
+          <TableCell>
+            <Typography variant="body2">
+              {customerApplication.applicationProvider || 'N/A'}
+            </Typography>
+          </TableCell>
+
+          {/* Tenure */}
+          <TableCell>
+            <Typography variant="body2">
+              {formatTenure( customerApplication.applicationTenure )}
+            </Typography>
+          </TableCell>
+
+          {/* Location */}
+          <TableCell>
+            <Typography variant="body2">
+              {customerApplication.customerLocation
+                ? capitalizeFirstLetter( customerApplication.customerLocation )
+                : 'N/A'},
+              <br></br>
+              {customerApplication.customerState
+                ? capitalizeFirstLetter( customerApplication.customerState )
+                : 'N/A'}
+            </Typography>
+          </TableCell>
+
+          {/* State
+          // <TableCell>
+          //   <Typography variant="body2">
+          //     {customerApplication.customerState
+          //       ? capitalizeFirstLetter( customerApplication.customerState )
+          //       : 'N/A'}
+          //   </Typography>
+          // </TableCell> */}
+
+          {/* Created At */}
+          <TableCell>
+            <Typography variant="body2">
+              {customerApplication?.applicationDate
+                ? new Date( customerApplication.applicationDate ).toLocaleDateString( 'en-IN', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                } )
+                : "N/A"}
+            </Typography>
+          </TableCell>
+
+          {/* Actions */}
+          <TableCell>
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+              {/* Delete Button */}
+              {( showDeleteButton || ( userRole === "admin" && handleDeleteTicket ) ) && (
+                <IconButton
+                  onClick={openConfirmDialog}
+                  sx={{
+                    color: "#f44336",
+                    '&:hover': {
+                      backgroundColor: "rgba(244, 67, 54, 0.1)",
+                      color: "#d32f2f",
+                    },
+                  }}
+                  size="small"
+                >
+                  <DeleteOutline sx={{ fontSize: 18 }} />
+                </IconButton>
+              )}
+
+              {/* History Button (only for tickets) */}
+              {handleStartClick && customerApplication.ticketId && (
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={toggleHistory}
+                  sx={{
+                    borderColor: "#667eea",
+                    color: "#667eea",
+                    "&:hover": {
+                      borderColor: "#5a6fd8",
+                      bgcolor: "rgba(102, 126, 234, 0.04)",
+                    },
+                    textTransform: 'none',
+                    fontSize: '0.75rem',
+                  }}
+                >
+                  {showHistory ? "History" : "History"}
+                </Button>
+              )}
+
+              {/* Pick Checkbox */}
+              {decodedToken()?.role !== "sales" && !handleStartClick && (
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                  <Typography variant="caption" sx={{ mr: 0.5, fontWeight: "bold" }}>
+                    Pick
+                  </Typography>
+                  <Checkbox
+                    onChange={() => handleCheckboxChange( customerApplication.applicationId )}
+                    size="small"
+                    sx={{
+                      color: "#666",
+                      "&.Mui-checked": {
+                        color: "#FFD93D",
+                      },
+                    }}
+                  />
+                </Box>
+              )}
+
+              {/* Visit Ticket Button (if applicable) */}
+              {handleStartClick && customerApplication.ticketId && userRole !== "sales" && (
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => handleStartClick( customerApplication.ticketId )}
+                  sx={{
+                    bgcolor: "#1976D2",
+                    "&:hover": { bgcolor: "#1565C0" },
+                    textTransform: 'none',
+                    fontSize: '0.75rem',
+                  }}
+                >
+                  Visit
+                </Button>
+              )}
+            </Box>
+          </TableCell>
+        </TableRow>
+
+        {/* History Row - appears when showHistory is true */}
+        {showHistory && customerApplication.ticketId && (
+          <TableRow>
+            <TableCell colSpan={11} sx={{ bgcolor: '#f5f5f5', p: 2 }}>
+              <Box sx={{ maxHeight: '200px', overflowY: 'auto' }}>
+                {historyData.length > 0 ? (
+                  historyData.map( ( history, index ) => (
+                    <Box
+                      key={index}
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        mb: 2,
+                        p: 1.5,
+                        bgcolor: "white",
+                        borderRadius: 1,
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "black",
+                          fontWeight: "medium",
+                          mb: 0.5,
+                        }}
+                      >
+                        <strong>
+                          {capitalizeFirstLetter(
+                            history.action.split( " " )[ 0 ]
+                          )}
+                        </strong>
+                        {` ${ history.action.substring(
+                          history.action.indexOf( " " ) + 1
+                        ) }`}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: "#1976d2" }}
+                      >
+                        {new Date( history.created_at ).toLocaleDateString( 'en-IN', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        } )}
+                      </Typography>
+                    </Box>
+                  ) )
+                ) : (
+                  <Typography variant="body2" sx={{ color: "#666", textAlign: 'center' }}>
+                    No history data available.
+                  </Typography>
+                )}
+              </Box>
+            </TableCell>
+          </TableRow>
+        )}
+      </>
+    );
+  };
+
   return (
     <>
-      {toggleListView ? <ListView /> : <GridView />}
+      {toggleListView === 'list' ? <ListView /> : toggleListView === 'grid' ? <GridView /> : <TableView />}
 
       <Dialog
         open={openDeleteDialog}
