@@ -1,29 +1,135 @@
-import React, { useState, memo } from "react";
-import { Box, Grid, Paper, Typography, Button } from "@mui/material";
+import React, { useState, memo, useEffect } from "react";
+import { Box, Grid, Paper, Typography, Button, CircularProgress } from "@mui/material";
 import PdfViewer from "@/app/components/common/PdfViewer";
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import axios from "axios";
 
-const TicketDocuments = ({ isMobile, isTab, documents }) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [showAttachment, setShowAttachment] = useState({});
+const TicketDocuments = ( { isMobile, isTab, documents, customerId, onDocumentUploaded } ) => {
+  const [ currentPage, setCurrentPage ] = useState( 1 );
+  const [ showAttachment, setShowAttachment ] = useState( {} );
+  const [ selectedFile, setSelectedFile ] = useState( null );
+  const [ isUploading, setIsUploading ] = useState( false );
   const itemsPerPage = 3;
-
-  const toggleAttachment = (id) => {
-    setShowAttachment((prev) => ({
+ 
+  const toggleAttachment = ( id ) => {
+    setShowAttachment( ( prev ) => ( {
       ...prev,
-      [id]: !prev[id],
-    }));
+      [ id ]: !prev[ id ],
+    } ) );
   };
 
-  const totalPages = Math.ceil(documents.length / itemsPerPage);
+  const totalPages = Math.ceil( documents.length / itemsPerPage );
 
-  const startIndex = (currentPage - 1) * itemsPerPage;
+  const startIndex = ( currentPage - 1 ) * itemsPerPage;
   const displayedDocuments = documents.slice(
     startIndex,
     startIndex + itemsPerPage
   );
 
-  const isPDF = (url) => url.toLowerCase().endsWith(".pdf");
+  const handleFileChange = async ( event ) => {
+    if ( event.target.files && event.target.files[ 0 ] )
+    {
+      const file = event.target.files[ 0 ];
 
+      // Check if the user is online
+      if ( !navigator.onLine )
+      {
+        return;
+      }
+
+      // Check file size limit (10MB = 10,485,760 bytes)
+      if ( file.size > 10485760 )
+      {
+        handleToast( `${ file.name } exceeds the 10MB limit`, "error" );
+        return;
+      }
+
+      setSelectedFile( file );
+      await uploadDocument( file );
+    }
+  };
+
+  // Upload document function (similar to Step3Form logic)
+  const uploadDocument = async ( file ) => {
+    let attachmentUrl = null;
+    setIsUploading( true );
+
+    const formData = new FormData();
+    formData.append( "document", file );
+    formData.append( "folder", `document/${ file.name }` );
+
+    try
+    {
+      // First upload to S3
+      const uploadResponse = await axios.post(
+        `${ process.env.NEXT_PUBLIC_WEB_URL }/upload-to-s3`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      attachmentUrl = uploadResponse.data.data;
+
+      if ( attachmentUrl )
+      {
+        // Then create document record in database
+        await axios.post(
+          `${ process.env.NEXT_PUBLIC_WEB_URL }/create-document`,
+          {
+            document_url: attachmentUrl,
+            customer_id: customerId,
+            type: "general document", // You can change this type as needed
+          }
+        );
+
+        // Call callback to refresh documents list if provided
+        if ( onDocumentUploaded )
+        {
+          onDocumentUploaded();
+        }
+      }
+    } catch ( err )
+    {
+      console.error( "Error uploading document:", err );
+    } finally
+    {
+      setIsUploading( false );
+      setSelectedFile( null );
+      // Reset file input
+      const fileInput = document.getElementById( 'add-document-input' );
+      if ( fileInput )
+      {
+        fileInput.value = '';
+      }
+    }
+  };
+
+
+  // Handler for button click to trigger file input
+  const handleAddDocumentClick = () => {
+    document.getElementById( 'add-document-input' ).click();
+  };
+
+  useEffect( () => {
+    const handleOnline = () => {
+      console.log( "You are online" );
+    };
+    const handleOffline = () => {
+      console.log( "You are offline" );
+    };
+    window.addEventListener( "online", handleOnline );
+    window.addEventListener( "offline", handleOffline );
+
+    return () => {
+      window.removeEventListener( "online", handleOnline );
+      window.removeEventListener( "offline", handleOffline );
+    };
+  }, [] );
+
+  const isPDF = ( url ) => url.toLowerCase().endsWith( ".pdf" );
+  
   return (
     <Grid item xs={12} md={8}>
       <Paper
@@ -43,6 +149,39 @@ const TicketDocuments = ({ isMobile, isTab, documents }) => {
           boxShadow: "0px 4px 20px rgba(149, 117, 205, 0.3)",
         }}
       >
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2, width: "100%" }}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={isUploading ? <CircularProgress size={16} color="inherit" /> : <CloudUploadIcon />}
+            onClick={handleAddDocumentClick}
+            disabled={isUploading}
+            sx={{
+              bgcolor: "#9D50BB",
+              color: "white",
+              textTransform: "none",
+              fontWeight: 600,
+              position: "relative",
+              "&:hover": {
+                bgcolor: "#f06292",
+                color: "black",
+              },
+              "&:disabled": {
+                bgcolor: "#ccc",
+                color: "#666",
+              },
+            }}
+          >
+            {isUploading ? "Uploading..." : "Add Document"}
+          </Button>
+          <input
+            id="add-document-input"
+            type="file"
+            accept="image/*,.pdf,.doc,.docx,.txt"
+            style={{ display: "none" }}
+            onChange={handleFileChange}
+          />
+        </Box>
         <Typography
           variant="h6"
           sx={{
@@ -65,7 +204,7 @@ const TicketDocuments = ({ isMobile, isTab, documents }) => {
               gap: 1,
             }}
           >
-            {displayedDocuments.map((doc, index) => (
+            {displayedDocuments.map( ( doc, index ) => (
               <React.Fragment key={index}>
                 <Box
                   sx={{
@@ -93,8 +232,9 @@ const TicketDocuments = ({ isMobile, isTab, documents }) => {
                   </Typography>
                   <Button
                     onClick={() => {
-                      if (!isPDF(doc.document_url)) {
-                        toggleAttachment(index);
+                      if ( !isPDF( doc.document_url ) )
+                      {
+                        toggleAttachment( index );
                       }
                     }}
                     variant="contained"
@@ -110,7 +250,7 @@ const TicketDocuments = ({ isMobile, isTab, documents }) => {
                       },
                     }}
                   >
-                    {isPDF(doc.document_url) ? (
+                    {isPDF( doc.document_url ) ? (
                       <a
                         href={doc.document_url}
                         target="_blank"
@@ -130,7 +270,7 @@ const TicketDocuments = ({ isMobile, isTab, documents }) => {
                 </Box>
 
                 {/* Conditional rendering of the attachment */}
-                {showAttachment[index] && (
+                {showAttachment[ index ] && (
                   <Box
                     sx={{
                       position: "fixed",
@@ -150,7 +290,7 @@ const TicketDocuments = ({ isMobile, isTab, documents }) => {
                     <Box>
                       <img
                         src={doc.document_url}
-                        alt={`Attachment for ${doc.type}`}
+                        alt={`Attachment for ${ doc.type }`}
                         style={{
                           height: isMobile ? "33vh" : isTab ? "35vh" : "90vh",
                           borderRadius: "8px",
@@ -166,7 +306,7 @@ const TicketDocuments = ({ isMobile, isTab, documents }) => {
                       }}
                     >
                       <Button
-                        onClick={() => toggleAttachment(index)}
+                        onClick={() => toggleAttachment( index )}
                         variant="contained"
                         size="small"
                         sx={{
@@ -187,7 +327,7 @@ const TicketDocuments = ({ isMobile, isTab, documents }) => {
                   </Box>
                 )}
               </React.Fragment>
-            ))}
+            ) )}
           </Box>
         ) : (
           <Typography
@@ -226,7 +366,7 @@ const TicketDocuments = ({ isMobile, isTab, documents }) => {
                 width: isMobile ? "1vw" : isTab ? "" : "5vw",
               }}
               disabled={currentPage === 1}
-              onClick={() => setCurrentPage((prev) => prev - 1)}
+              onClick={() => setCurrentPage( ( prev ) => prev - 1 )}
             >
               Previous
             </Button>
@@ -246,7 +386,7 @@ const TicketDocuments = ({ isMobile, isTab, documents }) => {
                 width: "5vw",
               }}
               disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((prev) => prev + 1)}
+              onClick={() => setCurrentPage( ( prev ) => prev + 1 )}
             >
               Next
             </Button>
@@ -269,4 +409,4 @@ const TicketDocuments = ({ isMobile, isTab, documents }) => {
   );
 };
 
-export default memo(TicketDocuments);
+export default memo( TicketDocuments );

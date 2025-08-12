@@ -8,10 +8,18 @@ import {
   Button,
   Grid,
   IconButton,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   Tooltip,
   Typography,
   useMediaQuery,
 } from "@mui/material";
+import TableViewIcon from "@mui/icons-material/TableView";
 
 import ApplicationCard from "../components/common/ApplicationCard";
 import FilterPanel from "../components/common/FilterPanel";
@@ -41,14 +49,15 @@ const Ticket = () => {
   const [ disbursedAmount, setDisbursedAmount ] = useState<number>( 0 );
 
   // Initialize toggleListView from sessionStorage or default to true (list view)
-  const [ toggleListView, setToggleListView ] = useState( () => {
-    if ( typeof window !== 'undefined' )
-    {
-      const savedView = sessionStorage.getItem( 'ticketViewPreference' );
-      return savedView !== null ? JSON.parse( savedView ) : true;
-    }
-    return true; // Default to list view
-  } );
+  // const [ toggleListView, setToggleListView ] = useState( () => {
+  //   if ( typeof window !== 'undefined' )
+  //   {
+  //     const savedView = sessionStorage.getItem( 'ticketViewPreference' );
+  //     return savedView !== null ? JSON.parse( savedView ) : true;
+  //   }
+  //   return true; // Default to list view
+  // } );
+  const [ toggleListView, setToggleListView ] = useState( 'table' );
 
   const [ currentPage, setCurrentPage ] = useState<number>( 1 );
   const [ hasMoreData, setHasMoreData ] = useState<boolean>( true );
@@ -109,14 +118,25 @@ const Ticket = () => {
   const pathname = usePathname();
 
   // Function to handle view toggle and save to sessionStorage
-  const handleViewToggle = ( isListView: boolean ) => {
-    setToggleListView( isListView );
-    // Save the preference to sessionStorage
+  useEffect( () => {
     if ( typeof window !== 'undefined' )
     {
-      sessionStorage.setItem( 'ticketViewPreference', JSON.stringify( isListView ) );
+      const savedView = sessionStorage.getItem( 'ticketViewPreference' );
+      if ( savedView !== null )
+      {
+        try
+        {
+          const parsedView = JSON.parse( savedView );
+          setToggleListView( parsedView );
+        } catch ( error )
+        {
+          console.error( 'Error parsing saved view preference:', error );
+          // Fall back to default
+          setToggleListView( 'list' );
+        }
+      }
     }
-  };
+  }, [] );
 
   // Load view preference from sessionStorage on component mount
   useEffect( () => {
@@ -130,31 +150,31 @@ const Ticket = () => {
     }
   }, [] );
 
-  useEffect( () => {
-    if ( pathname === "/ticket" && typeof window !== "undefined" )
-    {
-      const hasRefreshed = sessionStorage.getItem( "hasRefreshed" );
+  // useEffect( () => {
+  //   if ( pathname === "/ticket" && typeof window !== "undefined" )
+  //   {
+  //     const hasRefreshed = sessionStorage.getItem( "hasRefreshed" );
 
-      if ( !hasRefreshed )
-      {
-        sessionStorage.setItem( "hasRefreshed", "true" );
-        window.location.reload();
-      }
-    }
-    return () => {
-      console.log( "remove session" );
-      sessionStorage.removeItem( "hasRefreshed" );
-    };
-  }, [ pathname ] );
+  //     if ( !hasRefreshed )
+  //     {
+  //       sessionStorage.setItem( "hasRefreshed", "true" );
+  //       window.location.reload();
+  //     }
+  //   }
+  //   return () => {
+  //     console.log( "remove session" );
+  //     sessionStorage.removeItem( "hasRefreshed" );
+  //   };
+  // }, [ pathname ] );
 
-  // Cleanup flag when leaving the page
-  useEffect( () => {
-    if ( pathname !== "/ticket" )
-    {
-      sessionStorage.removeItem( "hasRefreshed" );
-      // Note: We don't remove 'ticketViewPreference' here because we want it to persist
-    }
-  }, [ pathname ] );
+  // // Cleanup flag when leaving the page
+  // useEffect( () => {
+  //   if ( pathname !== "/ticket" )
+  //   {
+  //     sessionStorage.removeItem( "hasRefreshed" );
+  //     // Note: We don't remove 'ticketViewPreference' here because we want it to persist
+  //   }
+  // }, [ pathname ] );
 
   useEffect( () => {
     // Fetch user data only if user is admin
@@ -442,102 +462,154 @@ const Ticket = () => {
     >
       <Box
         sx={{
+          width: "100%",
           display: "flex",
-          width: '80%',
+          flexDirection: { xs: "column", md: "row" },
+          justifyContent: "space-between",
+          alignItems: { xs: "stretch", md: "center" },
+          gap: 2,
+          p: 2,
+          backgroundColor: "#cfd8dc",
+          borderRadius: 2,
+          boxShadow: 1
         }}
       >
+        {/* Filter Panel Container */}
         <Box
           sx={{
             display: "flex",
-            flexDirection: {
-              xs: "column-reverse",
-              sm: "column-reverse",
-              md: "row",
-            },
-            position: "relative",
-            marginTop: { xs: "20px", sm: "20px", md: "0" },
+            width: { xs: "100%", md: "80%" },
+            flexGrow: 1,
           }}
         >
-          <FilterPanel
-            searchLabel="Search Tickets"
-            sortBy={sortBy}
-            loanProvider={loanProvider}
-            filter={filter}
-            setFilter={setFilter}
-            startDate={startDate}
-            setStartDate={setStartDate}
-            endDate={endDate}
-            setEndDate={setEndDate}
-            selectedUser={selectedUser}
-            setSelectedUser={setSelectedUser}
-            handleSortChange={handleSortChange}
-            handleProviderChange={handleProviderChange}
-            userData={userData}
-            userRole={userRole}
-            ticketCount={ticketData?.count}
-            // bankCount={ticketData?.}
-            disbursedAmount={disbursedAmount}
-            handleFilterChange={handleFilterChange}
-          />
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: {
+                xs: "column-reverse",
+                sm: "column-reverse",
+                md: "row",
+              },
+              position: "relative",
+              width: "100%",
+              gap: 2,
+            }}
+          >
+            <FilterPanel
+              searchLabel="Search Tickets"
+              sortBy={sortBy}
+              loanProvider={loanProvider}
+              filter={filter}
+              setFilter={setFilter}
+              startDate={startDate}
+              setStartDate={setStartDate}
+              endDate={endDate}
+              setEndDate={setEndDate}
+              selectedUser={selectedUser}
+              setSelectedUser={setSelectedUser}
+              handleSortChange={handleSortChange}
+              handleProviderChange={handleProviderChange}
+              userData={userData}
+              userRole={userRole}
+              ticketCount={ticketData?.count}
+              disbursedAmount={disbursedAmount}
+              handleFilterChange={handleFilterChange}
+            />
+          </Box>
         </Box>
 
+        {/* View Toggle Container */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            border: "1px solid",
+            borderColor: "divider",
+            borderRadius: "12px",
+            p: 0.5,
+            backgroundColor: "background.default",
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
+            width: "fit-content",
+            height: { xs: "auto", md: "56px" },
+            alignSelf: { xs: "flex-end", md: "center" },
+            ml: "auto"
+          }}
+        >
+          <Tooltip title="Grid View">
+            <IconButton
+              onClick={() => {
+                setToggleListView( 'grid' );
+                if ( typeof window !== 'undefined' )
+                {
+                  sessionStorage.setItem( 'ticketViewPreference', JSON.stringify( 'grid' ) );
+                }
+              }}
+              sx={{
+                color: toggleListView === 'grid' ? "primary.main" : "action.disabled",
+                backgroundColor: toggleListView === 'grid' ? "action.selected" : "transparent",
+                borderRadius: "8px",
+                p: 1,
+                transition: "all 0.2s ease",
+                '&:hover': {
+                  backgroundColor: toggleListView === 'grid' ? "primary.light" : "action.hover",
+                }
+              }}
+            >
+              <GridViewIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title="List View">
+            <IconButton
+              onClick={() => {
+                setToggleListView( 'list' );
+                if ( typeof window !== 'undefined' )
+                {
+                  sessionStorage.setItem( 'ticketViewPreference', JSON.stringify( 'list' ) );
+                }
+              }}
+              sx={{
+                color: toggleListView === 'list' ? "primary.main" : "action.disabled",
+                backgroundColor: toggleListView === 'list' ? "action.selected" : "transparent",
+                borderRadius: "8px",
+                p: 1,
+                transition: "all 0.2s ease",
+                '&:hover': {
+                  backgroundColor: toggleListView === 'list' ? "primary.light" : "action.hover",
+                }
+              }}
+            >
+              <ViewListIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title="Table View">
+            <IconButton
+              onClick={() => {
+                setToggleListView( 'table' );
+                if ( typeof window !== 'undefined' )
+                {
+                  sessionStorage.setItem( 'ticketViewPreference', JSON.stringify( 'table' ) );
+                }
+              }}
+              sx={{
+                color: toggleListView === 'table' ? "primary.main" : "action.disabled",
+                backgroundColor: toggleListView === 'table' ? "action.selected" : "transparent",
+                borderRadius: "8px",
+                p: 1,
+                transition: "all 0.2s ease",
+                '&:hover': {
+                  backgroundColor: toggleListView === 'table' ? "primary.light" : "action.hover",
+                }
+              }}
+            >
+              <TableViewIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
       </Box>
 
       {/* Updated View Toggle Box with Session Storage */}
-      <Box
-        sx={{
-          position: { xs: "relative", sm: "relative", md: "absolute" },
-          right: { xs: "unset", sm: "unset", md: 0 },
-          top: { xs: "unset", sm: "unset", md: 0 },
-          display: "flex",
-          alignItems: "center",
-          border: "2px solid #e0e0e0",
-          borderRadius: "8px",
-          padding: "6px 12px",
-          backgroundColor: "#fafafa",
-          width: "fit-content",
-          marginLeft: { xs: "auto", sm: "auto", md: ".5rem" },
-          marginRight: { xs: "auto", sm: "auto", md: "unset" },
-          marginBottom: { xs: "15px", sm: "15px", md: "0" },
-          height: {
-            xs: "6vh",
-            sm: "",
-            md: "7vh",
-          },
-          left: {
-            xs: 125,
-            sm: 260,
-            md: "inherit",
-            lg: "inherit",
-          },
-        }}
-      >
-        <Tooltip title="Grid View">
-          <IconButton
-            onClick={() => handleViewToggle( false )}
-            sx={{
-              color: !toggleListView ? "#1d86ff" : "#9e9e9e",
-              backgroundColor: !toggleListView ? "#e3f2fd" : "transparent",
-              borderRadius: "8px",
-            }}
-          >
-            <GridViewIcon />
-          </IconButton>
-        </Tooltip>
-
-        <Tooltip title="List View">
-          <IconButton
-            onClick={() => handleViewToggle( true )}
-            sx={{
-              color: toggleListView ? "#1d86ff" : "#9e9e9e",
-              backgroundColor: toggleListView ? "#e3f2fd" : "transparent",
-              borderRadius: "8px",
-            }}
-          >
-            <ViewListIcon />
-          </IconButton>
-        </Tooltip>
-      </Box>
 
       <Box
         sx={{
@@ -548,6 +620,7 @@ const Ticket = () => {
           justifyContent: "space-between",
           paddingTop: "20px",
           marginBottom: "0",
+          marginTop: "5vh",
 
         }}
       >
@@ -580,18 +653,56 @@ const Ticket = () => {
             </Typography>
           ) : (
             <>
-              {ticket.results.map( ( ticket, index ) => (
-                <ApplicationCard
-                  key={index}
-                  customerApplication={ticket}
-                  userRole={userRole}
-                  handleStartClick={() =>
-                    router.push( `ticket/${ ticket.ticketId }` )
-                  }
-                  handleDeleteTicket={handleDeleteTicket}
-                  toggleListView={toggleListView}
-                />
-              ) )}
+              {toggleListView === 'table' ? (
+                // Table View
+
+                <TableContainer component={Paper} elevation={2} sx={{ borderRadius: 2 }}>
+                  <Table>
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: "#3f50b5" }}>
+                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem" }}>Name</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem" }}>Email</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem" }}>Contact</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem" }}>Amount</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem" }}>Provider</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem" }}>Tenure</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem" }}>Location</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem" }}>Created At</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', pl: "3vw", color: "white", fontSize: "1rem" }}>Actions</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {ticket.results.map( ( ticket, index ) => (
+                        <ApplicationCard
+                          key={index}
+                          customerApplication={ticket}
+                          userRole={userRole}
+                          handleStartClick={() =>
+                            router.push( `ticket/${ ticket.ticketId }` )
+                          }
+                          handleDeleteTicket={handleDeleteTicket}
+                          toggleListView={toggleListView}
+                        />
+                      ) )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <Grid container spacing={2}>
+                  {ticket.results.map( ( ticket, index ) => (
+                    <ApplicationCard
+                      key={index}
+                      customerApplication={ticket}
+                      userRole={userRole}
+                      handleStartClick={() =>
+                        router.push( `ticket/${ ticket.ticketId }` )
+                      }
+                      handleDeleteTicket={handleDeleteTicket}
+                      toggleListView={toggleListView}
+                    />
+                  ) )}
+                </Grid>
+              )}
 
               {!hasMoreData && !swrLoading && (
                 <Typography

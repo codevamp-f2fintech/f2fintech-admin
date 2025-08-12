@@ -351,6 +351,8 @@ const Progress: React.FC = () => {
                   isMobile={isMobile}
                   isTab={isTab}
                   documents={ticketDetailData?.customerDocuments ?? []}
+                  customerId={ticketDetailData?.customer_id || ticketDetailData?.customerId}
+
                 />
                 <TicketVoiceNotes
                   isMobile={isMobile}
