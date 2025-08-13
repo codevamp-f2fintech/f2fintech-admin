@@ -466,7 +466,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                       />
                       <InfoChip
                         icon={<PhoneRounded />}
-                        text={customerApplication.customerContact}
+                        text={`+91 ${ customerApplication.customerContact }`}
                         color="#33415c"
                       />
                     </>
@@ -885,7 +885,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
 
                     <InfoRow
                       icon={<PhoneRounded />}
-                      text={customerApplication.customerContact}
+                      text={`+91 ${ customerApplication.customerContact }`}
                     />
                   </>
                 )}
@@ -1157,10 +1157,14 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
 
           {/* Provider */}
           <TableCell>
-            <Typography variant="body2">
+            <Typography
+              variant="body2"
+              sx={{ color: '#6A0DAD', fontWeight: 600 }}
+            >
               {customerApplication.applicationProvider || 'N/A'}
             </Typography>
           </TableCell>
+
 
           {/* Tenure */}
           <TableCell>
