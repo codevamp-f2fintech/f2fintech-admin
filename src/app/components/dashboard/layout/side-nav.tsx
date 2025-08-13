@@ -21,7 +21,7 @@ import { Logo } from "../../core/logo";
 
 export function SideNav(): React.JSX.Element {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = React.useState(false); // Collapse state
+  const [collapsed, setCollapsed] = React.useState(true); // Collapse state
   const { decodedToken } = Utility();
 
   const userRole = decodedToken()?.role;

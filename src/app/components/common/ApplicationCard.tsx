@@ -1115,7 +1115,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
 
           {/* Email */}
           <TableCell>
-            <Typography variant="body2">
+            <Typography variant="body2" >
               {customerApplication.customerEmail}
             </Typography>
           </TableCell>

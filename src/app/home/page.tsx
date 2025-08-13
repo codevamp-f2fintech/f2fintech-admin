@@ -503,17 +503,17 @@ const Home: React.FC = () => {
                   <TableContainer component={Paper} elevation={2} sx={{ borderRadius: 2 }}>
                     <Table>
                       <TableHead>
-                        <TableRow sx={{ backgroundColor: "#3f50b5" }}>
-                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem" }}>Name</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem" }}>Email</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem" }}>Contact</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem" }}>Amount</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem" }}>Provider</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem" }}>Tenure</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem" }}>Location</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem" }}>Created At</TableCell>
+                        <TableRow sx={{ backgroundColor: "#3f50b5", }}>
+                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>Name</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>Email</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>Contact</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>Amount</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>Provider</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>Tenure</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>Location</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>Created At</TableCell>
                           {userRole !== 'sales' && (
-                            <TableCell sx={{ fontWeight: 'bold', color: "white",fontSize: "1rem" }}>Actions</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>Actions</TableCell>
                           )}
                         </TableRow>
                       </TableHead>
