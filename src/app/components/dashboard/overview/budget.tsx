@@ -14,7 +14,7 @@ export interface BudgetProps {
   name: string;
   sx?: SxProps;
   value: string;
-  amount: any;
+  amount?: number | null | undefined;
   Icon: any;
   setDate?: ( date: string ) => void;
   iconColor?: string;

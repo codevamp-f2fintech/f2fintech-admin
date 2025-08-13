@@ -174,7 +174,7 @@ async function fetchTotalTickets (
   }
   const resData = await response.json();
 
-  if ( status === "disbursed" )
+  if ( status === "disbursed" || status === "approved" )
   {
     // When the status is disbursed, return both the count and total amount
     return { count: resData.data.count, amount: resData.data.amount };
@@ -361,6 +361,11 @@ export default function Page (): React.JSX.Element {
         ? totalDisbursed
         : { count: totalDisbursed, amount: null };
 
+    const normalizedApproved =
+      typeof totalApproved === "object" && totalApproved !== null
+        ? totalApproved
+        : { count: totalApproved, amount: null };
+
     const normalizedNewApplications = totalNewApplications
       ? {
         count: totalNewApplications.count,
@@ -380,7 +385,7 @@ export default function Page (): React.JSX.Element {
       totalFileSendToBanker,
       totalCarryForward,
       totalToBeApproved,
-      totalApproved,
+      totalApproved: normalizedApproved,
       totalRejected,
       totalDrop,
       totalHold,
@@ -499,7 +504,8 @@ export default function Page (): React.JSX.Element {
       label: "Approved",
       key: "approved",
       color: "#64dd17",
-      count: allCounts?.totalApproved,
+      count: allCounts?.totalApproved?.count,
+      amount: allCounts?.totalApproved?.amount,
       link: `/ticket?status=${ decodeURIComponent( "approved" ) }${ selectedMonth
         ? `&month=${ encodeURIComponent( selectedMonth ) }&startDate=${ getFirstDayOfMonth( selectedMonth ) }&endDate=${ getLastDayOfMonth( selectedMonth ) }`
         : ""
@@ -591,6 +597,7 @@ export default function Page (): React.JSX.Element {
     const day = String( date.getDate() ).padStart( 2, '0' );
     return `${ year }-${ month }-${ day }`;
   }
+  console.log( "allCounts:", allCounts );
 
   return (
     <>
@@ -844,7 +851,7 @@ export default function Page (): React.JSX.Element {
                   allCounts?.totalDisbursed?.count,
                   allCounts?.totalFileSendToBanker,
                   allCounts?.totalToBeApproved,
-                  allCounts?.totalApproved,
+                  allCounts?.totalApproved?.count,
                   allCounts?.totalCarryForward,
                 ]}
                 labels={[
