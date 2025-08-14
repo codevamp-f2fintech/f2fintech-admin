@@ -614,14 +614,8 @@ const Ticket = () => {
       <Box
         sx={{
           minWidth: "80vw",
-          minHeight: "70vh",
-          display: "flex",
-          alignItems: isMobile ? "center" : isTab ? "center" : "flex-start",
-          justifyContent: "space-between",
-          paddingTop: "20px",
-          marginBottom: "0",
-          marginTop: "5vh",
-
+          minHeight: "90vh",
+          marginTop: "7vh",
         }}
       >
         <Grid
@@ -653,24 +647,36 @@ const Ticket = () => {
             </Typography>
           ) : (
             <>
-              {toggleListView === 'table' ? (
-                // Table View
-
-                <TableContainer component={Paper} elevation={2} sx={{ borderRadius: 2 }}>
-                  <Table>
-                    <TableHead>
-                      <TableRow sx={{ backgroundColor: "#3f50b5" }}>
-                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem",wordWrap: 'break-word' }}>Name</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem",wordWrap: 'break-word' }}>Email</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem",wordWrap: 'break-word' }}>Contact</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem",wordWrap: 'break-word' }}>Amount</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem",wordWrap: 'break-word' }}>Provider</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem",wordWrap: 'break-word' }}>Tenure</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem",wordWrap: 'break-word' }}>Location</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem",wordWrap: 'break-word' }}>Created At</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', pl: "3vw", color: "white", fontSize: "1rem",wordWrap: 'break-word' }}>Actions</TableCell>
-                      </TableRow>
-                    </TableHead>
+                {toggleListView === 'table' ? (
+                  <Box sx={{ width: '100%', overflowX: 'auto' }}>
+                    <TableContainer
+                      component={Paper}
+                      elevation={2}
+                      sx={{
+                        borderRadius: 2,
+                        minWidth: '80vw', // Match Home.tsx
+                        margin: '0 auto' // Center the table
+                      }}
+                    >
+                      <Table sx={{
+                        tableLayout: "auto",
+                        '& .MuiTableCell-root': {
+                          padding: '8px' // Match Home.tsx padding
+                        }
+                      }}>
+                        <TableHead>
+                          <TableRow sx={{ backgroundColor: "#3f50b5" }}>
+                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Name</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Email</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Contact</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Amount</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Provider</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Tenure</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Location</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Created At</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Actions</TableCell>
+                          </TableRow>
+                        </TableHead>
                     <TableBody>
                       {ticket.results.map( ( ticket, index ) => (
                         <ApplicationCard
@@ -687,6 +693,7 @@ const Ticket = () => {
                     </TableBody>
                   </Table>
                 </TableContainer>
+                  </Box>
               ) : (
                 <Grid container spacing={2}>
                   {ticket.results.map( ( ticket, index ) => (
