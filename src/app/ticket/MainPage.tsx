@@ -665,7 +665,7 @@ const Ticket = () => {
                         }
                       }}>
                         <TableHead>
-                          <TableRow sx={{ backgroundColor: "#3f50b5" }}>
+                          <TableRow sx={{ backgroundColor: "#3f50b5",  }}>
                             <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Name</TableCell>
                             <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Email</TableCell>
                             <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Contact</TableCell>
@@ -674,7 +674,7 @@ const Ticket = () => {
                             <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Tenure</TableCell>
                             <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Location</TableCell>
                             <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Created At</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Actions</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word', display: 'flex', alignItems: 'center', justifyContent: 'center',border: "none" }}>Actions</TableCell>
                           </TableRow>
                         </TableHead>
                     <TableBody>

@@ -355,7 +355,7 @@ const Home: React.FC = () => {
             <Link href="/ticket" passHref>
               <Button
                 sx={{
-                  width: { xs: "100%", md: "12vw" },
+                  width: { xs: "100%", md: "auto" },
                   fontSize: { xs: "0.7rem", md: "1rem" },
                   bgcolor: "#0c66e4",
                   color: "white",
@@ -510,8 +510,8 @@ const Home: React.FC = () => {
                       <TableHead>
                         <TableRow sx={{ backgroundColor: "#3f50b5"}}>
                           <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>Name</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>Email</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>Contact</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>E-mail</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>Contact no</TableCell>
                           <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>Amount</TableCell>
                           <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>Provider</TableCell>
                           <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>Tenure</TableCell>
@@ -520,7 +520,7 @@ const Home: React.FC = () => {
                           <TableRow sx={{
                             backgroundColor: "#3f50b5",
                             '& td': { borderBottom: 'none' },
-                            borderBottom: 'none'
+                            borderBottom: 'none',
                           }}>
                             {userRole !== 'sales' ? (
                               <TableCell sx={{
@@ -528,7 +528,8 @@ const Home: React.FC = () => {
                                 color: "white",
                                 fontSize: ".9rem",
                                 wordWrap: 'break-word',
-                                borderBottom: 'none'
+                                borderBottom: 'none',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',ml: "1.5vw"
                               }}>Actions</TableCell>
                             ) : null}
                           </TableRow>
