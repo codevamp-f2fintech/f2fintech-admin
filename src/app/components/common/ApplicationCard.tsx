@@ -498,17 +498,6 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                       fontWeight: "bold",
                     }}
                   />
-                  {/* <Chip
-                    label={`${ calculateDaysAgo(
-                      customerApplication.applicationDate
-                    ) } days ago`}
-                    size="small"
-                    sx={{
-                      bgcolor: "rgba(255,255,255,0.2)",
-                      color: "#33415c",
-                      fontWeight: "bold",
-                    }}
-                  /> */}
                 </Box>
               }
             />
@@ -738,13 +727,6 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
             backgroundBlendMode: "multiply, screen, normal",
             pt: isMobile ? 3 : 5,
             mt: 5,
-            // height: {
-            //   xs: "auto", // Fixed height for mobile
-            //   sm: "55vh", // Fixed height for tablet
-            //   md: "90vh"  // Fixed height for desktop
-            // },
-            // display: "flex",
-            // flexDirection: "column",
           }}
         >
           {/* Delete Button */}
@@ -965,9 +947,6 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                           year: 'numeric',
                         } )} ({calculateDaysAgo( history.created_at )} days ago)
                       </Typography>
-                      {/* <Typography variant="caption" sx={{ color: "blue" }}>
-                        {calculateDaysAgo( history.created_at )} days ago
-                      </Typography> */}
                     </Box>
                   ) )
                 ) : (
@@ -1143,13 +1122,13 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
               variant="body2"
               sx={{
                 fontWeight: 'medium',
-                color: '#00796B', // Default color
+                color: '#00796B',
                 '&:hover': {
-                  color: '#004D40', // Hover color
-                  cursor: 'pointer' // Optional: changes cursor to pointer on hover
+                  color: '#004D40',
+                  cursor: 'pointer'
                 }
               }}
-              className="amount-link" // You can still add the class if needed
+              className="amount-link"
             >
               {formatRupees( customerApplication.applicationAmount )}
             </Typography>
@@ -1185,15 +1164,6 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                 : 'N/A'}
             </Typography>
           </TableCell>
-
-          {/* State
-          // <TableCell>
-          //   <Typography variant="body2">
-          //     {customerApplication.customerState
-          //       ? capitalizeFirstLetter( customerApplication.customerState )
-          //       : 'N/A'}
-          //   </Typography>
-          // </TableCell> */}
 
           {/* Created At */}
           <TableCell>

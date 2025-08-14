@@ -97,7 +97,7 @@ const MultiStepForm: React.FC = () => {
       setIsStepCompleted( ( prev ) => ( { ...prev, step3: true } ) );
     if ( activeStep === 2 )
       setIsStepCompleted( ( prev ) => ( { ...prev, step4: true } ) );
-    handleNext(); // Proceed to the next step upon successful form submission
+    handleNext();
   };
 
   useEffect( () => {
@@ -175,11 +175,6 @@ const MultiStepForm: React.FC = () => {
     }
   };
 
-  console.log( 'applicationNumber', applicationNumber, activeStep, applicationData?.salary, getStarted );
-  // activeStep === 0 &&
-  //   !applicationData?.salary &&
-  //   !getStarted &&
-
   return (
     <Container
       maxWidth={false}
@@ -209,9 +204,8 @@ const MultiStepForm: React.FC = () => {
             alignItems: "center",
             flexDirection: "column",
             width: "50%",
-            overflowX: "hidden", // Enable vertical scrolling
-            maxHeight: "260vh", // Adjust height as needed
-            // border: "2px solid yellow",
+            overflowX: "hidden",
+            maxHeight: "260vh",
             backgroundColor: "#424242",
             borderRadius: "20px 0px 0px 20px",
           }}
@@ -244,21 +238,21 @@ const MultiStepForm: React.FC = () => {
                   <Step key={label}>
                     <StepLabel
                       sx={{
-                        color: index === activeStep ? 'white !imprtant' : 'green', // Active step color white, inactive white
-                        fontWeight: index === activeStep ? 'bold' : 'normal', // Make the active step bold
+                        color: index === activeStep ? 'white !imprtant' : 'green',
+                        fontWeight: index === activeStep ? 'bold' : 'normal',
                         '&.MuiStepLabel-completed': {
-                          color: 'green', // Completed step color green
+                          color: 'green',
                         },
                         '&.MuiStepLabel-active': {
-                          color: 'blue', // Active step text color blue
+                          color: 'blue',
                         },
                         '& .MuiStepIcon-root': {
-                          color: index === activeStep ? 'white !important' : 'green', // Change icon color for active and inactive steps
+                          color: index === activeStep ? 'white !important' : 'green',
                           '&.MuiStepIcon-completed': {
-                            color: 'green', // Completed step icon color green
+                            color: 'green',
                           },
                           '&.MuiStepIcon-active': {
-                            color: 'blue', // Active step icon color blue
+                            color: 'blue',
                           },
                         },
                       }}
@@ -282,7 +276,7 @@ const MultiStepForm: React.FC = () => {
               justifyContent: "center",
               alignItems: "center",
               width: "50%",
-              position: "sticky", // Make the right box sticky
+              position: "sticky",
               top: 0,
               height: "100vh",
               overflowY: "auto",

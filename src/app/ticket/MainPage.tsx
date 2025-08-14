@@ -47,28 +47,15 @@ const Ticket = () => {
   const [ startDate, setStartDate ] = useState<string | null>( null );
   const [ endDate, setEndDate ] = useState<string | null>( null );
   const [ disbursedAmount, setDisbursedAmount ] = useState<number>( 0 );
-
-  // Initialize toggleListView from sessionStorage or default to true (list view)
-  // const [ toggleListView, setToggleListView ] = useState( () => {
-  //   if ( typeof window !== 'undefined' )
-  //   {
-  //     const savedView = sessionStorage.getItem( 'ticketViewPreference' );
-  //     return savedView !== null ? JSON.parse( savedView ) : true;
-  //   }
-  //   return true; // Default to list view
-  // } );
   const [ toggleListView, setToggleListView ] = useState( 'table' );
-
   const [ currentPage, setCurrentPage ] = useState<number>( 1 );
   const [ hasMoreData, setHasMoreData ] = useState<boolean>( true );
-
   const { ticket } = useSelector( ( state: RootState ) => state.tickets );
   const { deleteTicket, error, loading } = useDeleteTicket();
   const { deleteCustomerApplication } = useDeleteCustomerApplication();
   const isMobile = useMediaQuery( "(max-width:600px)" );
   const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
-  const ITEMS_PER_PAGE = 12; // Number of tickets per page
-
+  const ITEMS_PER_PAGE = 12;
   const dispatch: AppDispatch = useDispatch();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -150,31 +137,6 @@ const Ticket = () => {
     }
   }, [] );
 
-  // useEffect( () => {
-  //   if ( pathname === "/ticket" && typeof window !== "undefined" )
-  //   {
-  //     const hasRefreshed = sessionStorage.getItem( "hasRefreshed" );
-
-  //     if ( !hasRefreshed )
-  //     {
-  //       sessionStorage.setItem( "hasRefreshed", "true" );
-  //       window.location.reload();
-  //     }
-  //   }
-  //   return () => {
-  //     console.log( "remove session" );
-  //     sessionStorage.removeItem( "hasRefreshed" );
-  //   };
-  // }, [ pathname ] );
-
-  // // Cleanup flag when leaving the page
-  // useEffect( () => {
-  //   if ( pathname !== "/ticket" )
-  //   {
-  //     sessionStorage.removeItem( "hasRefreshed" );
-  //     // Note: We don't remove 'ticketViewPreference' here because we want it to persist
-  //   }
-  // }, [ pathname ] );
 
   useEffect( () => {
     // Fetch user data only if user is admin
@@ -278,12 +240,12 @@ const Ticket = () => {
   const handleScroll = useCallback(
     debounceScroll( () => {
       const nearBottom =
-        window.innerHeight + window.scrollY >= document.body.offsetHeight - 400; // 400px threshold
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 400;
       if ( nearBottom && !swrLoading && hasMoreData )
       {
-        setCurrentPage( ( prevPage ) => prevPage + 1 ); // Increment page only once
+        setCurrentPage( ( prevPage ) => prevPage + 1 );
       }
-    }, 200 ), // Debounce delay: 200ms
+    }, 200 ),
     [ swrLoading, hasMoreData ]
   );
 
@@ -647,53 +609,53 @@ const Ticket = () => {
             </Typography>
           ) : (
             <>
-                {toggleListView === 'table' ? (
-                  <Box sx={{ width: '100%', overflowX: 'auto' }}>
-                    <TableContainer
-                      component={Paper}
-                      elevation={2}
-                      sx={{
-                        borderRadius: 2,
-                        minWidth: '80vw', // Match Home.tsx
-                        margin: '0 auto' // Center the table
-                      }}
-                    >
-                      <Table sx={{
-                        tableLayout: "auto",
-                        '& .MuiTableCell-root': {
-                          padding: '8px' // Match Home.tsx padding
-                        }
-                      }}>
-                        <TableHead>
-                          <TableRow sx={{ backgroundColor: "#3f50b5",  }}>
-                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Name</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Email</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Contact</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Amount</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Provider</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Tenure</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Location</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Created At</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word', display: 'flex', alignItems: 'center', justifyContent: 'center',border: "none" }}>Actions</TableCell>
-                          </TableRow>
-                        </TableHead>
-                    <TableBody>
-                      {ticket.results.map( ( ticket, index ) => (
-                        <ApplicationCard
-                          key={index}
-                          customerApplication={ticket}
-                          userRole={userRole}
-                          handleStartClick={() =>
-                            router.push( `ticket/${ ticket.ticketId }` )
-                          }
-                          handleDeleteTicket={handleDeleteTicket}
-                          toggleListView={toggleListView}
-                        />
-                      ) )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-                  </Box>
+              {toggleListView === 'table' ? (
+                <Box sx={{ width: '100%', overflowX: 'auto' }}>
+                  <TableContainer
+                    component={Paper}
+                    elevation={2}
+                    sx={{
+                      borderRadius: 2,
+                      minWidth: '80vw',
+                      margin: '0 auto'
+                    }}
+                  >
+                    <Table sx={{
+                      tableLayout: "auto",
+                      '& .MuiTableCell-root': {
+                        padding: '8px'
+                      }
+                    }}>
+                      <TableHead>
+                        <TableRow sx={{ backgroundColor: "#3f50b5", }}>
+                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Name</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Email</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Contact</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Amount</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Provider</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Tenure</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Location</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Created At</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word', display: 'flex', alignItems: 'center', justifyContent: 'center', border: "none" }}>Actions</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {ticket.results.map( ( ticket, index ) => (
+                          <ApplicationCard
+                            key={index}
+                            customerApplication={ticket}
+                            userRole={userRole}
+                            handleStartClick={() =>
+                              router.push( `ticket/${ ticket.ticketId }` )
+                            }
+                            handleDeleteTicket={handleDeleteTicket}
+                            toggleListView={toggleListView}
+                          />
+                        ) )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Box>
               ) : (
                 <Grid container spacing={2}>
                   {ticket.results.map( ( ticket, index ) => (

@@ -18,7 +18,7 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  Paper, // Added missing import
+  Paper,
 } from "@mui/material";
 import ApplicationCard from "../components/common/ApplicationCard";
 import Loader from "../components/common/Loader";
@@ -499,59 +499,59 @@ const Home: React.FC = () => {
           </Box>
         ) : (
           <>
-                {toggleListView === 'table' ? (
-                  <TableContainer component={Paper} elevation={2} sx={{ borderRadius: 2 }}>
-                    <Table sx={{
-                      tableLayout: "auto",
-                      '& .MuiTableCell-root': {
-                        padding: '8px' // Adjust padding if needed
-                      }
-                    }}>
-                      <TableHead>
-                        <TableRow sx={{ backgroundColor: "#3f50b5"}}>
-                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>Name</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>E-mail</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>Contact no</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>Amount</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>Provider</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>Tenure</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>Location</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold',color: "white",fontSize: "1rem,wordWrap: 'break-word'" }}>Created At</TableCell>
-                          <TableRow sx={{
-                            backgroundColor: "#3f50b5",
-                            '& td': { borderBottom: 'none' },
+            {toggleListView === 'table' ? (
+              <TableContainer component={Paper} elevation={2} sx={{ borderRadius: 2 }}>
+                <Table sx={{
+                  tableLayout: "auto",
+                  '& .MuiTableCell-root': {
+                    padding: '8px'
+                  }
+                }}>
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: "#3f50b5" }}>
+                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Name</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>E-mail</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Contact no</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Amount</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Provider</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Tenure</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Location</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Created At</TableCell>
+                      <TableRow sx={{
+                        backgroundColor: "#3f50b5",
+                        '& td': { borderBottom: 'none' },
+                        borderBottom: 'none',
+                      }}>
+                        {userRole !== 'sales' ? (
+                          <TableCell sx={{
+                            fontWeight: 'bold',
+                            color: "white",
+                            fontSize: ".9rem",
+                            wordWrap: 'break-word',
                             borderBottom: 'none',
-                          }}>
-                            {userRole !== 'sales' ? (
-                              <TableCell sx={{
-                                fontWeight: 'bold',
-                                color: "white",
-                                fontSize: ".9rem",
-                                wordWrap: 'break-word',
-                                borderBottom: 'none',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',ml: "1.5vw"
-                              }}>Actions</TableCell>
-                            ) : null}
-                          </TableRow>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {filteredCustomers.map( ( customerApplication ) => (
-                          <ApplicationCard
-                            key={customerApplication.applicationId}
-                            customerApplication={customerApplication}
-                            refetch={refetch}
-                            showDeleteButton={isAdmin}
-                            onDelete={openDeleteDialog}
-                            isApplication={true}
-                            handleDeleteApplication={handleDeleteApplication}
-                            toggleListView={toggleListView}
-                            userRole={userRole}
-                          />
-                        ) )}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', ml: "1.5vw"
+                          }}>Actions</TableCell>
+                        ) : null}
+                      </TableRow>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {filteredCustomers.map( ( customerApplication ) => (
+                      <ApplicationCard
+                        key={customerApplication.applicationId}
+                        customerApplication={customerApplication}
+                        refetch={refetch}
+                        showDeleteButton={isAdmin}
+                        onDelete={openDeleteDialog}
+                        isApplication={true}
+                        handleDeleteApplication={handleDeleteApplication}
+                        toggleListView={toggleListView}
+                        userRole={userRole}
+                      />
+                    ) )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             ) : (
               // List View - You can implement a different list component here
               <Grid container spacing={2}>
