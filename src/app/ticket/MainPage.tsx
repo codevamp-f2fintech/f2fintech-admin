@@ -462,7 +462,7 @@ const Ticket = () => {
     >
       <Box
         sx={{
-          width: "80%",
+          width: "100%",
           display: "flex",
           flexDirection: { xs: "column", md: "row" },
           justifyContent: "space-between",
