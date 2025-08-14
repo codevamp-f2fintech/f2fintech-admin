@@ -462,7 +462,7 @@ const Ticket = () => {
     >
       <Box
         sx={{
-          width: "100%",
+          width: "80%",
           display: "flex",
           flexDirection: { xs: "column", md: "row" },
           justifyContent: "space-between",
@@ -660,15 +660,15 @@ const Ticket = () => {
                   <Table>
                     <TableHead>
                       <TableRow sx={{ backgroundColor: "#3f50b5" }}>
-                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem" }}>Name</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem" }}>Email</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem" }}>Contact</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem" }}>Amount</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem" }}>Provider</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem" }}>Tenure</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem" }}>Location</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem" }}>Created At</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', pl: "3vw", color: "white", fontSize: "1rem" }}>Actions</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem",wordWrap: 'break-word' }}>Name</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem",wordWrap: 'break-word' }}>Email</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem",wordWrap: 'break-word' }}>Contact</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem",wordWrap: 'break-word' }}>Amount</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem",wordWrap: 'break-word' }}>Provider</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem",wordWrap: 'break-word' }}>Tenure</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem",wordWrap: 'break-word' }}>Location</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem",wordWrap: 'break-word' }}>Created At</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', pl: "3vw", color: "white", fontSize: "1rem",wordWrap: 'break-word' }}>Actions</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
