@@ -48,7 +48,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
     "Bajaj Finance",
     "Bajaj Market",
     "Chola",
-    "LNT",
+    "L&T",
     "Tata",
     "ABFL",
     "Godrej",
@@ -131,16 +131,16 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
             "info",
             "Ticket Details Edited Successfully"
           );
-          setOpenEditModal(false); // Close the modal after saving
+          setOpenEditModal(false);
         } else {
-          setOpenEditModal(false); // Close the modal after saving
+          setOpenEditModal(false);
         }
       } else {
-        setOpenEditModal(false); // Close the modal after saving
+        setOpenEditModal(false);
       }
     } catch (error) {
       console.error("Error saving the ticket:", error);
-      setOpenEditModal(false); // Close the modal after saving
+      setOpenEditModal(false);
     }
   };
 
@@ -199,15 +199,6 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
           flexDirection: isMobile ? "column" : isTab ? "" : "",
         }}
       >
-        {/* <Box>
-          <Avatar
-            src={ticketDetailData?.customerName}
-            sx={{
-              width: isMobile ? "2rem" : isTab ? "6vw" : "4rem",
-              height: isMobile ? "2rem" : isTab ? "4vh" : "4rem",
-            }}
-          />
-        </Box> */}
         <Box
           sx={{
             flex: 1,
@@ -428,21 +419,21 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
         sx={{
           "& .MuiDialogContent-root": {
             padding: "16px",
-            maxHeight: "500px", // Set a max height for the content to ensure scrolling is needed
+            maxHeight: "500px",
           },
           "& .MuiDialogActions-root": {
             padding: "16px",
-            justifyContent: "flex-end", // Align buttons to the right
+            justifyContent: "flex-end",
           },
           "& .MuiPaper-root": {
-            borderRadius: "12px", // Rounded corners for the dialog
+            borderRadius: "12px",
           },
           // Hide the scrollbars
           "&::-webkit-scrollbar": {
-            display: "none", // Hide scrollbars on WebKit browsers (Chrome, Safari, Edge)
+            display: "none",
           },
           "& *": {
-            scrollbarWidth: "none", // Firefox scrollbar hiding
+            scrollbarWidth: "none",
           },
           height: "70v%",
         }}

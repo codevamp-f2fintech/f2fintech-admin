@@ -96,7 +96,7 @@ const bankOptions = [
   "Bajaj Finance",
   "Bajaj Market",
   "Chola",
-  "LNT",
+  "L&T",
   "Tata",
   "ABFL",
   "Godrej",
@@ -165,58 +165,57 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
   const getStatusColor = ( status: string ): string => {
     const normalizedStatus = normalizeStatusForDisplay( status );
     const colors: { [ key: string ]: string } = {
-      "under credit review": "#ff9800", // Orange ----
-      operations: "#2196f3", // Blue
-      "pendency in file": "#f44336", // Red   ----
-      "file send to banker": "#3f51b5", // Indigo
-      hold: "#ffeb3b", // Yellow
-      "to be approved": "#4caf50", // Green   ----
-      "to be disbursed": "#9c27b0", // Purple
-      approved: "#8bc34a", // Light Green   ----
-      disbursed: "#00bcd4", // Cyan   ----
-      "carry forward": "#9e9e9e", // Grey
-      rejected: "#f44336", // Red   ----
-      drop: "#ff5722", // Orange-Red
-      forwarded: "#ffc107", // Amber for Forwarded
-      "forwarded to me": "#ff7043", // Deep Orange
-      "forwarded by me": "#26c6da", // cyan
-      all: "#757575", // Grey
-      // relook: "#ff5722", // Orange-Red
+      "under credit review": "#ff9800",
+      operations: "#2196f3",
+      "pendency in file": "#f44336",
+      "file send to banker": "#3f51b5",
+      hold: "#ffeb3b",
+      "to be approved": "#4caf50",
+      "to be disbursed": "#9c27b0",
+      approved: "#8bc34a",
+      disbursed: "#00bcd4",
+      "carry forward": "#9e9e9e",
+      rejected: "#f44336",
+      drop: "#ff5722",
+      forwarded: "#ffc107",
+      "forwarded to me": "#ff7043",
+      "forwarded by me": "#26c6da",
+      all: "#757575",
     };
     return colors[ normalizedStatus ] || colors.all;
   };
 
   const getBankColor = ( bank: string ): string => {
     const colors: { [ key: string ]: string } = {
-      "Bajaj Finance": "#E91E63", // Pink
-      "Bajaj Market": "#9C27B0", // Purple
-      Chola: "#673AB7", // Deep Purple
-      LNT: "#3F51B5", // Indigo
-      Tata: "#2196F3", // Blue
-      ABFL: "#03A9F4", // Light Blue
-      Godrej: "#00BCD4", // Cyan
-      IDFC: "#009688", // Teal
-      "HDFC Bank": "#4CAF50", // Green
-      ICICI: "#8BC34A", // Light Green
-      INDUSIND: "#CDDC39", // Lime
-      "Lending Cart": "#FFEB3B", // Yellow
-      Incred: "#FFC107", // Amber
-      "Credit Saison": "#FF9800", // Orange
-      PaySense: "#FF5722", // Deep Orange
-      Shriram: "#795548", // Brown
-      all: "#757575", // Grey
+      "Bajaj Finance": "#E91E63",
+      "Bajaj Market": "#9C27B0",
+      Chola: "#673AB7",
+      "L&T": "#3F51B5",
+      Tata: "#2196F3",
+      ABFL: "#03A9F4",
+      Godrej: "#00BCD4",
+      IDFC: "#009688",
+      "HDFC Bank": "#4CAF50",
+      ICICI: "#8BC34A",
+      INDUSIND: "#CDDC39",
+      "Lending Cart": "#FFEB3B",
+      Incred: "#FFC107",
+      "Credit Saison": "#FF9800",
+      PaySense: "#FF5722",
+      Shriram: "#795548",
+      all: "#757575",
     };
     return colors[ bank ] || colors.all;
   };
 
   const getRoleColor = ( role: string ): string => {
     const colors: { [ key: string ]: string } = {
-      admin: "#d32f2f", // Red - highest authority
-      "sub admin": "#f57c00", // Orange - secondary authority
-      operations: "#1976d2", // Blue - operational role
-      credit: "#1976d2", // Blue - operational role
-      sales: "#388e3c", // Green - revenue generation
-      default: "#757575", // Grey for unknown roles
+      admin: "#d32f2f",
+      "sub admin": "#f57c00",
+      operations: "#1976d2",
+      credit: "#1976d2",
+      sales: "#388e3c",
+      default: "#757575",
     };
     return colors[ role?.toLowerCase() ] || colors.default;
   };
@@ -297,8 +296,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
   // Handle the status change
   const handleStatusChange = ( status: string ) => {
     const normalizedStatus = normalizeStatusForApi( status );
-    handleSortChange( normalizedStatus ); // Update the status in parent component
-    handleFilterChange( { status: normalizedStatus, page: 1 } ); // Reset page to 1 and update filter
+    handleSortChange( normalizedStatus );
+    handleFilterChange( { status: normalizedStatus, page: 1 } );
   };
 
   // Handle the bank change
@@ -309,8 +308,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
 
   // Handle the user change
   const handleUserChange = ( user: User ) => {
-    setSelectedUser( user ); // Update selected user
-    handleFilterChange( { user, page: 1 } ); // Reset page to 1 and update user filter
+    setSelectedUser( user );
+    handleFilterChange( { user, page: 1 } );
   };
 
   // Handler for opening the modal
@@ -348,7 +347,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
       startDate: formattedStart,
       endDate: formattedEnd,
       page: 1,
-    } ); // Reset page to 1 and update date range
+    } );
   };
 
   // Get the appropriate status options based on user role
@@ -363,7 +362,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
   const getDefaultStatus = () => {
     if ( userRole === "credit" )
     {
-      return "forwarded"; // Default to "forwarded" for credit users
+      return "forwarded";
     }
     return "all";
   };
@@ -521,7 +520,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
               "&:hover": { opacity: 0.9 },
               fontWeight: 500,
               "& .MuiChip-icon": {
-                color: "inherit", // Make icon color match text color
+                color: "inherit",
               },
             }}
           />
