@@ -510,7 +510,9 @@ const Home: React.FC = () => {
                   <TableHead>
                     <TableRow sx={{ backgroundColor: "#3f50b5" }}>
                       <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Name</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>E-mail</TableCell>
+                      {userRole !== "sales" && (
+                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>E-mail</TableCell>
+                      )}
                       {userRole === "admin" && (
                         <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Contact no</TableCell>
                       )}

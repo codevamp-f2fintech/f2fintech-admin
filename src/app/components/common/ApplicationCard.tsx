@@ -1099,11 +1099,13 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
           </TableCell>
 
           {/* Email */}
-          <TableCell>
-            <Typography variant="body2" >
-              {customerApplication.customerEmail}
-            </Typography>
-          </TableCell>
+          {userRole !== "sales" && (
+            <TableCell>
+              <Typography variant="body2" >
+                {customerApplication.customerEmail}
+              </Typography>
+            </TableCell>
+          )}
 
           {/* Contact */}
           {userRole === "admin" && (
