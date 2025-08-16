@@ -464,6 +464,10 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                         text={customerApplication.customerEmail}
                         color="#33415c"
                       />
+                    </>
+                  )}
+                  {userRole === "admin" && (
+                    <>
                       <InfoChip
                         icon={<PhoneRounded />}
                         text={`+91 ${ customerApplication.customerContact }`}
@@ -471,6 +475,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                       />
                     </>
                   )}
+
                   {customerApplication.customerLocation && (
                     <InfoChip
                       icon={<LocationOnRounded />}
@@ -859,18 +864,19 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                 }}
               >
                 {userRole !== "sales" && (
-                  <>
-                    <InfoRow
-                      icon={<MailRounded />}
-                      text={customerApplication.customerEmail}
-                    />
-
-                    <InfoRow
-                      icon={<PhoneRounded />}
-                      text={`+91 ${ customerApplication.customerContact }`}
-                    />
-                  </>
+                  <InfoRow
+                    icon={<MailRounded />}
+                    text={customerApplication.customerEmail}
+                  />
                 )}
+
+                {userRole === "admin" && (
+                  <InfoRow
+                    icon={<PhoneRounded />}
+                    text={`+91 ${ customerApplication.customerContact }`}
+                  />
+                )}
+
                 <InfoRow
                   icon={<CurrencyRupeeIcon />}
                   text={formatRupees( customerApplication.applicationAmount )}
@@ -1100,21 +1106,23 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
           </TableCell>
 
           {/* Contact */}
-          <TableCell>
-            <Typography
-              variant="body2"
-              sx={{
-                color: customerApplication.customerContact ? '#0c66e4' : 'inherit',
-                // Optional: add hover effect
-                '&:hover': {
-                  color: customerApplication.customerContact ? '#0052cc' : 'inherit',
-                  cursor: customerApplication.customerContact ? 'pointer' : 'default'
-                }
-              }}
-            >
-              +91 {customerApplication.customerContact || 'N/A'}
-            </Typography>
-          </TableCell>
+          {userRole === "admin" && (
+            <TableCell>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: customerApplication.customerContact ? '#0c66e4' : 'inherit',
+                  // Optional: add hover effect
+                  '&:hover': {
+                    color: customerApplication.customerContact ? '#0052cc' : 'inherit',
+                    cursor: customerApplication.customerContact ? 'pointer' : 'default'
+                  }
+                }}
+              >
+                +91 {customerApplication.customerContact || 'N/A'}
+              </Typography>
+            </TableCell>
+          )}
 
           {/* Amount */}
           <TableCell>

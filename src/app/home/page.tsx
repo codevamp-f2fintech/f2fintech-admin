@@ -378,7 +378,7 @@ const Home: React.FC = () => {
                 alignItems: "center",
                 border: "2px solid #e0e0e0",
                 borderRadius: "8px",
-                padding: "4px",
+                padding: "3px",
                 backgroundColor: "#fafafa",
                 boxShadow: "0 1px 4px rgba(0, 0, 0, 0.08)",
                 width: "fit-content",
@@ -511,7 +511,9 @@ const Home: React.FC = () => {
                     <TableRow sx={{ backgroundColor: "#3f50b5" }}>
                       <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Name</TableCell>
                       <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>E-mail</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Contact no</TableCell>
+                      {userRole === "admin" && (
+                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Contact no</TableCell>
+                      )}
                       <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Amount</TableCell>
                       <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Provider</TableCell>
                       <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Tenure</TableCell>
