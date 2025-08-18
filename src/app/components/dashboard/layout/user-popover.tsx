@@ -25,7 +25,7 @@ export function UserPopover({
   open,
 }: UserPopoverProps): React.JSX.Element {
   const popoverRef = React.useRef<HTMLDivElement | null>(null);
-  const [userProfile, setUserProfile] = React.useState<object>();
+  const [userProfile, setUserProfile] = React.useState(null);
   const { capitalizeFirstLetter, decodedToken } = Utility();
   const userId = decodedToken()?.id;
 
@@ -159,9 +159,7 @@ export function UserPopover({
               width: "100%",
             }}
           >
-            {userProfile?.role === "sub admin"
-              ? capitalizeFirstLetter(userProfile?.designation)
-              : capitalizeFirstLetter(userProfile?.role)}
+            {userProfile?.designation ? capitalizeFirstLetter(userProfile.designation) : capitalizeFirstLetter(userProfile?.role)}
           </Typography>
         </Box>
       </Box>
