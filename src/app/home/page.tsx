@@ -513,9 +513,9 @@ const Home: React.FC = () => {
                       {userRole !== "sales" && (
                         <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>E-mail</TableCell>
                       )}
-                      {userRole === "admin" && (
+                      {/* {userRole !== "sales" && (
                         <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Contact no</TableCell>
-                      )}
+                      )} */}
                       <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Amount</TableCell>
                       <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Provider</TableCell>
                       <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Tenure</TableCell>

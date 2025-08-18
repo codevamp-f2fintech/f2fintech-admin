@@ -632,9 +632,9 @@ const Ticket = () => {
                           {userRole !== "sales" && (
                             <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Email</TableCell>
                           )}
-                          {userRole === "admin" && (
+                            {/* {userRole == "sales" && (
                             <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Contact</TableCell>
-                          )}
+                          )} */}
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Amount</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Provider</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Tenure</TableCell>
