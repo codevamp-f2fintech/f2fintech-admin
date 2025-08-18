@@ -459,14 +459,22 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
 
                   {userRole !== "sales" && (
                     <>
-                      <InfoChip
-                        icon={<MailRounded />}
-                        text={customerApplication.customerEmail}
-                        color="#33415c"
-                      />
+                      {( userRole === "admin" || customerApplication.ticketStatus !== "disbursed" ) ? (
+                        <InfoChip
+                          icon={<MailRounded />}
+                          text={customerApplication.customerEmail}
+                          color="#33415c"
+                        />
+                      ) : (
+                        <InfoChip
+                          icon={<MailRounded />}
+                          text="N/A"
+                          color="#33415c"
+                        />
+                      )}
                     </>
                   )}
-                  {userRole === "admin" && (
+                  {/* {userRole === "admin" && (
                     <>
                       <InfoChip
                         icon={<PhoneRounded />}
@@ -474,7 +482,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                         color="#33415c"
                       />
                     </>
-                  )}
+                  )} */}
 
                   {customerApplication.customerLocation && (
                     <InfoChip
@@ -866,16 +874,20 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                 {userRole !== "sales" && (
                   <InfoRow
                     icon={<MailRounded />}
-                    text={customerApplication.customerEmail}
+                    text={
+                      ( userRole === "admin" || customerApplication.ticketStatus !== "disbursed" )
+                        ? customerApplication.customerEmail
+                        : "N/A"
+                    }
                   />
                 )}
 
-                {userRole === "admin" && (
+                {/* {userRole === "admin" && (
                   <InfoRow
                     icon={<PhoneRounded />}
                     text={`+91 ${ customerApplication.customerContact }`}
                   />
-                )}
+                )} */}
 
                 <InfoRow
                   icon={<CurrencyRupeeIcon />}
@@ -1101,30 +1113,41 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
           {/* Email */}
           {userRole !== "sales" && (
             <TableCell>
-              <Typography variant="body2" >
-                {customerApplication.customerEmail}
+              <Typography variant="body2">
+                {( userRole === "admin" || customerApplication.ticketStatus !== "disbursed" )
+                  ? customerApplication.customerEmail
+                  : "N/A"
+                }
               </Typography>
             </TableCell>
           )}
 
           {/* Contact */}
-          {userRole === "admin" && (
+          {/* {userRole !== "sales" && (
             <TableCell>
               <Typography
                 variant="body2"
                 sx={{
-                  color: customerApplication.customerContact ? '#0c66e4' : 'inherit',
-                  // Optional: add hover effect
+                  color: ( userRole === "admin" || customerApplication.ticketStatus !== "disbursed" ) && customerApplication.customerContact
+                    ? '#0c66e4'
+                    : 'inherit',
                   '&:hover': {
-                    color: customerApplication.customerContact ? '#0052cc' : 'inherit',
-                    cursor: customerApplication.customerContact ? 'pointer' : 'default'
+                    color: ( userRole === "admin" || customerApplication.ticketStatus !== "disbursed" ) && customerApplication.customerContact
+                      ? '#0052cc'
+                      : 'inherit',
+                    cursor: ( userRole === "admin" || customerApplication.ticketStatus !== "disbursed" ) && customerApplication.customerContact
+                      ? 'pointer'
+                      : 'default'
                   }
                 }}
               >
-                +91 {customerApplication.customerContact || 'N/A'}
+                {( userRole === "admin" || customerApplication.ticketStatus !== "disbursed" )
+                  ? `+91 ${ customerApplication.customerContact || 'N/A' }`
+                  : "N/A"
+                }
               </Typography>
             </TableCell>
-          )}
+          )} */}
 
           {/* Amount */}
           <TableCell>
