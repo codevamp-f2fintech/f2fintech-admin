@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import React, { useCallback, useEffect, useState } from "react";
 import {
@@ -35,6 +35,7 @@ import {
   resetTickets,
   removeTicket,
 } from "@/redux/features/ticketSlice";
+import { useDeleteCustomerApplication } from "@/hooks/customerApplication";
 import GridViewIcon from "@mui/icons-material/GridView";
 import ViewListIcon from "@mui/icons-material/ViewList";
 
@@ -51,6 +52,7 @@ const Ticket = () => {
   const [ hasMoreData, setHasMoreData ] = useState<boolean>( true );
   const { ticket } = useSelector( ( state: RootState ) => state.tickets );
   const { deleteTicket, error, loading } = useDeleteTicket();
+  const { deleteCustomerApplication } = useDeleteCustomerApplication();
   const isMobile = useMediaQuery( "(max-width:600px)" );
   const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
   const ITEMS_PER_PAGE = 12;
@@ -69,19 +71,27 @@ const Ticket = () => {
           ? sortBy.replace( /\s+/g, "" )
           : sortBy
         }&provider=${ loanProvider }`
-      : userRole === "operations" || userRole === "credit" || userRole === "sales"
+      : userRole === "operations" || userRole === "credit"
         ? sortBy === "all" && loanProvider === "all"
           ? `get-all-tickets/${ decodedToken()?.id }`
           : `get-all-tickets/${ decodedToken()?.id }?status=${ sortBy == "forwarded to me" || sortBy == "forwarded by me"
             ? sortBy.replace( /\s+/g, "" )
             : sortBy
           }&provider=${ loanProvider }`
+        : userRole === "sales"
+          ? sortBy === "all" && loanProvider === "all"
+            ? `get-all-tickets?appliedBy=${ decodedToken()?.id }`
+            : `get-all-tickets?appliedBy=${ decodedToken()?.id }&status=${ sortBy == "forwarded to me" || sortBy == "forwarded by me"
+              ? sortBy.replace( /\s+/g, "" )
+              : sortBy
+            }&provider=${ loanProvider }`
           : `get-all-tickets`;
 
   const {
     value: ticketData,
     error: swrError,
     swrLoading,
+    refetcher,
   } = useGetTickets(
     apiEndpoint,
     currentPage,
@@ -92,6 +102,7 @@ const Ticket = () => {
   );
 
   const [ userData, setUserData ] = useState( [] );
+  const pathname = usePathname();
 
   // Function to handle view toggle and save to sessionStorage
   useEffect( () => {
@@ -616,14 +627,10 @@ const Ticket = () => {
                       }
                     }}>
                       <TableHead>
-                        <TableRow sx={{ backgroundColor: "#3f50b5" }}>
+                        <TableRow sx={{ backgroundColor: "#3f50b5", }}>
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Name</TableCell>
-                          {userRole !== "sales" && (
-                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Email</TableCell>
-                          )}
-                            {/* {userRole == "sales" && (
-                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Contact</TableCell>
-                          )} */}
+                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Email</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Contact</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Amount</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Provider</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Tenure</TableCell>
