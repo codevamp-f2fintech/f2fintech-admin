@@ -140,7 +140,8 @@ async function fetchTotalTickets (
   role: string,
   date?: string | null,
   month?: string,
-  year?: string
+  year?: string,
+
 ): Promise<number | { count: number; amount: number }> {
   let url = `${ process.env.NEXT_PUBLIC_API_URL }/dashboard/tickets/count`;
 
@@ -247,6 +248,7 @@ export default function Page (): React.JSX.Element {
 
     console.log( "currentMonth:", currentMonth );
     console.log( "currentDateTime:", new Date().toLocaleDateString() );
+    console.log( "currentYear:", typeof ( currentYear ) );
   }, [] );
 
   const formatDateTime = ( date: Date ) => {
@@ -262,14 +264,19 @@ export default function Page (): React.JSX.Element {
   };
 
   const handleMonthChange = ( e ) => {
-    const newMonth = e.target.value;
-    setSelectedMonth( newMonth );
-
+    let newMonth = e.target.value;
+   
+    console.log( "newMonth", newMonth )
     // If a month is selected, clear the date filter
     if ( newMonth && newMonth !== "" )
     {
       setDate( "" ); // Changed from null to empty string for consistency
     }
+    if ( newMonth === 'All' )
+    {
+      newMonth = "";
+    }   
+    setSelectedMonth( newMonth );
   };
 
   // Date TextField onChange handler
@@ -679,7 +686,8 @@ export default function Page (): React.JSX.Element {
                   borderRadius: 1,
                 }}
               >
-                <MenuItem value="">All Months</MenuItem>
+                <MenuItem value=""></MenuItem>
+                <MenuItem value="All">All Months</MenuItem>
                 <MenuItem value="January">January</MenuItem>
                 <MenuItem value="February">February</MenuItem>
                 <MenuItem value="March">March</MenuItem>
