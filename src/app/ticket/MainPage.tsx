@@ -63,28 +63,28 @@ const Ticket = () => {
   const userRole = decodedToken()?.role;
 
   const apiEndpoint = selectedUser
-    ? `get-all-tickets/${ selectedUser.id }`
+    ? `get-all-tickets/${selectedUser.id}`
     : userRole === "admin" || userRole === "sub admin"
       ? sortBy === "all" && loanProvider === "all"
         ? `get-all-tickets`
-        : `get-all-tickets?status=${ sortBy == "forwarded to me" || sortBy == "forwarded by me"
-          ? sortBy.replace( /\s+/g, "" )
+        : `get-all-tickets?status=${sortBy == "forwarded to me" || sortBy == "forwarded by me"
+          ? sortBy.replace(/\s+/g, "")
           : sortBy
-        }&provider=${ loanProvider }`
+        }&provider=${loanProvider}`
       : userRole === "operations" || userRole === "credit"
         ? sortBy === "all" && loanProvider === "all"
-          ? `get-all-tickets/${ decodedToken()?.id }`
-          : `get-all-tickets/${ decodedToken()?.id }?status=${ sortBy == "forwarded to me" || sortBy == "forwarded by me"
-            ? sortBy.replace( /\s+/g, "" )
+          ? `get-all-tickets/${decodedToken()?.id}`
+          : `get-all-tickets/${decodedToken()?.id}?status=${sortBy == "forwarded to me" || sortBy == "forwarded by me"
+            ? sortBy.replace(/\s+/g, "")
             : sortBy
-          }&provider=${ loanProvider }`
+          }&provider=${loanProvider}`
         : userRole === "sales"
           ? sortBy === "all" && loanProvider === "all"
-            ? `get-all-tickets?appliedBy=${ decodedToken()?.id }`
-            : `get-all-tickets?appliedBy=${ decodedToken()?.id }&status=${ sortBy == "forwarded to me" || sortBy == "forwarded by me"
-              ? sortBy.replace( /\s+/g, "" )
+            ? `get-all-tickets/${decodedToken()?.id}?appliedBy=sales`
+            : `get-all-tickets/${decodedToken()?.id}?appliedBy=sales&status=${sortBy == "forwarded to me" || sortBy == "forwarded by me"
+              ? sortBy.replace(/\s+/g, "")
               : sortBy
-            }&provider=${ loanProvider }`
+            }&provider=${loanProvider}`
           : `get-all-tickets`;
 
   const {
@@ -458,7 +458,7 @@ const Ticket = () => {
             }}
           >
             <FilterPanel
-              searchLabel="Search Tickets"
+              searchLabel="Search Tickets By Name, Number, PAN"
               sortBy={sortBy}
               loanProvider={loanProvider}
               filter={filter}
