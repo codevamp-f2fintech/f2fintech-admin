@@ -458,7 +458,7 @@ const Ticket = () => {
             }}
           >
             <FilterPanel
-              searchLabel="Search Tickets By Name, Number, PAN"
+              searchLabel="Search By Name, Number, PAN, Ticket ID"
               sortBy={sortBy}
               loanProvider={loanProvider}
               filter={filter}
