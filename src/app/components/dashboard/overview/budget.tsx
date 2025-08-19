@@ -13,7 +13,7 @@ import Tooltip from "@mui/material/Tooltip";
 export interface BudgetProps {
   name: string;
   sx?: SxProps;
-  value: string;
+  value: number | string;
   amount?: number | null | undefined;
   Icon: any;
   setDate?: ( date: string ) => void;
@@ -21,7 +21,7 @@ export interface BudgetProps {
   iconBgColor?: string;
 }
 
-const formatAmountInIndianStyle = ( amount: string ) => {
+const formatAmountInIndianStyle = ( amount: string | number ) => {
   const number = parseFloat( amount );
   return new Intl.NumberFormat( 'hi-IN' ).format( number );
 };
