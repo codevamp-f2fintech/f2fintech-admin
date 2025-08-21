@@ -63,9 +63,9 @@ export async function middleware(request: NextRequest) {
         if (role !== "admin" && role !== "operations" && role !== "credit" && role !== "sales" && role !== "sub admin") {
           return NextResponse.redirect(new URL("/unauthorised", request.url));
         }
-        if (role === "sales" && !request.nextUrl.pathname.startsWith("/home") && !request.nextUrl.pathname.startsWith("/ticket")) {
-          return NextResponse.redirect(new URL("/home", request.url));
-        }
+        // if (role === "sales" && !request.nextUrl.pathname.startsWith("/home") && !request.nextUrl.pathname.startsWith("/ticket")) {
+        //   return NextResponse.redirect(new URL("/home", request.url));
+        // }
       } catch (error) {
         return NextResponse.redirect(new URL("/login", request.url));
       }

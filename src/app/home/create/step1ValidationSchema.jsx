@@ -57,8 +57,8 @@ const step1ValidationSchema = yup.object().shape({
 
   contact: yup
     .string()
-    .matches(phoneRegExp, "Contact Number is not valid")
-    .required("This field is required"),
+    .matches( /^[0-9]{7,10}$/, "Contact number must be between 7 and 10 digits" )
+    .required( "This field is required" ),
 
   email: yup
     .string()

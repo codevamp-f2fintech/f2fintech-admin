@@ -19,7 +19,10 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
+import DownloadIcon from '@mui/icons-material/Download';
 import TableViewIcon from "@mui/icons-material/TableView";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 import ApplicationCard from "../components/common/ApplicationCard";
 import FilterPanel from "../components/common/FilterPanel";
@@ -63,28 +66,28 @@ const Ticket = () => {
   const userRole = decodedToken()?.role;
 
   const apiEndpoint = selectedUser
-    ? `get-all-tickets/${selectedUser.id}`
+    ? `get-all-tickets/${ selectedUser.id }`
     : userRole === "admin" || userRole === "sub admin"
       ? sortBy === "all" && loanProvider === "all"
         ? `get-all-tickets`
-        : `get-all-tickets?status=${sortBy == "forwarded to me" || sortBy == "forwarded by me"
-          ? sortBy.replace(/\s+/g, "")
+        : `get-all-tickets?status=${ sortBy == "forwarded to me" || sortBy == "forwarded by me"
+          ? sortBy.replace( /\s+/g, "" )
           : sortBy
-        }&provider=${loanProvider}`
+        }&provider=${ loanProvider }`
       : userRole === "operations" || userRole === "credit"
         ? sortBy === "all" && loanProvider === "all"
-          ? `get-all-tickets/${decodedToken()?.id}`
-          : `get-all-tickets/${decodedToken()?.id}?status=${sortBy == "forwarded to me" || sortBy == "forwarded by me"
-            ? sortBy.replace(/\s+/g, "")
+          ? `get-all-tickets/${ decodedToken()?.id }`
+          : `get-all-tickets/${ decodedToken()?.id }?status=${ sortBy == "forwarded to me" || sortBy == "forwarded by me"
+            ? sortBy.replace( /\s+/g, "" )
             : sortBy
-          }&provider=${loanProvider}`
+          }&provider=${ loanProvider }`
         : userRole === "sales"
           ? sortBy === "all" && loanProvider === "all"
-            ? `get-all-tickets/${decodedToken()?.id}?appliedBy=sales`
-            : `get-all-tickets/${decodedToken()?.id}?appliedBy=sales&status=${sortBy == "forwarded to me" || sortBy == "forwarded by me"
-              ? sortBy.replace(/\s+/g, "")
+            ? `get-all-tickets/${ decodedToken()?.id }?appliedBy=sales`
+            : `get-all-tickets/${ decodedToken()?.id }?appliedBy=sales&status=${ sortBy == "forwarded to me" || sortBy == "forwarded by me"
+              ? sortBy.replace( /\s+/g, "" )
               : sortBy
-            }&provider=${loanProvider}`
+            }&provider=${ loanProvider }`
           : `get-all-tickets`;
 
   const {
@@ -104,6 +107,94 @@ const Ticket = () => {
   const [ userData, setUserData ] = useState( [] );
   const pathname = usePathname();
 
+  const handleExportToExcel = () => {
+    if ( !ticket?.results?.length )
+    {
+      alert( "No ticket data available to export!" );
+      return;
+    }
+
+    const currentUser = decodedToken();
+    const userName = currentUser?.username || "Unknown User";
+    const currentUserRole = currentUser?.role || "Unknown Role";
+
+    let reportPeriod = "All Time";
+    const currentDate = new Date();
+    const monthNames = [ "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December" ];
+    const currentMonth = monthNames[ currentDate.getMonth() ];
+    const currentYear = currentDate.getFullYear();
+
+    if ( startDate && endDate )
+    {
+      reportPeriod = `${ new Date( startDate ).toLocaleDateString() } to ${ new Date( endDate ).toLocaleDateString() }`;
+    } else if ( startDate )
+    {
+      reportPeriod = `From ${ new Date( startDate ).toLocaleDateString() } to ${ currentDate.toLocaleDateString() }`;
+    } else if ( endDate )
+    {
+      reportPeriod = `All records until ${ new Date( endDate ).toLocaleDateString() }`;
+    } else
+    {
+      reportPeriod = `All records of ${ currentMonth } ${ currentYear } until ${ currentDate.toLocaleDateString() }`;
+    }
+
+    const formattedData = ticket.results.map( ( t: any, index: number ) => ( {
+      "S.No": index + 1,
+      "Ticket ID": t?.ticketId || "-",
+      Name: t?.customerName || "-",
+      Email: t?.customerEmail || "-",
+      Contact: t?.customerContact || "-",
+      Amount: t?.applicationAmount || "-",
+      Provider: t?.applicationProvider || "-",
+      Tenure: t?.applicationTenure
+        ? `${ t.applicationTenure } ${ t.applicationTenure > 1 ? "Years" : "Years" }`
+        : "-",
+      Status: t?.ticketStatus || "-",
+      Location: `${ t?.customerLocation || "-" }, ${ t?.customerState || "-" }`,
+      "Created At": t?.createdAt
+        ? new Date( t.createdAt ).toLocaleDateString()
+        : "-",
+    } ) );
+
+    const worksheet = XLSX.utils.json_to_sheet( formattedData );
+
+    const range = XLSX.utils.decode_range( worksheet[ '!ref' ] || 'A1' );
+    const nextRow = range.e.r + 2;
+
+    // Add user information at the bottom
+    XLSX.utils.sheet_add_aoa( worksheet, [
+      [],
+      [],
+      [],
+      [ "Report Generated By:", userName ],
+      [ "User Role:", currentUserRole ],
+      [ "Report Period:", reportPeriod ],
+      [ "Generated On:", new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString() ],
+      [ "Total Records:", ticket.results.length ],
+    ], { origin: `A${ nextRow }` } );
+
+    const updatedRange = XLSX.utils.decode_range( worksheet[ '!ref' ] || 'A1' );
+    updatedRange.e.r += 8;
+    worksheet[ '!ref' ] = XLSX.utils.encode_range( updatedRange );
+
+    // Create workbook and append the worksheet
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet( workbook, worksheet, "Tickets" );
+
+    // Export as Excel file with user info in filename
+    const excelBuffer = XLSX.write( workbook, {
+      bookType: "xlsx",
+      type: "array",
+    } );
+
+    const data = new Blob( [ excelBuffer ], { type: "application/octet-stream" } );
+
+    // Include user role and date in filename
+    const fileName = `Tickets_${ currentUserRole }_${ userName.replace( /\s+/g, '_' ) }_${ new Date().toISOString().slice( 0, 10 ) }.xlsx`;
+
+    saveAs( data, fileName );
+  };
   // Function to handle view toggle and save to sessionStorage
   useEffect( () => {
     if ( typeof window !== 'undefined' )
@@ -124,6 +215,13 @@ const Ticket = () => {
       }
     }
   }, [] );
+  console.log( "handleExportToExcel", handleExportToExcel )
+  useEffect( () => {
+    if ( ticket?.results?.length )
+    {
+      console.log( "Ticket sample:", ticket.results[ 0 ] );
+    }
+  }, [ ticket ] );
 
   // Load view preference from sessionStorage on component mount
   useEffect( () => {
@@ -478,224 +576,255 @@ const Ticket = () => {
               handleFilterChange={handleFilterChange}
             />
           </Box>
-        </Box>
-
-        {/* View Toggle Container */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            border: "1px solid",
-            borderColor: "divider",
-            borderRadius: "12px",
-            p: 0.5,
-            backgroundColor: "background.default",
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
-            width: "fit-content",
-            height: { xs: "auto", md: "56px" },
-            alignSelf: { xs: "flex-end", md: "center" },
-            ml: "auto"
-          }}
-        >
-          <Tooltip title="Grid View">
-            <IconButton
-              onClick={() => {
-                setToggleListView( 'grid' );
-                if ( typeof window !== 'undefined' )
-                {
-                  sessionStorage.setItem( 'ticketViewPreference', JSON.stringify( 'grid' ) );
-                }
-              }}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Tooltip title="Download Report">
+            <Button
+              onClick={handleExportToExcel}
               sx={{
-                color: toggleListView === 'grid' ? "primary.main" : "action.disabled",
-                backgroundColor: toggleListView === 'grid' ? "action.selected" : "transparent",
-                borderRadius: "8px",
-                p: 1,
-                transition: "all 0.2s ease",
-                '&:hover': {
-                  backgroundColor: toggleListView === 'grid' ? "primary.light" : "action.hover",
-                }
+                minWidth: "48px",
+                height: "48px",
+                background: "linear-gradient(135deg, #3f50b5 30%, #80adc9ff 90%)",
+                color: "#fff",
+                borderRadius: "12px",
+                boxShadow: "0 4px 10px rgba(76, 175, 80, 0.3)",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  background: "linear-gradient(135deg, #3f50b5 30%, #a0bcd7ff 90%)",
+                  boxShadow: "0 6px 14px rgba(76, 175, 80, 0.5)",
+                  transform: "translateY(-2px)",
+                },
               }}
             >
-              <GridViewIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-
-          <Tooltip title="List View">
-            <IconButton
-              onClick={() => {
-                setToggleListView( 'list' );
-                if ( typeof window !== 'undefined' )
-                {
-                  sessionStorage.setItem( 'ticketViewPreference', JSON.stringify( 'list' ) );
-                }
-              }}
-              sx={{
-                color: toggleListView === 'list' ? "primary.main" : "action.disabled",
-                backgroundColor: toggleListView === 'list' ? "action.selected" : "transparent",
-                borderRadius: "8px",
-                p: 1,
-                transition: "all 0.2s ease",
-                '&:hover': {
-                  backgroundColor: toggleListView === 'list' ? "primary.light" : "action.hover",
-                }
-              }}
-            >
-              <ViewListIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-
-          <Tooltip title="Table View">
-            <IconButton
-              onClick={() => {
-                setToggleListView( 'table' );
-                if ( typeof window !== 'undefined' )
-                {
-                  sessionStorage.setItem( 'ticketViewPreference', JSON.stringify( 'table' ) );
-                }
-              }}
-              sx={{
-                color: toggleListView === 'table' ? "primary.main" : "action.disabled",
-                backgroundColor: toggleListView === 'table' ? "action.selected" : "transparent",
-                borderRadius: "8px",
-                p: 1,
-                transition: "all 0.2s ease",
-                '&:hover': {
-                  backgroundColor: toggleListView === 'table' ? "primary.light" : "action.hover",
-                }
-              }}
-            >
-              <TableViewIcon fontSize="small" />
-            </IconButton>
+              <DownloadIcon />
+            </Button>
           </Tooltip>
         </Box>
+
+
       </Box>
 
-      {/* Updated View Toggle Box with Session Storage */}
-
+      {/* View Toggle Container */}
       <Box
         sx={{
-          minWidth: "80vw",
-          minHeight: "90vh",
-          marginTop: "7vh",
+          display: "flex",
+          alignItems: "center",
+          border: "1px solid",
+          borderColor: "divider",
+          borderRadius: "12px",
+          p: 0.5,
+          backgroundColor: "background.default",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
+          width: "fit-content",
+          height: { xs: "auto", md: "56px" },
+          alignSelf: { xs: "flex-end", md: "center" },
+          ml: "auto"
         }}
       >
-        <Grid
-          container
-          spacing={2}
+        <Tooltip title="Grid View">
+          <IconButton
+            onClick={() => {
+              setToggleListView( 'grid' );
+              if ( typeof window !== 'undefined' )
+              {
+                sessionStorage.setItem( 'ticketViewPreference', JSON.stringify( 'grid' ) );
+              }
+            }}
+            sx={{
+              color: toggleListView === 'grid' ? "primary.main" : "action.disabled",
+              backgroundColor: toggleListView === 'grid' ? "action.selected" : "transparent",
+              borderRadius: "8px",
+              p: 1,
+              transition: "all 0.2s ease",
+              '&:hover': {
+                backgroundColor: toggleListView === 'grid' ? "primary.light" : "action.hover",
+              }
+            }}
+          >
+            <GridViewIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+
+        <Tooltip title="List View">
+          <IconButton
+            onClick={() => {
+              setToggleListView( 'list' );
+              if ( typeof window !== 'undefined' )
+              {
+                sessionStorage.setItem( 'ticketViewPreference', JSON.stringify( 'list' ) );
+              }
+            }}
+            sx={{
+              color: toggleListView === 'list' ? "primary.main" : "action.disabled",
+              backgroundColor: toggleListView === 'list' ? "action.selected" : "transparent",
+              borderRadius: "8px",
+              p: 1,
+              transition: "all 0.2s ease",
+              '&:hover': {
+                backgroundColor: toggleListView === 'list' ? "primary.light" : "action.hover",
+              }
+            }}
+          >
+            <ViewListIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+
+        <Tooltip title="Table View">
+          <IconButton
+            onClick={() => {
+              setToggleListView( 'table' );
+              if ( typeof window !== 'undefined' )
+              {
+                sessionStorage.setItem( 'ticketViewPreference', JSON.stringify( 'table' ) );
+              }
+            }}
+            sx={{
+              color: toggleListView === 'table' ? "primary.main" : "action.disabled",
+              backgroundColor: toggleListView === 'table' ? "action.selected" : "transparent",
+              borderRadius: "8px",
+              p: 1,
+              transition: "all 0.2s ease",
+              '&:hover': {
+                backgroundColor: toggleListView === 'table' ? "primary.light" : "action.hover",
+              }
+            }}
+          >
+            <TableViewIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </Box>
+    </Box>
+
+      {/* Updated View Toggle Box with Session Storage */ }
+
+  <Box
+    sx={{
+      minWidth: "80vw",
+      minHeight: "90vh",
+      marginTop: "7vh",
+    }}
+  >
+    <Grid
+      container
+      spacing={2}
+      sx={{
+        justifyContent: "center",
+        alignItems: "center",
+        display: "flex",
+        flexDirection: isMobile ? "column" : isTab ? "" : "",
+      }}
+    >
+      {!ticket?.results?.length ? (
+        <Typography
           sx={{
-            justifyContent: "center",
-            alignItems: "center",
-            display: "flex",
-            flexDirection: isMobile ? "column" : isTab ? "" : "",
+            width: "100%",
+            textAlign: "center",
+            mt: "20vh",
+            color: "text.secondary",
           }}
         >
-          {!ticket?.results?.length ? (
+          {userRole === "admin" ? (
+            "No Tickets Found"
+          ) : (
+            <Link href="/home">
+              No Tickets Found. Start Picking Some By Clicking Here!
+            </Link>
+          )}
+        </Typography>
+      ) : (
+        <>
+          {toggleListView === 'table' ? (
+            <Box sx={{ width: '100%', overflowX: 'auto' }}>
+              <TableContainer
+                component={Paper}
+                elevation={2}
+                sx={{
+                  borderRadius: 2,
+                  minWidth: '80vw',
+                  margin: '0 auto'
+                }}
+              >
+                <Table sx={{
+                  tableLayout: "auto",
+                  '& .MuiTableCell-root': {
+                    padding: '8px'
+                  }
+                }}>
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: "#3f50b5" }}>
+                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Name</TableCell>
+                      {userRole !== "sales" && (
+                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Email</TableCell>
+                      )}
+                      {/* {userRole == "sales" && (
+                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Contact</TableCell>
+                          )} */}
+                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Amount</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Provider</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Tenure</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Location</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Created At</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word', display: 'flex', alignItems: 'center', justifyContent: 'center', border: "none" }}>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {ticket.results.map( ( ticket, index ) => (
+                      <ApplicationCard
+                        key={index}
+                        customerApplication={ticket}
+                        userRole={userRole}
+                        handleStartClick={() =>
+                          router.push( `ticket/${ ticket.ticketId }` )
+                        }
+                        handleDeleteTicket={handleDeleteTicket}
+                        toggleListView={toggleListView}
+                      />
+                    ) )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+          ) : (
+            <Grid container spacing={2}>
+              {ticket.results.map( ( ticket, index ) => (
+                <ApplicationCard
+                  key={index}
+                  customerApplication={ticket}
+                  userRole={userRole}
+                  handleStartClick={() =>
+                    router.push( `ticket/${ ticket.ticketId }` )
+                  }
+                  handleDeleteTicket={handleDeleteTicket}
+                  toggleListView={toggleListView}
+                />
+              ) )}
+            </Grid>
+          )}
+
+          {!hasMoreData && !swrLoading && (
             <Typography
               sx={{
                 width: "100%",
                 textAlign: "center",
-                mt: "20vh",
+                mt: 5,
+                mb: 2,
                 color: "text.secondary",
               }}
             >
-              {userRole === "admin" ? (
-                "No Tickets Found"
-              ) : (
-                <Link href="/home">
-                  No Tickets Found. Start Picking Some By Clicking Here!
-                </Link>
-              )}
+              No more tickets to load...
             </Typography>
-          ) : (
-            <>
-              {toggleListView === 'table' ? (
-                <Box sx={{ width: '100%', overflowX: 'auto' }}>
-                  <TableContainer
-                    component={Paper}
-                    elevation={2}
-                    sx={{
-                      borderRadius: 2,
-                      minWidth: '80vw',
-                      margin: '0 auto'
-                    }}
-                  >
-                    <Table sx={{
-                      tableLayout: "auto",
-                      '& .MuiTableCell-root': {
-                        padding: '8px'
-                      }
-                    }}>
-                      <TableHead>
-                        <TableRow sx={{ backgroundColor: "#3f50b5" }}>
-                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Name</TableCell>
-                          {userRole !== "sales" && (
-                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Email</TableCell>
-                          )}
-                          {/* {userRole == "sales" && (
-                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Contact</TableCell>
-                          )} */}
-                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Amount</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Provider</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Tenure</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Location</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Created At</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word', display: 'flex', alignItems: 'center', justifyContent: 'center', border: "none" }}>Actions</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {ticket.results.map( ( ticket, index ) => (
-                          <ApplicationCard
-                            key={index}
-                            customerApplication={ticket}
-                            userRole={userRole}
-                            handleStartClick={() =>
-                              router.push( `ticket/${ ticket.ticketId }` )
-                            }
-                            handleDeleteTicket={handleDeleteTicket}
-                            toggleListView={toggleListView}
-                          />
-                        ) )}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </Box>
-              ) : (
-                <Grid container spacing={2}>
-                  {ticket.results.map( ( ticket, index ) => (
-                    <ApplicationCard
-                      key={index}
-                      customerApplication={ticket}
-                      userRole={userRole}
-                      handleStartClick={() =>
-                        router.push( `ticket/${ ticket.ticketId }` )
-                      }
-                      handleDeleteTicket={handleDeleteTicket}
-                      toggleListView={toggleListView}
-                    />
-                  ) )}
-                </Grid>
-              )}
-
-              {!hasMoreData && !swrLoading && (
-                <Typography
-                  sx={{
-                    width: "100%",
-                    textAlign: "center",
-                    mt: 5,
-                    mb: 2,
-                    color: "text.secondary",
-                  }}
-                >
-                  No more tickets to load...
-                </Typography>
-              )}
-            </>
           )}
-        </Grid>
-      </Box>
-      {swrLoading && <Loader />}
-    </Box>
+        </>
+      )}
+    </Grid>
+  </Box>
+  { swrLoading && <Loader /> }
+    </Box >
   );
 };
 

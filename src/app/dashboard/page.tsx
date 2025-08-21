@@ -141,47 +141,72 @@ async function fetchTotalTickets (
   date?: string | null,
   month?: string,
   year?: string,
-
 ): Promise<number | { count: number; amount: number }> {
   let url = `${ process.env.NEXT_PUBLIC_API_URL }/dashboard/tickets/count`;
 
+  // Build query parameters
+  const params = new URLSearchParams();
+
+  // Add userId for non-admin users
   if ( role !== "admin" && role !== "sub admin" && id !== null )
   {
-    url += `/${ id }`;
+    params.append( 'userId', id.toString() );
   }
 
+  // Add status if provided
   if ( status )
   {
-    url += `/${ encodeURIComponent( status ) }`;
+    params.append( 'status', status );
   }
 
+  // Add date filters
   if ( date )
   {
-    url += `?date=${ encodeURIComponent( date ) }`;
+    params.append( 'date', date );
   }
-
   if ( month )
   {
-    url += `?month=${ encodeURIComponent( month ) }`;
+    params.append( 'month', month );
   }
-
-  const response = await fetch( url, {
-    cache: "no-store",
-  } ); // To Prevent caching
-
-  if ( !response.ok )
+  if ( year )
   {
-    throw new Error( "Failed to fetch total Tickets" );
+    params.append( 'year', year );
   }
-  const resData = await response.json();
 
-  if ( status === "disbursed" || status === "approved" )
+  // Add query parameters to URL if any exist
+  if ( params.toString() )
   {
-    // When the status is disbursed, return both the count and total amount
-    return { count: resData.data.count, amount: resData.data.amount };
+    url += `?${ params.toString() }`;
   }
 
-  return resData.data;
+  console.log( 'Fetching tickets from URL:', url );
+
+  try
+  {
+    const response = await fetch( url, {
+      cache: "no-store",
+    } );
+
+    if ( !response.ok )
+    {
+      console.error( `HTTP error! status: ${ response.status }` );
+      throw new Error( "Failed to fetch total Tickets" );
+    }
+
+    const resData = await response.json();
+    console.log( 'API Response:', resData );
+
+    if ( status === "disbursed" || status === "approved" )
+    {
+      return { count: resData.data.count || 0, amount: resData.data.amount || 0 };
+    }
+
+    return resData.data || 0;
+  } catch ( error )
+  {
+    console.error( 'Error fetching tickets:', error );
+    return 0; // Return 0 instead of throwing to prevent UI crashes
+  }
 }
 
 async function getTotalTicketsByMonth ( year: number ): Promise<Ticket[]> {
