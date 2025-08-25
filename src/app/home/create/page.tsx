@@ -180,6 +180,7 @@ const MultiStepForm: React.FC = () => {
       maxWidth={false}
       sx={{
         display: "flex",
+        flexDirection: { xs: "column", sm: "row" }, // responsive layout
         marginBottom: "15px",
         minHeight: "70vh",
         alignItems: "center",
@@ -192,22 +193,25 @@ const MultiStepForm: React.FC = () => {
           display: "flex",
           width: "100%",
           marginBottom: "15px",
+          flexDirection: { xs: "column", sm: "row" },
           justifyContent: applicationData?.salary ? "center" : "flex-start",
           borderRadius: "20px",
         }}
       >
-        {/* // Left side box  */}
+        {/* Left side box */}
         <Box
           sx={{
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
             flexDirection: "column",
-            width: "50%",
+            width: { xs: "100%", sm: "50%" }, // full on mobile, half on iPad & desktop
             overflowX: "hidden",
             maxHeight: "260vh",
-            backgroundColor: "#424242",
-            borderRadius: "20px 0px 0px 20px",
+            background:
+              "linear-gradient(90deg, hsla(221, 45%, 73%, 1) 0%, hsla(220, 78%, 29%, 1) 100%)",
+            borderRadius: { xs: "20px 20px 0 0", sm: "20px 0px 0px 20px" },
+            // padding: { xs: "15px", sm: "30px" },
           }}
         >
           <Box sx={{ width: "100%" }}>
@@ -225,7 +229,10 @@ const MultiStepForm: React.FC = () => {
                       justifyContent: "flex-end",
                     }}
                   >
-                    <Button onClick={handleNext} sx={{ mr: 10, color: "white", bgcolor: "#0277bd" }}>
+                    <Button
+                      onClick={handleNext}
+                      sx={{ mr: 2, color: "white", bgcolor: "#0277bd" }}
+                    >
                       Next
                     </Button>
                   </Box>
@@ -233,26 +240,32 @@ const MultiStepForm: React.FC = () => {
             </Box>
 
             {!applicationData?.salary && (
-              <Stepper activeStep={activeStep} sx={{ margin: "20px 80px" }}>
+              <Stepper
+                activeStep={activeStep}
+                sx={{ margin: { xs: "20px 10px", sm: "20px 40px", md: "20px 80px" } }}
+              >
                 {steps.map( ( label, index ) => (
                   <Step key={label}>
                     <StepLabel
                       sx={{
-                        color: index === activeStep ? 'white !imprtant' : 'green',
-                        fontWeight: index === activeStep ? 'bold' : 'normal',
-                        '&.MuiStepLabel-completed': {
-                          color: 'green',
+                        color: index === activeStep ? "white !important" : "green",
+                        fontWeight: index === activeStep ? "bold" : "normal",
+                        "&.MuiStepLabel-completed": {
+                          color: "green",
                         },
-                        '&.MuiStepLabel-active': {
-                          color: 'blue',
+                        "&.MuiStepLabel-active": {
+                          color: "blue",
                         },
-                        '& .MuiStepIcon-root': {
-                          color: index === activeStep ? 'white !important' : 'green',
-                          '&.MuiStepIcon-completed': {
-                            color: 'green',
+                        "& .MuiStepIcon-root": {
+                          color:
+                            index === activeStep
+                              ? "white !important"
+                              : "green",
+                          "&.MuiStepIcon-completed": {
+                            color: "green",
                           },
-                          '&.MuiStepIcon-active': {
-                            color: 'blue',
+                          "&.MuiStepIcon-active": {
+                            color: "blue",
                           },
                         },
                       }}
@@ -265,36 +278,30 @@ const MultiStepForm: React.FC = () => {
             )}
           </Box>
         </Box>
+
+        {/* Right side box */}
         {!applicationData?.salary && (
-          // Right side box
           <Box
             sx={{
               display: "flex",
               flexDirection: "column",
-              padding: "20px",
-              backgroundColor: "#e0e0e0",
+              padding: { xs: "15px", sm: "20px" },
+              background:
+                "linear-gradient(90deg, hsla(212, 35%, 58%, 1) 0%, hsla(218, 32%, 80%, 1) 100%)",
               justifyContent: "center",
               alignItems: "center",
-              width: "50%",
-              position: "sticky",
-              top: 0,
-              height: "100vh",
-              overflowY: "auto",
-              borderRadius: "0px 20px 20px 0px",
+              width: { xs: "100%", sm: "50%" }, // half width on iPad and desktop
+              position: { xs: "relative", md: "sticky" }, // sticky only on desktop
+              top: { md: 0 },
+              height: { xs: "auto", sm: "auto", md: "100vh" }, // prevent cutoff on tablets
+              overflowY: { md: "auto" },
+              borderRadius: { xs: "0 0 20px 20px", sm: "0px 20px 20px 0px" },
             }}
           >
-            <Typography
-              variant="h4"
-              align="center"
-              sx={{ marginBottom: "20px" }}
-            >
+            <Typography variant="h4" align="center" sx={{ marginBottom: "20px" }}>
               Steps Ahead
             </Typography>
-            <Typography
-              variant="body1"
-              align="center"
-              sx={{ marginBottom: "20px" }}
-            >
+            <Typography variant="body1" align="center" sx={{ marginBottom: "20px" }}>
               In order to receive the loan amount, you will need to successfully
               complete these steps.
             </Typography>
@@ -304,7 +311,7 @@ const MultiStepForm: React.FC = () => {
                 sx={{
                   backgroundColor: "white",
                   display: "flex",
-                  width: "20vw",
+                  width: { xs: "90%", sm: "70%", md: "20vw" },
                   alignItems: "center",
                   borderRadius: "10px",
                   padding: "10px",
@@ -326,7 +333,9 @@ const MultiStepForm: React.FC = () => {
           </Box>
         )}
       </Box>
-    </Container >
+    </Container>
+
+
   );
 };
 

@@ -375,6 +375,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
   const handleForwardedMenuClose = () => {
     setForwardedAnchorEl( null );
   };
+  console.log( 'set fsdsfdsfd', tempInputValue, startDate, selectedUser, selectedBank, sortBy, loanProvider )
   return (
     <Paper
       elevation={2}
@@ -810,7 +811,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
 
 
         {/* Clear Filters */}
-        {( tempInputValue || startDate || selectedUser || selectedBank ) && (
+        {( tempInputValue || startDate || selectedUser || selectedBank || ( sortBy && sortBy !== 'all' ) || ( loanProvider && loanProvider !== 'all' ) ) && (
           <Tooltip title="Clear All Filters">
             <IconButton
               size="small"
