@@ -310,7 +310,7 @@ const Step7Form: React.FC<Step7FormProps> = ( {
           variant="filled"
           type="text"
           name="amount"
-          label="(Salary/Turnover)p.a*"
+          label="( Salary/Turnover ) p.a*"
           placeholder="(Salary/Turnover)*p.a"
           value={amount}
           onChange={( e ) => {
@@ -333,14 +333,43 @@ const Step7Form: React.FC<Step7FormProps> = ( {
             overflow: "hidden",
             marginBottom: 2,
             "& .MuiFilledInput-root": {
-              borderRadius: "4px",
-              border: "1px solid transparent",
+              backgroundColor: "rgba(255, 255, 255, 0.15)",
+              borderRadius: "8px",
+              border: "1px solid rgba(255, 255, 255, 0.3)",
+              backdropFilter: "blur(10px)",
+              color: "white",
+              "&:hover": {
+                backgroundColor: "rgba(255, 255, 255, 0.2)",
+              },
+              "&.Mui-focused": {
+                backgroundColor: "rgba(255, 255, 255, 0.25)",
+                border: "1px solid rgba(255, 255, 255, 0.5)",
+              },
+              "&:before": {
+                display: "none",
+              },
+              "&:after": {
+                display: "none",
+              },
             },
             "& .MuiInputAdornment-root": {
-              color: "#9e9e9e",
+              color: "rgba(255, 255, 255, 0.8)",
             },
-            "& .css-ubk1op-MuiFormLabel-root-MuiInputLabel-root": {
-              color: "white",
+            "& .MuiInputLabel-root": {
+              color: "rgba(255, 255, 255, 0.9)",
+              "&.Mui-focused": {
+                color: "white",
+              },
+            },
+            "& .MuiFormHelperText-root": {
+              color: "rgba(255, 255, 255, 0.8)",
+              "&.Mui-error": {
+                color: "#ffcccb",
+              },
+            },
+            "& input::placeholder": {
+              color: "rgba(255, 255, 255, 0.6)",
+              opacity: 1,
             },
           }}
         />
@@ -373,14 +402,43 @@ const Step7Form: React.FC<Step7FormProps> = ( {
             overflow: "hidden",
             marginBottom: 2,
             "& .MuiFilledInput-root": {
-              borderRadius: "4px",
-              border: "1px solid transparent",
+              backgroundColor: "rgba(255, 255, 255, 0.15)",
+              borderRadius: "8px",
+              border: "1px solid rgba(255, 255, 255, 0.3)",
+              backdropFilter: "blur(10px)",
+              color: "white",
+              "&:hover": {
+                backgroundColor: "rgba(255, 255, 255, 0.2)",
+              },
+              "&.Mui-focused": {
+                backgroundColor: "rgba(255, 255, 255, 0.25)",
+                border: "1px solid rgba(255, 255, 255, 0.5)",
+              },
+              "&:before": {
+                display: "none",
+              },
+              "&:after": {
+                display: "none",
+              },
             },
             "& .MuiInputAdornment-root": {
-              color: "#9e9e9e",
+              color: "rgba(255, 255, 255, 0.8)",
             },
-            "& .css-ubk1op-MuiFormLabel-root-MuiInputLabel-root": {
-              color: "white",
+            "& .MuiInputLabel-root": {
+              color: "rgba(255, 255, 255, 0.9)",
+              "&.Mui-focused": {
+                color: "white",
+              },
+            },
+            "& .MuiFormHelperText-root": {
+              color: "rgba(255, 255, 255, 0.8)",
+              "&.Mui-error": {
+                color: "#ffcccb",
+              },
+            },
+            "& input::placeholder": {
+              color: "rgba(255, 255, 255, 0.6)",
+              opacity: 1,
             },
           }}
         />
@@ -412,14 +470,43 @@ const Step7Form: React.FC<Step7FormProps> = ( {
             borderRadius: "10px",
             overflow: "hidden",
             "& .MuiFilledInput-root": {
-              borderRadius: "4px",
-              border: "1px solid transparent",
+              backgroundColor: "rgba(255, 255, 255, 0.15)",
+              borderRadius: "8px",
+              border: "1px solid rgba(255, 255, 255, 0.3)",
+              backdropFilter: "blur(10px)",
+              color: "white",
+              "&:hover": {
+                backgroundColor: "rgba(255, 255, 255, 0.2)",
+              },
+              "&.Mui-focused": {
+                backgroundColor: "rgba(255, 255, 255, 0.25)",
+                border: "1px solid rgba(255, 255, 255, 0.5)",
+              },
+              "&:before": {
+                display: "none",
+              },
+              "&:after": {
+                display: "none",
+              },
             },
             "& .MuiInputAdornment-root": {
-              color: "#9e9e9e",
+              color: "rgba(255, 255, 255, 0.8)",
             },
-            "& .css-ubk1op-MuiFormLabel-root-MuiInputLabel-root": {
-              color: "white",
+            "& .MuiInputLabel-root": {
+              color: "rgba(255, 255, 255, 0.9)",
+              "&.Mui-focused": {
+                color: "white",
+              },
+            },
+            "& .MuiFormHelperText-root": {
+              color: "rgba(255, 255, 255, 0.8)",
+              "&.Mui-error": {
+                color: "#ffcccb",
+              },
+            },
+            "& input::placeholder": {
+              color: "rgba(255, 255, 255, 0.6)",
+              opacity: 1,
             },
           }}
         />
