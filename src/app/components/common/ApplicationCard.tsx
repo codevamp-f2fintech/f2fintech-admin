@@ -1898,8 +1898,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
           {/* Created At */}
           <TableCell>
             <Typography variant="body2">
-              {customerApplication?.applicationDate
-                ? new Date( customerApplication.applicationDate ).toLocaleDateString( 'en-IN', {
+              {customerApplication?.createdAt
+                ? new Date( customerApplication.createdAt ).toLocaleDateString( 'en-IN', {
                   day: '2-digit',
                   month: 'short',
                   year: 'numeric',
