@@ -228,7 +228,7 @@ const TicketDocuments = ({
                     borderRadius: "8px",
                     boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
                     transition: "transform 0.2s ease",
-                    width: isMobile ? "50vw" : isTab ? "92%" : "38.5vw",
+                    width: isMobile ? "60vw" : isTab ? "92%" : "38.5vw",
                     marginLeft: "1.5rem",
                     "&:hover": {
                       transform: "scale(1.02)",
@@ -406,6 +406,7 @@ const TicketDocuments = ({
               sx={{
                 color: "black",
                 textAlign: "center",
+                fontSize: isMobile ? ".6rem" : isTab ? ".8rem" : "0.85rem",
                 flexGrow: 1,
                 mt: isMobile ? "" : isTab ? "1rem" : ".5rem",
                 mr: isMobile ? "1rem" : isTab ? "20vw" : "20vw",

@@ -95,7 +95,7 @@ const OriginalEstimateField: React.FC<OriginalEstimateProps> = ({
     <Box
       sx={{
         display: "flex",
-        flexDirection: isMobile ? "column" : "row",
+        flexDirection: isMobile ? "row" : "row",
         justifyContent: "space-between",
         alignItems: "center",
         mt: 2,
