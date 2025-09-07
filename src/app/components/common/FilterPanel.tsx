@@ -376,8 +376,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         borderRadius: 3,
         background: "linear-gradient(135deg, #fff 0%, #f5f5f5 100%)",
         display: "flex",
-        flexDirection: { xs: "column", sm: "column", md: "row" }, // 📱 Mobile/Tab: stack, 💻 Desktop: row
+        flexDirection: { xs: "column", sm: "column", md: "row" },
         gap: 2,
+        width: "95%",
       }}
     >
       <Button
