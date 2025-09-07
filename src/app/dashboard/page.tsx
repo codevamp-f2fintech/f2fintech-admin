@@ -926,11 +926,14 @@ export default function Page(): React.JSX.Element {
                       boxShadow: "0 8px 25px rgba(0,0,0,0.15)",
                     },
 
+                    
                     // Icon styling
                     "& .MuiSvgIcon-root": {
-                      fontSize: { xs: "1.5rem", sm: "2.2rem" },
-                      mb: { xs: 0.5, sm: 1 },
+                      fontSize: { xs: "1.5rem", sm: "1.8rem" },
+                      // mb: { xs: 0.5, sm: 1 },
                       opacity: 0.9,
+                      display: "block",         
+                      margin: "0 auto",         
                     },
 
                     // Main label text styling - FIXED FOR MOBILE
