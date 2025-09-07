@@ -417,7 +417,7 @@ const Progress: React.FC = () => {
                           activeSection === "Comments" ? "#155fcc" : "white",
                         color: activeSection === "Comments" ? "white" : "black",
                         fontSize: isMobile
-                          ? ".7rem"
+                          ? ".6rem"
                           : isTab
                           ? "0.8rem"
                           : "12px",
@@ -438,7 +438,7 @@ const Progress: React.FC = () => {
                           activeSection === "History" ? "#155fcc" : "white",
                         color: activeSection === "History" ? "white" : "black",
                         fontSize: isMobile
-                          ? ".7rem"
+                          ? ".6rem"
                           : isTab
                           ? "0.8rem"
                           : "12px",
@@ -460,7 +460,7 @@ const Progress: React.FC = () => {
                           activeSection === "WorkLog" ? "#155fcc" : "white",
                         color: activeSection === "WorkLog" ? "white" : "black",
                         fontSize: isMobile
-                          ? ".7rem"
+                          ? ".6rem"
                           : isTab
                           ? "0.8rem"
                           : "12px",
@@ -607,7 +607,7 @@ const Progress: React.FC = () => {
                           onChange={handleChangeEmployeeStatus}
                           sx={{
                             borderRadius: "5px",
-                            width: isMobile ? "30vw" : isTab ? "40vw" : "7vw",
+                            width: isMobile ? "30vw" : isTab ? "40vw" : "8.5vw",
                             minWidth: isMobile ? "0" : isTab ? "180px" : "0",
                           }}
                         >
@@ -678,7 +678,7 @@ const Progress: React.FC = () => {
                         onChange={handleChangeLoanStatus}
                         sx={{
                           borderRadius: "5px",
-                          width: isMobile ? "30vw" : isTab ? "40vw" : "7vw",
+                          width: isMobile ? "30vw" : isTab ? "40vw" : "8.5vw",
                           minWidth: isMobile ? "0" : isTab ? "180px" : "0",
                         }}
                       >

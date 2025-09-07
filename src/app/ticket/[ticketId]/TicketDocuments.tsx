@@ -228,7 +228,7 @@ const TicketDocuments = ({
                     borderRadius: "8px",
                     boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
                     transition: "transform 0.2s ease",
-                    width: isMobile ? "50vw" : isTab ? "43vw" : "38.5vw",
+                    width: isMobile ? "50vw" : isTab ? "92%" : "38.5vw",
                     marginLeft: "1.5rem",
                     "&:hover": {
                       transform: "scale(1.02)",
