@@ -68,29 +68,29 @@ const Ticket = () => {
   const [ exportLoading, setExportLoading ] = useState( false );
 
   const apiEndpoint = selectedUser
-    ? `get-all-tickets/${ selectedUser.id }`
+    ? `get-all-tickets/${ selectedUser.id }${ sortBy === "disbursed" ? "?onlyDisbursed=true" : "" }`
     : userRole === "admin" || userRole === "sub admin"
       ? sortBy === "all" && loanProvider === "all"
         ? `get-all-tickets`
         : `get-all-tickets?status=${ sortBy == "forwarded to me" || sortBy == "forwarded by me"
           ? sortBy.replace( /\s+/g, "" )
           : sortBy
-        }&provider=${ loanProvider }`
+        }&provider=${ loanProvider }${ sortBy === "disbursed" ? "&onlyDisbursed=true" : "" }`
       : userRole === "operations" || userRole === "credit"
         ? sortBy === "all" && loanProvider === "all"
           ? `get-all-tickets/${ decodedToken()?.id }`
           : `get-all-tickets/${ decodedToken()?.id }?status=${ sortBy == "forwarded to me" || sortBy == "forwarded by me"
             ? sortBy.replace( /\s+/g, "" )
             : sortBy
-          }&provider=${ loanProvider }`
+          }&provider=${ loanProvider }${ sortBy === "disbursed" ? "&onlyDisbursed=true" : "" }`
         : userRole === "sales"
           ? sortBy === "all" && loanProvider === "all"
             ? `get-all-tickets/${ decodedToken()?.id }?appliedBy=sales`
             : `get-all-tickets/${ decodedToken()?.id }?appliedBy=sales&status=${ sortBy == "forwarded to me" || sortBy == "forwarded by me"
               ? sortBy.replace( /\s+/g, "" )
               : sortBy
-            }&provider=${ loanProvider }`
-          : `get-all-tickets`;
+             }&provider=${loanProvider}${sortBy === "disbursed" ? "&onlyDisbursed=true" : ""}`
+        : `get-all-tickets${sortBy === "disbursed" ? "?onlyDisbursed=true" : ""}`;
 
   const {
     value: ticketData,
@@ -392,16 +392,37 @@ const Ticket = () => {
   useEffect( () => {
     if ( ticketData.results.length > 0 )
     {
-      dispatch( setTickets( { ...ticketData, currentPage } ) );
-      setHasMoreData( ticketData.results.length === ITEMS_PER_PAGE );
+      let filteredResults = ticketData.results;
 
-      // Set disbursed amount only if status is 'disbursed'
-      if ( sortBy === "disbursed" && ticketData.totalDisbursedAmount )
+      // If status is 'disbursed', filter to only show records with disbursedAt
+      if ( sortBy === "disbursed" )
       {
-        setDisbursedAmount( ticketData.totalDisbursedAmount );
+        filteredResults = ticketData.results.filter( ticket =>
+          ticket.disbursedAt && ticket.disbursedAt !== null
+        );
+
+        // Set disbursed amount only for actually disbursed records
+        if ( ticketData.totalDisbursedAmount )
+        {
+          setDisbursedAmount( ticketData.totalDisbursedAmount );
+        }
       } else
       {
         setDisbursedAmount( 0 );
+      }
+
+      // Update the dispatch with filtered results
+      dispatch( setTickets( {
+        ...ticketData,
+        results: filteredResults,
+        currentPage
+      } ) );
+
+      setHasMoreData( ticketData.results.length === ITEMS_PER_PAGE );
+
+      if ( filteredResults.length === 0 && ticketData?.errorMessage )
+      {
+        console.error( "API Error:", ticketData.errorMessage );
       }
     } else
     {
@@ -866,7 +887,9 @@ const Ticket = () => {
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Provider</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Tenure</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Location</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Ticket Created At</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Application Date</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Created At</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Disbursed At</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word', display: 'flex', alignItems: 'center', justifyContent: 'center', border: "none" }}>Actions</TableCell>
                         </TableRow>
                       </TableHead>

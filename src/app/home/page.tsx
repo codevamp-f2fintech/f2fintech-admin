@@ -520,7 +520,7 @@ const Home: React.FC = () => {
                       <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Provider</TableCell>
                       <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Tenure</TableCell>
                       <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Location</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Created At</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Application Date</TableCell>
                       <TableRow sx={{
                         backgroundColor: "#3f50b5",
                         '& td': { borderBottom: 'none' },

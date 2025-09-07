@@ -71,6 +71,8 @@ interface ApplicationCardProps {
     userRole?: string;
     applicationProvider?: string;
     showDeleteButton?: boolean;
+    disbursed_At?: string;
+    disbursed_Amount?: number;
     onDelete: ( applicationId: string, customerName: string ) => void;
   };
   handleStartClick?: ( ticketId: number ) => void;
@@ -198,7 +200,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
   const toggleComment = () => setShowComment( ( prev ) => !prev );
 
   const formattedCreatedAt = customerApplication?.applicationDate
-    ? `Created At: ${ new Date( customerApplication.applicationDate ).toLocaleDateString( 'en-IN', {
+    ? `Application At: ${ new Date( customerApplication.applicationDate ).toLocaleDateString( 'en-IN', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
@@ -592,6 +594,19 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                         color="#33415c"
                       />
                     )}
+                    <InfoChip
+                      icon={<AccessTimeRounded />}
+                      text={
+                        customerApplication?.disbursedAt
+                          ? `Disbursed: ${ new Date( customerApplication.disbursedAt ).toLocaleDateString( 'en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          } ) }`
+                          : "Not Disbursed"
+                      }
+                      color="#33415c"
+                    />
                     <Chip
                       label={formattedCreatedAt}
                       size="small"
@@ -1329,6 +1344,18 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                     )}
                   />
                 )}
+                <InfoRow
+                  icon={<AccessTimeRounded />}
+                  text={
+                    customerApplication.disbursedAt
+                      ? `Disbursed At: ${ new Date( customerApplication.disbursedAt ).toLocaleDateString( 'en-IN', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                      } ) }`
+                      : "Not Disbursed"
+                  }
+                />
               </Box>
             ) : showHistory ? (
               <Box
@@ -1821,7 +1848,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
         setCurrentAttachment( null );
       }
     };
-
+    console.log( "customerApplication", customerApplication )
     return (
       <>
         <TableRow key={customerApplication.customerId} sx={{
@@ -1895,6 +1922,19 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
             </Typography>
           </TableCell>
 
+          {/* Application date */}
+          {!isApplication && <TableCell>
+            <Typography variant="body2">
+              {customerApplication?.applicationDate
+                ? new Date( customerApplication.applicationDate ).toLocaleDateString( 'en-IN', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                } )
+                : "Not Disbursed"}
+            </Typography>
+          </TableCell>}
+
           {/* Created At */}
           <TableCell>
             <Typography variant="body2">
@@ -1907,6 +1947,20 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                 : "N/A"}
             </Typography>
           </TableCell>
+          {/* Disbursed At */}
+          {!isApplication &&
+            <TableCell>
+              <Typography variant="body2">
+                {customerApplication?.disbursedAt
+                  ? new Date( customerApplication.disbursedAt ).toLocaleDateString( 'en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                  } )
+                  : "Not Disbursed"}
+              </Typography>
+            </TableCell>
+          }
 
           {/* Actions */}
           <TableCell>
