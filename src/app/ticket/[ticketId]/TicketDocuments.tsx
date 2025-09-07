@@ -357,7 +357,7 @@ const TicketDocuments = ({
               justifyContent: "center",
               alignItems: "center",
               marginTop: 2,
-              width: isMobile ? "55vw" : isTab ? "44vw" : "38vw",
+              width: isMobile ? "55vw" : isTab ? "90%" : "38vw",
             }}
           >
             <Button
@@ -404,7 +404,7 @@ const TicketDocuments = ({
             <Typography
               variant="body2"
               sx={{
-                color: "white",
+                color: "black",
                 textAlign: "center",
                 flexGrow: 1,
                 mt: isMobile ? "" : isTab ? "1rem" : ".5rem",
