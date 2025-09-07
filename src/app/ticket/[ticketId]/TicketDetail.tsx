@@ -148,20 +148,40 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
     <>
       <Box
         display="flex"
-        justifyContent="flex-start"
-        alignItems="flex-start"
+        justifyContent="center"
+        sx={{
+          flexDirection: "column",
+        }}
         mb={1}
       >
-        <Box sx={{ display: "flex", alignItems: "flex-start" }}>
-          <Button
-            startIcon={<ArrowBackRounded />}
-            onClick={() => router.back()}
-            sx={{ color: "black" }}
-          >
-            Back
-          </Button>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "flex-start" }}>
+            <Button
+              startIcon={<ArrowBackRounded />}
+              onClick={() => router.back()}
+              sx={{ color: "black" }}
+            >
+              Back
+            </Button>
+          </Box>
+
+          {/* Edit Button */}
+          <Box sx={{ marginLeft: "auto" }}>
+            <Button
+              startIcon={<EditRounded />}
+              onClick={handleOpenEditModal}
+              sx={{ color: "black" }}
+            >
+              Edit
+            </Button>
+          </Box>
         </Box>
-        <Box sx={{ marginLeft: "8vw" }}>
+        <Box sx={{ display: "flex", justifyContent: "center" }}>
           <Typography
             variant="h5"
             sx={{
@@ -175,16 +195,6 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
           >
             Ticket ID: F2FIN-{ticketDetailData?.ticketId}
           </Typography>
-        </Box>
-        {/* Edit Button */}
-        <Box sx={{ marginLeft: "auto" }}>
-          <Button
-            startIcon={<EditRounded />}
-            onClick={handleOpenEditModal}
-            sx={{ color: "black" }}
-          >
-            Edit
-          </Button>
         </Box>
       </Box>
 

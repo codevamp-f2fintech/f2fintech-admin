@@ -16,7 +16,7 @@ import {
   InputAdornment,
   IconButton,
 } from "@mui/material";
-import PercentIcon from '@mui/icons-material/Percent';
+import PercentIcon from "@mui/icons-material/Percent";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ArrowBackRounded } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
@@ -31,8 +31,8 @@ import axios from "axios";
 
 const LoanFormPage = () => {
   const router = useRouter();
-  const [ loading, setLoading ] = useState( false );
-  const { createLoanProvider } = useCreateLoanProvider( "create-loan-provider" );
+  const [loading, setLoading] = useState(false);
+  const { createLoanProvider } = useCreateLoanProvider("create-loan-provider");
 
   // Initial form values
   const initialValues = {
@@ -52,36 +52,34 @@ const LoanFormPage = () => {
   };
 
   // Handle image upload
-  const handleImageUpload = ( file: File, setFieldValue ) => {
-    if ( !file ) return;
+  const handleImageUpload = (file: File, setFieldValue) => {
+    if (!file) return;
 
     // Create a temporary URL for the selected file
-    const imageUrl = URL.createObjectURL( file );
+    const imageUrl = URL.createObjectURL(file);
 
     // Store the file and image URL in the state
-    setFieldValue( "home_image", imageUrl ); // Set preview URL in Formik state
-    setFieldValue( "image_file", file ); // Store the actual file object for upload
+    setFieldValue("home_image", imageUrl); // Set preview URL in Formik state
+    setFieldValue("image_file", file); // Store the actual file object for upload
   };
 
   // Handle form submission
-  const handleSubmit = async ( values ) => {
-    setLoading( true );
-    console.log( "values", values );
+  const handleSubmit = async (values) => {
+    setLoading(true);
+    console.log("values", values);
 
     // If there's an image file, upload it to S3 first
-    if ( values.image_file )
-    {
-      try
-      {
+    if (values.image_file) {
+      try {
         const formDataToUpload = new FormData();
-        formDataToUpload.append( "document", values.image_file );
+        formDataToUpload.append("document", values.image_file);
         formDataToUpload.append(
           "folder",
-          `loan-provider/${ values.image_file.name }`
+          `loan-provider/${values.image_file.name}`
         );
 
         const uploadResponse = await axios.post(
-          `${ process.env.NEXT_PUBLIC_WEB_URL }/upload-to-s3`,
+          `${process.env.NEXT_PUBLIC_WEB_URL}/upload-to-s3`,
           formDataToUpload,
           {
             headers: {
@@ -95,25 +93,33 @@ const LoanFormPage = () => {
         values.home_image = uploadedImageUrl; // Update the home_image with the S3 URL
 
         // Now create the loan provider
-        await createLoanProvider( values );
-        router.push( "/loan-provider" );
-      } catch ( error )
-      {
-        console.error( "Error uploading image:", error );
+        await createLoanProvider(values);
+        router.push("/loan-provider");
+      } catch (error) {
+        console.error("Error uploading image:", error);
       }
-    } else
-    {
+    } else {
       // If no image, proceed with creating the loan provider without an image
-      await createLoanProvider( values );
-      router.push( "/loan-provider" );
+      await createLoanProvider(values);
+      router.push("/loan-provider");
     }
 
-    setLoading( false );
+    setLoading(false);
   };
 
   return (
-    <Container sx={{ py: 4, backgroundColor: "white", borderRadius: "20px" }}>
-      <Box sx={{ mb: 4 }}>
+    <Container
+      sx={{
+        py: { xs: 2, sm: 3, md: 4 },
+        backgroundColor: "white",
+        borderRadius: "20px",
+        width: "100%",
+        maxWidth: "100%",
+        overflowX: "hidden",
+        px: 0,
+      }}
+    >
+      <Box sx={{ mb: { xs: 2, md: 4 } }}>
         <Button
           startIcon={<ArrowBackRounded />}
           onClick={() => router.back()}
@@ -131,9 +137,10 @@ const LoanFormPage = () => {
         validationSchema={validationSchema}
         onSubmit={handleSubmit}
       >
-        {( { setFieldValue, values, touched, errors } ) => (
+        {({ setFieldValue, values, touched, errors }) => (
           <Form>
-            <Grid container spacing={3}>
+            <Grid container spacing={{ xs: 2, md: 3 }}>
+              {" "}
               {/* Loan Provider Name */}
               <Grid item xs={12} md={6}>
                 <Field
@@ -141,7 +148,7 @@ const LoanFormPage = () => {
                   fullWidth
                   label="Loan Provider Name"
                   name="title"
-                  error={touched.title && Boolean( errors.title )}
+                  error={touched.title && Boolean(errors.title)}
                   helperText={touched.title && errors.title}
                   required
                 />
@@ -154,7 +161,7 @@ const LoanFormPage = () => {
                     as={Select}
                     name="country"
                     value={values.country}
-                    onChange={( e ) => setFieldValue( "country", e.target.value )}
+                    onChange={(e) => setFieldValue("country", e.target.value)}
                     required
                   >
                     {[
@@ -168,11 +175,11 @@ const LoanFormPage = () => {
                       "China",
                       "Japan",
                       "Brazil",
-                    ].map( ( country ) => (
+                    ].map((country) => (
                       <MenuItem key={country} value={country}>
                         {country}
                       </MenuItem>
-                    ) )}
+                    ))}
                   </Field>
                   <ErrorMessage name="country" component="div" />
                 </FormControl>
@@ -184,7 +191,7 @@ const LoanFormPage = () => {
                   fullWidth
                   label="Interest Rate"
                   name="interest_rate"
-                  error={touched.interest_rate && Boolean( errors.interest_rate )}
+                  error={touched.interest_rate && Boolean(errors.interest_rate)}
                   helperText={touched.interest_rate && errors.interest_rate}
                   required
                   InputProps={{
@@ -203,7 +210,6 @@ const LoanFormPage = () => {
                   }}
                 />
               </Grid>
-
               {/* Max Tenure */}
               <Grid item xs={12} md={6}>
                 <Field
@@ -212,7 +218,7 @@ const LoanFormPage = () => {
                   label="Max Tenure"
                   name="max_tenure"
                   required
-                  error={touched.max_tenure && Boolean( errors.max_tenure )}
+                  error={touched.max_tenure && Boolean(errors.max_tenure)}
                   helperText={touched.max_tenure && errors.max_tenure}
                   InputProps={{
                     startAdornment: (
@@ -238,7 +244,7 @@ const LoanFormPage = () => {
                   label="Minimum Amount"
                   name="min_amount"
                   type="number"
-                  error={touched.min_amount && Boolean( errors.min_amount )}
+                  error={touched.min_amount && Boolean(errors.min_amount)}
                   helperText={touched.min_amount && errors.min_amount}
                   required
                   InputProps={{
@@ -250,7 +256,6 @@ const LoanFormPage = () => {
                   }}
                 />
               </Grid>
-
               {/* Maximum Loan Amount */}
               <Grid item xs={12} md={6}>
                 <Field
@@ -259,7 +264,7 @@ const LoanFormPage = () => {
                   label="Maximum Loan Amount"
                   name="max_amount"
                   type="number"
-                  error={touched.max_amount && Boolean( errors.max_amount )}
+                  error={touched.max_amount && Boolean(errors.max_amount)}
                   helperText={touched.max_amount && errors.max_amount}
                   required
                   InputProps={{
@@ -278,12 +283,11 @@ const LoanFormPage = () => {
                   fullWidth
                   label="Charges"
                   name="charges"
-                  error={touched.charges && Boolean( errors.charges )}
+                  error={touched.charges && Boolean(errors.charges)}
                   helperText={touched.charges && errors.charges}
                   required
                 />
               </Grid>
-
               {/* Description */}
               <Grid item xs={12} md={6}>
                 <Field
@@ -291,11 +295,10 @@ const LoanFormPage = () => {
                   fullWidth
                   label="Description"
                   name="description"
-                  error={touched.description && Boolean( errors.description )}
+                  error={touched.description && Boolean(errors.description)}
                   helperText={touched.description && errors.description}
                 />
               </Grid>
-
               {/* Short Description */}
               <Grid item xs={12} md={6}>
                 <Field
@@ -305,7 +308,7 @@ const LoanFormPage = () => {
                   name="short_description"
                   error={
                     touched.short_description &&
-                    Boolean( errors.short_description )
+                    Boolean(errors.short_description)
                   }
                   helperText={
                     touched.short_description && errors.short_description
@@ -313,7 +316,6 @@ const LoanFormPage = () => {
                   required
                 />
               </Grid>
-
               {/* Long Description */}
               <Grid item xs={12} md={6}>
                 <Field
@@ -322,7 +324,7 @@ const LoanFormPage = () => {
                   label="Long Description"
                   name="long_description"
                   error={
-                    touched.long_description && Boolean( errors.long_description )
+                    touched.long_description && Boolean(errors.long_description)
                   }
                   helperText={
                     touched.long_description && errors.long_description
@@ -330,7 +332,6 @@ const LoanFormPage = () => {
                   required
                 />
               </Grid>
-
               {/* Minimum KYC */}
               <Grid item xs={12} md={6}>
                 <Field
@@ -338,12 +339,11 @@ const LoanFormPage = () => {
                   fullWidth
                   label="Minimum KYC"
                   name="minimum_kyc"
-                  error={touched.minimum_kyc && Boolean( errors.minimum_kyc )}
+                  error={touched.minimum_kyc && Boolean(errors.minimum_kyc)}
                   helperText={touched.minimum_kyc && errors.minimum_kyc}
                   required
                 />
               </Grid>
-
               {/* Document Required */}
               <Grid item xs={12} md={6}>
                 <Field
@@ -353,7 +353,7 @@ const LoanFormPage = () => {
                   name="document_required"
                   error={
                     touched.document_required &&
-                    Boolean( errors.document_required )
+                    Boolean(errors.document_required)
                   }
                   helperText={
                     touched.document_required && errors.document_required
@@ -409,11 +409,10 @@ const LoanFormPage = () => {
                         type="file"
                         accept="image/*"
                         hidden
-                        onChange={( e ) => {
-                          const file = e.target.files?.[ 0 ];
-                          if ( file )
-                          {
-                            handleImageUpload( file, setFieldValue ); // Handle image upload
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            handleImageUpload(file, setFieldValue); // Handle image upload
                           }
                         }}
                       />
@@ -432,12 +431,11 @@ const LoanFormPage = () => {
                         <IconButton
                           onClick={() => {
                             // Clean up preview URL only if it exists
-                            if ( values.home_image )
-                            {
-                              URL.revokeObjectURL( values.home_image );
+                            if (values.home_image) {
+                              URL.revokeObjectURL(values.home_image);
                             }
-                            setFieldValue( "home_image", "" ); // Reset the preview
-                            setFieldValue( "image_file", null ); // Reset the file
+                            setFieldValue("home_image", ""); // Reset the preview
+                            setFieldValue("image_file", null); // Reset the file
                           }}
                           sx={{
                             position: "absolute",
@@ -471,15 +469,16 @@ const LoanFormPage = () => {
                   </Box>
                 </FormControl>
               </Grid>
-
               {/* Submit button */}
               <Box
                 sx={{
                   mt: 4,
                   display: "flex",
-                  justifyContent: "flex-end",
+                  justifyContent: "end",
+                  alignItems: "center",
+                  flexDirection: "row",
                   gap: 2,
-                  ml: "47vw",
+                  ml: 10,
                 }}
               >
                 <Button

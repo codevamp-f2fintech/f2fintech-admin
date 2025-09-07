@@ -48,28 +48,27 @@ interface UsersPageProps {
 
 const ITEMS_PER_PAGE = 10;
 
-const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
-  const [ openDialog, setOpenDialog ] = useState( false );
-  const [ updatePassword, setUpdatePassword ] = useState( false );
-  const [ selectedUserId, setSelectedUserId ] = useState<string | null>( null );
-  const [ searchTerm, setSearchTerm ] = useState<string>( "" );
-  const [ currentPage, setCurrentPage ] = useState<number>( 1 );
-  const [ showInactive, setShowInactive ] = useState<boolean>( false );
-  const [ inactiveUsers, setInactiveUsers ] = useState<User | null>( null );
-  const [ loadingInactive, setLoadingInactive ] = useState<boolean>( false );
+const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
+  const [openDialog, setOpenDialog] = useState(false);
+  const [updatePassword, setUpdatePassword] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [showInactive, setShowInactive] = useState<boolean>(false);
+  const [inactiveUsers, setInactiveUsers] = useState<User | null>(null);
+  const [loadingInactive, setLoadingInactive] = useState<boolean>(false);
 
-  const { toast } = useSelector( ( state: RootState ) => state.toast );
-  const { user, reduxLoading } = useSelector( ( state: RootState ) => state.user );
+  const { toast } = useSelector((state: RootState) => state.toast);
+  const { user, reduxLoading } = useSelector((state: RootState) => state.user);
 
   const dispatch: AppDispatch = useDispatch();
   const { capitalizeFirstLetter, toastAndNavigate } = Utility();
 
-  useEffect( () => {
-    if ( initialData?.data )
-    {
-      dispatch( setUsers( initialData?.data ) );
+  useEffect(() => {
+    if (initialData?.data) {
+      dispatch(setUsers(initialData?.data));
     }
-  }, [ initialData?.data ] );
+  }, [initialData?.data]);
 
   const {
     value: data,
@@ -82,66 +81,62 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
     ITEMS_PER_PAGE
   );
 
-  useEffect( () => {
-    if ( data?.data?.results?.length > initialData?.data?.results?.length )
-    {
-      dispatch( setUsers( data ) );
+  useEffect(() => {
+    if (data?.data?.results?.length > initialData?.data?.results?.length) {
+      dispatch(setUsers(data));
     }
-  }, [ data?.data?.results?.length, initialData?.data?.results?.length ] );
+  }, [data?.data?.results?.length, initialData?.data?.results?.length]);
 
   // Function to fetch inactive users
-  const fetchInactiveUsers = useCallback( async () => {
-    try
-    {
-      setLoadingInactive( true );
-      const response = await UserAPI.getInactiveUsers( currentPage, ITEMS_PER_PAGE ); // You'll need to add this method
-      setInactiveUsers( response.data );
-    } catch ( err: any )
-    {
+  const fetchInactiveUsers = useCallback(async () => {
+    try {
+      setLoadingInactive(true);
+      const response = await UserAPI.getInactiveUsers(
+        currentPage,
+        ITEMS_PER_PAGE
+      ); // You'll need to add this method
+      setInactiveUsers(response.data);
+    } catch (err: any) {
       const errorMessage =
-        err?.response?.data?.message || "Error fetching inactive users. Please Try Again";
-      toastAndNavigate( dispatch, true, "error", errorMessage );
-    } finally
-    {
-      setLoadingInactive( false );
+        err?.response?.data?.message ||
+        "Error fetching inactive users. Please Try Again";
+      toastAndNavigate(dispatch, true, "error", errorMessage);
+    } finally {
+      setLoadingInactive(false);
     }
-  }, [ currentPage, dispatch, toastAndNavigate ] );
+  }, [currentPage, dispatch, toastAndNavigate]);
 
   // Handle toggle between active and inactive users
-  const handleToggleUsers = useCallback( async () => {
-    if ( !showInactive )
-    {
+  const handleToggleUsers = useCallback(async () => {
+    if (!showInactive) {
       // Switching to inactive users
       await fetchInactiveUsers();
     }
-    setShowInactive( !showInactive );
-    setSearchTerm( "" ); // Clear search when toggling
-    setCurrentPage( 1 ); // Reset to first page
-  }, [ showInactive, fetchInactiveUsers ] );
+    setShowInactive(!showInactive);
+    setSearchTerm(""); // Clear search when toggling
+    setCurrentPage(1); // Reset to first page
+  }, [showInactive, fetchInactiveUsers]);
 
   // Get current users to display based on toggle state
-  const currentUsersData = useMemo( () => {
-    if ( showInactive )
-    {
+  const currentUsersData = useMemo(() => {
+    if (showInactive) {
       return inactiveUsers?.data?.results || [];
     }
     return user?.results || initialData?.data?.results || [];
-  }, [ showInactive, inactiveUsers, user?.results, initialData?.data?.results ] );
+  }, [showInactive, inactiveUsers, user?.results, initialData?.data?.results]);
 
-  const filteredUsers = useMemo( () => {
-    return currentUsersData.filter( ( val: any ) =>
-      val.username?.toLowerCase().includes( searchTerm.toLowerCase() )
+  const filteredUsers = useMemo(() => {
+    return currentUsersData.filter((val: any) =>
+      val.username?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [ searchTerm, currentUsersData ] );
+  }, [searchTerm, currentUsersData]);
 
-  const handleUserDelete = useCallback( async ( id: string | number ) => {
-    try
-    {
-      await UserAPI.updateUserProfile( { id, status: "inactive" } );
+  const handleUserDelete = useCallback(async (id: string | number) => {
+    try {
+      await UserAPI.updateUserProfile({ id, status: "inactive" });
       const updatedUsers = await refetch();
-      if ( updatedUsers )
-      {
-        dispatch( setUsers( updatedUsers.data ) );
+      if (updatedUsers) {
+        dispatch(setUsers(updatedUsers.data));
         toastAndNavigate(
           dispatch,
           true,
@@ -152,50 +147,66 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
           true
         );
       }
-    } catch ( err: any )
-    {
+    } catch (err: any) {
       const errorMessage =
         err?.response?.data?.message || "Error Occurred. Please Try Again";
-      toastAndNavigate( dispatch, true, "error", errorMessage );
+      toastAndNavigate(dispatch, true, "error", errorMessage);
     }
-  }, [] );
+  }, []);
 
   // Function to restore inactive user
-  const handleUserRestore = useCallback( async ( id: string | number ) => {
-    try
-    {
-      await UserAPI.updateUserProfile( { id, status: "active" } );
-      // Refresh inactive users list
-      await fetchInactiveUsers();
-      toastAndNavigate( dispatch, true, "success", "User Restored Successfully", null, null, true );
-    } catch ( err: any )
-    {
-      const errorMessage =
-        err?.response?.data?.message || "Error restoring user. Please Try Again";
-      toastAndNavigate( dispatch, true, "error", errorMessage, null, null, true );
-    }
-  }, [ fetchInactiveUsers, dispatch, toastAndNavigate ] );
+  const handleUserRestore = useCallback(
+    async (id: string | number) => {
+      try {
+        await UserAPI.updateUserProfile({ id, status: "active" });
+        // Refresh inactive users list
+        await fetchInactiveUsers();
+        toastAndNavigate(
+          dispatch,
+          true,
+          "success",
+          "User Restored Successfully",
+          null,
+          null,
+          true
+        );
+      } catch (err: any) {
+        const errorMessage =
+          err?.response?.data?.message ||
+          "Error restoring user. Please Try Again";
+        toastAndNavigate(
+          dispatch,
+          true,
+          "error",
+          errorMessage,
+          null,
+          null,
+          true
+        );
+      }
+    },
+    [fetchInactiveUsers, dispatch, toastAndNavigate]
+  );
 
-  const handleOpenDialog = ( userId: string | null = null ) => {
-    setSelectedUserId( userId );
-    setUpdatePassword( false );
-    setOpenDialog( !openDialog );
+  const handleOpenDialog = (userId: string | null = null) => {
+    setSelectedUserId(userId);
+    setUpdatePassword(false);
+    setOpenDialog(!openDialog);
   };
 
   const handlePageChange = (
     event: React.ChangeEvent<unknown>,
     page: number
   ) => {
-    setCurrentPage( page );
+    setCurrentPage(page);
   };
 
   // Effect to refetch inactive users when page changes and showing inactive users
-  useEffect( () => {
-    if ( showInactive && currentPage > 1 )
-    {
+  useEffect(() => {
+    if (showInactive && currentPage > 1) {
       fetchInactiveUsers();
     }
-  }, [ currentPage, showInactive, fetchInactiveUsers ] );
+  }, [currentPage, showInactive, fetchInactiveUsers]);
 
   return (
     <Box
@@ -205,7 +216,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
         // px: { xs: 2, sm: 4 },
       }}
     >
-      <Container sx={{ p: 4 }}>
+      <Container sx={{ p: 0 }}>
         {/* Header */}
         <Box
           sx={{
@@ -223,7 +234,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
             variant="outlined"
             size="small"
             value={searchTerm}
-            onChange={( e ) => setSearchTerm( e.target.value )}
+            onChange={(e) => setSearchTerm(e.target.value)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -232,7 +243,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
               ),
               endAdornment: searchTerm && (
                 <InputAdornment position="end">
-                  <IconButton size="small" onClick={() => setSearchTerm( "" )}>
+                  <IconButton size="small" onClick={() => setSearchTerm("")}>
                     <ClearRounded sx={{ fontSize: 16 }} />
                   </IconButton>
                 </InputAdornment>
@@ -254,22 +265,31 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
               },
             }}
           />
-          <Box sx={{ display: "flex",justifyContent: "flex-end", width: "100%",gap: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap", // allow wrapping on small screens
+              justifyContent: { xs: "center", sm: "flex-end" }, // center on mobile, right align on bigger screens
+              width: "100%",
+              gap: 2,
+            }}
+          >
             {/* Show Create button only for active users */}
             {!showInactive && (
               <Button
                 variant="contained"
                 startIcon={<PersonAddRounded />}
-                onClick={() => handleOpenDialog( null )}
+                onClick={() => handleOpenDialog(null)}
                 sx={{
                   borderRadius: "100px",
-                  px: 3,
+                  px: { xs: 2, sm: 3 }, // smaller padding on mobile
                   textTransform: "none",
                   fontWeight: 600,
                   boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
                   bgcolor: "#0c66e4",
                   color: "white",
-                  ml: "20vw",
+                  // remove ml (non-responsive), instead use flex/grid
+                  width: { xs: "100%", sm: "auto" }, // full width on mobile, auto on desktop
                   "&:hover": {
                     bgcolor: "#0c66e4",
                     color: "white",
@@ -282,17 +302,20 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
 
             <Button
               variant="outlined"
-              startIcon={showInactive ? <PersonRounded /> : <PersonOffRounded />}
+              startIcon={
+                showInactive ? <PersonRounded /> : <PersonOffRounded />
+              }
               onClick={handleToggleUsers}
               disabled={loadingInactive}
               sx={{
                 borderRadius: "100px",
-                px: 3,
+                px: { xs: 2, sm: 3 },
                 textTransform: "none",
                 fontWeight: 600,
                 boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
                 color: "#0c66e4",
                 borderColor: "#0c66e4",
+                width: { xs: "100%", sm: "auto" }, // full width on small devices
                 "&:hover": {
                   bgcolor: "#f0f4ff",
                   borderColor: "#0c66e4",
@@ -305,7 +328,6 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
               {showInactive ? "View Active Users" : "View Inactive Users"}
             </Button>
           </Box>
-
         </Box>
 
         {/* Display current view title */}
@@ -314,7 +336,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
           sx={{
             mb: 3,
             fontWeight: 600,
-            color: "#33415c"
+            color: "#33415c",
           }}
         >
           {showInactive ? "Inactive Users" : "Active Users"}
@@ -323,7 +345,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
         {/* User Grid */}
         <Grid container spacing={3}>
           {filteredUsers.length > 0 &&
-            filteredUsers.map( ( user: UserData, index: number ) => (
+            filteredUsers.map((user: UserData, index: number) => (
               <Grid item xs={12} md={6} key={index}>
                 <Card
                   sx={{
@@ -355,7 +377,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
                           variant="h5"
                           sx={{ color: "black", fontWeight: 600, mb: 1 }}
                         >
-                          {capitalizeFirstLetter( user.username )}
+                          {capitalizeFirstLetter(user.username)}
                           {showInactive && (
                             <Chip
                               label="Inactive"
@@ -363,7 +385,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
                               sx={{
                                 ml: 1,
                                 bgcolor: "#dc3545",
-                                color: "white"
+                                color: "white",
                               }}
                             />
                           )}
@@ -432,7 +454,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
                           icon={
                             <PersonRounded sx={{ color: "#fff !important" }} />
                           }
-                          label={capitalizeFirstLetter( user.gender )}
+                          label={capitalizeFirstLetter(user.gender)}
                           sx={{
                             bgcolor: "#0c66e4",
                             color: "#fff",
@@ -458,7 +480,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
                           height: 48,
                         }}
                       >
-                        {user.username.charAt( 0 )}
+                        {user.username.charAt(0)}
                       </Avatar>
                       <Box sx={{ display: "flex", gap: 1 }}>
                         {showInactive ? (
@@ -470,7 +492,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
                                 bgcolor: "#28a745",
                                 "&:hover": { bgcolor: "#218838" },
                               }}
-                              onClick={() => handleUserRestore( user.id )}
+                              onClick={() => handleUserRestore(user.id)}
                             >
                               <PersonAddRounded />
                             </IconButton>
@@ -485,7 +507,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
                                   bgcolor: "#adb5bd",
                                   "&:hover": { bgcolor: "#33415c" },
                                 }}
-                                onClick={() => handleOpenDialog( user.id )}
+                                onClick={() => handleOpenDialog(user.id)}
                               >
                                 <EditRounded />
                               </IconButton>
@@ -498,7 +520,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
                                   bgcolor: "#adb5bd",
                                   "&:hover": { bgcolor: "#33415c" },
                                 }}
-                                onClick={() => handleUserDelete( user.id )}
+                                onClick={() => handleUserDelete(user.id)}
                               >
                                 <DeleteRounded />
                               </IconButton>
@@ -510,7 +532,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
                   </CardContent>
                 </Card>
               </Grid>
-            ) )}
+            ))}
         </Grid>
 
         {/* Show message when no users found */}
@@ -520,7 +542,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              minHeight: "200px"
+              minHeight: "200px",
             }}
           >
             <Typography variant="h6" color="text.secondary">
@@ -533,7 +555,11 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
         {filteredUsers.length > 0 && (
           <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
             <Pagination
-              count={showInactive ? ( inactiveUsers?.pages || 1 ) : ( data?.pages || initialData?.pages || 1 )}
+              count={
+                showInactive
+                  ? inactiveUsers?.pages || 1
+                  : data?.pages || initialData?.pages || 1
+              }
               page={currentPage}
               onChange={handlePageChange}
               color="primary"
@@ -543,7 +569,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
         )}
       </Container>
 
-      {( reduxLoading || swrLoading || loadingInactive ) ? (
+      {reduxLoading || swrLoading || loadingInactive ? (
         <Box display="flex" justifyContent="center" mb={2}>
           <CircularProgress />
         </Box>

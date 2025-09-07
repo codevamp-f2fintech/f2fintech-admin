@@ -73,7 +73,7 @@ export function LatestApplications({
     <Paper
       elevation={3}
       sx={{
-        width: { xs: "90%", sm: "100%", md: "100%" }, // Responsive width
+        width: { xs: "100%", sm: "100%", md: "100%" }, // Responsive width
         maxHeight: { xs: "85vh", sm: "100vh", md: "130vh" }, // Responsive max-height
         height: "100%",
         display: "flex",
@@ -282,7 +282,13 @@ export function LatestApplications({
                 bgcolor: "#0c66e4",
                 color: "white",
               },
-              whiteSpace: "nowrap", // Prevent text wrapping
+              whiteSpace: "nowrap",
+              mt: {
+                xs: 3,
+                md: 0,
+                sm: -1,
+                lg: 0,
+              },
             }}
           >
             View all
