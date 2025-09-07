@@ -49,6 +49,7 @@ import dayjs from "dayjs";
 import DateRangeModal from "./DateRangeModal";
 import { User } from "@/types/user";
 import { useRouter } from "next/navigation";
+import { useGetLoanProviders } from "@/hooks/loanProvider";
 
 interface FilterPanelProps {
   searchLabel: string;
@@ -92,25 +93,6 @@ const statusOptions = [
 // Credit role specific options
 const creditStatusOptions = ["forwarded", "forwardedtome", "forwardedbyme"];
 
-const bankOptions = [
-  "Bajaj Finance",
-  "Bajaj Market",
-  "Chola",
-  "L&T",
-  "Tata",
-  "ABFL",
-  "Godrej",
-  "IDFC",
-  "HDFC Bank",
-  "ICICI",
-  "INDUSIND",
-  "Lending Cart",
-  "Incred",
-  "Credit Saison",
-  "PaySense",
-  "Shriram",
-];
-
 const FilterPanel: React.FC<FilterPanelProps> = ({
   sortBy,
   loanProvider,
@@ -142,6 +124,13 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   const [userAnchorEl, setUserAnchorEl] = useState<null | HTMLElement>(null);
   const [dateModalOpen, setDateModalOpen] = useState<boolean>(false);
   const [tempInputValue, setTempInputValue] = useState<string>(filter);
+      // Fetch loan providers
+      const { value: providersData, swrLoading: providersLoading } =
+        useGetLoanProviders( null, "get-all-loan-providers", 1, 100 );
+  
+    const PROVIDER_OPTIONS = providersLoading
+      ? []
+      : providersData?.data?.results?.map( provider => provider.title ) || [];
 
   const normalizeStatusForApi = (status: string): string => {
     if (status === "forwarded to me") return "forwardedtome";
@@ -507,12 +496,12 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 },
               }}
             >
-              <BusinessRounded sx={{ fontSize: 20 }} />
-              All Banks {ticketCount}
+              {/* <BusinessRounded sx={{ fontSize: 20 }} /> */}
+              {/* All Banks */}
             </MenuItem>
 
             {/* Individual bank options */}
-            {bankOptions.map((bank) => (
+            {PROVIDER_OPTIONS.map((bank) => (
               <MenuItem
                 key={bank}
                 onClick={() => {

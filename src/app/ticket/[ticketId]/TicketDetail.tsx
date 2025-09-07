@@ -23,6 +23,7 @@ import Toast from "../../components/common/Toast";
 import { AppDispatch, RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import { useCreateTicketHistory } from "@/hooks/tickethistory";
+import { useGetLoanProviders } from "@/hooks/loanProvider";
 
 const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
   const router = useRouter();
@@ -44,24 +45,14 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
   );
   const userRole = decodedToken()?.role;
 
-  const bankOptions = [
-    "Bajaj Finance",
-    "Bajaj Market",
-    "Chola",
-    "L&T",
-    "Tata",
-    "ABFL",
-    "Godrej",
-    "IDFC",
-    "HDFC Bank",
-    "ICICI Bank",
-    "INDUSIND",
-    "Lending Cart",
-    "Incred",
-    "Credit Saison",
-    "PaySence",
-    "Shriram",
-  ];
+    // Fetch loan providers
+    const { value: providersData, swrLoading: providersLoading } =
+      useGetLoanProviders( null, "get-all-loan-providers", 1, 100 );
+
+  const PROVIDER_OPTIONS = providersLoading
+    ? []
+    : providersData?.data?.results?.map( provider => provider.title ) || [];
+
 
   // Update editedTicketData when ticketDetailData changes
   useEffect(() => {
@@ -478,7 +469,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
                     label="Loan Provider"
                     onChange={handleInputChange}
                   >
-                    {bankOptions.map((bank) => (
+                    {PROVIDER_OPTIONS.map((bank) => (
                       <MenuItem key={bank} value={bank}>
                         {bank}
                       </MenuItem>
