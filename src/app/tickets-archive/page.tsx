@@ -51,116 +51,107 @@ import {
 
 const ArchivedTicketsPage = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery( theme.breakpoints.down( 'sm' ) );
-  const isTablet = useMediaQuery( theme.breakpoints.down( 'md' ) );
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
 
-  const [ tickets, setTickets ] = useState( [] );
-  const [ loading, setLoading ] = useState( true );
-  const [ error, setError ] = useState( null );
-  const [ currentPage, setCurrentPage ] = useState( 1 );
-  const [ totalPages, setTotalPages ] = useState( 1 );
-  const [ totalCount, setTotalCount ] = useState( 0 );
-  const [ limit ] = useState( 10 );
-  const [ selectedTicket, setSelectedTicket ] = useState( null );
-  const [ openModal, setOpenModal ] = useState( false );
-  const [ users, setUsers ] = useState( [] );
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [limit] = useState(10);
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [openModal, setOpenModal] = useState(false);
+  const [users, setUsers] = useState([]);
 
   // Filters
-  const [ filters, setFilters ] = useState( {
+  const [filters, setFilters] = useState({
     status: "",
     provider: "",
     name: "",
     startDate: "",
     endDate: "",
     userId: "",
-    search: ''
-  } );
+    search: "",
+  });
 
-  const capitalizeFirstLetter = ( string ) => {
-    if ( !string ) return "";
-    return string.charAt( 0 ).toUpperCase() + string.slice( 1 );
+  const capitalizeFirstLetter = (string) => {
+    if (!string) return "";
+    return string.charAt(0).toUpperCase() + string.slice(1);
   };
 
   const fetchUsers = async () => {
-    try
-    {
+    try {
       const response = await fetch(
-        `${ process.env.NEXT_PUBLIC_API_URL }/get-users?page=1&limit=100`
+        `${process.env.NEXT_PUBLIC_API_URL}/get-users?page=1&limit=100`
       );
       const data = await response.json();
 
-      if ( data.statusCode === 200 )
-      {
-        setUsers( data.data.results || data.data );
-      } else
-      {
-        console.error( "Failed to fetch users:", data.message );
+      if (data.statusCode === 200) {
+        setUsers(data.data.results || data.data);
+      } else {
+        console.error("Failed to fetch users:", data.message);
       }
-    } catch ( err )
-    {
-      console.error( "Error fetching users:", err );
+    } catch (err) {
+      console.error("Error fetching users:", err);
     }
   };
 
-  useEffect( () => {
+  useEffect(() => {
     fetchUsers();
-  }, [] );
+  }, []);
 
   // Mock API call
-  const fetchArchivedTickets = async ( page = 1, appliedFilters = filters ) => {
-    try
-    {
-      setLoading( true );
+  const fetchArchivedTickets = async (page = 1, appliedFilters = filters) => {
+    try {
+      setLoading(true);
 
-      const queryParams = new URLSearchParams( {
+      const queryParams = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
-        ...( appliedFilters.status && { status: appliedFilters.status } ),
-        ...( appliedFilters.provider && { provider: appliedFilters.provider } ),
-        ...( appliedFilters.name && { name: appliedFilters.name } ),
-        ...( appliedFilters.startDate && {
+        ...(appliedFilters.status && { status: appliedFilters.status }),
+        ...(appliedFilters.provider && { provider: appliedFilters.provider }),
+        ...(appliedFilters.name && { name: appliedFilters.name }),
+        ...(appliedFilters.startDate && {
           startDate: appliedFilters.startDate,
-        } ),
-        ...( appliedFilters.endDate && { endDate: appliedFilters.endDate } ),
-        ...( appliedFilters.search && { search: appliedFilters.search } ),
-      } );
+        }),
+        ...(appliedFilters.endDate && { endDate: appliedFilters.endDate }),
+        ...(appliedFilters.search && { search: appliedFilters.search }),
+      });
 
-      const url = `${ process.env.NEXT_PUBLIC_API_URL }/get-all-archived-tickets?${ queryParams }`;
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/get-all-archived-tickets?${queryParams}`;
 
-      const response = await fetch( url );
+      const response = await fetch(url);
       const data = await response.json();
 
-      if ( data.statusCode === 200 )
-      {
-        setTickets( data.data.results );
-        setTotalPages( data.data.pages );
-        setTotalCount( data.data.count );
-      } else
-      {
-        setError( data.message || "Failed to fetch archived tickets" );
+      if (data.statusCode === 200) {
+        setTickets(data.data.results);
+        setTotalPages(data.data.pages);
+        setTotalCount(data.data.count);
+      } else {
+        setError(data.message || "Failed to fetch archived tickets");
       }
-    } catch ( err )
-    {
-      setError( "Error fetching archived tickets" );
-      console.error( "Error:", err );
-    } finally
-    {
-      setLoading( false );
+    } catch (err) {
+      setError("Error fetching archived tickets");
+      console.error("Error:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect( () => {
-    fetchArchivedTickets( currentPage );
-  }, [ currentPage, filters ] );
+  useEffect(() => {
+    fetchArchivedTickets(currentPage);
+  }, [currentPage, filters]);
 
-  const getUsernameById = ( userId ) => {
-    if ( !userId ) return "System";
+  const getUsernameById = (userId) => {
+    if (!userId) return "System";
     const user = users.find(
-      ( user ) => user.id === userId || user._id === userId
+      (user) => user.id === userId || user._id === userId
     );
     return user
-      ? user.username || user.name || `User ${ userId }`
-      : `User ${ userId }`;
+      ? user.username || user.name || `User ${userId}`
+      : `User ${userId}`;
   };
 
   const clearFilters = () => {
@@ -171,50 +162,46 @@ const ArchivedTicketsPage = () => {
       startDate: "",
       endDate: "",
       userId: "",
-      searchQuery: ''
+      searchQuery: "",
     };
-    setFilters( clearedFilters );
-    setCurrentPage( 1 );
-    fetchArchivedTickets( 1, clearedFilters );
+    setFilters(clearedFilters);
+    setCurrentPage(1);
+    fetchArchivedTickets(1, clearedFilters);
   };
 
-  const handleViewDetails = ( ticket ) => {
-    setSelectedTicket( ticket );
-    setOpenModal( true );
+  const handleViewDetails = (ticket) => {
+    setSelectedTicket(ticket);
+    setOpenModal(true);
   };
 
   const handleCloseModal = () => {
-    setOpenModal( false );
-    setSelectedTicket( null );
+    setOpenModal(false);
+    setSelectedTicket(null);
   };
 
-  const handleRestore = async ( archiveId ) => {
-    try
-    {
+  const handleRestore = async (archiveId) => {
+    try {
       const response = await fetch(
-        `${ process.env.NEXT_PUBLIC_API_URL }/restore-original-ticket/${ archiveId }`,
+        `${process.env.NEXT_PUBLIC_API_URL}/restore-original-ticket/${archiveId}`,
         {
           method: "POST",
         }
       );
       const data = await response.json();
 
-      if ( data.statusCode === 201 )
-      {
-        alert( "Ticket restored successfully" );
-        fetchArchivedTickets( currentPage );
-      } else
-      {
-        alert( data.message || "Failed to restore ticket" );
+      if (data.statusCode === 201) {
+        alert("Ticket restored successfully");
+        fetchArchivedTickets(currentPage);
+      } else {
+        alert(data.message || "Failed to restore ticket");
       }
-    } catch ( err )
-    {
-      alert( "Error restoring ticket" );
-      console.error( "Error:", err );
+    } catch (err) {
+      alert("Error restoring ticket");
+      console.error("Error:", err);
     }
   };
 
-  const getStatusColor = ( status ) => {
+  const getStatusColor = (status) => {
     const statusColors = {
       disbursed: "success",
       rejected: "error",
@@ -223,69 +210,71 @@ const ArchivedTicketsPage = () => {
       "under review": "secondary",
       default: "default",
     };
-    return statusColors[ status?.toLowerCase() ] || statusColors.default;
+    return statusColors[status?.toLowerCase()] || statusColors.default;
   };
 
-  const formatDate = ( dateString ) => {
-    if ( !dateString ) return "N/A";
-    return new Date( dateString ).toLocaleDateString( "en-US", {
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    } );
+    });
   };
 
-  const formatAmount = ( amount ) => {
-    if ( !amount || amount === "No Amount" ) return "N/A";
-    return new Intl.NumberFormat( "en-IN", {
+  const formatAmount = (amount) => {
+    if (!amount || amount === "No Amount") return "N/A";
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
-    } ).format( amount );
+    }).format(amount);
   };
 
   // Card view for mobile/tablet
-  const renderTicketCard = ( ticket ) => (
+  const renderTicketCard = (ticket) => (
     <Card
       key={ticket.archiveId}
       sx={{
         mb: 2,
         borderRadius: 2,
-        '&:hover': {
-          boxShadow: theme.shadows[ 4 ],
-          transform: 'translateY(-2px)',
-          transition: 'all 0.3s ease-in-out'
-        }
+        "&:hover": {
+          boxShadow: theme.shadows[4],
+          transform: "translateY(-2px)",
+          transition: "all 0.3s ease-in-out",
+        },
       }}
     >
       <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
         {/* Header */}
-        <Box sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          mb: 2,
-          flexWrap: 'wrap',
-          gap: 1
-        }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            mb: 2,
+            flexWrap: "wrap",
+            gap: 1,
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Chip
-              label={`#${ ticket.archiveId }`}
+              label={`#${ticket.archiveId}`}
               size="small"
               variant="outlined"
               color="primary"
             />
             <Chip
               label={ticket.ticketStatus}
-              color={getStatusColor( ticket.ticketStatus )}
+              color={getStatusColor(ticket.ticketStatus)}
               size="small"
             />
           </Box>
           <ButtonGroup variant="text" size="small">
             <Tooltip title="Restore">
               <IconButton
-                onClick={() => handleRestore( ticket.archiveId )}
+                onClick={() => handleRestore(ticket.archiveId)}
                 color="success"
                 size="small"
               >
@@ -294,7 +283,7 @@ const ArchivedTicketsPage = () => {
             </Tooltip>
             <Tooltip title="View Details">
               <IconButton
-                onClick={() => handleViewDetails( ticket )}
+                onClick={() => handleViewDetails(ticket)}
                 color="primary"
                 size="small"
               >
@@ -307,42 +296,46 @@ const ArchivedTicketsPage = () => {
         {/* Customer Info */}
         <Box sx={{ mb: 2 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1 }}>
-            <Avatar sx={{
-              width: 32,
-              height: 32,
-              bgcolor: 'primary.main',
-              fontSize: 14
-            }}>
-              {ticket.customerName.charAt( 0 ).toUpperCase()}
+            <Avatar
+              sx={{
+                width: 32,
+                height: 32,
+                bgcolor: "primary.main",
+                fontSize: 14,
+              }}
+            >
+              {ticket.customerName.charAt(0).toUpperCase()}
             </Avatar>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="subtitle2" fontWeight={600} noWrap>
                 {ticket.customerName}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                Archived by: {getUsernameById( ticket.archiveBy )}
+                Archived by: {getUsernameById(ticket.archiveBy)}
               </Typography>
             </Box>
           </Box>
 
           {/* Contact chips - responsive layout */}
-          <Box sx={{
-            display: "flex",
-            gap: 1,
-            flexWrap: 'wrap',
-            mt: 1
-          }}>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 1,
+              flexWrap: "wrap",
+              mt: 1,
+            }}
+          >
             <Chip
               icon={<PhoneIcon fontSize="small" />}
               label={ticket.customerContact}
               size="small"
               variant="outlined"
               sx={{
-                maxWidth: { xs: '140px', sm: '180px' },
-                '& .MuiChip-label': {
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }
+                maxWidth: { xs: "140px", sm: "180px" },
+                "& .MuiChip-label": {
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                },
               }}
             />
             <Chip
@@ -351,11 +344,11 @@ const ArchivedTicketsPage = () => {
               size="small"
               variant="outlined"
               sx={{
-                maxWidth: { xs: '140px', sm: '200px' },
-                '& .MuiChip-label': {
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }
+                maxWidth: { xs: "140px", sm: "200px" },
+                "& .MuiChip-label": {
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                },
               }}
             />
           </Box>
@@ -368,7 +361,7 @@ const ArchivedTicketsPage = () => {
               Amount
             </Typography>
             <Typography variant="body2" fontWeight={500}>
-              {formatAmount( ticket.applicationAmount )}
+              {formatAmount(ticket.applicationAmount)}
             </Typography>
           </Grid>
           <Grid item xs={6}>
@@ -392,7 +385,7 @@ const ArchivedTicketsPage = () => {
               Archived
             </Typography>
             <Typography variant="body2" fontWeight={500}>
-              {formatDate( ticket.archivedAt )}
+              {formatDate(ticket.archivedAt)}
             </Typography>
           </Grid>
         </Grid>
@@ -401,29 +394,32 @@ const ArchivedTicketsPage = () => {
   );
 
   return (
-    <Box sx={{
-      p: { xs: 2, sm: 3 },
-      minHeight: "100vh",
-      maxWidth: "100vw",
-      overflowX: "hidden"
-    }}>
+    <Box
+      sx={{
+        p: { xs: 2, sm: 3 },
+        minHeight: "100vh",
+        maxWidth: "100vw",
+        overflowX: "hidden",
+      }}
+    >
       <Box sx={{ maxWidth: "1400px", mx: "auto" }}>
-
         {/* Header */}
         <Box sx={{ mb: 4 }}>
-          <Box sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: { xs: 'flex-start', sm: 'center' },
-            flexDirection: { xs: 'column', sm: 'row' },
-            gap: 2
-          }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: { xs: "flex-start", sm: "center" },
+              flexDirection: { xs: "column", sm: "row" },
+              gap: 2,
+            }}
+          >
             <Box>
               <Typography
                 variant={isMobile ? "h5" : "h4"}
                 component="h1"
                 gutterBottom
-                sx={{ fontWeight: 'bold' }}
+                sx={{ fontWeight: "bold" }}
               >
                 Archived Tickets
               </Typography>
@@ -431,26 +427,37 @@ const ArchivedTicketsPage = () => {
                 Manage and restore your archived tickets
               </Typography>
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: { xs: '100%', sm: 'auto' } }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+                width: { xs: "100%", sm: "auto" },
+              }}
+            >
               <Paper
                 component="form"
                 sx={{
-                  p: '2px 4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  width: { xs: '100%', sm: 400 },
+                  p: "2px 4px",
+                  display: "flex",
+                  alignItems: "center",
+                  width: { xs: "100%", sm: 400 },
                   maxWidth: 400,
                   borderRadius: 2,
-                  boxShadow: 'none',
-                  border: '1px solid',
-                  borderColor: 'divider'
+                  boxShadow: "none",
+                  border: "1px solid",
+                  borderColor: "divider",
                 }}
-                onSubmit={( e ) => {
+                onSubmit={(e) => {
                   e.preventDefault();
-                  fetchArchivedTickets( 1 );
+                  fetchArchivedTickets(1);
                 }}
               >
-                <IconButton type="submit" sx={{ p: '10px' }} aria-label="search">
+                <IconButton
+                  type="submit"
+                  sx={{ p: "10px" }}
+                  aria-label="search"
+                >
                   <SearchIcon />
                 </IconButton>
                 <input
@@ -458,25 +465,27 @@ const ArchivedTicketsPage = () => {
                   placeholder="Search by Candidate Name or Archive Id..."
                   style={{
                     flex: 1,
-                    border: 'none',
-                    outline: 'none',
-                    padding: '8px',
-                    fontSize: '14px',
-                    backgroundColor: 'transparent'
+                    border: "none",
+                    outline: "none",
+                    padding: "8px",
+                    fontSize: "14px",
+                    backgroundColor: "transparent",
                   }}
-                  value={filters.search || ''}
-                  onChange={( e ) => setFilters( {
-                    ...filters,
-                    search: e.target.value
-                  } )}
+                  value={filters.search || ""}
+                  onChange={(e) =>
+                    setFilters({
+                      ...filters,
+                      search: e.target.value,
+                    })
+                  }
                 />
                 {filters.search && (
                   <IconButton
                     onClick={() => {
-                      setFilters( { ...filters, search: '' } );
-                      fetchArchivedTickets( 1, { ...filters, search: '' } );
+                      setFilters({ ...filters, search: "" });
+                      fetchArchivedTickets(1, { ...filters, search: "" });
                     }}
-                    sx={{ p: '10px' }}
+                    sx={{ p: "10px" }}
                     aria-label="clear"
                   >
                     <CloseIcon fontSize="small" />
@@ -525,27 +534,31 @@ const ArchivedTicketsPage = () => {
         </Grid>
 
         {/* Tickets Table/Cards */}
-        <Paper elevation={3} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{
-            p: 2,
-            borderBottom: 1,
-            borderColor: "divider",
-            backgroundImage: "linear-gradient(#c4d5eb, #c4d5eb)",
-          }}>
+        <Paper elevation={3} sx={{ borderRadius: 2, overflow: "hidden" }}>
+          <Box
+            sx={{
+              p: 2,
+              borderBottom: 1,
+              borderColor: "divider",
+              backgroundImage: "linear-gradient(#c4d5eb, #c4d5eb)",
+            }}
+          >
             <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
               Archived Tickets
             </Typography>
           </Box>
 
           {loading ? (
-            <Box sx={{
-              display: "flex",
-              flexDirection: 'column',
-              alignItems: "center",
-              justifyContent: "center",
-              p: 6,
-              gap: 2
-            }}>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                p: 6,
+                gap: 2,
+              }}
+            >
               <CircularProgress size={60} thickness={4} />
               <Typography variant="body1" color="text.secondary">
                 Loading archived tickets...
@@ -557,15 +570,17 @@ const ArchivedTicketsPage = () => {
               {error}
             </Alert>
           ) : tickets.length === 0 ? (
-            <Box sx={{
-              display: "flex",
-              flexDirection: 'column',
-              alignItems: "center",
-              justifyContent: "center",
-              p: 6,
-              gap: 2
-            }}>
-              <FolderOffIcon sx={{ fontSize: 60, color: 'text.disabled' }} />
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                p: 6,
+                gap: 2,
+              }}
+            >
+              <FolderOffIcon sx={{ fontSize: 60, color: "text.disabled" }} />
               <Typography variant="h6" color="text.secondary">
                 No archived tickets found
               </Typography>
@@ -579,17 +594,22 @@ const ArchivedTicketsPage = () => {
               {isTablet ? (
                 // Card view for tablet and mobile
                 <Box sx={{ p: { xs: 2, sm: 3 } }}>
-                  {tickets.map( renderTicketCard )}
+                  {tickets.map(renderTicketCard)}
                 </Box>
               ) : (
                 // Table view for desktop
                 <Box sx={{ overflowX: "auto" }}>
                   <Table sx={{ minWidth: 900 }}>
                     <TableHead>
-                      <TableRow sx={{
-                        backgroundColor: ( theme ) => theme.palette.mode === 'light' ? 'grey.100' : 'background.default',
-                        '& th': { fontWeight: 600 }
-                      }}>
+                      <TableRow
+                        sx={{
+                          backgroundColor: (theme) =>
+                            theme.palette.mode === "light"
+                              ? "grey.100"
+                              : "background.default",
+                          "& th": { fontWeight: 600 },
+                        }}
+                      >
                         <TableCell>Archive ID</TableCell>
                         <TableCell>Archived By</TableCell>
                         <TableCell>Customer</TableCell>
@@ -599,31 +619,41 @@ const ArchivedTicketsPage = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {tickets.map( ( ticket ) => (
+                      {tickets.map((ticket) => (
                         <TableRow
                           key={ticket.archiveId}
                           hover
-                          sx={{ '&:last-child td': { borderBottom: 0 } }}
+                          sx={{ "&:last-child td": { borderBottom: 0 } }}
                         >
                           <TableCell>
                             <Chip
-                              label={`#${ ticket.archiveId }`}
+                              label={`#${ticket.archiveId}`}
                               size="small"
                               variant="outlined"
                             />
                           </TableCell>
                           <TableCell>
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                              <Avatar sx={{
-                                width: 32,
-                                height: 32,
-                                bgcolor: 'primary.main',
-                                fontSize: 14
-                              }}>
-                                {getUsernameById( ticket.archiveBy ).charAt( 0 ).toUpperCase()}
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1.5,
+                              }}
+                            >
+                              <Avatar
+                                sx={{
+                                  width: 32,
+                                  height: 32,
+                                  bgcolor: "primary.main",
+                                  fontSize: 14,
+                                }}
+                              >
+                                {getUsernameById(ticket.archiveBy)
+                                  .charAt(0)
+                                  .toUpperCase()}
                               </Avatar>
                               <Typography variant="body2">
-                                {getUsernameById( ticket.archiveBy )}
+                                {getUsernameById(ticket.archiveBy)}
                               </Typography>
                             </Box>
                           </TableCell>
@@ -649,10 +679,10 @@ const ArchivedTicketsPage = () => {
                                     variant="outlined"
                                     sx={{
                                       maxWidth: 150,
-                                      '& .MuiChip-label': {
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis'
-                                      }
+                                      "& .MuiChip-label": {
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                      },
                                     }}
                                   />
                                 </Tooltip>
@@ -661,11 +691,11 @@ const ArchivedTicketsPage = () => {
                           </TableCell>
                           <TableCell>
                             <Typography variant="subtitle2" fontWeight={500}>
-                              {formatAmount( ticket.applicationAmount )}
+                              {formatAmount(ticket.applicationAmount)}
                             </Typography>
                             <Box sx={{ display: "flex", gap: 1.5, mt: 0.5 }}>
                               <Chip
-                                label={`${ ticket.applicationTenure } yrs`}
+                                label={`${ticket.applicationTenure} yrs`}
                                 size="small"
                               />
                               <Chip
@@ -677,17 +707,22 @@ const ArchivedTicketsPage = () => {
                           </TableCell>
                           <TableCell>
                             <Typography variant="subtitle2">
-                              {formatDate( ticket.archivedAt )}
+                              {formatDate(ticket.archivedAt)}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              Created: {formatDate( ticket.createdAt )}
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              Created: {formatDate(ticket.createdAt)}
                             </Typography>
                           </TableCell>
                           <TableCell align="center">
                             <ButtonGroup variant="text" size="small">
                               <Tooltip title="Restore">
                                 <IconButton
-                                  onClick={() => handleRestore( ticket.archiveId )}
+                                  onClick={() =>
+                                    handleRestore(ticket.archiveId)
+                                  }
                                   color="success"
                                 >
                                   <RotateIcon />
@@ -695,7 +730,7 @@ const ArchivedTicketsPage = () => {
                               </Tooltip>
                               <Tooltip title="View Details">
                                 <IconButton
-                                  onClick={() => handleViewDetails( ticket )}
+                                  onClick={() => handleViewDetails(ticket)}
                                   color="primary"
                                 >
                                   <EyeIcon />
@@ -704,7 +739,7 @@ const ArchivedTicketsPage = () => {
                             </ButtonGroup>
                           </TableCell>
                         </TableRow>
-                      ) )}
+                      ))}
                     </TableBody>
                   </Table>
                 </Box>
@@ -712,26 +747,38 @@ const ArchivedTicketsPage = () => {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <Box sx={{
-                  p: 2,
-                  borderTop: 1,
-                  borderColor: "divider",
-                  backgroundColor: ( theme ) => theme.palette.mode === 'light' ? 'grey.50' : 'background.paper'
-                }}>
-                  <Box sx={{
-                    display: "flex",
-                    flexDirection: { xs: 'column', sm: 'row' },
-                    alignItems: { sm: "center" },
-                    justifyContent: "space-between",
-                    gap: 2
-                  }}>
+                <Box
+                  sx={{
+                    p: 2,
+                    borderTop: 1,
+                    borderColor: "divider",
+                    backgroundColor: (theme) =>
+                      theme.palette.mode === "light"
+                        ? "grey.50"
+                        : "background.paper",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: { xs: "column", sm: "row" },
+                      alignItems: { sm: "center" },
+                      justifyContent: "space-between",
+                      gap: 2,
+                    }}
+                  >
                     <Typography variant="body2" color="text.secondary">
-                      Showing <strong>{( currentPage - 1 ) * limit + 1}-{Math.min( currentPage * limit, totalCount )}</strong> of <strong>{totalCount}</strong>
+                      Showing{" "}
+                      <strong>
+                        {(currentPage - 1) * limit + 1}-
+                        {Math.min(currentPage * limit, totalCount)}
+                      </strong>{" "}
+                      of <strong>{totalCount}</strong>
                     </Typography>
                     <Pagination
                       count={totalPages}
                       page={currentPage}
-                      onChange={( e, page ) => setCurrentPage( page )}
+                      onChange={(e, page) => setCurrentPage(page)}
                       color="primary"
                       shape="rounded"
                       showFirstButton={!isMobile}
@@ -740,9 +787,9 @@ const ArchivedTicketsPage = () => {
                       boundaryCount={1}
                       size={isMobile ? "small" : "medium"}
                       sx={{
-                        '& .MuiPaginationItem-root': {
-                          fontWeight: 500
-                        }
+                        "& .MuiPaginationItem-root": {
+                          fontWeight: 500,
+                        },
                       }}
                     />
                   </Box>
@@ -767,14 +814,14 @@ const ArchivedTicketsPage = () => {
               boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.15)",
               overflow: "hidden",
               m: isMobile ? 0 : 2,
-              maxHeight: isMobile ? '100vh' : '90vh'
+              maxHeight: isMobile ? "100vh" : "90vh",
             },
           }}
         >
           <DialogTitle
             sx={{
-              backgroundColor: "primary.main",
-              color: "white",
+              backgroundColor: "#c4d5eb",
+              color: "black",
               py: 2,
               px: 3,
               display: "flex",
@@ -785,7 +832,7 @@ const ArchivedTicketsPage = () => {
             <Box display="flex" alignItems="center">
               <Avatar
                 sx={{
-                  bgcolor: "primary.light",
+                  bgcolor: "#aaa",
                   mr: 2,
                   width: 40,
                   height: 40,
@@ -802,12 +849,15 @@ const ArchivedTicketsPage = () => {
                 </Typography>
               </Box>
             </Box>
-            <IconButton onClick={handleCloseModal} sx={{ color: "white" }}>
+            <IconButton onClick={handleCloseModal} sx={{ color: "red" }}>
               <CloseIcon />
             </IconButton>
           </DialogTitle>
 
-          <DialogContent dividers sx={{ p: 0, maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
+          <DialogContent
+            dividers
+            sx={{ p: 0, maxHeight: "calc(100vh - 200px)", overflowY: "auto" }}
+          >
             <Grid container>
               {/* Left Section - Customer Info */}
               <Grid
@@ -848,24 +898,22 @@ const ArchivedTicketsPage = () => {
                 >
                   <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                     <Avatar
-                      alt={
-                        capitalizeFirstLetter(
-                          selectedTicket.customerName.split( "." )[ 1 ]?.trim() ||
+                      alt={capitalizeFirstLetter(
+                        selectedTicket.customerName.split(".")[1]?.trim() ||
                           selectedTicket.customerName
-                            .split( " " )
-                            .slice( 1 )
-                            .join( " " )
-                        )
-                      }
+                            .split(" ")
+                            .slice(1)
+                            .join(" ")
+                      )}
                       src={
-                        Array.isArray( selectedTicket.customerProfileImage ) &&
-                          selectedTicket.customerProfileImage.length > 0
-                          ? selectedTicket.customerProfileImage[ 0 ]
+                        Array.isArray(selectedTicket.customerProfileImage) &&
+                        selectedTicket.customerProfileImage.length > 0
+                          ? selectedTicket.customerProfileImage[0]
                           : undefined
                       }
                       sx={{
-                        bgcolor: "primary.light",
-                        color: "primary.main",
+                        bgcolor: "#aaa",
+                        color: "white",
                         mr: 2,
                         width: 48,
                         height: 48,
@@ -875,20 +923,24 @@ const ArchivedTicketsPage = () => {
                       }}
                     >
                       {capitalizeFirstLetter(
-                        selectedTicket.customerName.split( "." )[ 1 ]?.trim() ||
-                        selectedTicket.customerName
-                          .split( " " )
-                          .slice( 1 )
-                          .join( " " )
-                      ).charAt( 0 )}
+                        selectedTicket.customerName.split(".")[1]?.trim() ||
+                          selectedTicket.customerName
+                            .split(" ")
+                            .slice(1)
+                            .join(" ")
+                      ).charAt(0)}
                     </Avatar>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }} noWrap>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{ fontWeight: 600 }}
+                        noWrap
+                      >
                         {selectedTicket.customerName}
                       </Typography>
                       <Chip
                         label={selectedTicket.ticketStatus}
-                        color={getStatusColor( selectedTicket.ticketStatus )}
+                        color={getStatusColor(selectedTicket.ticketStatus)}
                         size="small"
                         sx={{ mt: 0.5 }}
                       />
@@ -918,9 +970,9 @@ const ArchivedTicketsPage = () => {
                         primaryTypographyProps={{
                           variant: "body2",
                           sx: {
-                            wordBreak: 'break-word',
-                            overflowWrap: 'break-word'
-                          }
+                            wordBreak: "break-word",
+                            overflowWrap: "break-word",
+                          },
                         }}
                         secondary="Email"
                         secondaryTypographyProps={{ variant: "caption" }}
@@ -966,7 +1018,7 @@ const ArchivedTicketsPage = () => {
                         />
                       </ListItemIcon>
                       <ListItemText
-                        primary={formatDate( selectedTicket.createdAt )}
+                        primary={formatDate(selectedTicket.createdAt)}
                         primaryTypographyProps={{ variant: "body2" }}
                         secondary="Created"
                         secondaryTypographyProps={{ variant: "caption" }}
@@ -984,7 +1036,7 @@ const ArchivedTicketsPage = () => {
                         />
                       </ListItemIcon>
                       <ListItemText
-                        primary={formatDate( selectedTicket.archivedAt )}
+                        primary={formatDate(selectedTicket.archivedAt)}
                         primaryTypographyProps={{ variant: "body2" }}
                         secondary="Archived"
                         secondaryTypographyProps={{ variant: "caption" }}
@@ -1018,8 +1070,11 @@ const ArchivedTicketsPage = () => {
                         <Typography variant="caption" color="text.secondary">
                           Loan Amount
                         </Typography>
-                        <Typography variant={isMobile ? "body1" : "h6"} sx={{ fontWeight: 600 }}>
-                          {formatAmount( selectedTicket.applicationAmount )}
+                        <Typography
+                          variant={isMobile ? "body1" : "h6"}
+                          sx={{ fontWeight: 600 }}
+                        >
+                          {formatAmount(selectedTicket.applicationAmount)}
                         </Typography>
                       </CardContent>
                     </Card>
@@ -1030,7 +1085,10 @@ const ArchivedTicketsPage = () => {
                         <Typography variant="caption" color="text.secondary">
                           Tenure
                         </Typography>
-                        <Typography variant={isMobile ? "body1" : "h6"} sx={{ fontWeight: 600 }}>
+                        <Typography
+                          variant={isMobile ? "body1" : "h6"}
+                          sx={{ fontWeight: 600 }}
+                        >
                           {selectedTicket.applicationTenure} years
                         </Typography>
                       </CardContent>
@@ -1055,7 +1113,10 @@ const ArchivedTicketsPage = () => {
                       >
                         <BuildingIcon fontSize="small" />
                       </Avatar>
-                      <Typography variant="body1" sx={{ fontWeight: 500, wordBreak: 'break-word' }}>
+                      <Typography
+                        variant="body1"
+                        sx={{ fontWeight: 500, wordBreak: "break-word" }}
+                      >
                         {selectedTicket.applicationProvider}
                       </Typography>
                     </Box>
@@ -1090,18 +1151,20 @@ const ArchivedTicketsPage = () => {
                   <Box sx={{ display: "flex", alignItems: "center" }}>
                     <Avatar
                       sx={{
-                        bgcolor: "primary.main",
+                        bgcolor: "#aaa",
                         mr: 2,
                         width: 36,
                         height: 36,
-                        fontSize: 16
+                        fontSize: 16,
                       }}
                     >
-                      {getUsernameById( selectedTicket.archiveBy ).charAt( 0 ).toUpperCase()}
+                      {getUsernameById(selectedTicket.archiveBy)
+                        .charAt(0)
+                        .toUpperCase()}
                     </Avatar>
                     <Box>
                       <Typography variant="body1" fontWeight="medium">
-                        {getUsernameById( selectedTicket.archiveBy )}
+                        {getUsernameById(selectedTicket.archiveBy)}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
                         ID: #{selectedTicket.archiveBy || "System"}
@@ -1138,7 +1201,7 @@ const ArchivedTicketsPage = () => {
                   <Box sx={{ display: "flex", alignItems: "center" }}>
                     <Box>
                       <Typography variant="body1" fontWeight="medium">
-                        {( selectedTicket.reason )}
+                        {selectedTicket.reason}
                       </Typography>
                     </Box>
                   </Box>
@@ -1167,8 +1230,8 @@ const ArchivedTicketsPage = () => {
                           variant="body2"
                           sx={{
                             whiteSpace: "pre-line",
-                            wordBreak: 'break-word',
-                            overflowWrap: 'break-word'
+                            wordBreak: "break-word",
+                            overflowWrap: "break-word",
                           }}
                         >
                           {selectedTicket.additionalNotes}
@@ -1186,8 +1249,8 @@ const ArchivedTicketsPage = () => {
               p: 2,
               borderTop: "1px solid",
               borderColor: "divider",
-              flexDirection: { xs: 'column-reverse', sm: 'row' },
-              gap: { xs: 1, sm: 0 }
+              flexDirection: { xs: "column-reverse", sm: "row" },
+              gap: { xs: 1, sm: 0 },
             }}
           >
             <Button
@@ -1195,14 +1258,14 @@ const ArchivedTicketsPage = () => {
               variant="outlined"
               sx={{
                 borderRadius: 2,
-                width: { xs: '100%', sm: 'auto' }
+                width: { xs: "100%", sm: "auto" },
               }}
             >
               Close
             </Button>
             <Button
               onClick={() => {
-                handleRestore( selectedTicket.archiveId );
+                handleRestore(selectedTicket.archiveId);
                 handleCloseModal();
               }}
               variant="contained"
@@ -1210,7 +1273,7 @@ const ArchivedTicketsPage = () => {
               startIcon={<RotateIcon />}
               sx={{
                 borderRadius: 2,
-                width: { xs: '100%', sm: 'auto' }
+                width: { xs: "100%", sm: "auto" },
               }}
             >
               Restore Ticket

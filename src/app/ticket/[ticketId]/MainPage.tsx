@@ -351,8 +351,10 @@ const Progress: React.FC = () => {
                   isMobile={isMobile}
                   isTab={isTab}
                   documents={ticketDetailData?.customerDocuments ?? []}
-                  customerId={ticketDetailData?.customer_id || ticketDetailData?.customerId}
-
+                  customerId={
+                    ticketDetailData?.customer_id ||
+                    ticketDetailData?.customerId
+                  }
                 />
                 <TicketVoiceNotes
                   isMobile={isMobile}
@@ -368,13 +370,13 @@ const Progress: React.FC = () => {
                     alignItems: "center",
                     justifyContent: "space-between",
                     borderRadius: "10px",
-                    width: isMobile ? "73vw" : isTab ? "65vw" : "43.5vw", // Adjusted tab width
+                    width: isMobile ? "73vw" : isTab ? "auto" : "43.5vw",
                     bgcolor: "#e9ecef",
                   }}
                 >
                   <Box
                     sx={{
-                      width: isMobile ? "10vw" : isTab ? "15vw" : "10vw", // Adjusted tab width
+                      width: isMobile ? "10vw" : isTab ? "15vw" : "10vw",
                       height: "7vh",
                       borderRadius: "10px 0px 0px 10px",
                       display: "flex",
@@ -391,7 +393,7 @@ const Progress: React.FC = () => {
                         fontSize: isMobile
                           ? ".7rem"
                           : isTab
-                          ? "0.9rem" // Slightly smaller for tab
+                          ? "0.9rem"
                           : "1.1rem",
                       }}
                     >
@@ -400,12 +402,12 @@ const Progress: React.FC = () => {
                   </Box>
                   <Box
                     sx={{
-                      width: isMobile ? "60vw" : isTab ? "48vw" : "20vw", // Adjusted tab width
+                      width: isMobile ? "60vw" : isTab ? "48vw" : "20vw",
                       height: "7vh",
                       borderRadius: "0px 10px 10px 0px",
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "space-evenly", // Better spacing for tab
+                      justifyContent: "space-evenly",
                     }}
                   >
                     <Typography
@@ -418,12 +420,12 @@ const Progress: React.FC = () => {
                           ? ".7rem"
                           : isTab
                           ? "0.8rem"
-                          : "12px", // Adjusted tab font
+                          : "12px",
                         borderRadius: "4px",
-                        marginLeft: isTab ? "0" : "10px", // Remove extra margin on tab
-                        padding: isTab ? "0.3rem" : ".4rem", // Adjusted padding for tab
+                        marginLeft: isTab ? "0" : "10px",
+                        padding: isTab ? "0.3rem" : ".4rem",
                         cursor: "pointer",
-                        whiteSpace: "nowrap", // Prevent text wrapping
+                        whiteSpace: "nowrap",
                       }}
                       onClick={showComments}
                     >
@@ -439,12 +441,12 @@ const Progress: React.FC = () => {
                           ? ".7rem"
                           : isTab
                           ? "0.8rem"
-                          : "12px", // Adjusted tab font
+                          : "12px",
                         borderRadius: "4px",
-                        marginLeft: isTab ? "0" : "10px", // Remove extra margin on tab
-                        padding: isTab ? "0.3rem" : "6px", // Adjusted padding for tab
+                        marginLeft: isTab ? "0" : "10px",
+                        padding: isTab ? "0.3rem" : "6px",
                         cursor: "pointer",
-                        whiteSpace: "nowrap", // Prevent text wrapping
+                        whiteSpace: "nowrap",
                       }}
                       onClick={showHistory}
                     >
@@ -461,12 +463,12 @@ const Progress: React.FC = () => {
                           ? ".7rem"
                           : isTab
                           ? "0.8rem"
-                          : "12px", // Adjusted tab font
+                          : "12px",
                         borderRadius: "4px",
-                        marginLeft: isTab ? "0" : "10px", // Remove extra margin on tab
-                        padding: isTab ? "0.3rem" : "6px", // Adjusted padding for tab
+                        marginLeft: isTab ? "0" : "10px",
+                        padding: isTab ? "0.3rem" : "6px",
                         cursor: "pointer",
-                        whiteSpace: "nowrap", // Prevent text wrapping
+                        whiteSpace: "nowrap",
                       }}
                       onClick={showWorkLog}
                     >
@@ -587,14 +589,13 @@ const Progress: React.FC = () => {
                           background: "white",
                           borderRadius: "15px",
                           "& .MuiFilledInput-underline:before": {
-                            borderBottom: "none", // Removes the underline in normal state
+                            borderBottom: "none",
                           },
                           "& .MuiFilledInput-underline:after": {
-                            borderBottom: "none", // Removes the underline in focused state
+                            borderBottom: "none",
                           },
-
                           "& .MuiFilledInput-underline:hover:before": {
-                            borderBottom: "none !important", // Remove underline on hover
+                            borderBottom: "none !important",
                           },
                         }}
                       >
@@ -605,8 +606,9 @@ const Progress: React.FC = () => {
                           value={newEmployeeStatus}
                           onChange={handleChangeEmployeeStatus}
                           sx={{
-                            borderRadius: "15px",
-                            width: isMobile ? "30vw" : "8vw",
+                            borderRadius: "5px",
+                            width: isMobile ? "30vw" : isTab ? "40vw" : "7vw",
+                            minWidth: isMobile ? "0" : isTab ? "180px" : "0",
                           }}
                         >
                           {employeeStatusObj.map((status) => (
@@ -631,7 +633,6 @@ const Progress: React.FC = () => {
                     fontSize: "1rem",
                     mt: "1rem",
                     bgcolor: "#b39ddb",
-
                     "&:hover": {
                       transform: "scale(1.02)",
                       transition: "transform 0.3s ease",
@@ -658,14 +659,14 @@ const Progress: React.FC = () => {
                         borderRadius: "15px",
 
                         "& .MuiFilledInput-underline:before": {
-                          borderBottom: "none", // Removes the underline in normal state
+                          borderBottom: "none",
                         },
                         "& .MuiFilledInput-underline:after": {
-                          borderBottom: "none", // Removes the underline in focused state
+                          borderBottom: "none",
                         },
 
                         "& .MuiFilledInput-underline:hover:before": {
-                          borderBottom: "none !important", // Remove underline on hover
+                          borderBottom: "none !important",
                         },
                       }}
                     >
@@ -677,7 +678,8 @@ const Progress: React.FC = () => {
                         onChange={handleChangeLoanStatus}
                         sx={{
                           borderRadius: "5px",
-                          width: isMobile ? "30vw" : "8vw",
+                          width: isMobile ? "30vw" : isTab ? "40vw" : "7vw",
+                          minWidth: isMobile ? "0" : isTab ? "180px" : "0",
                         }}
                       >
                         <MenuItem value="submitted">Submitted</MenuItem>

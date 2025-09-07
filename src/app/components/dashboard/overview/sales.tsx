@@ -24,42 +24,58 @@ export function Sales({ chartSeries, sx }: SalesProps): React.JSX.Element {
   return (
     <Card
       sx={{
-        height: isTab ? "55vh" : isMobile ? "75vh" : "90vh",
-        width: "100%"
+        height: isTab ? "55vh" : isMobile ? "70vh" : "80vh",
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        ...sx,
       }}
     >
+      {/* Header */}
       <Box
         sx={{
+          flexShrink: 0,
           display: "flex",
-          justifyContent: "flex-start",
           alignItems: "center",
-          height: isMobile ? "8vh" : isTab ? "5vh" : "12vh",
+          height: isMobile ? "8vh" : isTab ? "6vh" : "10vh",
+          px: 2,
         }}
       >
         <Typography
-          variant="h5"
+          variant="h6"
           component="h2"
           sx={{
             fontWeight: 600,
             color: "#1a237e",
             textTransform: "uppercase",
             letterSpacing: "0.5px",
-            ml: "1vw",
           }}
         >
           Tickets Overview
         </Typography>
       </Box>
+
       <Divider />
-      <CardContent sx={{ mt: isTab ? "8vh" : "14vh" }}>
+
+      {/* Chart Section */}
+      <CardContent
+        sx={{
+          flexGrow: 1, // fill remaining height
+          minHeight: 0, // prevents overflow
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+        }}
+      >
         <Chart
-          height={350}
           options={chartOptions}
           series={chartSeries}
           type="bar"
           width="100%"
+          height="100%" // chart fills parent
         />
       </CardContent>
+
       <Divider />
     </Card>
   );
@@ -89,15 +105,13 @@ function useChartOptions(): ApexOptions {
     legend: { show: false },
     plotOptions: {
       bar: {
-        columnWidth: "40px",
-        borderRadius: 4
-      }
+        columnWidth: "40%",
+        borderRadius: 4,
+      },
     },
-    stroke: { colors: ["transparent"], show: true, width: 2 },
+    stroke: { colors: ["transparent"], show: true, width: 45 },
     theme: { mode: theme.palette.mode },
     xaxis: {
-      axisBorder: { color: theme.palette.divider, show: true },
-      axisTicks: { color: theme.palette.divider, show: true },
       categories: [
         "Jan",
         "Feb",

@@ -71,23 +71,23 @@ interface ApplicationCardProps {
     userRole?: string;
     applicationProvider?: string;
     showDeleteButton?: boolean;
-    onDelete: ( applicationId: string, customerName: string ) => void;
+    onDelete: (applicationId: string, customerName: string) => void;
   };
-  handleStartClick?: ( ticketId: number ) => void;
+  handleStartClick?: (ticketId: number) => void;
   refetch?: () => Promise<void>;
   userRole?: string;
-  handleDeleteTicket?: ( ticketId: number ) => void;
+  handleDeleteTicket?: (ticketId: number) => void;
   isApplication?: boolean;
   toggleListView?: string;
 }
 
-function InfoRow ( {
+function InfoRow({
   icon,
   text,
 }: {
   icon: React.ReactNode;
   text: string | undefined;
-} ) {
+}) {
   return (
     <Box
       sx={{
@@ -107,9 +107,9 @@ function InfoRow ( {
           padding: "8px",
         }}
       >
-        {React.cloneElement( icon as React.ReactElement, {
+        {React.cloneElement(icon as React.ReactElement, {
           fontSize: "small",
-        } )}
+        })}
       </Box>
       <Typography variant="body2" sx={{ color: "#333", fontWeight: "medium" }}>
         {text}
@@ -118,7 +118,7 @@ function InfoRow ( {
   );
 }
 
-function InfoChip ( {
+function InfoChip({
   icon,
   text,
   color = "#6E44FF",
@@ -126,20 +126,20 @@ function InfoChip ( {
   icon: React.ReactNode;
   text: string | undefined;
   color?: string;
-} ) {
+}) {
   return (
     <Chip
-      icon={React.cloneElement( icon as React.ReactElement, {
+      icon={React.cloneElement(icon as React.ReactElement, {
         fontSize: "small",
         sx: { color: color },
-      } )}
+      })}
       label={text}
       variant="outlined"
       size="small"
       sx={{
         borderColor: color,
         color: color,
-        backgroundColor: `${ color }10`,
+        backgroundColor: `${color}10`,
         fontWeight: "medium",
         "& .MuiChip-icon": {
           color: color,
@@ -149,7 +149,7 @@ function InfoChip ( {
   );
 }
 
-const ApplicationCard: React.FC<ApplicationCardProps> = ( {
+const ApplicationCard: React.FC<ApplicationCardProps> = ({
   customerApplication,
   handleStartClick = null,
   showDeleteButton = false,
@@ -160,15 +160,15 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
   handleDeleteApplication,
   isApplication = false,
   toggleListView,
-} ) => {
-  const [ showHistory, setShowHistory ] = useState<boolean>( false );
-  const [ showComment, setShowComment ] = useState<boolean>( false );
-  const [ historyData, setHistoryData ] = useState<any[]>( [] );
-  const [ commentData, setCommentData ] = useState<any[]>( [] );
-  const [ openDeleteDialog, setOpenDeleteDialog ] = useState<boolean>( false );
-  const [ expanded, setExpanded ] = useState<boolean>( false );
+}) => {
+  const [showHistory, setShowHistory] = useState<boolean>(false);
+  const [showComment, setShowComment] = useState<boolean>(false);
+  const [historyData, setHistoryData] = useState<any[]>([]);
+  const [commentData, setCommentData] = useState<any[]>([]);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false);
+  const [expanded, setExpanded] = useState<boolean>(false);
   const dispatch: AppDispatch = useDispatch();
-  const { toast } = useSelector( ( state: RootState ) => state.toast );
+  const { toast } = useSelector((state: RootState) => state.toast);
   const { toastAndNavigate } = Utility();
   const {
     calculateDaysAgo,
@@ -176,12 +176,12 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
     decodedToken,
     formatTenure,
   } = Utility();
-  const [ showOtpComponent, setShowOtpComponent ] = useState<boolean>( false );
-  const isMobile = useMediaQuery( "(max-width:600px)" );
-  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
-  const [ deleteReason, setDeleteReason ] = useState<string>( "" );
+  const [showOtpComponent, setShowOtpComponent] = useState<boolean>(false);
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const [deleteReason, setDeleteReason] = useState<string>("");
 
-  const handleDeleteClick = ( e: React.MouseEvent ) => {
+  const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onDelete(
       customerApplication.applicationId,
@@ -189,34 +189,35 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
     );
   };
 
-  const { createTicket } = useCreateTicket( "create-ticket" );
+  const { createTicket } = useCreateTicket("create-ticket");
   const { modifyCustomerApplication: modifyiedCustomerApplication } =
-    useModifyCustomerApplication( "update-loan-application" );
+    useModifyCustomerApplication("update-loan-application");
 
-  const toggleHistory = () => setShowHistory( ( prev ) => !prev );
-  const toggleExpanded = () => setExpanded( ( prev ) => !prev );
-  const toggleComment = () => setShowComment( ( prev ) => !prev );
+  const toggleHistory = () => setShowHistory((prev) => !prev);
+  const toggleExpanded = () => setExpanded((prev) => !prev);
+  const toggleComment = () => setShowComment((prev) => !prev);
 
   const formattedCreatedAt = customerApplication?.applicationDate
-    ? `Created At: ${ new Date( customerApplication.applicationDate ).toLocaleDateString( 'en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    } ) }`
+    ? `Created At: ${new Date(
+        customerApplication.applicationDate
+      ).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })}`
     : "Created At: N/A";
 
-  const openConfirmDialog = ( e ) => {
+  const openConfirmDialog = (e) => {
     e.stopPropagation();
-    setOpenDeleteDialog( true );
+    setOpenDeleteDialog(true);
   };
 
   const closeConfirmDialog = () => {
-    setOpenDeleteDialog( false );
+    setOpenDeleteDialog(false);
   };
 
   const confirmDelete = async () => {
-    if ( !deleteReason.trim() )
-    {
+    if (!deleteReason.trim()) {
       toastAndNavigate(
         dispatch,
         true,
@@ -229,11 +230,9 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
       return;
     }
 
-    if ( handleDeleteTicket && !isApplication )
-    {
-      try
-      {
-        await handleDeleteTicket( customerApplication.ticketId, deleteReason );
+    if (handleDeleteTicket && !isApplication) {
+      try {
+        await handleDeleteTicket(customerApplication.ticketId, deleteReason);
         toastAndNavigate(
           dispatch,
           true,
@@ -244,9 +243,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
           false
         );
         closeConfirmDialog();
-      } catch ( error )
-      {
-        console.log( "Error deleting ticket:", error );
+      } catch (error) {
+        console.log("Error deleting ticket:", error);
         toastAndNavigate(
           dispatch,
           true,
@@ -258,178 +256,164 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
         );
       }
     }
-    if ( isApplication && handleDeleteApplication )
-    {
-      handleDeleteApplication( customerApplication.applicationId );
+    if (isApplication && handleDeleteApplication) {
+      handleDeleteApplication(customerApplication.applicationId);
     }
   };
 
-  useEffect( () => {
-    if ( showHistory && customerApplication.ticketId )
-    {
+  useEffect(() => {
+    if (showHistory && customerApplication.ticketId) {
       const fetchHistoryData = async () => {
-        try
-        {
+        try {
           const { data } = await fetcher(
-            `get-ticket-histories/${ customerApplication.ticketId }`
+            `get-ticket-histories/${customerApplication.ticketId}`
           );
-          setHistoryData( data );
-        } catch ( error )
-        {
-          console.log( "Error fetching history data:", error );
+          setHistoryData(data);
+        } catch (error) {
+          console.log("Error fetching history data:", error);
         }
       };
       fetchHistoryData();
     }
-  }, [ showHistory, customerApplication?.ticketId ] );
+  }, [showHistory, customerApplication?.ticketId]);
 
-
-  useEffect( () => {
-    if ( showComment && customerApplication.ticketId )
-    {
+  useEffect(() => {
+    if (showComment && customerApplication.ticketId) {
       const fetchCommentData = async () => {
-        try
-        {
+        try {
           const { data } = await fetcher(
-            `get-ticket-activities/${ customerApplication.ticketId }`
+            `get-ticket-activities/${customerApplication.ticketId}`
           );
-          setCommentData( data );
-        } catch ( error )
-        {
-          console.log( "Error fetching history data:", error );
+          setCommentData(data);
+        } catch (error) {
+          console.log("Error fetching history data:", error);
         }
       };
       fetchCommentData();
     }
-  }, [ showComment, customerApplication?.ticketId ] );
+  }, [showComment, customerApplication?.ticketId]);
 
-
-
-  const handleCheckboxChange = async ( applicationId: number ) => {
-    try
-    {
-      const ticketResponse = await createTicket( {
+  const handleCheckboxChange = async (applicationId: number) => {
+    try {
+      const ticketResponse = await createTicket({
         customer_application_id: applicationId,
         user_id: decodedToken()?.id,
         status: "operations",
-      } );
-      if ( ticketResponse?.statusCode === 409 )
-      {
+      });
+      if (ticketResponse?.statusCode === 409) {
         toastAndNavigate(
           dispatch,
           true,
           "error",
-          'This Application Is Already Picked By Another User.Please Pick Another Application.',
+          "This Application Is Already Picked By Another User.Please Pick Another Application.",
           null,
           null,
           false,
           true
         );
 
-        dispatch( resetCustomerApplications( applicationId ) );
-      } else
-      {
-        dispatch( resetTickets() );
-        await modifyiedCustomerApplication( applicationId, {
+        dispatch(resetCustomerApplications(applicationId));
+      } else {
+        dispatch(resetTickets());
+        await modifyiedCustomerApplication(applicationId, {
           is_picked: 1,
-        } );
-        dispatch( resetCustomerApplications( applicationId ) );
+        });
+        dispatch(resetCustomerApplications(applicationId));
       }
-    } catch ( error )
-    {
-      console.log( "Error in checkbox change:", error );
+    } catch (error) {
+      console.log("Error in checkbox change:", error);
     }
   };
 
-  useEffect( () => {
+  useEffect(() => {
     // Collapse when it's an application
-    if ( isApplication )
-    {
-      setExpanded( false );
+    if (isApplication) {
+      setExpanded(false);
     }
-  }, [ isApplication ] );
+  }, [isApplication]);
 
-  const formatRupees = ( value: number ) => {
-    return new Intl.NumberFormat( "en-IN", {
+  const formatRupees = (value: number) => {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    } ).format( value );
+    }).format(value);
   };
 
   const ListView = () => {
-    const [ showAttachment, setShowAttachment ] = useState( {} );
+    const [showAttachment, setShowAttachment] = useState({});
 
-    const getFileExtensionFromUrl = ( url ) => {
-      try
-      {
-        const urlParts = url.split( "/" );
-        const filename = urlParts[ urlParts.length - 1 ];
-        const extension = filename.split( "." ).pop()?.toLowerCase();
+    const getFileExtensionFromUrl = (url) => {
+      try {
+        const urlParts = url.split("/");
+        const filename = urlParts[urlParts.length - 1];
+        const extension = filename.split(".").pop()?.toLowerCase();
         return extension || "";
-      } catch ( error )
-      {
+      } catch (error) {
         return "";
       }
     };
 
-    const isPdfAttachment = ( attachmentUrl ) => {
-      const extension = getFileExtensionFromUrl( attachmentUrl );
+    const isPdfAttachment = (attachmentUrl) => {
+      const extension = getFileExtensionFromUrl(attachmentUrl);
       return extension === "pdf";
     };
 
-    const isExcelAttachment = ( attachmentUrl ) => {
-      const extension = getFileExtensionFromUrl( attachmentUrl );
-      const excelExtensions = [ "xlsx", "xls", "csv", "xlsm", "xlsb" ];
-      return excelExtensions.includes( extension );
+    const isExcelAttachment = (attachmentUrl) => {
+      const extension = getFileExtensionFromUrl(attachmentUrl);
+      const excelExtensions = ["xlsx", "xls", "csv", "xlsm", "xlsb"];
+      return excelExtensions.includes(extension);
     };
 
-    const isImageAttachment = ( attachmentUrl ) => {
-      const extension = getFileExtensionFromUrl( attachmentUrl );
-      const imageExtensions = [ "jpg", "jpeg", "png", "gif", "bmp", "webp", "svg" ];
-      return imageExtensions.includes( extension );
+    const isImageAttachment = (attachmentUrl) => {
+      const extension = getFileExtensionFromUrl(attachmentUrl);
+      const imageExtensions = [
+        "jpg",
+        "jpeg",
+        "png",
+        "gif",
+        "bmp",
+        "webp",
+        "svg",
+      ];
+      return imageExtensions.includes(extension);
     };
 
-    const toggleAttachment = ( commentId, attachmentUrl ) => {
-      if ( isExcelAttachment( attachmentUrl ) )
-      {
-        const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${ encodeURIComponent(
+    const toggleAttachment = (commentId, attachmentUrl) => {
+      if (isExcelAttachment(attachmentUrl)) {
+        const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
           attachmentUrl
-        ) }`;
+        )}`;
 
-        const newWindow = window.open( officeViewerUrl, "_blank" );
+        const newWindow = window.open(officeViewerUrl, "_blank");
 
         if (
           !newWindow ||
           newWindow.closed ||
           typeof newWindow.closed === "undefined"
-        )
-        {
+        ) {
           const shouldDownload = window.confirm(
             "Unable to open file in viewer. Would you like to download it instead?"
           );
 
-          if ( shouldDownload )
-          {
-            const link = document.createElement( "a" );
+          if (shouldDownload) {
+            const link = document.createElement("a");
             link.href = attachmentUrl;
             link.download = "";
             link.target = "_blank";
-            document.body.appendChild( link );
+            document.body.appendChild(link);
             link.click();
-            document.body.removeChild( link );
+            document.body.removeChild(link);
           }
         }
-      } else if ( isPdfAttachment( attachmentUrl ) )
-      {
-        window.open( attachmentUrl, "_blank" );
-      } else
-      {
-        setShowAttachment( ( prev ) => ( {
+      } else if (isPdfAttachment(attachmentUrl)) {
+        window.open(attachmentUrl, "_blank");
+      } else {
+        setShowAttachment((prev) => ({
           ...prev,
-          [ commentId ]: !prev[ commentId ],
-        } ) );
+          [commentId]: !prev[commentId],
+        }));
       }
     };
 
@@ -477,15 +461,13 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
             >
               <ListItemAvatar sx={{ minWidth: isMobile ? "auto" : 60 }}>
                 <Avatar
-                  alt={
-                    capitalizeFirstLetter(
-                      customerApplication.customerName.split( "." )[ 1 ]?.trim() ||
+                  alt={capitalizeFirstLetter(
+                    customerApplication.customerName.split(".")[1]?.trim() ||
                       customerApplication.customerName
-                        .split( " " )
-                        .slice( 1 )
-                        .join( " " )
-                    )
-                  }
+                        .split(" ")
+                        .slice(1)
+                        .join(" ")
+                  )}
                   src={customerApplication.customerProfileImage}
                   sx={{
                     width: isMobile ? 40 : 32,
@@ -539,7 +521,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                   >
                     <InfoChip
                       icon={<CurrencyRupeeIcon />}
-                      text={formatRupees( customerApplication.applicationAmount )}
+                      text={formatRupees(customerApplication.applicationAmount)}
                       color="#0c66e4"
                     />
                     {customerApplication.applicationProvider && (
@@ -551,14 +533,14 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                     )}
                     <InfoChip
                       icon={<AccessTimeRounded />}
-                      text={formatTenure( customerApplication.applicationTenure )}
+                      text={formatTenure(customerApplication.applicationTenure)}
                       color="#0c66e4"
                     />
 
                     {userRole !== "sales" && (
                       <>
                         {userRole === "admin" ||
-                          customerApplication.ticketStatus !== "disbursed" ? (
+                        customerApplication.ticketStatus !== "disbursed" ? (
                           <InfoChip
                             icon={<MailRounded />}
                             text={customerApplication.customerEmail}
@@ -616,23 +598,23 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                 }}
               >
                 {/* Delete Button */}
-                {( showDeleteButton ||
-                  ( userRole === "admin" && handleDeleteTicket ) ) && (
-                    <IconButton
-                      onClick={openConfirmDialog}
-                      sx={{
-                        color: "#f44336",
-                        backgroundColor: "rgba(255,255,255,0.9)",
-                        "&:hover": {
-                          backgroundColor: "rgba(244, 67, 54, 0.1)",
-                          color: "#d32f2f",
-                        },
-                      }}
-                      size="small"
-                    >
-                      <DeleteOutline sx={{ fontSize: 16 }} />
-                    </IconButton>
-                  )}
+                {(showDeleteButton ||
+                  (userRole === "admin" && handleDeleteTicket)) && (
+                  <IconButton
+                    onClick={openConfirmDialog}
+                    sx={{
+                      color: "#f44336",
+                      backgroundColor: "rgba(255,255,255,0.9)",
+                      "&:hover": {
+                        backgroundColor: "rgba(244, 67, 54, 0.1)",
+                        color: "#d32f2f",
+                      },
+                    }}
+                    size="small"
+                  >
+                    <DeleteOutline sx={{ fontSize: 16 }} />
+                  </IconButton>
+                )}
 
                 {/* Expand/Collapse Button */}
                 {!isApplication && (
@@ -666,7 +648,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                     </Typography>
                     <Checkbox
                       onChange={() =>
-                        handleCheckboxChange( customerApplication.applicationId )
+                        handleCheckboxChange(customerApplication.applicationId)
                       }
                       size="small"
                       sx={{
@@ -694,7 +676,10 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                   ></Box>
                 ) : showHistory ? (
                   <Box>
-                    <Typography variant="subtitle1" sx={{ color: "#333", mb: 1 }}>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ color: "#333", mb: 1 }}
+                    >
                       History
                     </Typography>
                     <Box
@@ -715,7 +700,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                       }}
                     >
                       {historyData.length > 0 ? (
-                        historyData.map( ( history, index ) => (
+                        historyData.map((history, index) => (
                           <Box
                             key={index}
                             sx={{
@@ -737,18 +722,18 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                             >
                               <strong>
                                 {capitalizeFirstLetter(
-                                  history.action.split( " " )[ 0 ]
+                                  history.action.split(" ")[0]
                                 )}
                               </strong>
-                              {` ${ history.action.substring(
-                                history.action.indexOf( " " ) + 1
-                              ) }`}
+                              {` ${history.action.substring(
+                                history.action.indexOf(" ") + 1
+                              )}`}
                             </Typography>
                             <Typography
                               variant="caption"
                               sx={{ color: "#1976d2" }}
                             >
-                              {new Date( history.created_at ).toLocaleDateString(
+                              {new Date(history.created_at).toLocaleDateString(
                                 "en-IN",
                                 {
                                   day: "2-digit",
@@ -756,10 +741,10 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                                   year: "numeric",
                                 }
                               )}{" "}
-                              ({calculateDaysAgo( history.created_at )} days ago)
+                              ({calculateDaysAgo(history.created_at)} days ago)
                             </Typography>
                           </Box>
-                        ) )
+                        ))
                       ) : (
                         <Typography variant="body2" sx={{ color: "#666" }}>
                           No history data available.
@@ -770,7 +755,10 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                 ) : showComment ? (
                   // Enhanced Comment Data Section with Image Preview
                   <Box>
-                    <Typography variant="subtitle1" sx={{ color: "#333", mb: 1 }}>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ color: "#333", mb: 1 }}
+                    >
                       Comments
                     </Typography>
                     <Box
@@ -791,7 +779,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                       }}
                     >
                       {commentData?.length > 0 ? (
-                        commentData.map( ( comment, idx ) => (
+                        commentData.map((comment, idx) => (
                           <Box
                             key={idx}
                             sx={{
@@ -806,7 +794,11 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                             {/* User Name */}
                             <Typography
                               variant="subtitle2"
-                              sx={{ fontWeight: "bold", color: "black", mb: 0.25 }}
+                              sx={{
+                                fontWeight: "bold",
+                                color: "black",
+                                mb: 0.25,
+                              }}
                             >
                               {capitalizeFirstLetter(
                                 comment?.user?.username || "Anonymous"
@@ -816,9 +808,13 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                             {/* Comment Text */}
                             <Typography
                               variant="body2"
-                              sx={{ color: "black", fontStyle: "normal", mb: 0.5 }}
+                              sx={{
+                                color: "black",
+                                fontStyle: "normal",
+                                mb: 0.5,
+                              }}
                             >
-                              {capitalizeFirstLetter( comment.comment )}
+                              {capitalizeFirstLetter(comment.comment)}
                             </Typography>
 
                             {/* Attachment Section */}
@@ -826,7 +822,10 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                               <Box sx={{ mb: 0.5 }}>
                                 <Button
                                   onClick={() =>
-                                    toggleAttachment( comment.id, comment.attachment )
+                                    toggleAttachment(
+                                      comment.id,
+                                      comment.attachment
+                                    )
                                   }
                                   variant="contained"
                                   size="small"
@@ -842,20 +841,23 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                                     },
                                   }}
                                 >
-                                  {isExcelAttachment( comment.attachment )
+                                  {isExcelAttachment(comment.attachment)
                                     ? "Open Excel File"
-                                    : isPdfAttachment( comment.attachment )
-                                      ? "Open PDF"
-                                      : showAttachment[ comment.id ]
-                                        ? "Hide Attachment"
-                                        : "View Attachment"}
+                                    : isPdfAttachment(comment.attachment)
+                                    ? "Open PDF"
+                                    : showAttachment[comment.id]
+                                    ? "Hide Attachment"
+                                    : "View Attachment"}
                                 </Button>
                               </Box>
                             )}
 
                             {/* Meta Info */}
-                            <Typography variant="caption" sx={{ color: "#1976d2" }}>
-                              {new Date( comment.created_at ).toLocaleDateString(
+                            <Typography
+                              variant="caption"
+                              sx={{ color: "#1976d2" }}
+                            >
+                              {new Date(comment.created_at).toLocaleDateString(
                                 "en-IN",
                                 {
                                   day: "2-digit",
@@ -863,10 +865,10 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                                   year: "numeric",
                                 }
                               )}{" "}
-                              ({calculateDaysAgo( comment.created_at )} days ago)
+                              ({calculateDaysAgo(comment.created_at)} days ago)
                             </Typography>
                           </Box>
-                        ) )
+                        ))
                       ) : (
                         <Typography variant="body2" sx={{ color: "#666" }}>
                           No comments available.
@@ -937,12 +939,16 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
           </Paper>
         </Grid>
 
-        {Object.keys( showAttachment ).some( key => showAttachment[ key ] ) && (
-          ( () => {
-            const activeCommentId = Object.keys( showAttachment ).find( key => showAttachment[ key ] );
-            const activeComment = commentData.find( comment => comment.id.toString() === activeCommentId );
+        {Object.keys(showAttachment).some((key) => showAttachment[key]) &&
+          (() => {
+            const activeCommentId = Object.keys(showAttachment).find(
+              (key) => showAttachment[key]
+            );
+            const activeComment = commentData.find(
+              (comment) => comment.id.toString() === activeCommentId
+            );
 
-            if ( !activeComment || !activeComment.attachment ) return null;
+            if (!activeComment || !activeComment.attachment) return null;
 
             return (
               <>
@@ -956,7 +962,9 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                     backgroundColor: "rgba(0, 0, 0, 0.8)",
                     zIndex: 999,
                   }}
-                  onClick={() => toggleAttachment( activeComment.id, activeComment.attachment )}
+                  onClick={() =>
+                    toggleAttachment(activeComment.id, activeComment.attachment)
+                  }
                 />
 
                 {/* Modal Content */}
@@ -995,7 +1003,12 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                       Attachment Preview
                     </Typography>
                     <Button
-                      onClick={() => toggleAttachment( activeComment.id, activeComment.attachment )}
+                      onClick={() =>
+                        toggleAttachment(
+                          activeComment.id,
+                          activeComment.attachment
+                        )
+                      }
                       variant="contained"
                       size="small"
                       sx={{
@@ -1032,19 +1045,19 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                         objectFit: "contain",
                         borderRadius: "4px",
                       }}
-                      onError={( e ) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'block';
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                        e.target.nextSibling.style.display = "block";
                       }}
                     />
                     <Box
                       sx={{
-                        display: 'none',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        height: '200px',
-                        color: '#666',
-                        flexDirection: 'column'
+                        display: "none",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: "200px",
+                        color: "#666",
+                        flexDirection: "column",
                       }}
                     >
                       <Typography>Unable to preview this file</Typography>
@@ -1061,92 +1074,105 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                 </Box>
               </>
             );
-          } )()
-        )}
+          })()}
       </>
     );
   };
 
+  // Ok or responsive //
+
   const GridView = () => {
-    const isSalesUser = userRole === "sales" || decodedToken()?.role === "sales";
-    const [ showAttachment, setShowAttachment ] = useState( {} );
+    const isSalesUser =
+      userRole === "sales" || decodedToken()?.role === "sales";
+    const [showAttachment, setShowAttachment] = useState({});
 
     // Helper functions for file handling
-    const getFileExtensionFromUrl = ( url ) => {
-      try
-      {
-        const urlParts = url.split( "/" );
-        const filename = urlParts[ urlParts.length - 1 ];
-        const extension = filename.split( "." ).pop()?.toLowerCase();
+    const getFileExtensionFromUrl = (url) => {
+      try {
+        const urlParts = url.split("/");
+        const filename = urlParts[urlParts.length - 1];
+        const extension = filename.split(".").pop()?.toLowerCase();
         return extension || "";
-      } catch ( error )
-      {
+      } catch (error) {
         return "";
       }
     };
 
-    const isPdfAttachment = ( attachmentUrl ) => {
-      const extension = getFileExtensionFromUrl( attachmentUrl );
+    const isPdfAttachment = (attachmentUrl) => {
+      const extension = getFileExtensionFromUrl(attachmentUrl);
       return extension === "pdf";
     };
 
-    const isExcelAttachment = ( attachmentUrl ) => {
-      const extension = getFileExtensionFromUrl( attachmentUrl );
-      const excelExtensions = [ "xlsx", "xls", "csv", "xlsm", "xlsb" ];
-      return excelExtensions.includes( extension );
+    const isExcelAttachment = (attachmentUrl) => {
+      const extension = getFileExtensionFromUrl(attachmentUrl);
+      const excelExtensions = ["xlsx", "xls", "csv", "xlsm", "xlsb"];
+      return excelExtensions.includes(extension);
     };
 
-    const isImageAttachment = ( attachmentUrl ) => {
-      const extension = getFileExtensionFromUrl( attachmentUrl );
-      const imageExtensions = [ "jpg", "jpeg", "png", "gif", "bmp", "webp", "svg" ];
-      return imageExtensions.includes( extension );
+    const isImageAttachment = (attachmentUrl) => {
+      const extension = getFileExtensionFromUrl(attachmentUrl);
+      const imageExtensions = [
+        "jpg",
+        "jpeg",
+        "png",
+        "gif",
+        "bmp",
+        "webp",
+        "svg",
+      ];
+      return imageExtensions.includes(extension);
     };
 
-    const toggleAttachment = ( commentId, attachmentUrl ) => {
-      if ( isExcelAttachment( attachmentUrl ) )
-      {
-        const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${ encodeURIComponent(
+    const toggleAttachment = (commentId, attachmentUrl) => {
+      if (isExcelAttachment(attachmentUrl)) {
+        const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
           attachmentUrl
-        ) }`;
+        )}`;
 
-        const newWindow = window.open( officeViewerUrl, "_blank" );
+        const newWindow = window.open(officeViewerUrl, "_blank");
 
         if (
           !newWindow ||
           newWindow.closed ||
           typeof newWindow.closed === "undefined"
-        )
-        {
+        ) {
           const shouldDownload = window.confirm(
             "Unable to open file in viewer. Would you like to download it instead?"
           );
 
-          if ( shouldDownload )
-          {
-            const link = document.createElement( "a" );
+          if (shouldDownload) {
+            const link = document.createElement("a");
             link.href = attachmentUrl;
             link.download = "";
             link.target = "_blank";
-            document.body.appendChild( link );
+            document.body.appendChild(link);
             link.click();
-            document.body.removeChild( link );
+            document.body.removeChild(link);
           }
         }
-      } else if ( isPdfAttachment( attachmentUrl ) )
-      {
-        window.open( attachmentUrl, "_blank" );
-      } else
-      {
+      } else if (isPdfAttachment(attachmentUrl)) {
+        window.open(attachmentUrl, "_blank");
+      } else {
         // For images and other files, use modal behavior
-        setShowAttachment( ( prev ) => ( {
+        setShowAttachment((prev) => ({
           ...prev,
-          [ commentId ]: !prev[ commentId ],
-        } ) );
+          [commentId]: !prev[commentId],
+        }));
       }
     };
 
     return (
-      <Grid item xs={12} sm={6} md={4} key={customerApplication.customerId}>
+      <Grid
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+        }}
+        item
+        xs={12}
+        sm={6}
+        md={4}
+        key={customerApplication.customerId}
+      >
         <Card
           sx={{
             maxWidth: 345,
@@ -1156,7 +1182,9 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
             boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
             backgroundImage: "linear-gradient(135deg, #fff 0%, #fff 100%)",
             backgroundBlendMode: "multiply, screen, normal",
-            pt: isMobile ? 3 : 5,
+            pt: isMobile ? 3 : isTab ? 4 : 5,
+            minHeight: isMobile ? "220px" : isTab ? "280px" : "300px",
+            height: "auto",
             mt: 5,
           }}
         >
@@ -1191,15 +1219,13 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
               }}
             >
               <Avatar
-                alt={
-                  capitalizeFirstLetter(
-                    customerApplication.customerName.split( "." )[ 1 ]?.trim() ||
+                alt={capitalizeFirstLetter(
+                  customerApplication.customerName.split(".")[1]?.trim() ||
                     customerApplication.customerName
-                      .split( " " )
-                      .slice( 1 )
-                      .join( " " )
-                  )
-                }
+                      .split(" ")
+                      .slice(1)
+                      .join(" ")
+                )}
                 src={customerApplication.customerProfileImage}
                 sx={{
                   width: 80,
@@ -1239,6 +1265,9 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                   fontSize: "1.3rem",
                   height: isMobile ? "7vh" : isTab ? "4vh" : "8vh",
                   width: isMobile ? "80vw" : isTab ? "25vw" : "30vw",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
                 {customerApplication.customerName?.toUpperCase()}
@@ -1283,15 +1312,24 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                   borderRadius: "10px 10px 0px 0px",
                   p: isSalesUser ? 1.5 : 2,
                   height: isSalesUser
-                    ? isMobile ? "30vh" : isTab ? "28vh" : "40vh"
-                    : isMobile ? "42vh" : isTab ? "38vh" : "60vh",
+                    ? isMobile
+                      ? "30vh"
+                      : isTab
+                      ? "28vh"
+                      : "40vh"
+                    : isMobile
+                    ? "42vh"
+                    : isTab
+                    ? "30vh"
+                    : "50vh",
                 }}
               >
                 {userRole !== "sales" && (
                   <InfoRow
                     icon={<MailRounded />}
                     text={
-                      userRole === "admin" || customerApplication.ticketStatus !== "disbursed"
+                      userRole === "admin" ||
+                      customerApplication.ticketStatus !== "disbursed"
                         ? customerApplication.customerEmail
                         : "N/A"
                     }
@@ -1300,11 +1338,11 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
 
                 <InfoRow
                   icon={<CurrencyRupeeIcon />}
-                  text={formatRupees( customerApplication.applicationAmount )}
+                  text={formatRupees(customerApplication.applicationAmount)}
                 />
                 <InfoRow
                   icon={<AccessTimeRounded />}
-                  text={formatTenure( customerApplication.applicationTenure )}
+                  text={formatTenure(customerApplication.applicationTenure)}
                 />
                 <InfoRow
                   icon={<AccountBalanceIcon />}
@@ -1343,15 +1381,23 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                   minHeight: isMobile ? "35vh" : isTab ? "20vh" : "40vh",
                   overflowY: "scroll",
                   height: isSalesUser
-                    ? isMobile ? "30vh" : isTab ? "28vh" : "35vh"
-                    : isMobile ? "42vh" : isTab ? "38vh" : "60vh",
+                    ? isMobile
+                      ? "30vh"
+                      : isTab
+                      ? "28vh"
+                      : "35vh"
+                    : isMobile
+                    ? "42vh"
+                    : isTab
+                    ? "38vh"
+                    : "60vh",
                   "&::-webkit-scrollbar": {
                     display: "none",
                   },
                 }}
               >
                 {historyData.length > 0 ? (
-                  historyData.map( ( history, index ) => (
+                  historyData.map((history, index) => (
                     <Box
                       key={index}
                       sx={{ display: "flex", flexDirection: "column", mb: 2 }}
@@ -1361,21 +1407,26 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                         sx={{ color: "black", fontStyle: "normal", mb: 1 }}
                       >
                         <strong>
-                          {capitalizeFirstLetter( history.action.split( " " )[ 0 ] )}
+                          {capitalizeFirstLetter(history.action.split(" ")[0])}
                         </strong>
-                        {` ${ history.action.substring(
-                          history.action.indexOf( " " ) + 1
-                        ) }`}
+                        {` ${history.action.substring(
+                          history.action.indexOf(" ") + 1
+                        )}`}
                       </Typography>
                       <Typography variant="caption" sx={{ color: "blue" }}>
-                        Created At: {new Date( history.created_at ).toLocaleDateString( 'en-IN', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric',
-                        } )} ({calculateDaysAgo( history.created_at )} days ago)
+                        Created At:{" "}
+                        {new Date(history.created_at).toLocaleDateString(
+                          "en-IN",
+                          {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          }
+                        )}{" "}
+                        ({calculateDaysAgo(history.created_at)} days ago)
                       </Typography>
                     </Box>
-                  ) )
+                  ))
                 ) : (
                   <Typography variant="body2" sx={{ color: "#333" }}>
                     No history data available.
@@ -1398,7 +1449,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                 }}
               >
                 {commentData?.length > 0 ? (
-                  commentData.map( ( comment, idx ) => (
+                  commentData.map((comment, idx) => (
                     <Box
                       key={idx}
                       sx={{ display: "flex", flexDirection: "column", mb: 2 }}
@@ -1408,7 +1459,9 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                         variant="subtitle2"
                         sx={{ fontWeight: "bold", color: "black" }}
                       >
-                        {capitalizeFirstLetter( comment?.user?.username || "Anonymous" )}
+                        {capitalizeFirstLetter(
+                          comment?.user?.username || "Anonymous"
+                        )}
                       </Typography>
 
                       {/* Comment Text */}
@@ -1416,14 +1469,16 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                         variant="body2"
                         sx={{ color: "black", fontStyle: "normal", mb: 1 }}
                       >
-                        {capitalizeFirstLetter( comment.comment )}
+                        {capitalizeFirstLetter(comment.comment)}
                       </Typography>
 
                       {/* Attachment Section */}
                       {comment.attachment && (
                         <Box sx={{ mb: 1 }}>
                           <Button
-                            onClick={() => toggleAttachment( comment.id, comment.attachment )}
+                            onClick={() =>
+                              toggleAttachment(comment.id, comment.attachment)
+                            }
                             variant="contained"
                             size="small"
                             sx={{
@@ -1438,19 +1493,19 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                               },
                             }}
                           >
-                            {isExcelAttachment( comment.attachment )
+                            {isExcelAttachment(comment.attachment)
                               ? "Open Excel File"
-                              : isPdfAttachment( comment.attachment )
-                                ? "Open PDF"
-                                : showAttachment[ comment.id ]
-                                  ? "Hide Attachment"
-                                  : "View Attachment"}
+                              : isPdfAttachment(comment.attachment)
+                              ? "Open PDF"
+                              : showAttachment[comment.id]
+                              ? "Hide Attachment"
+                              : "View Attachment"}
                           </Button>
 
                           {/* Image/PDF Preview Modal */}
-                          {!isExcelAttachment( comment.attachment ) &&
-                            !isPdfAttachment( comment.attachment ) &&
-                            showAttachment[ comment.id ] && (
+                          {!isExcelAttachment(comment.attachment) &&
+                            !isPdfAttachment(comment.attachment) &&
+                            showAttachment[comment.id] && (
                               <>
                                 {/* Backdrop */}
                                 <Box
@@ -1463,7 +1518,12 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                                     backgroundColor: "rgba(0, 0, 0, 0.8)",
                                     zIndex: 999,
                                   }}
-                                  onClick={() => toggleAttachment( comment.id, comment.attachment )}
+                                  onClick={() =>
+                                    toggleAttachment(
+                                      comment.id,
+                                      comment.attachment
+                                    )
+                                  }
                                 />
 
                                 {/* Modal Content */}
@@ -1476,11 +1536,20 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                                     zIndex: 1000,
                                     backgroundColor: "white",
                                     borderRadius: "8px",
-                                    boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.3)",
+                                    boxShadow:
+                                      "0px 4px 20px rgba(0, 0, 0, 0.3)",
                                     padding: 2,
                                     textAlign: "center",
-                                    height: isMobile ? "80vh" : isTab ? "80vh" : "85vh",
-                                    width: isMobile ? "95vw" : isTab ? "85vw" : "80vw",
+                                    height: isMobile
+                                      ? "80vh"
+                                      : isTab
+                                      ? "80vh"
+                                      : "85vh",
+                                    width: isMobile
+                                      ? "95vw"
+                                      : isTab
+                                      ? "85vw"
+                                      : "80vw",
                                     maxHeight: "90vh",
                                     maxWidth: "90vw",
                                     display: "flex",
@@ -1498,11 +1567,19 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                                       pb: 1,
                                     }}
                                   >
-                                    <Typography variant="h6" sx={{ color: "black" }}>
+                                    <Typography
+                                      variant="h6"
+                                      sx={{ color: "black" }}
+                                    >
                                       Attachment Preview
                                     </Typography>
                                     <Button
-                                      onClick={() => toggleAttachment( comment.id, comment.attachment )}
+                                      onClick={() =>
+                                        toggleAttachment(
+                                          comment.id,
+                                          comment.attachment
+                                        )
+                                      }
                                       variant="contained"
                                       size="small"
                                       sx={{
@@ -1539,22 +1616,25 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                                         objectFit: "contain",
                                         borderRadius: "4px",
                                       }}
-                                      onError={( e ) => {
-                                        e.target.style.display = 'none';
-                                        e.target.nextSibling.style.display = 'block';
+                                      onError={(e) => {
+                                        e.target.style.display = "none";
+                                        e.target.nextSibling.style.display =
+                                          "block";
                                       }}
                                     />
                                     <Box
                                       sx={{
-                                        display: 'none',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        height: '200px',
-                                        color: '#666',
-                                        flexDirection: 'column'
+                                        display: "none",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        height: "200px",
+                                        color: "#666",
+                                        flexDirection: "column",
                                       }}
                                     >
-                                      <Typography>Unable to preview this file</Typography>
+                                      <Typography>
+                                        Unable to preview this file
+                                      </Typography>
                                       <Button
                                         href={comment.attachment}
                                         target="_blank"
@@ -1573,15 +1653,18 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
 
                       {/* Meta Info */}
                       <Typography variant="caption" sx={{ color: "blue" }}>
-                        {new Date( comment.created_at ).toLocaleDateString( "en-IN", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        } )}{" "}
-                        ({calculateDaysAgo( comment.created_at )} days ago)
+                        {new Date(comment.created_at).toLocaleDateString(
+                          "en-IN",
+                          {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          }
+                        )}{" "}
+                        ({calculateDaysAgo(comment.created_at)} days ago)
                       </Typography>
                     </Box>
-                  ) )
+                  ))
                 ) : (
                   <Typography variant="body2" sx={{ color: "#333" }}>
                     No comments available.
@@ -1724,7 +1807,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                     </Typography>
                     <Checkbox
                       onChange={() =>
-                        handleCheckboxChange( customerApplication.applicationId )
+                        handleCheckboxChange(customerApplication.applicationId)
                       }
                       size="small"
                       sx={{
@@ -1744,93 +1827,103 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
     );
   };
   const TableView = () => {
-    const [ showAttachment, setShowAttachment ] = useState( {} );
-    const [ currentAttachment, setCurrentAttachment ] = useState( null );
+    const [showAttachment, setShowAttachment] = useState({});
+    const [currentAttachment, setCurrentAttachment] = useState(null);
 
     // Helper functions for file handling
-    const getFileExtensionFromUrl = ( url ) => {
-      try
-      {
-        const urlParts = url.split( "/" );
-        const filename = urlParts[ urlParts.length - 1 ];
-        const extension = filename.split( "." ).pop()?.toLowerCase();
+    const getFileExtensionFromUrl = (url) => {
+      try {
+        const urlParts = url.split("/");
+        const filename = urlParts[urlParts.length - 1];
+        const extension = filename.split(".").pop()?.toLowerCase();
         return extension || "";
-      } catch ( error )
-      {
+      } catch (error) {
         return "";
       }
     };
 
-    const isPdfAttachment = ( attachmentUrl ) => {
-      const extension = getFileExtensionFromUrl( attachmentUrl );
+    const isPdfAttachment = (attachmentUrl) => {
+      const extension = getFileExtensionFromUrl(attachmentUrl);
       return extension === "pdf";
     };
 
-    const isExcelAttachment = ( attachmentUrl ) => {
-      const extension = getFileExtensionFromUrl( attachmentUrl );
-      const excelExtensions = [ "xlsx", "xls", "csv", "xlsm", "xlsb" ];
-      return excelExtensions.includes( extension );
+    const isExcelAttachment = (attachmentUrl) => {
+      const extension = getFileExtensionFromUrl(attachmentUrl);
+      const excelExtensions = ["xlsx", "xls", "csv", "xlsm", "xlsb"];
+      return excelExtensions.includes(extension);
     };
 
-    const isImageAttachment = ( attachmentUrl ) => {
-      const extension = getFileExtensionFromUrl( attachmentUrl );
-      const imageExtensions = [ "jpg", "jpeg", "png", "gif", "bmp", "webp", "svg" ];
-      return imageExtensions.includes( extension );
+    const isImageAttachment = (attachmentUrl) => {
+      const extension = getFileExtensionFromUrl(attachmentUrl);
+      const imageExtensions = [
+        "jpg",
+        "jpeg",
+        "png",
+        "gif",
+        "bmp",
+        "webp",
+        "svg",
+      ];
+      return imageExtensions.includes(extension);
     };
 
-    const handleOpenAttachment = ( commentId, attachmentUrl ) => {
-      if ( isExcelAttachment( attachmentUrl ) )
-      {
-        const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${ encodeURIComponent(
+    const handleOpenAttachment = (commentId, attachmentUrl) => {
+      if (isExcelAttachment(attachmentUrl)) {
+        const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
           attachmentUrl
-        ) }`;
+        )}`;
 
-        const newWindow = window.open( officeViewerUrl, "_blank" );
+        const newWindow = window.open(officeViewerUrl, "_blank");
 
-        if ( !newWindow || newWindow.closed || typeof newWindow.closed === "undefined" )
-        {
+        if (
+          !newWindow ||
+          newWindow.closed ||
+          typeof newWindow.closed === "undefined"
+        ) {
           const shouldDownload = window.confirm(
             "Unable to open file in viewer. Would you like to download it instead?"
           );
 
-          if ( shouldDownload )
-          {
-            const link = document.createElement( "a" );
+          if (shouldDownload) {
+            const link = document.createElement("a");
             link.href = attachmentUrl;
             link.download = "";
             link.target = "_blank";
-            document.body.appendChild( link );
+            document.body.appendChild(link);
             link.click();
-            document.body.removeChild( link );
+            document.body.removeChild(link);
           }
         }
-      } else if ( isPdfAttachment( attachmentUrl ) )
-      {
-        window.open( attachmentUrl, "_blank" );
-      } else
-      {
-        setCurrentAttachment( { commentId, url: attachmentUrl } );
-        setShowAttachment( prev => ( { ...prev, [ commentId ]: true } ) );
+      } else if (isPdfAttachment(attachmentUrl)) {
+        window.open(attachmentUrl, "_blank");
+      } else {
+        setCurrentAttachment({ commentId, url: attachmentUrl });
+        setShowAttachment((prev) => ({ ...prev, [commentId]: true }));
       }
     };
 
     const handleCloseAttachment = () => {
-      if ( currentAttachment )
-      {
-        setShowAttachment( prev => ( { ...prev, [ currentAttachment.commentId ]: false } ) );
-        setCurrentAttachment( null );
+      if (currentAttachment) {
+        setShowAttachment((prev) => ({
+          ...prev,
+          [currentAttachment.commentId]: false,
+        }));
+        setCurrentAttachment(null);
       }
     };
 
     return (
       <>
-        <TableRow key={customerApplication.customerId} sx={{
-          '&:nth-of-type(odd)': { backgroundColor: 'rgba(0, 0, 0, 0.04)' },
-          '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.08)' }
-        }}>
+        <TableRow
+          key={customerApplication.customerId}
+          sx={{
+            "&:nth-of-type(odd)": { backgroundColor: "rgba(0, 0, 0, 0.04)" },
+            "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.08)" },
+          }}
+        >
           {/* Name */}
           <TableCell>
-            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+            <Typography variant="body2" sx={{ fontWeight: "bold" }}>
               {customerApplication.customerName?.toUpperCase()}
             </Typography>
           </TableCell>
@@ -1839,10 +1932,10 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
           {userRole !== "sales" && (
             <TableCell>
               <Typography variant="body2">
-                {( userRole === "admin" || customerApplication.ticketStatus !== "disbursed" )
+                {userRole === "admin" ||
+                customerApplication.ticketStatus !== "disbursed"
                   ? customerApplication.customerEmail
-                  : "N/A"
-                }
+                  : "N/A"}
               </Typography>
             </TableCell>
           )}
@@ -1852,16 +1945,16 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
             <Typography
               variant="body2"
               sx={{
-                fontWeight: 'medium',
-                color: '#00796B',
-                '&:hover': {
-                  color: '#004D40',
-                  cursor: 'pointer'
-                }
+                fontWeight: "medium",
+                color: "#00796B",
+                "&:hover": {
+                  color: "#004D40",
+                  cursor: "pointer",
+                },
               }}
               className="amount-link"
             >
-              {formatRupees( customerApplication.applicationAmount )}
+              {formatRupees(customerApplication.applicationAmount)}
             </Typography>
           </TableCell>
 
@@ -1869,16 +1962,16 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
           <TableCell>
             <Typography
               variant="body2"
-              sx={{ color: '#6A0DAD', fontWeight: 600 }}
+              sx={{ color: "#6A0DAD", fontWeight: 600 }}
             >
-              {customerApplication.applicationProvider || 'N/A'}
+              {customerApplication.applicationProvider || "N/A"}
             </Typography>
           </TableCell>
 
           {/* Tenure */}
           <TableCell>
             <Typography variant="body2">
-              {formatTenure( customerApplication.applicationTenure )}
+              {formatTenure(customerApplication.applicationTenure)}
             </Typography>
           </TableCell>
 
@@ -1886,38 +1979,50 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
           <TableCell>
             <Typography variant="body2">
               {customerApplication.customerLocation
-                ? capitalizeFirstLetter( customerApplication.customerLocation )
-                : 'N/A'},
-              <br></br>
+                ? capitalizeFirstLetter(customerApplication.customerLocation)
+                : "N/A"}
+              ,<br></br>
               {customerApplication.customerState
-                ? capitalizeFirstLetter( customerApplication.customerState )
-                : 'N/A'}
+                ? capitalizeFirstLetter(customerApplication.customerState)
+                : "N/A"}
             </Typography>
           </TableCell>
 
           {/* Created At */}
           <TableCell>
             <Typography variant="body2">
-              {customerApplication?.createdAt || customerApplication?.applicationDate
-                ? new Date( customerApplication.createdAt || customerApplication.applicationDate ).toLocaleDateString( 'en-IN', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                } )
+              {customerApplication?.createdAt ||
+              customerApplication?.applicationDate
+                ? new Date(
+                    customerApplication.createdAt ||
+                      customerApplication.applicationDate
+                  ).toLocaleDateString("en-IN", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })
                 : "N/A"}
             </Typography>
           </TableCell>
 
           {/* Actions */}
           <TableCell>
-            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', justifyContent: "flex-end" }}>
+            <Box
+              sx={{
+                display: "flex",
+                gap: 1,
+                alignItems: "center",
+                justifyContent: "flex-end",
+              }}
+            >
               {/* Delete Button */}
-              {( showDeleteButton || ( userRole === "admin" && handleDeleteTicket ) ) && (
+              {(showDeleteButton ||
+                (userRole === "admin" && handleDeleteTicket)) && (
                 <IconButton
                   onClick={openConfirmDialog}
                   sx={{
                     color: "#f44336",
-                    '&:hover': {
+                    "&:hover": {
                       backgroundColor: "rgba(244, 67, 54, 0.1)",
                       color: "#d32f2f",
                     },
@@ -1941,8 +2046,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                       borderColor: "#5a6fd8",
                       bgcolor: "rgba(102, 126, 234, 0.04)",
                     },
-                    textTransform: 'none',
-                    fontSize: '0.75rem',
+                    textTransform: "none",
+                    fontSize: "0.75rem",
                   }}
                 >
                   {showHistory ? "Close History" : "History"}
@@ -1950,34 +2055,41 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
               )}
 
               {/* Comments Button (only for tickets) */}
-              {handleStartClick && customerApplication.ticketId && userRole === "sales" && (
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={toggleComment}
-                  sx={{
-                    borderColor: "#667eea",
-                    color: "#667eea",
-                    "&:hover": {
-                      borderColor: "#5a6fd8",
-                      bgcolor: "rgba(102, 126, 234, 0.04)",
-                    },
-                    textTransform: 'none',
-                    fontSize: '0.75rem',
-                  }}
-                >
-                  {showComment ? "Close Comments" : "Comments"}
-                </Button>
-              )}
+              {handleStartClick &&
+                customerApplication.ticketId &&
+                userRole === "sales" && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={toggleComment}
+                    sx={{
+                      borderColor: "#667eea",
+                      color: "#667eea",
+                      "&:hover": {
+                        borderColor: "#5a6fd8",
+                        bgcolor: "rgba(102, 126, 234, 0.04)",
+                      },
+                      textTransform: "none",
+                      fontSize: "0.75rem",
+                    }}
+                  >
+                    {showComment ? "Close Comments" : "Comments"}
+                  </Button>
+                )}
 
               {/* Pick Checkbox */}
               {decodedToken()?.role !== "sales" && !handleStartClick && (
                 <Box sx={{ display: "flex", alignItems: "center" }}>
-                  <Typography variant="caption" sx={{ mr: 0.5, fontWeight: "bold" }}>
+                  <Typography
+                    variant="caption"
+                    sx={{ mr: 0.5, fontWeight: "bold" }}
+                  >
                     Pick
                   </Typography>
                   <Checkbox
-                    onChange={() => handleCheckboxChange( customerApplication.applicationId )}
+                    onChange={() =>
+                      handleCheckboxChange(customerApplication.applicationId)
+                    }
                     size="small"
                     sx={{
                       color: "#666",
@@ -1990,21 +2102,25 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
               )}
 
               {/* Visit Ticket Button (if applicable) */}
-              {handleStartClick && customerApplication.ticketId && userRole !== "sales" && (
-                <Button
-                  variant="contained"
-                  size="small"
-                  onClick={() => handleStartClick( customerApplication.ticketId )}
-                  sx={{
-                    bgcolor: "#1976D2",
-                    "&:hover": { bgcolor: "#1565C0" },
-                    textTransform: 'none',
-                    fontSize: '0.75rem',
-                  }}
-                >
-                  Visit
-                </Button>
-              )}
+              {handleStartClick &&
+                customerApplication.ticketId &&
+                userRole !== "sales" && (
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={() =>
+                      handleStartClick(customerApplication.ticketId)
+                    }
+                    sx={{
+                      bgcolor: "#1976D2",
+                      "&:hover": { bgcolor: "#1565C0" },
+                      textTransform: "none",
+                      fontSize: "0.75rem",
+                    }}
+                  >
+                    Visit
+                  </Button>
+                )}
             </Box>
           </TableCell>
         </TableRow>
@@ -2012,13 +2128,16 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
         {/* History Row - appears when showHistory is true */}
         {showHistory && customerApplication.ticketId && (
           <TableRow>
-            <TableCell colSpan={11} sx={{ bgcolor: '#f5f5f5', p: 2 }}>
-              <Typography variant="h6" sx={{ color: '#333', mb: 2, fontWeight: 'bold' }}>
+            <TableCell colSpan={11} sx={{ bgcolor: "#f5f5f5", p: 2 }}>
+              <Typography
+                variant="h6"
+                sx={{ color: "#333", mb: 2, fontWeight: "bold" }}
+              >
                 History
               </Typography>
-              <Box sx={{ maxHeight: '200px', overflowY: 'auto' }}>
+              <Box sx={{ maxHeight: "200px", overflowY: "auto" }}>
                 {historyData.length > 0 ? (
-                  historyData.map( ( history, index ) => (
+                  historyData.map((history, index) => (
                     <Box
                       key={index}
                       sx={{
@@ -2028,7 +2147,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                         p: 1.5,
                         bgcolor: "white",
                         borderRadius: 1,
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
                       }}
                     >
                       <Typography
@@ -2040,28 +2159,30 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                         }}
                       >
                         <strong>
-                          {capitalizeFirstLetter(
-                            history.action.split( " " )[ 0 ]
-                          )}
+                          {capitalizeFirstLetter(history.action.split(" ")[0])}
                         </strong>
-                        {` ${ history.action.substring(
-                          history.action.indexOf( " " ) + 1
-                        ) }`}
+                        {` ${history.action.substring(
+                          history.action.indexOf(" ") + 1
+                        )}`}
                       </Typography>
-                      <Typography
-                        variant="caption"
-                        sx={{ color: "#1976d2" }}
-                      >
-                        {new Date( history.created_at ).toLocaleDateString( 'en-IN', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric',
-                        } )} ({calculateDaysAgo( history.created_at )} days ago)
+                      <Typography variant="caption" sx={{ color: "#1976d2" }}>
+                        {new Date(history.created_at).toLocaleDateString(
+                          "en-IN",
+                          {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          }
+                        )}{" "}
+                        ({calculateDaysAgo(history.created_at)} days ago)
                       </Typography>
                     </Box>
-                  ) )
+                  ))
                 ) : (
-                  <Typography variant="body2" sx={{ color: "#666", textAlign: 'center' }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "#666", textAlign: "center" }}
+                  >
                     No history data available.
                   </Typography>
                 )}
@@ -2073,13 +2194,16 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
         {/* Comments Row - appears when showComment is true */}
         {showComment && customerApplication.ticketId && (
           <TableRow>
-            <TableCell colSpan={11} sx={{ bgcolor: '#f5f5f5', p: 2 }}>
-              <Typography variant="h6" sx={{ color: '#333', mb: 2, fontWeight: 'bold' }}>
+            <TableCell colSpan={11} sx={{ bgcolor: "#f5f5f5", p: 2 }}>
+              <Typography
+                variant="h6"
+                sx={{ color: "#333", mb: 2, fontWeight: "bold" }}
+              >
                 Comments
               </Typography>
-              <Box sx={{ maxHeight: '200px', overflowY: 'auto' }}>
+              <Box sx={{ maxHeight: "200px", overflowY: "auto" }}>
                 {commentData?.length > 0 ? (
-                  commentData.map( ( comment, idx ) => (
+                  commentData.map((comment, idx) => (
                     <Box
                       key={idx}
                       sx={{
@@ -2089,7 +2213,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                         p: 1.5,
                         bgcolor: "white",
                         borderRadius: 1,
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
                       }}
                     >
                       {/* User Name */}
@@ -2097,7 +2221,9 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                         variant="subtitle2"
                         sx={{ fontWeight: "bold", color: "black", mb: 0.5 }}
                       >
-                        {capitalizeFirstLetter( comment?.user.username || "Anonymous" )}
+                        {capitalizeFirstLetter(
+                          comment?.user.username || "Anonymous"
+                        )}
                       </Typography>
 
                       {/* Comment Text */}
@@ -2105,14 +2231,19 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                         variant="body2"
                         sx={{ color: "black", fontStyle: "normal", mb: 0.5 }}
                       >
-                        {capitalizeFirstLetter( comment.comment )}
+                        {capitalizeFirstLetter(comment.comment)}
                       </Typography>
 
                       {/* Attachment Section */}
                       {comment.attachment && (
                         <Box sx={{ mb: 0.5 }}>
                           <Button
-                            onClick={() => handleOpenAttachment( comment.id, comment.attachment )}
+                            onClick={() =>
+                              handleOpenAttachment(
+                                comment.id,
+                                comment.attachment
+                              )
+                            }
                             variant="contained"
                             size="small"
                             sx={{
@@ -2127,28 +2258,34 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                               },
                             }}
                           >
-                            {isExcelAttachment( comment.attachment )
+                            {isExcelAttachment(comment.attachment)
                               ? "Open Excel"
-                              : isPdfAttachment( comment.attachment )
-                                ? "Open PDF"
-                                : "View Attachment"}
+                              : isPdfAttachment(comment.attachment)
+                              ? "Open PDF"
+                              : "View Attachment"}
                           </Button>
                         </Box>
                       )}
 
                       {/* Meta Info */}
                       <Typography variant="caption" sx={{ color: "#1976d2" }}>
-                        {new Date( comment.created_at ).toLocaleDateString( "en-IN", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        } )}{" "}
-                        ({calculateDaysAgo( comment.created_at )} days ago)
+                        {new Date(comment.created_at).toLocaleDateString(
+                          "en-IN",
+                          {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          }
+                        )}{" "}
+                        ({calculateDaysAgo(comment.created_at)} days ago)
                       </Typography>
                     </Box>
-                  ) )
+                  ))
                 ) : (
-                  <Typography variant="body2" sx={{ color: "#666", textAlign: 'center' }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "#666", textAlign: "center" }}
+                  >
                     No comments available.
                   </Typography>
                 )}
@@ -2158,37 +2295,37 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
         )}
 
         {/* Image Preview Modal */}
-        {currentAttachment && showAttachment[ currentAttachment.commentId ] && (
+        {currentAttachment && showAttachment[currentAttachment.commentId] && (
           <Modal
-            open={showAttachment[ currentAttachment.commentId ]}
+            open={showAttachment[currentAttachment.commentId]}
             onClose={handleCloseAttachment}
             sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             <Box
               sx={{
-                position: 'relative',
-                bgcolor: 'white',
-                borderRadius: '8px',
+                position: "relative",
+                bgcolor: "white",
+                borderRadius: "8px",
                 boxShadow: 24,
                 p: 2,
-                width: isMobile ? '95vw' : '80vw',
-                height: isMobile ? '80vh' : '85vh',
-                maxWidth: '90vw',
-                maxHeight: '90vh',
-                outline: 'none',
+                width: isMobile ? "95vw" : "80vw",
+                height: isMobile ? "80vh" : "85vh",
+                maxWidth: "90vw",
+                maxHeight: "90vh",
+                outline: "none",
               }}
             >
               <Box
                 sx={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                   mb: 2,
-                  borderBottom: '1px solid #eee',
+                  borderBottom: "1px solid #eee",
                   pb: 1,
                 }}
               >
@@ -2196,7 +2333,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                 <IconButton
                   onClick={handleCloseAttachment}
                   sx={{
-                    color: 'red',
+                    color: "red",
                   }}
                 >
                   <Close />
@@ -2205,35 +2342,35 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
 
               <Box
                 sx={{
-                  height: 'calc(100% - 56px)',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  overflow: 'hidden',
+                  height: "calc(100% - 56px)",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  overflow: "hidden",
                 }}
               >
-                {isImageAttachment( currentAttachment.url ) ? (
+                {isImageAttachment(currentAttachment.url) ? (
                   <img
                     src={currentAttachment.url}
                     alt="Attachment Preview"
                     style={{
-                      maxHeight: '100%',
-                      maxWidth: '100%',
-                      objectFit: 'contain',
+                      maxHeight: "100%",
+                      maxWidth: "100%",
+                      objectFit: "contain",
                     }}
-                    onError={( e ) => {
-                      e.target.style.display = 'none';
+                    onError={(e) => {
+                      e.target.style.display = "none";
                     }}
                   />
                 ) : (
                   <Box
                     sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      height: '100%',
-                      color: '#666',
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: "100%",
+                      color: "#666",
                     }}
                   >
                     <Typography variant="body1" sx={{ mb: 2 }}>
@@ -2259,7 +2396,13 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
 
   return (
     <>
-      {toggleListView === 'list' ? <ListView /> : toggleListView === 'grid' ? <GridView /> : <TableView />}
+      {toggleListView === "list" ? (
+        <ListView />
+      ) : toggleListView === "grid" ? (
+        <GridView />
+      ) : (
+        <TableView />
+      )}
 
       <Dialog
         open={openDeleteDialog}
@@ -2321,7 +2464,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
             variant="outlined"
             label="Reason for deletion"
             value={deleteReason}
-            onChange={( e ) => setDeleteReason( e.target.value )}
+            onChange={(e) => setDeleteReason(e.target.value)}
             sx={{
               mt: 2,
               "& .MuiOutlinedInput-root": {

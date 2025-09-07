@@ -480,8 +480,25 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
         </IconButton>
       </Box>
       {attachment && (
-        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-          <Typography>{attachment.name}</Typography>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            mb: 2,
+            width: {
+              xs: "auto",
+              sm: "auto",
+              md: "auto",
+            },
+            overflowX: "auto",
+            whiteSpace: "nowrap",
+            scrollbarWidth: "thin",
+            "&::-webkit-scrollbar": {
+              height: "6px",
+            },
+          }}
+        >
+          {" "}
           {attachmentPreview && (
             <Box
               component="img"
@@ -498,6 +515,7 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
           <IconButton onClick={handleAttachmentDelete} sx={{ ml: 2 }}>
             <DeleteIcon />
           </IconButton>
+          <Typography>{attachment.name}</Typography>
         </Box>
       )}
 
@@ -537,32 +555,58 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
               <Box
                 key={comment.id}
                 mt={2}
-                p={2}
+                p={{ xs: 1.5, sm: 2, md: 2 }}
                 sx={{
                   display: "flex",
                   alignItems: "flex-start",
                   height: "auto",
+                  borderRadius: "8px",
+                  backgroundColor: "#fafafa",
                 }}
               >
-                <Avatar sx={{ bgcolor: "#eeeeee", mr: 2, color: "black" }}>
+                <Avatar
+                  sx={{
+                    bgcolor: "#eeeeee",
+                    mr: { xs: 1, sm: 1.5, md: 2 },
+                    color: "black",
+                    width: { xs: 32, sm: 36, md: 40 },
+                    height: { xs: 32, sm: 36, md: 40 },
+                    fontSize: { xs: "0.9rem", sm: "1rem", md: "1.1rem" },
+                  }}
+                >
                   {commentedBy?.username?.charAt(0).toUpperCase()}
                 </Avatar>
 
-                <Box sx={{ flexGrow: 1 }}>
+                <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                   <Box
                     sx={{
                       display: "flex",
-                      alignItems: "center",
-                      mb: isTab ? 0 : 0.5,
+                      alignItems: { xs: "flex-start", sm: "center" },
+                      flexDirection: { xs: "column", sm: "row" },
+                      mb: { xs: 0.5, sm: 0.5, md: 0.5 },
+                      gap: { xs: 0.5, sm: 2 },
                     }}
                   >
-                    <Typography fontWeight="bold" sx={{ marginRight: "8px" }}>
+                    <Typography
+                      fontWeight="bold"
+                      sx={{
+                        fontSize: { xs: "0.9rem", sm: "1rem", md: "1rem" },
+                        color: "#333",
+                      }}
+                    >
                       {capitalizeFirstLetter(commentedBy?.username)}
                     </Typography>
                     <Typography
                       variant="body2"
                       color="red"
-                      sx={{ ml: "20vw" }}
+                      sx={{
+                        fontSize: {
+                          xs: "0.75rem",
+                          sm: "0.8rem",
+                          md: "0.85rem",
+                        },
+                        flexShrink: 0,
+                      }}
                     >
                       {format(
                         new Date(comment.created_at),
@@ -594,11 +638,27 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
                         rows={3}
                         variant="filled"
                       />
-                      <Box mt={1}>
+                      <Box
+                        mt={1}
+                        sx={{
+                          display: "flex",
+                          gap: { xs: 1, sm: 2 },
+                          flexDirection: { xs: "column", sm: "row" },
+                        }}
+                      >
                         <Button
                           variant="contained"
                           color="primary"
-                          sx={{ color: "white", bgcolor: "green" }}
+                          sx={{
+                            color: "white",
+                            bgcolor: "green",
+                            fontSize: {
+                              xs: "0.75rem",
+                              sm: "0.85rem",
+                              md: "0.9rem",
+                            },
+                            py: { xs: 0.5, sm: 1 },
+                          }}
                           onClick={() =>
                             handleSaveEditComment(comment.id, comment.ticket_id)
                           }
@@ -607,7 +667,16 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
                         </Button>
                         <Button
                           variant="contained"
-                          sx={{ ml: 2, color: "white", bgcolor: "#f06292" }}
+                          sx={{
+                            color: "white",
+                            bgcolor: "#f06292",
+                            fontSize: {
+                              xs: "0.75rem",
+                              sm: "0.85rem",
+                              md: "0.9rem",
+                            },
+                            py: { xs: 0.5, sm: 1 },
+                          }}
                           onClick={handleCancelEdit}
                         >
                           Cancel
@@ -618,16 +687,32 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
                     <>
                       <Box
                         sx={{
-                          height: isTab ? "6vh" : isMobile ? "10vh" : "12vh",
+                          maxHeight: {
+                            xs: "15vh",
+                            sm: "12vh",
+                            md: "12vh",
+                            lg: "10vh",
+                          },
                           overflowY: "auto",
                           "&::-webkit-scrollbar": {
                             display: "none",
                           },
+                          mb: 1,
                         }}
                       >
                         <Typography
                           variant="body1"
-                          sx={{ mb: 1, color: "gray", fontSize: ".9rem" }}
+                          sx={{
+                            mb: 1,
+                            color: "gray",
+                            fontSize: {
+                              xs: "0.8rem",
+                              sm: "0.85rem",
+                              md: "0.9rem",
+                            },
+                            lineHeight: 1.5,
+                            wordBreak: "break-word",
+                          }}
                         >
                           {capitalizeFirstLetter(comment.comment)}
                         </Typography>
@@ -642,16 +727,14 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
                                 textTransform: "none",
                                 bgcolor: "#0c66e4",
                                 color: "white",
-                                width: isTab
-                                  ? "14vw"
-                                  : isMobile
-                                  ? "35vw"
-                                  : "9vw",
-                                fontSize: isTab
-                                  ? ""
-                                  : isMobile
-                                  ? ".6rem"
-                                  : "0.85rem",
+                                fontSize: {
+                                  xs: "0.7rem",
+                                  sm: "0.8rem",
+                                  md: "0.85rem",
+                                },
+                                py: { xs: 0.5, sm: 1 },
+                                px: { xs: 1, sm: 2 },
+                                minWidth: { xs: "auto", sm: "120px" },
                                 "&:hover": {
                                   bgcolor: "#0c66e4",
                                   color: "black",
@@ -674,45 +757,44 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
                                     top: "50%",
                                     left: "50%",
                                     transform: "translate(-50%, -50%)",
-                                    zIndex: 1000,
+                                    zIndex: 1300,
                                     backgroundColor: "white",
                                     borderRadius: "8px",
-                                    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
-                                    padding: 2,
+                                    boxShadow:
+                                      "0px 8px 16px rgba(0, 0, 0, 0.2)",
+                                    p: { xs: 1, sm: 2 },
                                     textAlign: "center",
-                                    height: isMobile
-                                      ? "70vh"
-                                      : isTab
-                                      ? "70vh"
-                                      : "100%",
-                                    width: isMobile
-                                      ? "95vw"
-                                      : isTab
-                                      ? "85vw"
-                                      : "100%",
+                                    height: {
+                                      xs: "90vh",
+                                      sm: "85vh",
+                                      md: "90vh",
+                                    },
+                                    width: {
+                                      xs: "95vw",
+                                      sm: "90vw",
+                                      md: "85vw",
+                                      lg: "80vw",
+                                    },
+                                    maxWidth: "1200px",
+                                    display: "flex",
+                                    flexDirection: "column",
                                   }}
                                 >
-                                  <Box>
+                                  <Box
+                                    sx={{
+                                      flexGrow: 1,
+                                      overflow: "hidden",
+                                      mb: 2,
+                                    }}
+                                  >
                                     <img
                                       src={comment.attachment}
                                       alt="Attachment Preview"
                                       style={{
-                                        height: isMobile
-                                          ? "62vh"
-                                          : isTab
-                                          ? "65vh"
-                                          : "90vh",
-                                        width: isMobile
-                                          ? "89vw"
-                                          : isTab
-                                          ? "78vw"
-                                          : "80vw",
+                                        height: "100%",
+                                        width: "100%",
+                                        objectFit: "contain",
                                         borderRadius: "8px",
-                                        marginLeft: isMobile
-                                          ? ""
-                                          : isTab
-                                          ? ""
-                                          : "15vw",
                                       }}
                                     />
                                   </Box>
@@ -721,8 +803,11 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
                                       display: "flex",
                                       alignItems: "center",
                                       justifyContent: "center",
-                                      width: "20vw",
-                                      marginLeft: isTab ? "30vw" : "45vw",
+                                      gap: { xs: 1, sm: 2 },
+                                      flexDirection: {
+                                        xs: "column",
+                                        sm: "row",
+                                      },
                                     }}
                                   >
                                     <Button
@@ -736,10 +821,13 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
                                       size="small"
                                       sx={{
                                         textTransform: "none",
-                                        fontSize: "0.85rem",
+                                        fontSize: {
+                                          xs: "0.8rem",
+                                          sm: "0.85rem",
+                                        },
                                         color: "white",
                                         bgcolor: "#f06292",
-                                        mr: "1vw",
+                                        px: { xs: 3, sm: 4 },
                                         "&:hover": {
                                           bgcolor: "red",
                                           color: "white",
@@ -752,9 +840,13 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
                                       size="small"
                                       sx={{
                                         textTransform: "none",
-                                        fontSize: "0.85rem",
+                                        fontSize: {
+                                          xs: "0.8rem",
+                                          sm: "0.85rem",
+                                        },
                                         color: "white",
                                         bgcolor: "#f06292",
+                                        px: { xs: 3, sm: 4 },
                                         "&:hover": {
                                           bgcolor: "red",
                                           color: "white",
@@ -774,20 +866,28 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
                       </Box>
                       <Box
                         sx={{
-                          width: "25%",
-                          mt: isTab ? "2vh" : "1vh",
+                          mt: { xs: 1, sm: 1.5, md: 2 },
                           display: "flex",
                           alignItems: "center",
-                          justifyContent: "space-between",
+                          gap: { xs: 1, sm: 1.5, md: 2 },
+                          flexDirection: { xs: "column", sm: "row" },
+                          justifyContent: { xs: "stretch", sm: "flex-start" },
                         }}
                       >
                         <Button
                           size="small"
                           sx={{
                             textTransform: "none",
-                            fontSize: "0.85rem",
+                            fontSize: {
+                              xs: "0.75rem",
+                              sm: "0.8rem",
+                              md: "0.85rem",
+                            },
                             bgcolor: "#155fcc",
                             color: "white",
+                            px: { xs: 2, sm: 3 },
+                            py: { xs: 0.5, sm: 1 },
+                            minWidth: { xs: "100px", sm: "auto" },
                             "&:hover": {
                               bgcolor: "#9D50BB",
                               color: "white",
@@ -803,10 +903,16 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
                           size="small"
                           sx={{
                             textTransform: "none",
-                            fontSize: "0.85rem",
+                            fontSize: {
+                              xs: "0.75rem",
+                              sm: "0.8rem",
+                              md: "0.85rem",
+                            },
                             color: "white",
                             bgcolor: "#f06292",
-                            ml: "1vw",
+                            px: { xs: 2, sm: 3 },
+                            py: { xs: 0.5, sm: 1 },
+                            minWidth: { xs: "100px", sm: "auto" },
                             "&:hover": {
                               bgcolor: "red",
                               color: "white",
