@@ -13,6 +13,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { ArrowBackRounded, EditRounded } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
@@ -25,7 +27,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useCreateTicketHistory } from "@/hooks/tickethistory";
 import { useGetLoanProviders } from "@/hooks/loanProvider";
 
-const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
+const TicketDetail = ({ ticketDetailData, isTab }) => {
   const router = useRouter();
   const dispatch: AppDispatch = useDispatch();
   const { toast } = useSelector((state: RootState) => state.toast);
@@ -43,7 +45,12 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
   const { createTicketHistory } = useCreateTicketHistory(
     "create-ticket-history"
   );
+  const muiTheme = useTheme();
   const userRole = decodedToken()?.role;
+    const isMobile = useMediaQuery( muiTheme.breakpoints.down( 'sm' ) ); // 0-599px
+    const isTablet = useMediaQuery( muiTheme.breakpoints.between( 'sm', 'md' ) ); // 600-899px
+    const isIpad = useMediaQuery( muiTheme.breakpoints.between( 'md', 'lg' ) ); // 900-1199px
+    const isDesktop = useMediaQuery( muiTheme.breakpoints.up( 'lg' ) ); // 1200px+
 
     // Fetch loan providers
     const { value: providersData, swrLoading: providersLoading } =
@@ -178,10 +185,11 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
             sx={{
               color: "black",
               textDecoration: "none",
-              fontSize: "1.5rem",
+              fontSize:isMobile?"1rem":isIpad?"2.5rem": "1.5rem",
               fontFamily: "monospace",
               fontStyle: "revert-layer",
               fontWeight: "bold",
+              
             }}
           >
             Ticket ID: F2FIN-{ticketDetailData?.ticketId}
@@ -217,7 +225,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
               <Typography
                 sx={{
                   color: "#172B4D",
-                  fontSize: "1rem",
+                  fontSize: isIpad?"1.4rem":"1rem",
                   mb: 1,
                   fontFamily: "",
                 }}
@@ -227,7 +235,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
                   component="span"
                   sx={{
                     color: "#5E6C84",
-                    fontSize: ".9rem",
+                    fontSize:isIpad?"1.4rem": ".9rem",
                     fontWeight: 500,
                   }}
                 >
@@ -241,7 +249,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
                   blackSpace: "normal",
                   fontFamily: "",
                   color: "#172B4D",
-                  fontSize: "1rem",
+                  fontSize: isIpad ? "1.4rem" : "1rem",
                   mb: 1,
                 }}
               >
@@ -250,7 +258,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
                   component="span"
                   sx={{
                     color: "#5E6C84",
-                    fontSize: ".9rem",
+                    fontSize: isIpad ? "1.4rem" : ".9rem",
                     fontWeight: 500,
                   }}
                 >
@@ -262,7 +270,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
               <Typography
                 sx={{
                   color: "#172B4D",
-                  fontSize: "1rem",
+                  fontSize: isIpad ? "1.4rem" : "1rem",
                   mb: 1,
                   fontFamily: "",
                 }}
@@ -272,7 +280,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
                   component="span"
                   sx={{
                     color: "#5E6C84",
-                    fontSize: ".9rem",
+                    fontSize: isIpad ? "1.4rem" : ".9rem",
                     fontWeight: 500,
                   }}
                 >
@@ -282,7 +290,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
               <Typography
                 sx={{
                   color: "#172B4D",
-                  fontSize: "1rem",
+                  fontSize: isIpad ? "1.4rem" : "1rem",
                   mb: 1,
                   fontFamily: "",
                 }}
@@ -292,7 +300,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
                   component="span"
                   sx={{
                     color: "#5E6C84",
-                    fontSize: ".9rem",
+                    fontSize: isIpad ? "1.4rem" : ".9rem",
                     fontWeight: 500,
                   }}
                 >
@@ -304,7 +312,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
               <Typography
                 sx={{
                   color: "#172B4D",
-                  fontSize: "1rem",
+                  fontSize: isIpad ? "1.4rem" : "1rem",
                   mb: 1,
                   fontFamily: "",
                 }}
@@ -314,7 +322,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
                   component="span"
                   sx={{
                     color: "#5E6C84",
-                    fontSize: ".9rem",
+                    fontSize: isIpad ? "1.4rem" : ".9rem",
                     fontWeight: 500,
                   }}
                 >
@@ -324,7 +332,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
               <Typography
                 sx={{
                   color: "#172B4D",
-                  fontSize: "1rem",
+                  fontSize: isIpad ? "1.4rem" : "1rem",
                   mb: 1,
                   fontFamily: "",
                 }}
@@ -334,7 +342,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
                   component="span"
                   sx={{
                     color: "#5E6C84",
-                    fontSize: ".9rem",
+                    fontSize: isIpad ? "1.4rem" : ".9rem",
                     fontWeight: 500,
                   }}
                 >
@@ -346,7 +354,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
               <Typography
                 sx={{
                   color: "#172B4D",
-                  fontSize: "1rem",
+                  fontSize: isIpad ? "1.4rem" : "1rem",
                   mb: 1,
                   fontFamily: "",
                 }}
@@ -356,7 +364,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
                   component="span"
                   sx={{
                     color: "#5E6C84",
-                    fontSize: ".9rem",
+                    fontSize: isIpad ? "1.4rem" : ".9rem",
                     fontWeight: 500,
                   }}
                 >
@@ -366,7 +374,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
               <Typography
                 sx={{
                   color: "#172B4D",
-                  fontSize: "1rem",
+                  fontSize: isIpad ? "1.4rem" : "1rem",
                   mb: 1,
                   fontFamily: "",
                 }}
@@ -376,7 +384,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
                   component="span"
                   sx={{
                     color: "#5E6C84",
-                    fontSize: ".9rem",
+                    fontSize: isIpad ? "1.4rem" : ".9rem",
                     fontWeight: 500,
                   }}
                 >
@@ -388,7 +396,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
               <Typography
                 sx={{
                   color: "#172B4D",
-                  fontSize: "1rem",
+                  fontSize: isIpad ? "1.4rem" : "1rem",
                   mb: 1,
                   fontFamily: "",
                 }}
@@ -398,7 +406,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
                   component="span"
                   sx={{
                     color: "#5E6C84",
-                    fontSize: ".9rem",
+                    fontSize: isIpad ? "1.4rem" : ".9rem",
                     fontWeight: 500,
                   }}
                 >

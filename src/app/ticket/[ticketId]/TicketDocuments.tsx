@@ -10,68 +10,75 @@ import {
 import PdfViewer from "@/app/components/common/PdfViewer";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import axios from "axios";
+import { Utility } from "@/utils";
 
-const TicketDocuments = ({
+const TicketDocuments = ( {
   isMobile,
   isTab,
+  isIpad,
   documents,
   customerId,
   onDocumentUploaded,
-}) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [showAttachment, setShowAttachment] = useState({});
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [isUploading, setIsUploading] = useState(false);
+} ) => {
+  const [ currentPage, setCurrentPage ] = useState( 1 );
+  const [ showAttachment, setShowAttachment ] = useState( {} );
+  const [ selectedFile, setSelectedFile ] = useState( null );
+  const [ isUploading, setIsUploading ] = useState( false );
   const itemsPerPage = 3;
+  const { capitalizeFirstLetter, decodedToken } = Utility();
 
-  const toggleAttachment = (id) => {
-    setShowAttachment((prev) => ({
+  const toggleAttachment = ( id ) => {
+    setShowAttachment( ( prev ) => ( {
       ...prev,
-      [id]: !prev[id],
-    }));
+      [ id ]: !prev[ id ],
+    } ) );
   };
 
-  const totalPages = Math.ceil(documents.length / itemsPerPage);
+  const totalPages = Math.ceil( documents.length / itemsPerPage );
 
-  const startIndex = (currentPage - 1) * itemsPerPage;
+  const startIndex = ( currentPage - 1 ) * itemsPerPage;
   const displayedDocuments = documents.slice(
     startIndex,
     startIndex + itemsPerPage
   );
 
-  const handleFileChange = async (event) => {
-    if (event.target.files && event.target.files[0]) {
-      const file = event.target.files[0];
+  const handleFileChange = async ( event ) => {
+    if ( event.target.files && event.target.files[ 0 ] )
+    {
+      const file = event.target.files[ 0 ];
 
       // Check if the user is online
-      if (!navigator.onLine) {
+      if ( !navigator.onLine )
+      {
         return;
       }
 
       // Check file size limit (10MB = 10,485,760 bytes)
-      if (file.size > 10485760) {
-        handleToast(`${file.name} exceeds the 10MB limit`, "error");
+      if ( file.size > 10485760 )
+      {
+        handleToast( `${ file.name } exceeds the 10MB limit`, "error" );
         return;
       }
 
-      setSelectedFile(file);
-      await uploadDocument(file);
+      setSelectedFile( file );
+      await uploadDocument( file );
     }
   };
 
   // Upload document function (similar to Step3Form logic)
-  const uploadDocument = async (file) => {
+  const uploadDocument = async ( file ) => {
     let attachmentUrl = null;
-    setIsUploading(true);
+    setIsUploading( true );
 
     const formData = new FormData();
-    formData.append("document", file);
-    formData.append("folder", `document/${file.name}`);
+    formData.append( "document", file );
+    formData.append( "folder", `document/${ file.name }` );
 
-    try {
+    try
+    {
       // First upload to S3
       const uploadResponse = await axios.post(
-        `${process.env.NEXT_PUBLIC_WEB_URL}/upload-to-s3`,
+        `${ process.env.NEXT_PUBLIC_WEB_URL }/upload-to-s3`,
         formData,
         {
           headers: {
@@ -81,27 +88,32 @@ const TicketDocuments = ({
       );
       attachmentUrl = uploadResponse.data.data;
 
-      if (attachmentUrl) {
+      if ( attachmentUrl )
+      {
         // Then create document record in database
-        await axios.post(`${process.env.NEXT_PUBLIC_WEB_URL}/create-document`, {
+        await axios.post( `${ process.env.NEXT_PUBLIC_WEB_URL }/create-document`, {
           document_url: attachmentUrl,
           customer_id: customerId,
           type: "general document", // You can change this type as needed
-        });
+        } );
 
         // Call callback to refresh documents list if provided
-        if (onDocumentUploaded) {
+        if ( onDocumentUploaded )
+        {
           onDocumentUploaded();
         }
       }
-    } catch (err) {
-      console.error("Error uploading document:", err);
-    } finally {
-      setIsUploading(false);
-      setSelectedFile(null);
+    } catch ( err )
+    {
+      console.error( "Error uploading document:", err );
+    } finally
+    {
+      setIsUploading( false );
+      setSelectedFile( null );
       // Reset file input
-      const fileInput = document.getElementById("add-document-input");
-      if (fileInput) {
+      const fileInput = document.getElementById( "add-document-input" );
+      if ( fileInput )
+      {
         fileInput.value = "";
       }
     }
@@ -109,26 +121,26 @@ const TicketDocuments = ({
 
   // Handler for button click to trigger file input
   const handleAddDocumentClick = () => {
-    document.getElementById("add-document-input").click();
+    document.getElementById( "add-document-input" ).click();
   };
 
-  useEffect(() => {
+  useEffect( () => {
     const handleOnline = () => {
-      console.log("You are online");
+      console.log( "You are online" );
     };
     const handleOffline = () => {
-      console.log("You are offline");
+      console.log( "You are offline" );
     };
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
+    window.addEventListener( "online", handleOnline );
+    window.addEventListener( "offline", handleOffline );
 
     return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener( "online", handleOnline );
+      window.removeEventListener( "offline", handleOffline );
     };
-  }, []);
+  }, [] );
 
-  const isPDF = (url) => url.toLowerCase().endsWith(".pdf");
+  const isPDF = ( url ) => url.toLowerCase().endsWith( ".pdf" );
 
   return (
     <Grid item xs={12} md={8}>
@@ -145,7 +157,7 @@ const TicketDocuments = ({
           borderRadius: "12px",
           backgroundColor: "#fff",
           width: { xs: "100%", sm: "100%", md: "150%" },
-          maxWidth: "800px",
+          maxWidth: "100vw",
           boxShadow: "0px 4px 20px rgba(149, 117, 205, 0.3)",
         }}
       >
@@ -182,6 +194,7 @@ const TicketDocuments = ({
                 bgcolor: "#ccc",
                 color: "#666",
               },
+              fontSize: isMobile ? ".6rem" : isTab ? ".8rem" : "0.85rem",
             }}
           >
             {isUploading ? "Uploading..." : "Add Document"}
@@ -200,7 +213,7 @@ const TicketDocuments = ({
             mb: 2,
             color: "#172B4D",
             fontWeight: 600,
-            fontSize: { xs: "1.2rem", md: "1.3rem" },
+            fontSize: { xs: "1.2rem", md: "1.8rem" },
             width: "100%",
             textAlign: "center",
           }}
@@ -216,7 +229,7 @@ const TicketDocuments = ({
               gap: 1,
             }}
           >
-            {displayedDocuments.map((doc, index) => (
+            {displayedDocuments.map( ( doc, index ) => (
               <React.Fragment key={index}>
                 <Box
                   sx={{
@@ -228,7 +241,7 @@ const TicketDocuments = ({
                     borderRadius: "8px",
                     boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
                     transition: "transform 0.2s ease",
-                    width: isMobile ? "60vw" : isTab ? "92%" : "38.5vw",
+                    width: isMobile ? "60vw" : isTab ? "92%" : isIpad ? "70vw" : "38.5vw",
                     marginLeft: "1.5rem",
                     "&:hover": {
                       transform: "scale(1.02)",
@@ -238,20 +251,21 @@ const TicketDocuments = ({
                 >
                   <Typography
                     variant="body1"
-                    sx={{ color: "black", flexGrow: 1 }}
+                    sx={{ color: "black", flexGrow: 1, fontSize: isIpad ? "1.4rem" : "0.85rem" }}
                   >
-                    {doc.type}
+                    {capitalizeFirstLetter(doc.type)}
                   </Typography>
                   <Button
                     onClick={() => {
-                      if (!isPDF(doc.document_url)) {
-                        toggleAttachment(index);
+                      if ( !isPDF( doc.document_url ) )
+                      {
+                        toggleAttachment( index );
                       }
                     }}
                     variant="contained"
                     sx={{
                       textTransform: "none",
-                      fontSize: "0.85rem",
+                      fontSize:isMobile?".5rem": "0.85rem",
                       bgcolor: "#f06292",
                       color: "white",
                       width: isTab ? "10vw" : isMobile ? "10vw" : "7vw",
@@ -261,7 +275,7 @@ const TicketDocuments = ({
                       },
                     }}
                   >
-                    {isPDF(doc.document_url) ? (
+                    {isPDF( doc.document_url ) ? (
                       <a
                         href={doc.document_url}
                         target="_blank"
@@ -281,7 +295,7 @@ const TicketDocuments = ({
                 </Box>
 
                 {/* Conditional rendering of the attachment */}
-                {showAttachment[index] && (
+                {showAttachment[ index ] && (
                   <Box
                     sx={{
                       position: "fixed",
@@ -301,7 +315,7 @@ const TicketDocuments = ({
                     <Box>
                       <img
                         src={doc.document_url}
-                        alt={`Attachment for ${doc.type}`}
+                        alt={`Attachment for ${ doc.type }`}
                         style={{
                           height: isMobile ? "33vh" : isTab ? "35vh" : "90vh",
                           borderRadius: "8px",
@@ -317,7 +331,7 @@ const TicketDocuments = ({
                       }}
                     >
                       <Button
-                        onClick={() => toggleAttachment(index)}
+                        onClick={() => toggleAttachment( index )}
                         variant="contained"
                         size="small"
                         sx={{
@@ -338,7 +352,7 @@ const TicketDocuments = ({
                   </Box>
                 )}
               </React.Fragment>
-            ))}
+            ) )}
           </Box>
         ) : (
           <Typography
@@ -354,10 +368,10 @@ const TicketDocuments = ({
           <Box
             sx={{
               display: "flex",
-              justifyContent: "center",
+              justifyContent: isIpad ? "space-between" : "center",
               alignItems: "center",
               marginTop: 2,
-              width: isMobile ? "55vw" : isTab ? "90%" : "38vw",
+              width: isMobile ? "55vw" : isTab ? "90%" : isIpad ? "69vw" : "38vw",
             }}
           >
             <Button
@@ -366,7 +380,7 @@ const TicketDocuments = ({
               sx={{
                 mr: ".5rem",
                 textTransform: "none",
-                fontSize: isMobile ? ".6rem" : "0.85rem",
+                fontSize: isMobile ? ".5rem" : "0.85rem",
                 bgcolor: "#f06292",
                 color: "white",
                 "&:hover": {
@@ -374,10 +388,10 @@ const TicketDocuments = ({
                   color: "black",
                 },
                 height: isMobile ? "3vh" : isTab ? "3vh" : "",
-                width: isMobile ? "1vw" : isTab ? "" : "5vw",
+                width: isMobile ? ".8vw" : isTab ? "" : "5vw",
               }}
               disabled={currentPage === 1}
-              onClick={() => setCurrentPage((prev) => prev - 1)}
+              onClick={() => setCurrentPage( ( prev ) => prev - 1 )}
             >
               Previous
             </Button>
@@ -394,10 +408,10 @@ const TicketDocuments = ({
                   color: "black",
                 },
                 height: isMobile ? "3vh" : isTab ? "3vh" : "",
-                width: "5vw",
+                width: isMobile ? ".8vw" : isTab ? "" : "5vw",
               }}
               disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((prev) => prev + 1)}
+              onClick={() => setCurrentPage( ( prev ) => prev + 1 )}
             >
               Next
             </Button>
@@ -409,7 +423,7 @@ const TicketDocuments = ({
                 fontSize: isMobile ? ".6rem" : isTab ? ".8rem" : "0.85rem",
                 flexGrow: 1,
                 mt: isMobile ? "" : isTab ? "1rem" : ".5rem",
-                mr: isMobile ? "1rem" : isTab ? "20vw" : "20vw",
+                mr: isMobile ? "-1rem" : isTab ? "20vw" : isIpad ? "-2rem" : "20vw",
               }}
             >
               Page {currentPage} of {totalPages}
@@ -421,4 +435,4 @@ const TicketDocuments = ({
   );
 };
 
-export default memo(TicketDocuments);
+export default memo( TicketDocuments );

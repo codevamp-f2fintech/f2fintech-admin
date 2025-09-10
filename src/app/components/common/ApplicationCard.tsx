@@ -179,6 +179,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
   const [showOtpComponent, setShowOtpComponent] = useState<boolean>(false);
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const isIpad = useMediaQuery( "(min-width:1000px) and (max-width:1300px)" );
   const [deleteReason, setDeleteReason] = useState<string>("");
 
   const handleDeleteClick = (e: React.MouseEvent) => {
@@ -1262,8 +1263,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   textOverflow: "ellipsis",
                   maxWidth: "100%",
                   textAlign: "center",
-                  fontSize: "1.3rem",
-                  height: isMobile ? "7vh" : isTab ? "4vh" : "8vh",
+                  fontSize: isTab?"1rem":"1.3rem",
+                  height: isMobile ? "7vh":isIpad? "7vh" : isTab ? "5vh" : "8vh",
                   width: isMobile ? "80vw" : isTab ? "25vw" : "30vw",
                   display: "flex",
                   alignItems: "center",
@@ -1923,7 +1924,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
         >
           {/* Name */}
           <TableCell>
-            <Typography variant="body2" sx={{ fontWeight: "bold" }}>
+            <Typography variant="body2" sx={{ fontWeight: "bold", whiteSpace: isTab ?"normal": "" }}>
               {customerApplication.customerName?.toUpperCase()}
             </Typography>
           </TableCell>

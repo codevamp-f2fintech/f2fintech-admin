@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Divider, Typography, useMediaQuery } from "@mui/material";
+import { Box, Divider, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { Bolt as BoltIcon } from "@mui/icons-material";
 import { format, formatDistanceToNow } from "date-fns";
 
@@ -12,23 +12,27 @@ interface HistoryProps {
   activeSection: string;
 }
 
-const History: React.FC<HistoryProps> = ({ ticketId, activeSection }) => {
-  const [hasFetched, setHasFetched] = React.useState(false);
+const History: React.FC<HistoryProps> = ( { ticketId, activeSection } ) => {
+  const [ hasFetched, setHasFetched ] = React.useState( false );
+  const muiTheme = useTheme();
   const { capitalizeFirstLetter } = Utility();
-  const isMobile = useMediaQuery("(max-width:600px)");
-  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const isMobile = useMediaQuery( muiTheme.breakpoints.down( 'sm' ) ); // 0-599px
+  const isTablet = useMediaQuery( muiTheme.breakpoints.between( 'sm', 'md' ) ); // 600-899px
+  const isIpad = useMediaQuery( muiTheme.breakpoints.between( 'md', 'lg' ) ); // 900-1199px
+  const isDesktop = useMediaQuery( muiTheme.breakpoints.up( 'lg' ) ); // 1200px+
 
   const { value: ticketHistory, refetch } = useGetTicketHistory(
     {} as TicketHistory,
-    hasFetched ? `get-ticket-histories/${ticketId}` : ''
+    hasFetched ? `get-ticket-histories/${ ticketId }` : ''
   );
 
-  React.useEffect(() => {
-    if (activeSection === "History" && !hasFetched) {
+  React.useEffect( () => {
+    if ( activeSection === "History" && !hasFetched )
+    {
       refetch();
-      setHasFetched(true);
+      setHasFetched( true );
     }
-  }, [activeSection, hasFetched, refetch]);
+  }, [ activeSection, hasFetched, refetch ] );
 
   return (
     <Box
@@ -43,10 +47,10 @@ const History: React.FC<HistoryProps> = ({ ticketId, activeSection }) => {
       }}
     >
       {ticketHistory?.data?.length ? (
-        ticketHistory.data.map((history) => {
-          const dateObj = new Date(history.created_at);
+        ticketHistory.data.map( ( history ) => {
+          const dateObj = new Date( history.created_at );
           const capitalizedAction = capitalizeFirstLetter(
-            history.action.replace(/<\/?[^>]+(>|$)/g, "")
+            history.action.replace( /<\/?[^>]+(>|$)/g, "" )
           );
 
           return (
@@ -63,8 +67,8 @@ const History: React.FC<HistoryProps> = ({ ticketId, activeSection }) => {
                 <Typography
                   variant="body1"
                   sx={{
-                    fontSize: isMobile ? ".6rem" : isTab ? ".8rem" : "",
-                    width: isMobile ? "90vw" : isTab ? "80vh" : "50vw",
+                    fontSize: isMobile ? ".6rem" : isTablet ? ".8rem" : "",
+                    width: isMobile ? "30vw" : isTablet ? "30vh" : isIpad ? "40vw" : "50vw",
                     color: "black",
                   }}
                 >
@@ -80,13 +84,13 @@ const History: React.FC<HistoryProps> = ({ ticketId, activeSection }) => {
                     width: isMobile ? "30vw" : "32vw",
                   }}
                 >
-                  {format(dateObj, "dd MMM yyyy HH:mm")} (
-                  {formatDistanceToNow(dateObj)} ago)
+                  {format( dateObj, "dd MMM yyyy HH:mm" )} (
+                  {formatDistanceToNow( dateObj )} ago)
                 </Typography>
               </Box>
             </React.Fragment>
           );
-        })
+        } )
       ) : (
         <Typography
           variant="body2"
