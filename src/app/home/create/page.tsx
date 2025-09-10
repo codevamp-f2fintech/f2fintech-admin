@@ -180,7 +180,7 @@ const MultiStepForm: React.FC = () => {
       maxWidth={false}
       sx={{
         display: "flex",
-        flexDirection: { xs: "column", sm: "row" }, // responsive layout
+        flexDirection: { xs: "column", sm: "row" },
         marginBottom: "15px",
         minHeight: "70vh",
         alignItems: "center",

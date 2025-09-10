@@ -20,7 +20,7 @@ import {
   Button,
 } from "@mui/material";
 import { ArrowForwardRounded } from "@mui/icons-material";
-import { ThemeProvider } from "@mui/material/styles";
+import { ThemeProvider, useTheme } from "@mui/material/styles";
 
 import Loader from "../../components/common/Loader";
 import Comments from "./Comments";
@@ -137,12 +137,14 @@ const Progress: React.FC = () => {
   const [ hasFetched, setHasFetched ] = useState( false ); // New state to track if data is already fetched
   const workLogRef = useRef( null );
   const isVisible = useIntersectionObserver( workLogRef );
+  const muiTheme = useTheme();
 
   const dispatch: AppDispatch = useDispatch();
   const params = useParams();
-  const isMobile = useMediaQuery( "(max-width:600px)" );
-  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1000px)" );
-  const isIpad = useMediaQuery( "(min-width:1000px) and (max-width:1300px)" );
+  const isMobile = useMediaQuery( muiTheme.breakpoints.down( 'sm' ) ); // 0-599px
+  const isTablet = useMediaQuery( muiTheme.breakpoints.between( 'sm', 'md' ) ); // 600-899px
+  const isIpad = useMediaQuery( muiTheme.breakpoints.between( 'md', 'lg' ) ); // 900-1199px
+  const isDesktop = useMediaQuery( muiTheme.breakpoints.up( 'lg' ) ); // 1200px+
   const ticketId = params?.ticketId;
   const {
     capitalizeFirstLetter,
@@ -333,172 +335,144 @@ const Progress: React.FC = () => {
     <ThemeProvider theme={theme}>
       <ColorModeContext.Provider value={colorMode}>
         <Container
+          maxWidth={false}
           sx={{
-            display: "flex",
-            justifyContent: isMobile ? "" : isTab ? "" : "center",
-            alignItems: isMobile ? "" : isTab ? "" : "center",
-            width: isMobile ? "95vw" : isTab ? "92vw" : isIpad ? "100%" : "76vw",
+            px: { xs: 1, sm: 2, md: 3 },
+            py: { xs: 1, sm: 2 },
+            minHeight: '100vh',
           }}
         >
           <Grid
             container
-            spacing={2}
-            sx={{ mt: 0, display: "flex" }}
-            padding={0}
+            spacing={{ xs: 1, sm: 2, md: 3 }}
+            sx={{
+              justifyContent: 'center',
+              alignItems: 'flex-start',
+            }}
           >
-            <Grid item xs={12} md={7}>
+            {/* Main Content Section */}
+            <Grid
+              item
+              xs={12}
+              lg={8}
+              sx={{
+                order: { xs: 1, lg: 1 },
+              }}
+            >
               <Paper
                 elevation={5}
                 sx={{
-                  padding: isMobile ? 3 : isTab ? 3 : 4,
-                  backgroundImage:
-                    "linear-gradient(135deg, #fff 0%, #f8f8f8 100%)",
+                  p: { xs: 2, sm: 3, md: 4 },
+                  backgroundImage: "linear-gradient(135deg, #fff 0%, #f8f8f8 100%)",
                   backgroundBlendMode: "multiply, screen, normal",
-                  borderRadius: "20px",
-                  width: isMobile ? "90vw" : isTab ? "90vw" : isIpad ? "55vw" : "48vw",
+                  borderRadius: 3,
+                  width: '100%',
                 }}
               >
                 <TicketDetail
                   ticketDetailData={ticketDetailData}
                   isMobile={isMobile}
-                  isTab={isTab}
+                  isTab={isTablet}
+                  isIpad={isIpad}
                 />
 
                 <TicketDocuments
                   isMobile={isMobile}
-                  isTab={isTab}
+                  isTab={isTablet}
+                  isIpad={isIpad}
                   documents={ticketDetailData?.customerDocuments ?? []}
                   customerId={
                     ticketDetailData?.customer_id ||
                     ticketDetailData?.customerId
                   }
                 />
+
                 <TicketVoiceNotes
                   isMobile={isMobile}
-                  isTab={isTab}
+                  isTab={isTablet}
+                  isIpad={isIpad}
                   ticketDetailData={ticketDetailData}
                 />
+
+                {/* Activity Section */}
                 <Box
-                  mt={4}
-                  mb={4}
                   sx={{
-                    height: "7vh",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    borderRadius: "10px",
-                    width: isMobile ? "73vw" : isTab ? "auto" : "43.5vw",
-                    bgcolor: "#e9ecef",
+                    mt: 4,
+                    mb: 4,
+                    display: 'flex',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    borderRadius: 2,
+                    bgcolor: '#e9ecef',
+                    p: { xs: 2, sm: 1 },
+                    gap: { xs: 2, sm: 0 },
                   }}
                 >
                   <Box
                     sx={{
-                      width: isMobile ? "10vw" : isTab ? "15vw" : "10vw",
-                      height: "7vh",
-                      borderRadius: "10px 0px 0px 10px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      // minWidth: { xs: 'auto', sm: 120 },
                     }}
                   >
                     <Typography
                       variant="h6"
                       sx={{
-                        ml: 2,
-                        mt: 0,
-                        color: "black",
-                        fontSize: isMobile
-                          ? ".7rem"
-                          : isTab
-                            ? "0.9rem"
-                            : "1.1rem",
+                        color: 'black',
+                        fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' },
+                        fontWeight: 'bold',
                       }}
                     >
                       Activity:
                     </Typography>
                   </Box>
+
                   <Box
                     sx={{
-                      width: isMobile ? "60vw" : isTab ? "48vw" : "20vw",
-                      height: "7vh",
-                      borderRadius: "0px 10px 10px 0px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-evenly",
+                      display: 'flex',
+                      flexDirection: { xs: 'row', sm: 'row' },
+                      alignItems: 'center',
+                      justifyContent: { xs: 'center', sm: 'flex-end' },
+                      gap: { xs: 1, sm: 2 },
+                      flexWrap: 'wrap',
                     }}
                   >
-                    <Typography
-                      component="span"
-                      sx={{
-                        backgroundColor:
-                          activeSection === "Comments" ? "#155fcc" : "white",
-                        color: activeSection === "Comments" ? "white" : "black",
-                        fontSize: isMobile
-                          ? ".6rem"
-                          : isTab
-                            ? "0.8rem"
-                            : "12px",
-                        borderRadius: "4px",
-                        marginLeft: isTab ? "0" : "10px",
-                        padding: isTab ? "0.3rem" : ".4rem",
-                        cursor: "pointer",
-                        whiteSpace: "nowrap",
-                      }}
-                      onClick={showComments}
-                    >
-                      Comments
-                    </Typography>
-                    <Typography
-                      component="span"
-                      sx={{
-                        backgroundColor:
-                          activeSection === "History" ? "#155fcc" : "white",
-                        color: activeSection === "History" ? "white" : "black",
-                        fontSize: isMobile
-                          ? ".6rem"
-                          : isTab
-                            ? "0.8rem"
-                            : "12px",
-                        borderRadius: "4px",
-                        marginLeft: isTab ? "0" : "10px",
-                        padding: isTab ? "0.3rem" : "6px",
-                        cursor: "pointer",
-                        whiteSpace: "nowrap",
-                      }}
-                      onClick={showHistory}
-                    >
-                      History
-                    </Typography>
-                    <Typography
-                      component="span"
-                      ref={workLogRef}
-                      sx={{
-                        backgroundColor:
-                          activeSection === "WorkLog" ? "#155fcc" : "white",
-                        color: activeSection === "WorkLog" ? "white" : "black",
-                        fontSize: isMobile
-                          ? ".6rem"
-                          : isTab
-                            ? "0.8rem"
-                            : "12px",
-                        borderRadius: "4px",
-                        marginLeft: isTab ? "0" : "10px",
-                        padding: isTab ? "0.3rem" : "6px",
-                        cursor: "pointer",
-                        whiteSpace: "nowrap",
-                      }}
-                      onClick={showWorkLog}
-                    >
-                      Work Log
-                    </Typography>
+                    {[ 'Comments', 'History', 'WorkLog' ].map( ( section ) => (
+                      <Typography
+                        key={section}
+                        component="span"
+                        sx={{
+                          backgroundColor: activeSection === section ? '#155fcc' : 'white',
+                          color: activeSection === section ? 'white' : 'black',
+                          fontSize: { xs: '0.5rem', sm: '0.85rem' },
+                          borderRadius: 1,
+                          px: { xs: 2, sm: 2.5 },
+                          py: { xs: 1, sm: 1.2 },
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                          textAlign: 'center',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            transform: 'scale(1.05)',
+                          },
+                        }}
+                        onClick={section === 'Comments' ? showComments :
+                          section === 'History' ? showHistory : showWorkLog}
+                        ref={section === 'WorkLog' ? workLogRef : null}
+                      >
+                        {section === 'WorkLog' ? 'Work Log' : section}
+                      </Typography>
+                    ) )}
                   </Box>
                 </Box>
 
+                {/* Content Sections */}
                 {activeSection === "Comments" && (
                   <Comments storedTicketId={ticketId} userData={userData} />
                 )}
 
-                {/* History Section */}
                 {activeSection === "History" && (
                   <History ticketId={ticketId} activeSection={activeSection} />
                 )}
@@ -508,285 +482,425 @@ const Progress: React.FC = () => {
                 )}
               </Paper>
             </Grid>
-            <Grid item xs={12} md={2} sx={{ ml: isIpad ? "2vw" : isTab ? "-7vw" : "" }}>
+
+            {/* Sidebar Section */}
+            <Grid
+              item
+              xs={12}
+              lg={4}
+              sx={{
+                order: { xs: 2, lg: 2 },
+              }}
+            >
               <Paper
                 elevation={4}
                 sx={{
-                  padding: isMobile ? 2 : isTab ? 2 : 3,
-                  height: isMobile ? "64vh" : isTab ? "50vh" : isIpad ? "38vh" : "78vh",
-                  width: isMobile ? "90vw" : isTab ? "90vw" : isIpad ? "33vw" : "25vw",
-                  borderRadius: "20px",
-                  position: isMobile ? "" : isTab ? "" : "fixed",
-                  // top: isTab ? "" : "20vh",
-                  ml: isIpad ? "1vw" : isMobile ? "1vw" : isTab ? "7vw" : "8vw",
-                  top: isIpad ? "18vh" : isTab ? "" : "",
-                  boxShadow: "0px 4px 20px rgba(149, 117, 205, 0.3)",
-                  backgroundImage:
-                    "linear-gradient(135deg, #fff 0%, #fff 100%)",
+                  p: { xs: 1.5, sm: 2, md: 3 },
+                  borderRadius: { xs: 2, sm: 3 },
+                  position: { xs: 'static', lg: 'sticky' },
+                  top: { lg: 24 },
+                  height: {
+                    xs: "70vh",
+                    sm: "62vh",
+                    md: "50vh",
+                    lg: "100vh"
+                  },
+                  maxHeight: {
+                    xs: "70vh",
+                    sm: "75vh",
+                    md: "80vh",
+                    lg: "100vh"
+                  },
+                  overflowY: 'auto',
+                  overflowX: 'hidden',
+                  boxShadow: {
+                    xs: '0px 2px 10px rgba(149, 117, 205, 0.2)',
+                    sm: '0px 4px 20px rgba(149, 117, 205, 0.3)'
+                  },
+                  backgroundImage: 'linear-gradient(135deg, #fff 0%, #fff 100%)',
+                  width: '100%',
+                  // Custom scrollbar styles for webkit browsers
+                  "&::-webkit-scrollbar": {
+                    width: "6px",
+                  },
+                  "&::-webkit-scrollbar-track": {
+                    background: "transparent",
+                  },
+                  "&::-webkit-scrollbar-thumb": {
+                    background: "rgba(149, 117, 205, 0.3)",
+                    borderRadius: "3px",
+                    "&:hover": {
+                      background: "rgba(149, 117, 205, 0.5)",
+                    },
+                  },
+                  // Hide scrollbar for Firefox
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "rgba(149, 117, 205, 0.3) transparent",
+                  // Smooth scrolling
+                  scrollBehavior: 'smooth',
                 }}
               >
-                <Grid item xs={6} md={5} mt={0}>
+                {/* Forward Button */}
+                <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
                   <Button
                     color="info"
                     endIcon={<ArrowForwardRounded />}
-                    size="small"
+                    size={isMobile ? "small" : "medium"}
                     variant="contained"
                     onClick={() => setNewEmployeeStatus( "forwarded" )}
                     sx={{
-                      bgcolor: "#155fcc",
-                      textAlign: "center",
-                      textTransform: "uppercase",
-                      backgroundSize: "200% auto",
-                      color: "white",
-                      borderRadius: "10px",
-                      margin: ".4rem",
+                      bgcolor: '#155fcc',
+                      textTransform: 'uppercase',
+                      borderRadius: { xs: 1.5, sm: 2 },
+                      py: { xs: 1, sm: 1.5, md: 1 },
+                      px: { xs: 1, sm: 2 },
+                      fontSize: {
+                        xs: '0.75rem',
+                        sm: '0.8rem',
+                        md: '0.85rem'
+                      },
+                      minHeight: { xs: '36px', sm: '42px' },
+                      '&:hover': {
+                        bgcolor: '#1248a8',
+                      },
                     }}
                   >
                     Forward
                   </Button>
-                </Grid>
-                {/* Conditionally render the dropdown if the status is forwarded */}
-                {newEmployeeStatus === "forwarded" && (
-                  <UserAutocomplete
-                    isMobile={isMobile}
-                    isTab={isTab}
-                    newEmployeeStatus={newEmployeeStatus}
-                    selectedUser={selectedUser}
-                    setSelectedUser={setSelectedUser}
-                    handleForwardAutocomplete={handleForwardAutocomplete}
-                    userData={userData}
-                    ticketId={ticketId}
-                    userId={ticketDetailData?.userId}
-                    isForwarded={ticketDetailData?.isForwarded}
-                    ticketDetailData={ticketDetailData}
-                    currentUserRole={decodedToken()?.role}
-                  />
-                )}
-                <Divider sx={{ my: 1 }} />
+                </Box>
 
-                {/* Employee Status FormControl */}
+                {/* User Autocomplete */}
+                {newEmployeeStatus === "forwarded" && (
+                  <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
+                    <UserAutocomplete
+                      isMobile={isMobile}
+                      isTab={isTablet}
+                      newEmployeeStatus={newEmployeeStatus}
+                      selectedUser={selectedUser}
+                      setSelectedUser={setSelectedUser}
+                      handleForwardAutocomplete={handleForwardAutocomplete}
+                      userData={userData}
+                      ticketId={ticketId}
+                      userId={ticketDetailData?.userId}
+                      isForwarded={ticketDetailData?.isForwarded}
+                      ticketDetailData={ticketDetailData}
+                      currentUserRole={decodedToken()?.role}
+                    />
+                  </Box>
+                )}
+
+                <Divider sx={{
+                  my: { xs: 1.5, sm: 2 },
+                  borderColor: '#e0e0e0'
+                }} />
+
+                {/* File Status */}
                 {decodedToken()?.role !== "credit" && (
                   <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
                     sx={{
-                      padding: 2,
-                      border: "1px solid white",
-                      borderRadius: "15px",
-                      fontSize: "1rem",
-                      bgcolor: "#b39ddb",
-                      boxShadow: "0px 4px 20px rgba(149, 117, 205, 0.3)",
-                      "&:hover": {
-                        transform: "scale(1.02)",
-                        transition: "transform 0.3s ease",
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: { xs: 1, sm: 1.5, md: 2 },
+                      p: { xs: 1.5, sm: 2 },
+                      borderRadius: { xs: 1.5, sm: 2 },
+                      bgcolor: '#b39ddb',
+                      boxShadow: '0px 4px 20px rgba(149, 117, 205, 0.3)',
+                      mb: { xs: 1.5, sm: 2 },
+                      transition: 'transform 0.3s ease',
+                      '&:hover': {
+                        transform: 'scale(1.02)',
                       },
                     }}
                   >
-                    {/* Left side: Typography */}
                     <Typography
                       variant="subtitle1"
-                      color="text.primary"
                       sx={{
-                        color: "white",
-                        fontWeight: "bold",
-                        fontFamily: "",
-                        "&:hover": {
-                          transform: "scale(1.02)",
-                          transition: "transform 0.3s ease",
+                        color: 'white',
+                        fontWeight: 'bold',
+                        fontSize: {
+                          xs: '0.8rem',
+                          sm: '0.9rem',
+                          md: '1rem'
                         },
+                        lineHeight: 1.2,
                       }}
                     >
                       File Status:
                     </Typography>
 
-                    {/* Right side: FormControl in Grid */}
-                    <Grid item xs={6} md={5} mt={0}>
-                      <FormControl
-                        variant="filled"
+                    <FormControl
+                      variant="filled"
+                      fullWidth
+                      size={isMobile ? "small" : "medium"}
+                      sx={{
+                        bgcolor: 'white',
+                        borderRadius: { xs: 1.5, sm: 2 },
+                        '& .MuiFilledInput-root': {
+                          fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                          minHeight: { xs: '48px', sm: '56px' },
+                          paddingTop: { xs: '24px', sm: '.4rem' },
+                        },
+                        '& .MuiInputLabel-root': {
+                          fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                          transform: isMobile ? 'translate(12px, 8px) scale(1)' : 'translate(12px, 10px) scale(1)',
+                          top: { xs: '-4px', sm: '-2px' },
+                        },
+                        '& .MuiInputLabel-shrink': {
+                          transform: isMobile ? 'translate(12px, 2px) scale(0.75)' : 'translate(12px, 4px) scale(0.75)',
+                          top: 0,
+                        },
+                        '& .MuiFilledInput-input': {
+                          paddingTop: { xs: '8px', sm: '12px' },
+                          paddingBottom: { xs: '8px', sm: '12px' },
+                        },
+                        '& .MuiSelect-select': {
+                          paddingTop: { xs: '8px', sm: '12px' } + ' !important',
+                          paddingBottom: { xs: '8px', sm: '12px' } + ' !important',
+                        },
+                        '& .MuiFilledInput-underline:before': {
+                          borderBottom: 'none',
+                        },
+                        '& .MuiFilledInput-underline:after': {
+                          borderBottom: 'none',
+                        },
+                        '& .MuiFilledInput-underline:hover:before': {
+                          borderBottom: 'none !important',
+                        },
+                      }}
+                    >
+                      <InputLabel>File Status</InputLabel>
+                      <Select
+                        value={newEmployeeStatus}
+                        onChange={handleChangeEmployeeStatus}
                         sx={{
-                          background: "white",
-                          borderRadius: "15px",
-                          "& .MuiFilledInput-underline:before": {
-                            borderBottom: "none",
-                          },
-                          "& .MuiFilledInput-underline:after": {
-                            borderBottom: "none",
-                          },
-                          "& .MuiFilledInput-underline:hover:before": {
-                            borderBottom: "none !important",
-                          },
+                          borderRadius: 1,
+                          '& .MuiSelect-select': {
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                            py: { xs: 1, sm: 1.5 },
+                          }
+                        }}
+                        MenuProps={{
+                          PaperProps: {
+                            sx: {
+                              maxHeight: 200,
+                              '& .MuiMenuItem-root': {
+                                fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                                minHeight: { xs: '36px', sm: '48px' },
+                              }
+                            }
+                          }
                         }}
                       >
-                        <InputLabel>File Status</InputLabel>
-                        <Select
-                          label="Employee Status"
-                          variant="filled"
-                          value={newEmployeeStatus}
-                          onChange={handleChangeEmployeeStatus}
-                          sx={{
-                            borderRadius: "5px",
-                            width: isMobile ? "30vw" : isIpad ? "10vw" : isTab ? "40vw" : "8.5vw",
-                            minWidth: isMobile ? "0" : isTab ? "180px" : "0",
-                          }}
-                        >
-                          {employeeStatusObj.map( ( status ) => (
-                            <MenuItem key={status.value} value={status.value}>
-                              {status.label}
-                            </MenuItem>
-                          ) )}
-                        </Select>
-                      </FormControl>
-                    </Grid>
+                        {employeeStatusObj.map( ( status ) => (
+                          <MenuItem key={status.value} value={status.value}>
+                            {status.label}
+                          </MenuItem>
+                        ) )}
+                      </Select>
+                    </FormControl>
                   </Box>
                 )}
 
+                {/* Loan Status */}
                 <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="center"
                   sx={{
-                    padding: 2,
-                    border: "1px solid white",
-                    borderRadius: "15px",
-                    fontSize: "1rem",
-                    mt: "1rem",
-                    bgcolor: "#b39ddb",
-                    "&:hover": {
-                      transform: "scale(1.02)",
-                      transition: "transform 0.3s ease",
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: { xs: 1, sm: 1.5, md: 2 },
+                    p: { xs: 1.5, sm: 2 },
+                    borderRadius: { xs: 1.5, sm: 2 },
+                    bgcolor: '#b39ddb',
+                    mb: { xs: 1.5, sm: 2 },
+                    transition: 'transform 0.3s ease',
+                    '&:hover': {
+                      transform: 'scale(1.02)',
                     },
                   }}
                 >
                   <Typography
                     variant="subtitle1"
-                    color="text.primary"
                     sx={{
-                      color: "white",
-                      fontWeight: "bold",
-                      fontFamily: "",
+                      color: 'white',
+                      fontWeight: 'bold',
+                      fontSize: {
+                        xs: '0.8rem',
+                        sm: '0.9rem',
+                        md: '1rem'
+                      },
+                      lineHeight: 1.2,
                     }}
                   >
                     Loan Status:
                   </Typography>
 
-                  <Grid item xs={6} md={5} mt={0}>
-                    <FormControl
-                      variant="filled"
+                  <FormControl
+                    variant="filled"
+                    fullWidth
+                    size={isMobile ? "small" : "medium"}
+                    sx={{
+                      bgcolor: 'white',
+                      borderRadius: { xs: 1.5, sm: 2 },
+                      '& .MuiFilledInput-root': {
+                        fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                        minHeight: { xs: '40px', sm: '48px' },
+                        paddingTop: { xs: '24px', sm: '.4rem' },
+                      },
+                      '& .MuiInputLabel-root': {
+                        fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                        transform: isMobile ? 'translate(12px, 12px) scale(1)' : 'translate(12px, 16px) scale(1)',
+                      },
+                      '& .MuiInputLabel-shrink': {
+                        transform: isMobile ? 'translate(12px, 4px) scale(0.75)' : 'translate(12px, 6px) scale(0.75)',
+                      },
+                      '& .MuiFilledInput-underline:before': {
+                        borderBottom: 'none',
+                      },
+                      '& .MuiFilledInput-underline:after': {
+                        borderBottom: 'none',
+                      },
+                      '& .MuiFilledInput-underline:hover:before': {
+                        borderBottom: 'none !important',
+                      },
+                    }}
+                  >
+                    <InputLabel>Loan Status</InputLabel>
+                    <Select
+                      value={newLoanStatus}
+                      onChange={handleChangeLoanStatus}
                       sx={{
-                        background: "white",
-                        borderRadius: "15px",
-
-                        "& .MuiFilledInput-underline:before": {
-                          borderBottom: "none",
-                        },
-                        "& .MuiFilledInput-underline:after": {
-                          borderBottom: "none",
-                        },
-
-                        "& .MuiFilledInput-underline:hover:before": {
-                          borderBottom: "none !important",
-                        },
+                        borderRadius: 1,
+                        '& .MuiSelect-select': {
+                          fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                          py: { xs: 1, sm: 1.5 },
+                        }
+                      }}
+                      MenuProps={{
+                        PaperProps: {
+                          sx: {
+                            maxHeight: 200,
+                            '& .MuiMenuItem-root': {
+                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                              minHeight: { xs: '36px', sm: '48px' },
+                            }
+                          }
+                        }
                       }}
                     >
-                      <InputLabel>Loan Status</InputLabel>
-                      <Select
-                        label="Loan Status"
-                        variant="filled"
-                        value={newLoanStatus}
-                        onChange={handleChangeLoanStatus}
-                        sx={{
-                          borderRadius: "5px",
-                          width: isMobile ? "30vw" : isIpad ? "10vw" : isTab ? "40vw" : "8.5vw",
-                          minWidth: isMobile ? "0" : isTab ? "180px" : "0",
-                        }}
-                      >
-                        <MenuItem value="submitted">Submitted</MenuItem>
-                        <MenuItem value="under credit review">
-                          Under Credit Review
-                        </MenuItem>
-                        <MenuItem value="login">Login</MenuItem>
-                        <MenuItem value="approved">Approved</MenuItem>
-                        <MenuItem value="disbursed">Disbursed</MenuItem>
-                        <MenuItem value="carry forward">Carry Forward</MenuItem>
-                        <MenuItem value="hold">Hold</MenuItem>
-                        <MenuItem value="drop">Drop</MenuItem>
-                        <MenuItem value="rejected">Rejected</MenuItem>
-                        <MenuItem value="relook">Relook</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Grid>
+                      <MenuItem value="submitted">Submitted</MenuItem>
+                      <MenuItem value="under credit review">Under Credit Review</MenuItem>
+                      <MenuItem value="login">Login</MenuItem>
+                      <MenuItem value="approved">Approved</MenuItem>
+                      <MenuItem value="disbursed">Disbursed</MenuItem>
+                      <MenuItem value="carry forward">Carry Forward</MenuItem>
+                      <MenuItem value="hold">Hold</MenuItem>
+                      <MenuItem value="drop">Drop</MenuItem>
+                      <MenuItem value="rejected">Rejected</MenuItem>
+                      <MenuItem value="relook">Relook</MenuItem>
+                    </Select>
+                  </FormControl>
                 </Box>
 
+                {/* Assignee */}
                 <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="center"
-                  mt={2}
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    p: { xs: 0.5, sm: 1 },
+                    mb: { xs: 1.5, sm: 2 },
+                    bgcolor: { xs: '#f5f5f5', sm: 'transparent' },
+                    borderRadius: { xs: 1, sm: 0 },
+                  }}
                 >
-                  <Box>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontSize: {
+                        xs: '0.75rem',
+                        sm: '0.8rem',
+                        md: '0.9rem',
+                        lg: '1rem'
+                      },
+                      fontWeight: 'bold',
+                      color: 'black',
+                    }}
+                  >
+                    Assignee
+                  </Typography>
+
+                  <Box sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: { xs: 0.5, sm: 1 },
+                    flexShrink: 0,
+                  }}>
                     <Typography
                       variant="body2"
                       sx={{
-                        fontSize: isMobile ? ".8rem" : isTab ? ".9rem" : "16px",
-                        fontWeight: "bold",
-                        color: "black",
-                        marginLeft: ".5rem",
-                        fontFamily: "",
+                        color: 'black',
+                        fontSize: {
+                          xs: '0.7rem',
+                          sm: '0.75rem',
+                          md: '0.8rem'
+                        },
+                        maxWidth: { xs: '80px', sm: '120px' },
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
                       }}
-                    >
-                      Assignee
-                    </Typography>
-                  </Box>
-
-                  <Box display="flex" alignItems="center">
-                    <Typography
-                      variant="body2"
-                      sx={{ mr: "1vw", color: "black", fontFamily: "" }}
                     >
                       {capitalizeFirstLetter( decodedToken()?.username )}
                     </Typography>
                     <Avatar
                       sx={{
-                        bgcolor: "#ADB5BD",
-                        mr: ".8rem",
-                        color: "white",
+                        bgcolor: '#ADB5BD',
+                        color: 'white',
+                        width: { xs: 28, sm: 32, md: 40 },
+                        height: { xs: 28, sm: 32, md: 40 },
+                        fontSize: { xs: '0.7rem', sm: '0.8rem', md: '1rem' },
                       }}
                       alt={capitalizeFirstLetter( decodedToken()?.username )}
                       src={capitalizeFirstLetter( decodedToken()?.username )}
                     />
                   </Box>
                 </Box>
-                <OriginalEstimateField
-                  ticketId={ticketId}
-                  initialEstimate={ticketDetailData?.originalEstimate}
-                  userRole={decodedToken()?.role}
-                />
-                <Box display="flex" justifyContent="space-between" mt={2}>
+
+                {/* Original Estimate Field */}
+                <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
+                  <OriginalEstimateField
+                    ticketId={ticketId}
+                    initialEstimate={ticketDetailData?.originalEstimate}
+                    userRole={decodedToken()?.role}
+                  />
+                </Box>
+
+                {/* Time Tracking */}
+                <Box sx={{ mt: { xs: 1.5, sm: 2 } }}>
                   <Typography
                     variant="body2"
-                    fontWeight="bold"
                     sx={{
-                      fontSize: isMobile ? ".8rem" : isTab ? ".9rem" : "16px",
-                      fontWeight: "bold",
-                      color: "black",
-                      marginLeft: ".5rem",
-                      fontFamily: "",
+                      fontSize: {
+                        xs: '0.75rem',
+                        sm: '0.8rem',
+                        md: '0.9rem',
+                        lg: '.9rem'
+                      },
+                      ml: ".6vw",
+                      fontWeight: 'bold',
+                      color: 'black',
+                      // mb: { xs: 0.5, sm: 1 },
                     }}
                   >
                     Time Tracking
                   </Typography>
 
                   <Box
-                    display="flex"
-                    mt={2}
                     sx={{
-                      width: isMobile ? "40vw" : isIpad ? "20vw" : isTab ? "50vw" : "25vh",
-                      color: "black",
-                      mr: ".5vw",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
+                      width: '100%',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      mt: { xs: 0.5, sm: 1, lg: 2 },
+                      px: { xs: 0, sm: 1 },
                     }}
                   >
                     <ProgressBar

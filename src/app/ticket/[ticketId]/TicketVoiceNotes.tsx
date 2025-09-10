@@ -39,17 +39,17 @@ import Loader from "../../components/common/Loader";
 import { TicketVoiceNote, TicketVoiceNoteData } from "@/types/ticketVoiceNote";
 
 interface UploadProgress {
-  [key: string]: number;
+  [ key: string ]: number;
 }
 
-const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
-  const [selectedAudioFiles, setSelectedAudioFiles] = useState<File[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<UploadProgress>({});
-  const inputRef = useRef<HTMLInputElement>(null);
+const TicketVoiceNotes = ( { isMobile, isTab, isIpad, ticketDetailData } ) => {
+  const [ selectedAudioFiles, setSelectedAudioFiles ] = useState<File[]>( [] );
+  const [ loading, setLoading ] = useState( false );
+  const [ uploadProgress, setUploadProgress ] = useState<UploadProgress>( {} );
+  const inputRef = useRef<HTMLInputElement>( null );
 
   const dispatch: AppDispatch = useDispatch();
-  const { toast } = useSelector((state: RootState) => state.toast);
+  const { toast } = useSelector( ( state: RootState ) => state.toast );
   const { toastAndNavigate, decodedToken } = Utility();
   const { createTicketHistory } = useCreateTicketHistory(
     "create-ticket-history"
@@ -63,53 +63,55 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
   } = useGetTicketVoiceNotes(
     {} as TicketVoiceNote,
     ticketDetailData?.ticketId
-      ? `get-ticket-voice-notes/${ticketDetailData.ticketId}`
+      ? `get-ticket-voice-notes/${ ticketDetailData.ticketId }`
       : ""
   );
 
   const { createTicketVoiceNote, loading: createLoading } =
-    useCreateTicketVoiceNote("create-ticket-voice-note");
+    useCreateTicketVoiceNote( "create-ticket-voice-note" );
   const { deleteTicketVoiceNote, loading: deleteLoading } =
-    useDeleteTicketVoiceNote("delete-ticket-voice-note");
+    useDeleteTicketVoiceNote( "delete-ticket-voice-note" );
 
   // Handle multiple file selection
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+  const handleFileChange = ( e: React.ChangeEvent<HTMLInputElement> ) => {
+    const files = Array.from( e.target.files || [] );
     const validFiles: File[] = [];
 
-    files.forEach((file) => {
+    files.forEach( ( file ) => {
       // Validate file size (20MB limit)
-      if (file.size > 20 * 1024 * 1024) {
+      if ( file.size > 20 * 1024 * 1024 )
+      {
         toastAndNavigate(
           dispatch,
           true,
           "error",
-          `${file.name} exceeds 20MB limit`
+          `${ file.name } exceeds 20MB limit`
         );
         return;
       }
-      validFiles.push(file);
-    });
-    setSelectedAudioFiles((prev) => [...prev, ...validFiles]);
+      validFiles.push( file );
+    } );
+    setSelectedAudioFiles( ( prev ) => [ ...prev, ...validFiles ] );
   };
 
   // Remove selected file
-  const removeSelectedFile = (index: number) => {
-    setSelectedAudioFiles((prev) => prev.filter((_, i) => i !== index));
+  const removeSelectedFile = ( index: number ) => {
+    setSelectedAudioFiles( ( prev ) => prev.filter( ( _, i ) => i !== index ) );
   };
 
   // Upload single voice note with progress tracking
   const uploadSingleVoiceNote = async (
     file: File
   ): Promise<{ success: boolean; fileName: string; error?: string }> => {
-    try {
+    try
+    {
       // Upload file to S3
       const formData = new FormData();
-      formData.append("document", file);
-      formData.append("folder", `voice-note/${file.name}`);
+      formData.append( "document", file );
+      formData.append( "folder", `voice-note/${ file.name }` );
 
       const uploadResponse = await axios.post(
-        `${process.env.NEXT_PUBLIC_WEB_URL}/upload-to-s3`,
+        `${ process.env.NEXT_PUBLIC_WEB_URL }/upload-to-s3`,
         formData,
         {
           headers: {
@@ -117,14 +119,14 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
           },
           maxContentLength: 20 * 1024 * 1024,
           maxBodyLength: 20 * 1024 * 1024,
-          onUploadProgress: (progressEvent) => {
+          onUploadProgress: ( progressEvent ) => {
             const progress = Math.round(
-              (progressEvent.loaded * 100) / (progressEvent.total || 1)
+              ( progressEvent.loaded * 100 ) / ( progressEvent.total || 1 )
             );
-            setUploadProgress((prev) => ({
+            setUploadProgress( ( prev ) => ( {
               ...prev,
-              [file.name]: progress,
-            }));
+              [ file.name ]: progress,
+            } ) );
           },
         }
       );
@@ -139,14 +141,15 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
         voice_note_url: attachmentUrl,
       };
 
-      const response = await createTicketVoiceNote(voiceNoteData);
-      if (response?.statusCode === 201) {
+      const response = await createTicketVoiceNote( voiceNoteData );
+      if ( response?.statusCode === 201 )
+      {
         const loggedInUser = decodedToken()?.username;
-        const historyMessage = `${loggedInUser} uploaded a voice note - ${file.name}`;
-        await createTicketHistory({
+        const historyMessage = `${ loggedInUser } uploaded a voice note - ${ file.name }`;
+        await createTicketHistory( {
           ticket_id: ticketDetailData.ticketId,
           action: historyMessage,
-        });
+        } );
         return { success: true, fileName: file.name };
       }
       return {
@@ -154,8 +157,9 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
         fileName: file.name,
         error: "Failed to create voice note record",
       };
-    } catch (error) {
-      console.error(`Error uploading ${file.name}:`, error);
+    } catch ( error )
+    {
+      console.error( `Error uploading ${ file.name }:`, error );
       return {
         success: false,
         fileName: file.name,
@@ -165,45 +169,50 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
   };
 
   // Upload all selected voice notes in parallel
-  const handleVoiceNotesUpload = useCallback(async () => {
-    if (selectedAudioFiles.length === 0 || !ticketDetailData?.ticketId) return;
-    setLoading(true);
+  const handleVoiceNotesUpload = useCallback( async () => {
+    if ( selectedAudioFiles.length === 0 || !ticketDetailData?.ticketId ) return;
+    setLoading( true );
 
-    try {
+    try
+    {
       // Upload all files in parallel using Promise.all
-      const uploadPromises = selectedAudioFiles.map((file) =>
-        uploadSingleVoiceNote(file)
+      const uploadPromises = selectedAudioFiles.map( ( file ) =>
+        uploadSingleVoiceNote( file )
       );
-      const results = await Promise.all(uploadPromises);
+      const results = await Promise.all( uploadPromises );
 
       // Process results
-      const successfulUploads = results.filter((result) => result.success);
-      const failedUploads = results.filter((result) => !result.success);
+      const successfulUploads = results.filter( ( result ) => result.success );
+      const failedUploads = results.filter( ( result ) => !result.success );
 
       // Clear selected files and reset input
-      setSelectedAudioFiles([]);
-      if (inputRef.current) {
+      setSelectedAudioFiles( [] );
+      if ( inputRef.current )
+      {
         inputRef.current.value = "";
       }
       // Refresh the voice notes list
       refetch();
 
       // Show appropriate toast message
-      if (successfulUploads.length > 0 && failedUploads.length === 0) {
+      if ( successfulUploads.length > 0 && failedUploads.length === 0 )
+      {
         toastAndNavigate(
           dispatch,
           true,
           "success",
-          `All ${successfulUploads.length} voice note(s) uploaded successfully`
+          `All ${ successfulUploads.length } voice note(s) uploaded successfully`
         );
-      } else if (successfulUploads.length > 0 && failedUploads.length > 0) {
+      } else if ( successfulUploads.length > 0 && failedUploads.length > 0 )
+      {
         toastAndNavigate(
           dispatch,
           true,
           "warning",
-          `${successfulUploads.length} uploaded successfully, ${failedUploads.length} failed`
+          `${ successfulUploads.length } uploaded successfully, ${ failedUploads.length } failed`
         );
-      } else {
+      } else
+      {
         toastAndNavigate(
           dispatch,
           true,
@@ -213,36 +222,40 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
       }
 
       // Log failed uploads for debugging
-      if (failedUploads.length > 0) {
-        console.error("Failed uploads:", failedUploads);
+      if ( failedUploads.length > 0 )
+      {
+        console.error( "Failed uploads:", failedUploads );
       }
-    } catch (error) {
-      console.error("Error in parallel upload:", error);
+    } catch ( error )
+    {
+      console.error( "Error in parallel upload:", error );
       toastAndNavigate(
         dispatch,
         true,
         "error",
         "Error uploading voice notes. Please try again"
       );
-    } finally {
-      setLoading(false);
-      setUploadProgress({});
+    } finally
+    {
+      setLoading( false );
+      setUploadProgress( {} );
     }
-  }, [selectedAudioFiles, ticketDetailData]);
+  }, [ selectedAudioFiles, ticketDetailData ] );
 
   // Delete voice note
   const handleDeleteVoiceNote = async (
     voiceNoteId: number,
     voiceNoteUrl: string
   ) => {
-    try {
-      await deleteTicketVoiceNote(voiceNoteId);
+    try
+    {
+      await deleteTicketVoiceNote( voiceNoteId );
       const loggedInUser = decodedToken()?.username;
-      const historyMessage = `${loggedInUser} deleted a voice note`;
-      await createTicketHistory({
+      const historyMessage = `${ loggedInUser } deleted a voice note`;
+      await createTicketHistory( {
         ticket_id: ticketDetailData.ticketId,
         action: historyMessage,
-      });
+      } );
       toastAndNavigate(
         dispatch,
         true,
@@ -250,40 +263,42 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
         "Voice note deleted successfully"
       );
       await refetch();
-    } catch (error) {
-      console.error("Error deleting voice note:", error);
-      toastAndNavigate(dispatch, true, "error", "Error deleting voice note");
+    } catch ( error )
+    {
+      console.error( "Error deleting voice note:", error );
+      toastAndNavigate( dispatch, true, "error", "Error deleting voice note" );
     }
   };
 
   // Format date for display
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString("en-US", {
+  const formatDate = ( dateString: string ) => {
+    const date = new Date( dateString );
+    return date.toLocaleString( "en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    });
+    } );
   };
 
   // Get file name from URL
-  const getFileName = (url: string) => {
-    const parts = url.split("/");
-    return parts[parts.length - 1] || "Voice Note";
+  const getFileName = ( url: string ) => {
+    const parts = url.split( "/" );
+    return parts[ parts.length - 1 ] || "Voice Note";
   };
 
   // Format file size
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
+  const formatFileSize = ( bytes: number ) => {
+    if ( bytes === 0 ) return "0 Bytes";
     const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+    const sizes = [ "Bytes", "KB", "MB", "GB" ];
+    const i = Math.floor( Math.log( bytes ) / Math.log( k ) );
+    return parseFloat( ( bytes / Math.pow( k, i ) ).toFixed( 2 ) ) + " " + sizes[ i ];
   };
 
-  if (swrLoading) {
+  if ( swrLoading )
+  {
     return <Loader />;
   }
 
@@ -320,7 +335,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
             sx={{
               color: "#9575cd",
               fontWeight: "bold",
-              fontSize: isMobile ? "1.2rem" : "1.5rem",
+              fontSize: isMobile ? "1.2rem" : isIpad ? "1.8rem" : "1.5rem",
             }}
           >
             Voice Notes ({voiceNotes?.length || 0})
@@ -340,7 +355,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
           <CardContent sx={{ p: 2 }}>
             <Typography
               variant="h6"
-              sx={{ mb: 2, fontSize: isMobile ? "1rem" : "1.1rem" }}
+              sx={{ mb: 2, fontSize: isMobile ? "1rem" : isIpad ? "1.4rem" : "1.1rem" }}
             >
               Upload Voice Notes
             </Typography>
@@ -356,6 +371,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
                   color: "#9575cd",
                   "&:hover": { bgcolor: "#f5f5f5" },
                   mb: 1,
+                  fontSize: isMobile ? ".6rem" : isIpad ? "1.2rem" : "1rem",
                 }}
               >
                 Select Audio Files
@@ -370,7 +386,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
               </Button>
               <Typography
                 variant="caption"
-                sx={{ display: "block", mt: 1, opacity: 0.8 }}
+                sx={{ display: "block", mt: 1, opacity: 0.8, fontSize:isMobile?".6rem": isIpad ? "1rem" : "" }}
               >
                 Select multiple audio files (Max 20MB each)
               </Typography>
@@ -391,7 +407,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
                     p: 1,
                   }}
                 >
-                  {selectedAudioFiles.map((file, index) => (
+                  {selectedAudioFiles.map( ( file, index ) => (
                     <Box
                       key={index}
                       sx={{
@@ -411,17 +427,18 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
                             overflow: "hidden",
                             textOverflow: "ellipsis",
                             whiteSpace: "nowrap",
+                            fontSize: isIpad ? "1.2rem" : "1rem"
                           }}
                         >
                           {file.name}
                         </Typography>
                         <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                          {formatFileSize(file.size)}
+                          {formatFileSize( file.size )}
                         </Typography>
-                        {uploadProgress[file.name] && (
+                        {uploadProgress[ file.name ] && (
                           <LinearProgress
                             variant="determinate"
-                            value={uploadProgress[file.name]}
+                            value={uploadProgress[ file.name ]}
                             sx={{
                               mt: 0.5,
                               "& .MuiLinearProgress-bar": {
@@ -432,14 +449,14 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
                         )}
                       </Box>
                       <IconButton
-                        size="small"
-                        onClick={() => removeSelectedFile(index)}
+                        size="medium"
+                        onClick={() => removeSelectedFile( index )}
                         sx={{ color: "white" }}
                       >
                         <DeleteIcon />
                       </IconButton>
                     </Box>
-                  ))}
+                  ) )}
                 </Box>
               </Box>
             )}
@@ -455,6 +472,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
                   bgcolor: "white",
                   color: "#9575cd",
                   "&:hover": { bgcolor: "#f5f5f5" },
+                  fontSize: isIpad ? "1.2rem" : "1rem",
                 }}
               >
                 Upload {selectedAudioFiles.length} File
@@ -488,7 +506,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
         >
           {voiceNotes && voiceNotes.data && voiceNotes.data.length > 0 ? (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              {voiceNotes.data.map((voiceNote: TicketVoiceNoteData) => (
+              {voiceNotes.data.map( ( voiceNote: TicketVoiceNoteData ) => (
                 <Card
                   key={voiceNote.id}
                   sx={{
@@ -532,7 +550,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
                               color="text.secondary"
                             >
                               <b style={{ fontSize: "13px" }}>Uploaded At:</b>{" "}
-                              {formatDate(voiceNote.created_at)}
+                              {formatDate( voiceNote.created_at )}
                             </Typography>
                           </Box>
                         </Box>
@@ -563,7 +581,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
                       }}
                     >
                       <Typography variant="body2" sx={{ mb: 1, color: "#666" }}>
-                        {getFileName(voiceNote.voice_note_url)}
+                        {getFileName( voiceNote.voice_note_url )}
                       </Typography>
                       <audio
                         controls
@@ -589,7 +607,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
                     </Box>
                   </CardContent>
                 </Card>
-              ))}
+              ) )}
             </Box>
           ) : (
             <Box
@@ -615,7 +633,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
         message={toast.toastMessage}
       />
 
-      {(loading || createLoading || deleteLoading) && <Loader />}
+      {( loading || createLoading || deleteLoading ) && <Loader />}
     </Box>
   );
 };

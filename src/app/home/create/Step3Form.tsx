@@ -13,19 +13,19 @@ import { Utility } from "@/utils";
 interface Step3FormProps {
   handleNext: () => void;
   allUploadsSuccess: boolean | null;
-  setAllUploadsSuccess: (value: boolean) => void;
+  setAllUploadsSuccess: ( value: boolean ) => void;
 }
 
 const initialValues = {
   data: [] as File[],
 };
 
-const Step3Form: React.FC<Step3FormProps> = ({
+const Step3Form: React.FC<Step3FormProps> = ( {
   handleNext,
   allUploadsSuccess,
   setAllUploadsSuccess,
-}) => {
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]); // To store selected files
+} ) => {
+  const [ selectedFiles, setSelectedFiles ] = useState<File[]>( [] ); // To store selected files
   const [ toast, setToast ] = useState<{
     open: boolean;
     message: string;
@@ -33,26 +33,27 @@ const Step3Form: React.FC<Step3FormProps> = ({
   }>( { open: false, message: "", severity: "success" } );
   const dispatch = useDispatch();
   const { getLocalStorage, setLocalStorage, toastAndNavigate } = Utility();
-  const customerId = getLocalStorage("customerInfo")?.id;
-  const [isUploading, setIsUploading] = useState(false);
+  const customerId = getLocalStorage( "customerInfo" )?.id;
+  const [ isUploading, setIsUploading ] = useState( false );
 
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>( null );
   const handleToast = ( message: string, severity: "success" | "error" ) => {
     setToast( { open: true, message, severity } );
   };
 
   // Handle deleting a file from the selected files array
-  const handleAttachmentDelete = (index: number) => {
-    const updatedFiles = selectedFiles.filter((_, i) => i !== index);
-    setSelectedFiles(updatedFiles);
-    if (inputRef.current) {
+  const handleAttachmentDelete = ( index: number ) => {
+    const updatedFiles = selectedFiles.filter( ( _, i ) => i !== index );
+    setSelectedFiles( updatedFiles );
+    if ( inputRef.current )
+    {
       inputRef.current.value = ""; // Reset the value of the input element
     }
   };
 
   // Submitting the form and uploading files
   const handleFormSubmit = useCallback(
-    async (values: typeof initialValues) => {
+    async ( values: typeof initialValues ) => {
       // Check if the user is online
       if ( !navigator.onLine )
       {
@@ -60,16 +61,18 @@ const Step3Form: React.FC<Step3FormProps> = ({
         return;
       }
       let attachmentUrl = null;
-      setIsUploading(true);
+      setIsUploading( true );
 
-      for (const file of values.data) {
+      for ( const file of values.data )
+      {
         const formData = new FormData();
-        formData.append("document", file);
-        formData.append("folder", `document/${file.name}`);
+        formData.append( "document", file );
+        formData.append( "folder", `document/${ file.name }` );
 
-        try {
+        try
+        {
           const uploadResponse = await axios.post(
-            `${process.env.NEXT_PUBLIC_WEB_URL}/upload-to-s3`,
+            `${ process.env.NEXT_PUBLIC_WEB_URL }/upload-to-s3`,
             formData,
             {
               headers: {
@@ -79,17 +82,18 @@ const Step3Form: React.FC<Step3FormProps> = ({
           );
           attachmentUrl = uploadResponse.data.data;
 
-          if (attachmentUrl) {
+          if ( attachmentUrl )
+          {
             await axios.post(
-              `${process.env.NEXT_PUBLIC_WEB_URL}/create-document`,
+              `${ process.env.NEXT_PUBLIC_WEB_URL }/create-document`,
               {
                 document_url: attachmentUrl,
                 customer_id: customerId,
                 type: "bank statement",
               }
             )
-            setAllUploadsSuccess(true);
-            setLocalStorage("StatementUpload", true);
+            setAllUploadsSuccess( true );
+            setLocalStorage( "StatementUpload", true );
             handleToast( "Documents uploaded successfully!", "success" );
           }
         } catch ( err )
@@ -99,7 +103,7 @@ const Step3Form: React.FC<Step3FormProps> = ({
           setAllUploadsSuccess( false );
         }
       }
-      setIsUploading(false);
+      setIsUploading( false );
     },
     [ customerId, setAllUploadsSuccess, setLocalStorage ]
   );
@@ -117,26 +121,27 @@ const Step3Form: React.FC<Step3FormProps> = ({
     };
   }, [] );
 
-  useEffect(() => {
-    if (allUploadsSuccess) {
-      const timer = setTimeout(() => {
+  useEffect( () => {
+    if ( allUploadsSuccess )
+    {
+      const timer = setTimeout( () => {
         handleNext(); // Call handleNext to move to the next step after 2 seconds
-      }, 2000);
+      }, 2000 );
 
       // Clear the timeout if the component unmounts or if allUploadsSuccess changes
-      return () => clearTimeout(timer);
+      return () => clearTimeout( timer );
     }
-  }, [allUploadsSuccess, handleNext]);
+  }, [ allUploadsSuccess, handleNext ] );
 
   return (
     <>
       <Formik
         initialValues={initialValues}
-        onSubmit={(values) =>
-          handleFormSubmit({ ...values, data: selectedFiles })
+        onSubmit={( values ) =>
+          handleFormSubmit( { ...values, data: selectedFiles } )
         }
       >
-        {({ dirty, isSubmitting, handleSubmit, setFieldValue }) => (
+        {( { dirty, isSubmitting, handleSubmit, setFieldValue } ) => (
           <Form onSubmit={handleSubmit} encType="multipart/form-data">
             <Container
               sx={{
@@ -208,7 +213,7 @@ const Step3Form: React.FC<Step3FormProps> = ({
                 {selectedFiles.length < 10 && (
                   <IconButton
                     component="label"
-                    sx={{ mb: 0, color: "#FFD700",display: "flex",justifyContent: "center" }}
+                    sx={{ mb: 0, color: "#FFD700", display: "flex", justifyContent: "center" }}
                   >
                     <AddPhotoAlternateIcon />
                     <input
@@ -217,38 +222,40 @@ const Step3Form: React.FC<Step3FormProps> = ({
                       multiple
                       type="file"
                       accept=".jpg, .gif, .png, .jpeg, .svg, .webp, application/pdf, .doc, .docx, .txt"
-                      onChange={(event) => {
-                        const newFiles = Array.from(event.target.files);
+                      onChange={( event ) => {
+                        const newFiles = Array.from( event.target.files );
 
                         // Calculate total files including the new selection
                         const totalFiles =
                           selectedFiles.length + newFiles.length;
 
-                        if (totalFiles > 10) {
+                        if ( totalFiles > 10 )
+                        {
                           handleToast( "Maximum limit reached: 10 files", "error" );
                           return;
                         }
 
                         // Check file size limit (1MB = 10,04,85,760 bytes)
-                        const filteredFiles = newFiles.filter((file) => {
-                          if (file.size > 10485760) {
+                        const filteredFiles = newFiles.filter( ( file ) => {
+                          if ( file.size > 10485760 )
+                          {
                             handleToast( `${ file.name } exceeds the 10MB limit`, "error" );
                             return false;
                           }
                           return true;
-                        });
+                        } );
 
                         // If there are no files left after filtering, return early
-                        if (filteredFiles.length === 0) return;
+                        if ( filteredFiles.length === 0 ) return;
 
-                        setSelectedFiles((prevFiles) => [
+                        setSelectedFiles( ( prevFiles ) => [
                           ...prevFiles,
                           ...filteredFiles,
-                        ]);
-                        setFieldValue("data", [
+                        ] );
+                        setFieldValue( "data", [
                           ...selectedFiles,
                           ...filteredFiles,
-                        ]);
+                        ] );
                       }}
                     />
                   </IconButton>
@@ -256,7 +263,7 @@ const Step3Form: React.FC<Step3FormProps> = ({
                 {/* Display selected file names with delete icons */}
                 {selectedFiles.length > 0 && (
                   <Box sx={{ width: "100%", maxWidth: "40vw", mt: 2, }}>
-                    {selectedFiles.map((file, index) => (
+                    {selectedFiles.map( ( file, index ) => (
                       <Box
                         key={index}
                         sx={{
@@ -268,17 +275,17 @@ const Step3Form: React.FC<Step3FormProps> = ({
                       >
                         <Typography>{file.name}</Typography>
                         <IconButton
-                          onClick={() => handleAttachmentDelete(index)}
+                          onClick={() => handleAttachmentDelete( index )}
                           sx={{ ml: 2 }}
                         >
                           <DeleteIcon />
                         </IconButton>
                       </Box>
-                    ))}
+                    ) )}
                   </Box>
                 )}
-               
-               
+
+
                 {/* Upload button */}
                 <Box
                   sx={{
@@ -339,7 +346,7 @@ const Step3Form: React.FC<Step3FormProps> = ({
                     Skip
                   </Button>
                 </Box>
-                
+
               </Box>
             </Container>
           </Form>
