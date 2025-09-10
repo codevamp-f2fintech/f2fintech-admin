@@ -1974,7 +1974,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
 
           {/* Name */}
           <TableCell>
-            <Typography variant="body2" sx={{ fontWeight: "bold", }}>
+            <Typography variant="body2" sx={{ fontWeight: "bold", whiteSpace: isTab ? "normal" : "" }}>
+
               {customerApplication.customerName?.toUpperCase()}
             </Typography>
           </TableCell>
@@ -1982,7 +1983,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
           {/* Email */}
           {userRole !== "sales" && (
             <TableCell>
-              <Typography variant="body2">
+              <Typography variant="body2" sx={{ whiteSpace: "normal" }}>
                 {userRole === "admin" ||
                   customerApplication.ticketStatus !== "disbursed"
                   ? customerApplication.customerEmail
