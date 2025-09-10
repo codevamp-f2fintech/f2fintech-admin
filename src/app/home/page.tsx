@@ -526,6 +526,21 @@ const Home: React.FC = () => {
                 >
                   <TableHead>
                     <TableRow sx={{ backgroundColor: "#3f50b5" }}>
+                          <TableCell
+                            sx={{
+                              fontWeight: "bold",
+                              color: "white",
+                              fontSize: {
+                                xs: "0.75rem",
+                                sm: "0.875rem",
+                                md: "1rem",
+                              },
+                              wordWrap: "break-word",
+                              minWidth: { xs: "60px", sm: "80px", md: "10px" },
+                            }}
+                          >
+                            S.no
+                          </TableCell>
                       <TableCell
                         sx={{
                           fontWeight: "bold",
@@ -669,10 +684,11 @@ const Home: React.FC = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {filteredCustomers.map((customerApplication) => (
+                    {filteredCustomers.map((customerApplication,index) => (
                       <ApplicationCard
                         key={customerApplication.applicationId}
                         customerApplication={customerApplication}
+                        mainIndex={index + 1}
                         refetch={refetch}
                         showDeleteButton={isAdmin}
                         onDelete={openDeleteDialog}
@@ -688,10 +704,11 @@ const Home: React.FC = () => {
             ) : (
               // List View - You can implement a different list component here
               <Grid container spacing={2}>
-                {filteredCustomers.map((customerApplication) => (
+                {filteredCustomers.map((customerApplication,index) => (
                   <ApplicationCard
                     key={customerApplication.applicationId}
                     customerApplication={customerApplication}
+                    mainIndex={index + 1}
                     refetch={refetch}
                     showDeleteButton={isAdmin}
                     onDelete={openDeleteDialog}
