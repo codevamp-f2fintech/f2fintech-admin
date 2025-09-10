@@ -178,11 +178,12 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
     decodedToken,
     formatTenure,
   } = Utility();
-  const [ showOtpComponent, setShowOtpComponent ] = useState<boolean>( false );
-  const isMobile = useMediaQuery( "(max-width:600px)" );
-  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
+
+  const [showOtpComponent, setShowOtpComponent] = useState<boolean>(false);
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
   const isIpad = useMediaQuery( "(min-width:1000px) and (max-width:1300px)" );
-  const [ deleteReason, setDeleteReason ] = useState<string>( "" );
+  const [deleteReason, setDeleteReason] = useState<string>("");
 
 
   const handleDeleteClick = ( e: React.MouseEvent ) => {
@@ -1298,6 +1299,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                   textAlign: "center",
                   fontSize: isTab ? "1rem" : "1.3rem",
                   height: isMobile ? "7vh" : isIpad ? "7vh" : isTab ? "5vh" : "8vh",
+
                   width: isMobile ? "80vw" : isTab ? "25vw" : "30vw",
                   display: "flex",
                   alignItems: "center",
