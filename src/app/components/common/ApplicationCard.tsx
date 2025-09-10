@@ -1972,7 +1972,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
 
           {/* Name */}
           <TableCell>
-            <Typography variant="body2" sx={{ fontWeight: "bold", whiteSpace: isTab ? "normal" : "" }}>
+            <Typography variant="body2" sx={{ fontWeight: "bold", }}>
               {customerApplication.customerName?.toUpperCase()}
             </Typography>
           </TableCell>
