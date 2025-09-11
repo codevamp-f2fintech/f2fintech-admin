@@ -976,7 +976,7 @@ const Ticket = () => {
                               fontWeight: "bold",
                               color: "white",
                               fontSize: "1rem",
-                              // wordWrap: "break-word",
+                              wordWrap: "break-word",
                             }}
                           >
                             Name
@@ -988,6 +988,7 @@ const Ticket = () => {
                                 color: "white",
                                 fontSize: "1rem",
                                 wordWrap: "break-word",
+                                whiteSpace: "normal"
                               }}
                             >
                               Email
