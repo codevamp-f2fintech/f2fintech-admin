@@ -1,16 +1,32 @@
 import React, { useState, memo, useEffect } from "react";
-import { Box, Grid, Paper, Typography, Button, CircularProgress } from "@mui/material";
+import {
+  Box,
+  Grid,
+  Paper,
+  Typography,
+  Button,
+  CircularProgress,
+} from "@mui/material";
 import PdfViewer from "@/app/components/common/PdfViewer";
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import axios from "axios";
+import { Utility } from "@/utils";
 
-const TicketDocuments = ( { isMobile, isTab, documents, customerId, onDocumentUploaded } ) => {
+const TicketDocuments = ( {
+  isMobile,
+  isTab,
+  isIpad,
+  documents,
+  customerId,
+  onDocumentUploaded,
+} ) => {
   const [ currentPage, setCurrentPage ] = useState( 1 );
   const [ showAttachment, setShowAttachment ] = useState( {} );
   const [ selectedFile, setSelectedFile ] = useState( null );
   const [ isUploading, setIsUploading ] = useState( false );
   const itemsPerPage = 3;
- 
+  const { capitalizeFirstLetter, decodedToken } = Utility();
+
   const toggleAttachment = ( id ) => {
     setShowAttachment( ( prev ) => ( {
       ...prev,
@@ -75,14 +91,11 @@ const TicketDocuments = ( { isMobile, isTab, documents, customerId, onDocumentUp
       if ( attachmentUrl )
       {
         // Then create document record in database
-        await axios.post(
-          `${ process.env.NEXT_PUBLIC_WEB_URL }/create-document`,
-          {
-            document_url: attachmentUrl,
-            customer_id: customerId,
-            type: "general document", // You can change this type as needed
-          }
-        );
+        await axios.post( `${ process.env.NEXT_PUBLIC_WEB_URL }/create-document`, {
+          document_url: attachmentUrl,
+          customer_id: customerId,
+          type: "general document", // You can change this type as needed
+        } );
 
         // Call callback to refresh documents list if provided
         if ( onDocumentUploaded )
@@ -98,18 +111,17 @@ const TicketDocuments = ( { isMobile, isTab, documents, customerId, onDocumentUp
       setIsUploading( false );
       setSelectedFile( null );
       // Reset file input
-      const fileInput = document.getElementById( 'add-document-input' );
+      const fileInput = document.getElementById( "add-document-input" );
       if ( fileInput )
       {
-        fileInput.value = '';
+        fileInput.value = "";
       }
     }
   };
 
-
   // Handler for button click to trigger file input
   const handleAddDocumentClick = () => {
-    document.getElementById( 'add-document-input' ).click();
+    document.getElementById( "add-document-input" ).click();
   };
 
   useEffect( () => {
@@ -129,7 +141,7 @@ const TicketDocuments = ( { isMobile, isTab, documents, customerId, onDocumentUp
   }, [] );
 
   const isPDF = ( url ) => url.toLowerCase().endsWith( ".pdf" );
-  
+
   return (
     <Grid item xs={12} md={8}>
       <Paper
@@ -145,15 +157,28 @@ const TicketDocuments = ( { isMobile, isTab, documents, customerId, onDocumentUp
           borderRadius: "12px",
           backgroundColor: "#fff",
           width: { xs: "100%", sm: "100%", md: "150%" },
-          maxWidth: "800px",
+          maxWidth: "100vw",
           boxShadow: "0px 4px 20px rgba(149, 117, 205, 0.3)",
         }}
       >
-        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2, width: "100%" }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            mb: 2,
+            width: "100%",
+          }}
+        >
           <Button
             variant="contained"
             color="primary"
-            startIcon={isUploading ? <CircularProgress size={16} color="inherit" /> : <CloudUploadIcon />}
+            startIcon={
+              isUploading ? (
+                <CircularProgress size={16} color="inherit" />
+              ) : (
+                <CloudUploadIcon />
+              )
+            }
             onClick={handleAddDocumentClick}
             disabled={isUploading}
             sx={{
@@ -161,7 +186,6 @@ const TicketDocuments = ( { isMobile, isTab, documents, customerId, onDocumentUp
               color: "white",
               textTransform: "none",
               fontWeight: 600,
-              position: "relative",
               "&:hover": {
                 bgcolor: "#f06292",
                 color: "black",
@@ -170,6 +194,7 @@ const TicketDocuments = ( { isMobile, isTab, documents, customerId, onDocumentUp
                 bgcolor: "#ccc",
                 color: "#666",
               },
+              fontSize: isMobile ? ".6rem" : isTab ? ".8rem" : "0.85rem",
             }}
           >
             {isUploading ? "Uploading..." : "Add Document"}
@@ -188,7 +213,7 @@ const TicketDocuments = ( { isMobile, isTab, documents, customerId, onDocumentUp
             mb: 2,
             color: "#172B4D",
             fontWeight: 600,
-            fontSize: { xs: "1.2rem", md: "1.3rem" },
+            fontSize: { xs: "1.2rem", md: "1.8rem" },
             width: "100%",
             textAlign: "center",
           }}
@@ -216,7 +241,7 @@ const TicketDocuments = ( { isMobile, isTab, documents, customerId, onDocumentUp
                     borderRadius: "8px",
                     boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
                     transition: "transform 0.2s ease",
-                    width: isMobile ? "50vw" : isTab ? "43vw" : "38.5vw",
+                    width: isMobile ? "60vw" : isTab ? "92%" : isIpad ? "70vw" : "38.5vw",
                     marginLeft: "1.5rem",
                     "&:hover": {
                       transform: "scale(1.02)",
@@ -226,9 +251,9 @@ const TicketDocuments = ( { isMobile, isTab, documents, customerId, onDocumentUp
                 >
                   <Typography
                     variant="body1"
-                    sx={{ color: "black", flexGrow: 1 }}
+                    sx={{ color: "black", flexGrow: 1, fontSize: isIpad ? "1.4rem" : "0.85rem" }}
                   >
-                    {doc.type}
+                    {capitalizeFirstLetter(doc.type)}
                   </Typography>
                   <Button
                     onClick={() => {
@@ -240,7 +265,7 @@ const TicketDocuments = ( { isMobile, isTab, documents, customerId, onDocumentUp
                     variant="contained"
                     sx={{
                       textTransform: "none",
-                      fontSize: "0.85rem",
+                      fontSize:isMobile?".5rem": "0.85rem",
                       bgcolor: "#f06292",
                       color: "white",
                       width: isTab ? "10vw" : isMobile ? "10vw" : "7vw",
@@ -343,10 +368,10 @@ const TicketDocuments = ( { isMobile, isTab, documents, customerId, onDocumentUp
           <Box
             sx={{
               display: "flex",
-              justifyContent: "center",
+              justifyContent: isIpad ? "space-between" : "center",
               alignItems: "center",
               marginTop: 2,
-              width: isMobile ? "55vw" : isTab ? "44vw" : "38vw",
+              width: isMobile ? "55vw" : isTab ? "90%" : isIpad ? "69vw" : "38vw",
             }}
           >
             <Button
@@ -355,7 +380,7 @@ const TicketDocuments = ( { isMobile, isTab, documents, customerId, onDocumentUp
               sx={{
                 mr: ".5rem",
                 textTransform: "none",
-                fontSize: isMobile ? ".6rem" : "0.85rem",
+                fontSize: isMobile ? ".5rem" : "0.85rem",
                 bgcolor: "#f06292",
                 color: "white",
                 "&:hover": {
@@ -363,7 +388,7 @@ const TicketDocuments = ( { isMobile, isTab, documents, customerId, onDocumentUp
                   color: "black",
                 },
                 height: isMobile ? "3vh" : isTab ? "3vh" : "",
-                width: isMobile ? "1vw" : isTab ? "" : "5vw",
+                width: isMobile ? ".8vw" : isTab ? "" : "5vw",
               }}
               disabled={currentPage === 1}
               onClick={() => setCurrentPage( ( prev ) => prev - 1 )}
@@ -383,7 +408,7 @@ const TicketDocuments = ( { isMobile, isTab, documents, customerId, onDocumentUp
                   color: "black",
                 },
                 height: isMobile ? "3vh" : isTab ? "3vh" : "",
-                width: "5vw",
+                width: isMobile ? ".8vw" : isTab ? "" : "5vw",
               }}
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage( ( prev ) => prev + 1 )}
@@ -393,11 +418,12 @@ const TicketDocuments = ( { isMobile, isTab, documents, customerId, onDocumentUp
             <Typography
               variant="body2"
               sx={{
-                color: "white",
+                color: "black",
                 textAlign: "center",
+                fontSize: isMobile ? ".6rem" : isTab ? ".8rem" : "0.85rem",
                 flexGrow: 1,
                 mt: isMobile ? "" : isTab ? "1rem" : ".5rem",
-                mr: isMobile ? "1rem" : isTab ? "20vw" : "20vw",
+                mr: isMobile ? "-1rem" : isTab ? "20vw" : isIpad ? "-2rem" : "20vw",
               }}
             >
               Page {currentPage} of {totalPages}

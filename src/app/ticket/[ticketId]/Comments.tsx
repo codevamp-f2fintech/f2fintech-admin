@@ -13,6 +13,7 @@ import {
   IconButton,
   useMediaQuery,
   Pagination,
+  useTheme,
 } from "@mui/material";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -38,29 +39,32 @@ interface CommentsProps {
   userData: User;
 }
 
-const Comments = ({ storedTicketId, userData }: CommentsProps) => {
-  const [newComment, setNewComment] = useState<string>("");
-  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
-  const [editedComment, setEditedComment] = useState<string | undefined>("");
-  const [attachment, setAttachment] = useState<string | null>(null);
-  const [attachmentPreview, setAttachmentPreview] = useState<string | null>(
+const Comments = ( { storedTicketId, userData }: CommentsProps ) => {
+  const [ newComment, setNewComment ] = useState<string>( "" );
+  const [ editingCommentId, setEditingCommentId ] = useState<number | null>( null );
+  const [ editedComment, setEditedComment ] = useState<string | undefined>( "" );
+  const [ attachment, setAttachment ] = useState<string | null>( null );
+  const [ attachmentPreview, setAttachmentPreview ] = useState<string | null>(
     null
   );
-  const { toast } = useSelector((state: RootState) => state.toast);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [showAttachment, setShowAttachment] = useState({});
-  const [hasFetched, setHasFetched] = useState(false);
-  const commentRef = useRef(null);
-  const isVisible = useIntersectionObserver(commentRef);
+  const { toast } = useSelector( ( state: RootState ) => state.toast );
+  const [ currentPage, setCurrentPage ] = useState( 1 );
+  const [ showAttachment, setShowAttachment ] = useState( {} );
+  const [ hasFetched, setHasFetched ] = useState( false );
+  const commentRef = useRef( null );
+  const isVisible = useIntersectionObserver( commentRef );
+  const muiTheme = useTheme();
 
   const dispatch: AppDispatch = useDispatch();
   const { capitalizeFirstLetter, decodedToken, toastAndNavigate } = Utility();
-  const isMobile = useMediaQuery("(max-width:600px)");
-  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const isMobile = useMediaQuery( muiTheme.breakpoints.down( 'sm' ) ); // 0-599px
+  const isTablet = useMediaQuery( muiTheme.breakpoints.between( 'sm', 'md' ) ); // 600-899px
+  const isIpad = useMediaQuery( muiTheme.breakpoints.between( 'md', 'lg' ) ); // 900-1199px
+  const isDesktop = useMediaQuery( muiTheme.breakpoints.up( 'lg' ) ); // 1200px+
 
   const { value: comments, refetch } = useGetTicketActivities(
     {} as TicketActivities,
-    hasFetched ? `get-ticket-activities/${storedTicketId}` : ""
+    hasFetched ? `get-ticket-activities/${ storedTicketId }` : ""
   );
 
   const { createTicketActivity } = useCreateTicketActivity(
@@ -73,52 +77,58 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
     "update-ticket-activity"
   );
 
-  useEffect(() => {
-    if (isVisible && !hasFetched) {
+  useEffect( () => {
+    if ( isVisible && !hasFetched )
+    {
       refetch();
-      setHasFetched(true);
+      setHasFetched( true );
     }
-  }, [isVisible, hasFetched]);
+  }, [ isVisible, hasFetched ] );
 
   // Helper function to get file extension from URL
-  const getFileExtensionFromUrl = (url: string) => {
-    try {
-      const urlParts = url.split("/");
-      const filename = urlParts[urlParts.length - 1];
-      const extension = filename.split(".").pop()?.toLowerCase();
+  const getFileExtensionFromUrl = ( url: string ) => {
+    try
+    {
+      const urlParts = url.split( "/" );
+      const filename = urlParts[ urlParts.length - 1 ];
+      const extension = filename.split( "." ).pop()?.toLowerCase();
       return extension || "";
-    } catch (error) {
+    } catch ( error )
+    {
       return "";
     }
   };
 
   // Helper function to check if attachment is PDF
-  const isPdfAttachment = (attachmentUrl: string) => {
-    const extension = getFileExtensionFromUrl(attachmentUrl);
+  const isPdfAttachment = ( attachmentUrl: string ) => {
+    const extension = getFileExtensionFromUrl( attachmentUrl );
     return extension === "pdf";
   };
 
   // Helper function to check if attachment is Excel based on URL
-  const isExcelAttachment = (attachmentUrl: string) => {
-    const extension = getFileExtensionFromUrl(attachmentUrl);
-    const excelExtensions = ["xlsx", "xls", "csv", "xlsm", "xlsb"];
-    return excelExtensions.includes(extension);
+  const isExcelAttachment = ( attachmentUrl: string ) => {
+    const extension = getFileExtensionFromUrl( attachmentUrl );
+    const excelExtensions = [ "xlsx", "xls", "csv", "xlsm", "xlsb" ];
+    return excelExtensions.includes( extension );
   };
 
-  const handleCreateComment = useCallback(async () => {
-    if (!newComment.trim()) return;
+  const handleCreateComment = useCallback( async () => {
+    if ( !newComment.trim() ) return;
 
-    try {
+    try
+    {
       let attachmentUrl = null;
 
-      if (attachment) {
-        try {
+      if ( attachment )
+      {
+        try
+        {
           const formData = new FormData();
-          formData.append("document", attachment);
-          formData.append("folder", `comment/${attachment.name}`);
+          formData.append( "document", attachment );
+          formData.append( "folder", `comment/${ attachment.name }` );
 
           const uploadResponse = await axios.post(
-            `${process.env.NEXT_PUBLIC_WEB_URL}/upload-to-s3`,
+            `${ process.env.NEXT_PUBLIC_WEB_URL }/upload-to-s3`,
             formData,
             {
               headers: {
@@ -127,8 +137,9 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
             }
           );
           attachmentUrl = uploadResponse.data.data;
-        } catch (err) {
-          console.log("Error uploading attachment:", err);
+        } catch ( err )
+        {
+          console.log( "Error uploading attachment:", err );
           toastAndNavigate(
             dispatch,
             true,
@@ -144,46 +155,51 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
         comment: newComment,
         attachment: attachmentUrl,
       };
-      const createdComment = await createTicketActivity(newCommentData);
-      if (createdComment) {
-        setNewComment("");
-        setAttachment(null);
-        setAttachmentPreview("");
-        toastAndNavigate(dispatch, true, "info", "Commented Successfully");
+      const createdComment = await createTicketActivity( newCommentData );
+      if ( createdComment )
+      {
+        setNewComment( "" );
+        setAttachment( null );
+        setAttachmentPreview( "" );
+        toastAndNavigate( dispatch, true, "info", "Commented Successfully" );
         refetch();
       }
-    } catch (error) {
-      toastAndNavigate(dispatch, true, "error", "Error Creating Comment");
-      console.log("Error creating the comment:", error);
+    } catch ( error )
+    {
+      toastAndNavigate( dispatch, true, "error", "Error Creating Comment" );
+      console.log( "Error creating the comment:", error );
     }
-  }, [attachment, newComment, storedTicketId, refetch]);
+  }, [ attachment, newComment, storedTicketId, refetch ] );
 
   const handleDeleteComment = useCallback(
-    async (commentId: number) => {
-      try {
-        await deleteTicketActivity(commentId);
-        toastAndNavigate(dispatch, true, "info", "Deleted Successfully");
+    async ( commentId: number ) => {
+      try
+      {
+        await deleteTicketActivity( commentId );
+        toastAndNavigate( dispatch, true, "info", "Deleted Successfully" );
         await refetch();
-      } catch (error) {
-        toastAndNavigate(dispatch, true, "error", "Error Deleting Comment");
-        console.log("Error deleting the comment:", error);
+      } catch ( error )
+      {
+        toastAndNavigate( dispatch, true, "error", "Error Deleting Comment" );
+        console.log( "Error deleting the comment:", error );
       }
     },
-    [deleteTicketActivity, refetch, dispatch, toastAndNavigate]
+    [ deleteTicketActivity, refetch, dispatch, toastAndNavigate ]
   );
 
   const handleEditComment = useCallback(
-    (commentId: number, commentText: string) => {
-      setEditingCommentId(commentId);
-      setEditedComment(commentText);
+    ( commentId: number, commentText: string ) => {
+      setEditingCommentId( commentId );
+      setEditedComment( commentText );
     },
     []
   );
 
   const handleSaveEditComment = useCallback(
-    async (commentId: number, ticketId: number) => {
-      if (!editedComment.trim()) return;
-      try {
+    async ( commentId: number, ticketId: number ) => {
+      if ( !editedComment.trim() ) return;
+      try
+      {
         const updatedCommentData = {
           comment: editedComment,
           updated_at: new Date().toISOString(),
@@ -193,99 +209,108 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
           commentId,
           updatedCommentData
         );
-        if (updatedComment) {
-          setEditingCommentId(null);
-          setEditedComment("");
-          setAttachment(null);
-          toastAndNavigate(dispatch, true, "info", "Updated Successfully");
+        if ( updatedComment )
+        {
+          setEditingCommentId( null );
+          setEditedComment( "" );
+          setAttachment( null );
+          toastAndNavigate( dispatch, true, "info", "Updated Successfully" );
           refetch();
         }
-      } catch (error) {
-        toastAndNavigate(dispatch, true, "error", "Error Updating Comment");
-        console.log("Error Updating the comment:", error);
+      } catch ( error )
+      {
+        toastAndNavigate( dispatch, true, "error", "Error Updating Comment" );
+        console.log( "Error Updating the comment:", error );
       }
     },
-    [editedComment, modifyTicketActivity, refetch, dispatch, toastAndNavigate]
+    [ editedComment, modifyTicketActivity, refetch, dispatch, toastAndNavigate ]
   );
 
-  const handleCancelEdit = useCallback(() => {
-    setEditingCommentId(null);
-    setEditedComment("");
-  }, []);
+  const handleCancelEdit = useCallback( () => {
+    setEditingCommentId( null );
+    setEditedComment( "" );
+  }, [] );
 
-  const handleAttachmentChange = (e: any) => {
-    const file = e.target.files[0];
-    setAttachment(file);
+  const handleAttachmentChange = ( e: any ) => {
+    const file = e.target.files[ 0 ];
+    setAttachment( file );
 
-    if (file && file.type.startsWith("image/")) {
-      const previewUrl = URL.createObjectURL(file);
-      setAttachmentPreview(previewUrl);
-    } else {
-      setAttachmentPreview("");
+    if ( file && file.type.startsWith( "image/" ) )
+    {
+      const previewUrl = URL.createObjectURL( file );
+      setAttachmentPreview( previewUrl );
+    } else
+    {
+      setAttachmentPreview( "" );
     }
   };
 
   const handleAttachmentDelete = () => {
-    setAttachment(null);
-    setAttachmentPreview("");
+    setAttachment( null );
+    setAttachmentPreview( "" );
   };
 
   const handlePageChange = (
     event: React.ChangeEvent<unknown>,
     page: number
   ) => {
-    setCurrentPage(page);
+    setCurrentPage( page );
   };
 
   const paginatedComments =
     comments && comments.data
       ? comments.data.slice(
-          (currentPage - 1) * ITEMS_PER_PAGE,
-          currentPage * ITEMS_PER_PAGE
-        )
+        ( currentPage - 1 ) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+      )
       : [];
 
   // RECOMMENDED: Replace your existing toggleAttachment function with this
-  const toggleAttachment = (commentId, attachmentUrl) => {
-    if (isExcelAttachment(attachmentUrl)) {
+  const toggleAttachment = ( commentId, attachmentUrl ) => {
+    if ( isExcelAttachment( attachmentUrl ) )
+    {
       // Microsoft Office Online Viewer is most reliable for Excel files
-      const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
+      const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${ encodeURIComponent(
         attachmentUrl
-      )}`;
+      ) }`;
 
       // Try opening the file
-      const newWindow = window.open(officeViewerUrl, "_blank");
+      const newWindow = window.open( officeViewerUrl, "_blank" );
 
       // If popup is blocked or fails, provide alternative options
       if (
         !newWindow ||
         newWindow.closed ||
         typeof newWindow.closed === "undefined"
-      ) {
+      )
+      {
         // Show options modal or direct download
         const shouldDownload = window.confirm(
           "Unable to open file in viewer. Would you like to download it instead?"
         );
 
-        if (shouldDownload) {
+        if ( shouldDownload )
+        {
           // Create download link
-          const link = document.createElement("a");
+          const link = document.createElement( "a" );
           link.href = attachmentUrl;
           link.download = "";
           link.target = "_blank";
-          document.body.appendChild(link);
+          document.body.appendChild( link );
           link.click();
-          document.body.removeChild(link);
+          document.body.removeChild( link );
         }
       }
-    } else if (isPdfAttachment(attachmentUrl)) {
-      window.open(attachmentUrl, "_blank");
-    } else {
+    } else if ( isPdfAttachment( attachmentUrl ) )
+    {
+      window.open( attachmentUrl, "_blank" );
+    } else
+    {
       // For images and other files, use existing modal behavior
-      setShowAttachment((prev) => ({
+      setShowAttachment( ( prev ) => ( {
         ...prev,
-        [commentId]: !prev[commentId],
-      }));
+        [ commentId ]: !prev[ commentId ],
+      } ) );
     }
   };
 
@@ -293,46 +318,50 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
   // Add this to your component imports
   // import * as XLSX from 'xlsx';
 
-  const [excelData, setExcelData] = useState(null);
-  const [showExcelModal, setShowExcelModal] = useState({});
+  const [ excelData, setExcelData ] = useState( null );
+  const [ showExcelModal, setShowExcelModal ] = useState( {} );
 
-  const parseExcelFile = async (attachmentUrl) => {
-    try {
-      const response = await fetch(attachmentUrl);
+  const parseExcelFile = async ( attachmentUrl ) => {
+    try
+    {
+      const response = await fetch( attachmentUrl );
       const arrayBuffer = await response.arrayBuffer();
-      const workbook = XLSX.read(arrayBuffer, { type: "array" });
+      const workbook = XLSX.read( arrayBuffer, { type: "array" } );
 
       // Get first worksheet
-      const wsname = workbook.SheetNames[0];
-      const ws = workbook.Sheets[wsname];
+      const wsname = workbook.SheetNames[ 0 ];
+      const ws = workbook.Sheets[ wsname ];
 
       // Convert to JSON
-      const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      const data = XLSX.utils.sheet_to_json( ws, { header: 1 } );
       return data;
-    } catch (error) {
-      console.error("Error parsing Excel file:", error);
+    } catch ( error )
+    {
+      console.error( "Error parsing Excel file:", error );
       return null;
     }
   };
 
-  const handleExcelView = async (commentId, attachmentUrl) => {
-    const data = await parseExcelFile(attachmentUrl);
-    if (data) {
-      setExcelData({ [commentId]: data });
-      setShowExcelModal((prev) => ({ ...prev, [commentId]: true }));
-    } else {
+  const handleExcelView = async ( commentId, attachmentUrl ) => {
+    const data = await parseExcelFile( attachmentUrl );
+    if ( data )
+    {
+      setExcelData( { [ commentId ]: data } );
+      setShowExcelModal( ( prev ) => ( { ...prev, [ commentId ]: true } ) );
+    } else
+    {
       // Fallback to external viewer
       window.open(
-        `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
+        `https://view.officeapps.live.com/op/embed.aspx?src=${ encodeURIComponent(
           attachmentUrl
-        )}`,
+        ) }`,
         "_blank"
       );
     }
   };
 
   // Excel data display modal component
-  const ExcelModal = ({ commentId, data, onClose }) => (
+  const ExcelModal = ( { commentId, data, onClose } ) => (
     <Box
       sx={{
         position: "fixed",
@@ -358,9 +387,9 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
 
       <Box sx={{ overflow: "auto" }}>
         <table style={{ borderCollapse: "collapse", width: "100%" }}>
-          {data.map((row, rowIndex) => (
+          {data.map( ( row, rowIndex ) => (
             <tr key={rowIndex}>
-              {row.map((cell, cellIndex) => (
+              {row.map( ( cell, cellIndex ) => (
                 <td
                   key={cellIndex}
                   style={{
@@ -371,44 +400,48 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
                 >
                   {cell}
                 </td>
-              ))}
+              ) )}
             </tr>
-          ))}
+          ) )}
         </table>
       </Box>
     </Box>
   );
 
   // Solution 4: Improved button with better UX
-  const ExcelFileButton = ({ commentId, attachmentUrl }) => {
-    const [loading, setLoading] = useState(false);
+  const ExcelFileButton = ( { commentId, attachmentUrl } ) => {
+    const [ loading, setLoading ] = useState( false );
 
     const handleClick = async () => {
-      setLoading(true);
+      setLoading( true );
 
-      try {
+      try
+      {
         // Try Office Online first
-        const officeUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
+        const officeUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${ encodeURIComponent(
           attachmentUrl
-        )}`;
-        const newWindow = window.open(officeUrl, "_blank");
+        ) }`;
+        const newWindow = window.open( officeUrl, "_blank" );
 
         // Check if window opened successfully
-        if (!newWindow) {
+        if ( !newWindow )
+        {
           // Popup blocked, try alternative
           window.location.href = officeUrl;
         }
-      } catch (error) {
-        console.error("Error opening Excel file:", error);
+      } catch ( error )
+      {
+        console.error( "Error opening Excel file:", error );
         // Fallback to download
-        const link = document.createElement("a");
+        const link = document.createElement( "a" );
         link.href = attachmentUrl;
         link.download = "";
-        document.body.appendChild(link);
+        document.body.appendChild( link );
         link.click();
-        document.body.removeChild(link);
-      } finally {
-        setLoading(false);
+        document.body.removeChild( link );
+      } finally
+      {
+        setLoading( false );
       }
     };
 
@@ -449,7 +482,7 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
           multiline
           rows={3}
           value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
+          onChange={( e ) => setNewComment( e.target.value )}
           sx={{
             mt: 1,
             bgcolor: "#ffffff",
@@ -480,8 +513,25 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
         </IconButton>
       </Box>
       {attachment && (
-        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-          <Typography>{attachment.name}</Typography>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            mb: 2,
+            width: {
+              xs: "auto",
+              sm: "auto",
+              md: "auto",
+            },
+            overflowX: "auto",
+            whiteSpace: "nowrap",
+            scrollbarWidth: "thin",
+            "&::-webkit-scrollbar": {
+              height: "6px",
+            },
+          }}
+        >
+          {" "}
           {attachmentPreview && (
             <Box
               component="img"
@@ -498,6 +548,7 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
           <IconButton onClick={handleAttachmentDelete} sx={{ ml: 2 }}>
             <DeleteIcon />
           </IconButton>
+          <Typography>{attachment.name}</Typography>
         </Box>
       )}
 
@@ -516,10 +567,12 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
             backgroundSize: "200% auto",
             color: "white",
             borderRadius: "10px",
+            width: { xs: "15w", sm: "20vw", md: "10vw" },
             display: "block",
             "&:hover": {
               bgcolor: "#155fcc",
             },
+            fontSize: { xs: "0.5rem", sm: "0.85rem", md: "0.9rem" },
           }}
           onClick={handleCreateComment}
         >
@@ -529,43 +582,69 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
 
       <Box mt={3}>
         {paginatedComments.length > 0 ? (
-          paginatedComments.map((comment: any) => {
+          paginatedComments.map( ( comment: any ) => {
             const commentedBy = userData?.data?.results?.find(
-              (user) => user.id == comment.user_id
+              ( user ) => user.id == comment.user_id
             );
             return (
               <Box
                 key={comment.id}
                 mt={2}
-                p={2}
+                p={{ xs: 1.5, sm: 2, md: 2 }}
                 sx={{
                   display: "flex",
                   alignItems: "flex-start",
                   height: "auto",
+                  borderRadius: "8px",
+                  backgroundColor: "#fafafa",
                 }}
               >
-                <Avatar sx={{ bgcolor: "#eeeeee", mr: 2, color: "black" }}>
-                  {commentedBy?.username?.charAt(0).toUpperCase()}
+                <Avatar
+                  sx={{
+                    bgcolor: "#eeeeee",
+                    mr: { xs: 1, sm: 1.5, md: 2 },
+                    color: "black",
+                    width: { xs: 32, sm: 36, md: 40 },
+                    height: { xs: 32, sm: 36, md: 40 },
+                    fontSize: { xs: "0.7rem", sm: "1rem", md: "1.1rem" },
+                  }}
+                >
+                  {commentedBy?.username?.charAt( 0 ).toUpperCase()}
                 </Avatar>
 
-                <Box sx={{ flexGrow: 1 }}>
+                <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                   <Box
                     sx={{
                       display: "flex",
-                      alignItems: "center",
-                      mb: isTab ? 0 : 0.5,
+                      alignItems: { xs: "flex-start", sm: "center" },
+                      flexDirection: { xs: "column", sm: "row" },
+                      mb: { xs: 0.5, sm: 0.5, md: 0.5 },
+                      gap: { xs: 0.5, sm: 2 },
                     }}
                   >
-                    <Typography fontWeight="bold" sx={{ marginRight: "8px" }}>
-                      {capitalizeFirstLetter(commentedBy?.username)}
+                    <Typography
+                      fontWeight="bold"
+                      sx={{
+                        fontSize: { xs: "0.7rem", sm: "1rem", md: "1rem" },
+                        color: "#333",
+                      }}
+                    >
+                      {capitalizeFirstLetter( commentedBy?.username )}
                     </Typography>
                     <Typography
                       variant="body2"
                       color="red"
-                      sx={{ ml: "20vw" }}
+                      sx={{
+                        fontSize: {
+                          xs: "0.6rem",
+                          sm: "0.8rem",
+                          md: "0.85rem",
+                        },
+                        flexShrink: 0,
+                      }}
                     >
                       {format(
-                        new Date(comment.created_at),
+                        new Date( comment.created_at ),
                         "MMM dd, yyyy 'at' hh:mm a"
                       )}
                     </Typography>
@@ -586,28 +665,53 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
                         fullWidth
                         multiline
                         value={editedComment}
-                        onChange={(e) =>
+                        onChange={( e ) =>
                           setEditedComment(
-                            capitalizeFirstLetter(e.target.value)
+                            capitalizeFirstLetter( e.target.value )
                           )
                         }
                         rows={3}
                         variant="filled"
                       />
-                      <Box mt={1}>
+                      <Box
+                        mt={1}
+                        sx={{
+                          display: "flex",
+                          gap: { xs: 1, sm: 2 },
+                          flexDirection: { xs: "column", sm: "row" },
+                        }}
+                      >
                         <Button
                           variant="contained"
                           color="primary"
-                          sx={{ color: "white", bgcolor: "green" }}
+                          sx={{
+                            color: "white",
+                            bgcolor: "green",
+                            fontSize: {
+                              xs: "0.75rem",
+                              sm: "0.85rem",
+                              md: "0.9rem",
+                            },
+                            py: { xs: 0.5, sm: 1 },
+                          }}
                           onClick={() =>
-                            handleSaveEditComment(comment.id, comment.ticket_id)
+                            handleSaveEditComment( comment.id, comment.ticket_id )
                           }
                         >
                           Save
                         </Button>
                         <Button
                           variant="contained"
-                          sx={{ ml: 2, color: "white", bgcolor: "#f06292" }}
+                          sx={{
+                            color: "white",
+                            bgcolor: "#f06292",
+                            fontSize: {
+                              xs: "0.75rem",
+                              sm: "0.85rem",
+                              md: "0.9rem",
+                            },
+                            py: { xs: 0.5, sm: 1 },
+                          }}
                           onClick={handleCancelEdit}
                         >
                           Cancel
@@ -618,101 +722,115 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
                     <>
                       <Box
                         sx={{
-                          height: isTab ? "6vh" : isMobile ? "10vh" : "12vh",
+                          maxHeight: {
+                            xs: "15vh",
+                            sm: "12vh",
+                            md: "12vh",
+                            lg: "10vh",
+                          },
                           overflowY: "auto",
                           "&::-webkit-scrollbar": {
                             display: "none",
                           },
+                          mb: 1,
                         }}
                       >
                         <Typography
                           variant="body1"
-                          sx={{ mb: 1, color: "gray", fontSize: ".9rem" }}
+                          sx={{
+                            mb: 1,
+                            color: "gray",
+                            fontSize: {
+                              xs: "0.8rem",
+                              sm: "0.95rem",
+                              md: "0.9rem",
+                            },
+                            lineHeight: 1.5,
+                            wordBreak: "break-word",
+                          }}
                         >
-                          {capitalizeFirstLetter(comment.comment)}
+                          {capitalizeFirstLetter( comment.comment )}
                         </Typography>
                         {comment.attachment && (
                           <Box>
                             <Button
                               onClick={() =>
-                                toggleAttachment(comment.id, comment.attachment)
+                                toggleAttachment( comment.id, comment.attachment )
                               }
                               variant="contained"
                               sx={{
                                 textTransform: "none",
                                 bgcolor: "#0c66e4",
                                 color: "white",
-                                width: isTab
-                                  ? "14vw"
-                                  : isMobile
-                                  ? "35vw"
-                                  : "9vw",
-                                fontSize: isTab
-                                  ? ""
-                                  : isMobile
-                                  ? ".6rem"
-                                  : "0.85rem",
+                                fontSize: {
+                                  xs: "0.5rem",
+                                  sm: "0.6rem",
+                                  md: "0.85rem",
+                                  lg: "0.7rem",
+                                },
+                                py: { xs: 0.5, sm: 1 },
+                                px: { xs: 1, sm: 2 },
+                                minWidth: { xs: "auto", sm: "120px" },
                                 "&:hover": {
                                   bgcolor: "#0c66e4",
                                   color: "black",
                                 },
                               }}
                             >
-                              {isExcelAttachment(comment.attachment)
+                              {isExcelAttachment( comment.attachment )
                                 ? "Open Excel File"
-                                : showAttachment[comment.id]
-                                ? "Hide Attachment"
-                                : "View Attachment"}
+                                : showAttachment[ comment.id ]
+                                  ? "Hide Attachment"
+                                  : "View Attachment"}
                             </Button>
 
                             {/* Only show modal for non-Excel files */}
-                            {!isExcelAttachment(comment.attachment) &&
-                              showAttachment[comment.id] && (
+                            {!isExcelAttachment( comment.attachment ) &&
+                              showAttachment[ comment.id ] && (
                                 <Box
                                   sx={{
                                     position: "fixed",
                                     top: "50%",
                                     left: "50%",
                                     transform: "translate(-50%, -50%)",
-                                    zIndex: 1000,
+                                    zIndex: 1300,
                                     backgroundColor: "white",
                                     borderRadius: "8px",
-                                    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
-                                    padding: 2,
+                                    boxShadow:
+                                      "0px 8px 16px rgba(0, 0, 0, 0.2)",
+                                    p: { xs: 1, sm: 2 },
                                     textAlign: "center",
-                                    height: isMobile
-                                      ? "70vh"
-                                      : isTab
-                                      ? "70vh"
-                                      : "100%",
-                                    width: isMobile
-                                      ? "95vw"
-                                      : isTab
-                                      ? "85vw"
-                                      : "100%",
+                                    height: {
+                                      xs: "90vh",
+                                      sm: "85vh",
+                                      md: "90vh",
+                                    },
+                                    width: {
+                                      xs: "95vw",
+                                      sm: "90vw",
+                                      md: "85vw",
+                                      lg: "80vw",
+                                    },
+                                    maxWidth: "1200px",
+                                    display: "flex",
+                                    flexDirection: "column",
                                   }}
                                 >
-                                  <Box>
+                                  <Box
+                                    sx={{
+                                      flexGrow: 1,
+                                      overflow: "hidden",
+                                      mb: 2,
+                                    }}
+                                  >
                                     <img
                                       src={comment.attachment}
                                       alt="Attachment Preview"
                                       style={{
-                                        height: isMobile
-                                          ? "62vh"
-                                          : isTab
-                                          ? "65vh"
-                                          : "90vh",
-                                        width: isMobile
-                                          ? "89vw"
-                                          : isTab
-                                          ? "78vw"
-                                          : "80vw",
+                                        height: "100%",
+                                        width: "100%",
+                                        objectFit: "contain",
                                         borderRadius: "8px",
-                                        marginLeft: isMobile
-                                          ? ""
-                                          : isTab
-                                          ? ""
-                                          : "15vw",
                                       }}
                                     />
                                   </Box>
@@ -721,8 +839,11 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
                                       display: "flex",
                                       alignItems: "center",
                                       justifyContent: "center",
-                                      width: "20vw",
-                                      marginLeft: isTab ? "30vw" : "45vw",
+                                      gap: { xs: 1, sm: 2 },
+                                      flexDirection: {
+                                        xs: "column",
+                                        sm: "row",
+                                      },
                                     }}
                                   >
                                     <Button
@@ -736,10 +857,13 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
                                       size="small"
                                       sx={{
                                         textTransform: "none",
-                                        fontSize: "0.85rem",
+                                        fontSize: {
+                                          xs: "0.8rem",
+                                          sm: "0.85rem",
+                                        },
                                         color: "white",
                                         bgcolor: "#f06292",
-                                        mr: "1vw",
+                                        px: { xs: 3, sm: 4 },
                                         "&:hover": {
                                           bgcolor: "red",
                                           color: "white",
@@ -752,16 +876,20 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
                                       size="small"
                                       sx={{
                                         textTransform: "none",
-                                        fontSize: "0.85rem",
+                                        fontSize: {
+                                          xs: "0.8rem",
+                                          sm: "0.85rem",
+                                        },
                                         color: "white",
                                         bgcolor: "#f06292",
+                                        px: { xs: 3, sm: 4 },
                                         "&:hover": {
                                           bgcolor: "red",
                                           color: "white",
                                         },
                                       }}
                                       onClick={() =>
-                                        handleDeleteComment(comment.id)
+                                        handleDeleteComment( comment.id )
                                       }
                                     >
                                       Delete
@@ -774,27 +902,36 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
                       </Box>
                       <Box
                         sx={{
-                          width: "25%",
-                          mt: isTab ? "2vh" : "1vh",
+                          mt: { xs: 1, sm: 1.5, md: 2 },
                           display: "flex",
                           alignItems: "center",
-                          justifyContent: "space-between",
+                          gap: { xs: 1, sm: 1.5, md: 2 },
+                          flexDirection: { xs: "row", sm: "row" },
+                          justifyContent: { xs: "stretch", sm: "flex-start" },
                         }}
                       >
                         <Button
                           size="small"
                           sx={{
                             textTransform: "none",
-                            fontSize: "0.85rem",
+                            fontSize: {
+                              xs: "0.6rem",
+                              sm: "0.6rem",
+                              md: "0.85rem",
+                              lg: "0.7rem",
+                            },
                             bgcolor: "#155fcc",
                             color: "white",
+                            px: { xs: 2, sm: 3 },
+                            py: { xs: 0.5, sm: 1 },
+                            minWidth: { xs: "70px", sm: "auto" },
                             "&:hover": {
                               bgcolor: "#9D50BB",
                               color: "white",
                             },
                           }}
                           onClick={() =>
-                            handleEditComment(comment.id, comment.comment)
+                            handleEditComment( comment.id, comment.comment )
                           }
                         >
                           Edit
@@ -803,16 +940,23 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
                           size="small"
                           sx={{
                             textTransform: "none",
-                            fontSize: "0.85rem",
+                            fontSize: {
+                              xs: "0.6rem",
+                              sm: "0.6rem",
+                              md: "0.85rem",
+                              lg: "0.7rem",
+                            },
                             color: "white",
                             bgcolor: "#f06292",
-                            ml: "1vw",
+                            px: { xs: 2, sm: 3 },
+                            py: { xs: 0.5, sm: 1 },
+                            minWidth: { xs: "70px", sm: "auto" },
                             "&:hover": {
                               bgcolor: "red",
                               color: "white",
                             },
                           }}
-                          onClick={() => handleDeleteComment(comment.id)}
+                          onClick={() => handleDeleteComment( comment.id )}
                         >
                           Delete
                         </Button>
@@ -822,7 +966,7 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
                 </Box>
               </Box>
             );
-          })
+          } )
         ) : (
           <Typography
             sx={{
@@ -835,7 +979,7 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
         <Pagination
           count={
             comments && comments.data
-              ? Math.ceil(comments.data.length / ITEMS_PER_PAGE)
+              ? Math.ceil( comments.data.length / ITEMS_PER_PAGE )
               : 0
           }
           page={currentPage}
@@ -852,4 +996,4 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
   );
 };
 
-export default memo(Comments);
+export default memo( Comments );

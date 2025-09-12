@@ -38,6 +38,7 @@ import step1ValidationSchema from "./step1ValidationSchema";
 import { Utility } from "@/utils";
 import Toast from "@/app/components/common/Toast";
 import { useGetLoanProviders } from "@/hooks/loanProvider";
+import { Chip, ListItemText } from "@mui/material";
 
 const initialValues = {
   title: "",
@@ -86,6 +87,16 @@ const Step1Form: React.FC<Step1FormProps> = ( {
   const [ loanStatus, setLoanStatus ] = useState<string | null>( null );
   const toastInfo = useSelector( ( state: any ) => state.toast );
   const dispatch = useDispatch();
+  const [ providers, setProviders ] = useState<string[]>( [] );
+
+  const validateProviders = ( values: string[] ): void => {
+    let error = "";
+    if ( !values || values.length === 0 )
+    {
+      error = "Please select at least one provider";
+    }
+    setErrors( ( prev ) => ( { ...prev, provider: error } ) );
+  };
 
   // Fetch loan providers
   const { value: providersData, swrLoading: providersLoading } =
@@ -122,16 +133,6 @@ const Step1Form: React.FC<Step1FormProps> = ( {
       error = "Amount must be divisible by 5";
     }
     setErrors( ( prev ) => ( { ...prev, amount: error } ) );
-  };
-
-  // Validation function for the tenure
-  const validateTenure = ( value: string ): void => {
-    let error = "";
-    if ( !value )
-    {
-      error = "This Field is required";
-    }
-    setErrors( ( prev ) => ( { ...prev, tenure: error } ) );
   };
 
   const validateProvider = ( value: string ): void => {
@@ -243,11 +244,11 @@ const Step1Form: React.FC<Step1FormProps> = ( {
     location.reload();
   }
 
+
   // Create new customer with loan application
   const create = useCallback(
     async ( values: typeof initialValues ) => {
       setLoading( true );
-      const applicationNumberGenerated = randomNumberGenerator();
       const { contact, email, name, status, dob, ...restValues } = values;
       const customer = {
         contact,
@@ -258,44 +259,61 @@ const Step1Form: React.FC<Step1FormProps> = ( {
         password: `${ name.replace( /\s/g, "" ) }@${ randomFourDigitNumber }`,
         status,
       };
+
       try
       {
-        const customerId =
-          storedCustomerId || ( await registerCustomer( customer ) );
+        const customerId = storedCustomerId || ( await registerCustomer( customer ) );
         await createCustomerInfo( customerId, restValues );
-        const applicationId = await createCustomerApplication(
-          customerId,
-          applicationNumberGenerated,
-          amount,
-          tenure,
-          provider,
-          loanType,
-        );
-        await createLoanTracking( applicationId );
+
+        // Create applications for each selected provider
+        const applicationPromises = providers.map( async ( providerName ) => {
+          const applicationNumberGenerated = randomNumberGenerator();
+          const applicationId = await createCustomerApplication(
+            customerId,
+            applicationNumberGenerated,
+            amount,
+            tenure,
+            providerName,
+            loanType,
+          );
+          await createLoanTracking( applicationId );
+          return applicationNumberGenerated;
+        } );
+
+        const applicationNumbers = await Promise.all( applicationPromises );
+
+        // Store the first application number or all of them as needed
+        setApplicationNumber( applicationNumbers[ 0 ] );
+
         !storedCustomerId
           ? await setCustomerData( {
             id: customerId,
-            name: customer.name
+            name: customer.name,
+            applicationNumbers: applicationNumbers, // Store all application numbers
           } )
           : location.reload();
+
         setLoading( false );
         console.log(
-          "Customer info, application, and loan tracking created successfully"
+          `Created ${ providers.length } applications successfully:`,
+          applicationNumbers
         );
       } catch ( err )
       {
-        toastAndNavigate( dispatch, true, "error", err?.response?.data?.msg || "Error Occurred. Please Try Again" );
-        setLoading( false );
-        console.log(
-          "Error during customer creation:",
-          err?.response?.data?.msg
+        toastAndNavigate(
+          dispatch,
+          true,
+          "error",
+          err?.response?.data?.msg || "Error Occurred. Please Try Again"
         );
+        setLoading( false );
+        console.log( "Error during customer creation:", err?.response?.data?.msg );
       } finally
       {
         setLoading( false );
       }
     },
-    [ amount, tenure, provider, loanType ]
+    [ amount, tenure, providers, loanType ] // Updated dependency
   );
 
   const PROVIDER_OPTIONS = providersLoading
@@ -307,6 +325,9 @@ const Step1Form: React.FC<Step1FormProps> = ( {
   // If application number and loan status exists, display success message without making user to fill the form again
   if ( applicationNumber )
   {
+    const storedCustomerInfo = getLocalStorage( "customerInfo" );
+    const allApplicationNumbers = storedCustomerInfo?.applicationNumbers || [ applicationNumber ];
+
     return (
       <Box
         sx={{
@@ -335,25 +356,26 @@ const Step1Form: React.FC<Step1FormProps> = ( {
             textAlign: "center",
           }}
         >
-          Your application is submitted!
+          Your applications are submitted!
         </Typography>
-        <Typography
-          sx={{
-            fontSize: "1rem",
-            color: "#333",
-            marginBottom: 2,
-          }}
-        >
-          Your Application Number is <strong>{applicationNumber}</strong>.
-        </Typography>
-        <Typography
-          sx={{
-            fontSize: "1rem",
-            color: "#333",
-            marginBottom: 2,
-          }}
-        >
-        </Typography>
+
+        {allApplicationNumbers.length > 1 ? (
+          <Box sx={{ mb: 2 }}>
+            <Typography sx={{ fontSize: "1rem", color: "#333", mb: 1 }}>
+              Your Application Numbers are:
+            </Typography>
+            {allApplicationNumbers.map( ( appNum, index ) => (
+              <Typography key={index} sx={{ fontSize: "0.9rem", color: "#333", textAlign: "center" }}>
+                <strong>{appNum}</strong>
+              </Typography>
+            ) )}
+          </Box>
+        ) : (
+          <Typography sx={{ fontSize: "1rem", color: "#333", mb: 2 }}>
+            Your Application Number is <strong>{applicationNumber}</strong>.
+          </Typography>
+        )}
+
         <Typography
           sx={{
             fontSize: "1rem",
@@ -363,11 +385,10 @@ const Step1Form: React.FC<Step1FormProps> = ( {
           }}
         >
           We will contact you within the next half an hour.
-          {!salary &&
-            `To speed up the
-          process, please complete the next steps.`}
+          {!salary && ` To speed up the process, please complete the next steps.`}
         </Typography>
-        {salary ?
+
+        {salary ? (
           <Button
             variant="contained"
             color="primary"
@@ -388,10 +409,11 @@ const Step1Form: React.FC<Step1FormProps> = ( {
           >
             Fill Another Application
           </Button>
-          : null}
+        ) : null}
       </Box>
     );
   }
+
 
   // Initial form view with amount and tenure selection
   if ( !getStarted )
@@ -435,11 +457,9 @@ const Step1Form: React.FC<Step1FormProps> = ( {
               color: "white",
               boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
               transition: "all 0.3s ease",
-
               "&:before, &:after": {
                 borderBottom: "none !important",
               },
-
               "&:hover": {
                 backgroundColor: "rgba(255,255,255,0.12)",
               },
@@ -460,21 +480,49 @@ const Step1Form: React.FC<Step1FormProps> = ( {
             },
           }}
         >
-          <InputLabel>Provider Name*</InputLabel>
+          <InputLabel>Provider Names* (Select Multiple)</InputLabel>
           <Select
             variant="filled"
-            name="provider"
-            value={provider}
+            name="providers"
+            multiple
+            value={providers}
             onChange={( e ) => {
-              setProvider( e.target.value );
-              validateProvider( e.target.value );
+              const value = typeof e.target.value === 'string' ? e.target.value.split( ',' ) : e.target.value;
+              setProviders( value );
+              validateProviders( value );
             }}
-            onBlur={() => validateProvider( provider )}
+            onBlur={() => validateProviders( providers )}
             startAdornment={
               <InputAdornment position="start" sx={{ color: "white !important" }}>
                 <AccountBalanceIcon />
               </InputAdornment>
             }
+            renderValue={( selected ) => (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {selected.map( ( value ) => (
+                  <Chip
+                    key={value}
+                    label={value}
+                    size="small"
+                    sx={{
+                      backgroundColor: 'rgba(144,202,249,0.3)',
+                      color: 'white',
+                      '& .MuiChip-deleteIcon': {
+                        color: 'white',
+                      },
+                    }}
+                    onDelete={() => {
+                      const newProviders = providers.filter( p => p !== value );
+                      setProviders( newProviders );
+                      validateProviders( newProviders );
+                    }}
+                    onMouseDown={( event ) => {
+                      event.stopPropagation();
+                    }}
+                  />
+                ) )}
+              </Box>
+            )}
             MenuProps={{
               PaperProps: {
                 sx: {
@@ -494,17 +542,29 @@ const Step1Form: React.FC<Step1FormProps> = ( {
               },
             }}
           >
-            {PROVIDER_OPTIONS.map( ( provider ) => (
+            {PROVIDER_OPTIONS.map( ( providerName ) => (
               <MenuItem
-                key={provider}
-                value={provider}
+                key={providerName}
+                value={providerName}
                 sx={{
                   padding: "10px 16px",
                   fontSize: "14px",
                   borderRadius: "6px",
                 }}
               >
-                {provider}
+                <Checkbox
+                  checked={providers.indexOf( providerName ) > -1}
+                  sx={{
+                    color: 'white',
+                    '&.Mui-checked': {
+                      color: '#90caf9',
+                    },
+                  }}
+                />
+                <ListItemText
+                  primary={providerName}
+                  sx={{ color: 'white' }}
+                />
               </MenuItem>
             ) )}
           </Select>
@@ -798,9 +858,11 @@ const Step1Form: React.FC<Step1FormProps> = ( {
           disabled={
             !!errors.amount ||
             !!errors.tenure ||
+            !!errors.provider ||
             !amount ||
             !tenure ||
-            !provider
+            !providers ||
+            providers.length === 0
           }
           variant="contained"
           endIcon={<ArrowForwardIcon />}

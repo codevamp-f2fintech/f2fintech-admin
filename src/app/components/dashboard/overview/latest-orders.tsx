@@ -339,7 +339,7 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
           variant="text"
           onClick={handleViewAllClick}
           sx={{
-            width: { xs: "140px", sm: "15vw", md: "8vw" }, // Fixed width on mobile
+            width: { xs: "140px", sm: "15vw", md: "8vw" },
             fontSize: { xs: "0.8rem", sm: "0.9rem" },
             mr: "1vw",
             bgcolor: "#0c66e4",
@@ -348,7 +348,13 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
               bgcolor: "#0c66e4",
               color: "white",
             },
-            whiteSpace: "nowrap", // Prevent text wrapping
+            whiteSpace: "nowrap",
+            mt: {
+              xs: 3,
+              md: 0,
+              sm: 0,
+              lg: 0,
+            },
           }}
         >
           View all

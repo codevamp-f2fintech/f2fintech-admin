@@ -13,6 +13,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { ArrowBackRounded, EditRounded } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
@@ -23,8 +25,9 @@ import Toast from "../../components/common/Toast";
 import { AppDispatch, RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import { useCreateTicketHistory } from "@/hooks/tickethistory";
+import { useGetLoanProviders } from "@/hooks/loanProvider";
 
-const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
+const TicketDetail = ({ ticketDetailData, isTab }) => {
   const router = useRouter();
   const dispatch: AppDispatch = useDispatch();
   const { toast } = useSelector((state: RootState) => state.toast);
@@ -42,26 +45,21 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
   const { createTicketHistory } = useCreateTicketHistory(
     "create-ticket-history"
   );
+  const muiTheme = useTheme();
   const userRole = decodedToken()?.role;
+    const isMobile = useMediaQuery( muiTheme.breakpoints.down( 'sm' ) ); // 0-599px
+    const isTablet = useMediaQuery( muiTheme.breakpoints.between( 'sm', 'md' ) ); // 600-899px
+    const isIpad = useMediaQuery( muiTheme.breakpoints.between( 'md', 'lg' ) ); // 900-1199px
+    const isDesktop = useMediaQuery( muiTheme.breakpoints.up( 'lg' ) ); // 1200px+
 
-  const bankOptions = [
-    "Bajaj Finance",
-    "Bajaj Market",
-    "Chola",
-    "L&T",
-    "Tata",
-    "ABFL",
-    "Godrej",
-    "IDFC",
-    "HDFC Bank",
-    "ICICI Bank",
-    "INDUSIND",
-    "Lending Cart",
-    "Incred",
-    "Credit Saison",
-    "PaySence",
-    "Shriram",
-  ];
+    // Fetch loan providers
+    const { value: providersData, swrLoading: providersLoading } =
+      useGetLoanProviders( null, "get-all-loan-providers", 1, 100 );
+
+  const PROVIDER_OPTIONS = providersLoading
+    ? []
+    : providersData?.data?.results?.map( provider => provider.title ) || [];
+
 
   // Update editedTicketData when ticketDetailData changes
   useEffect(() => {
@@ -148,43 +146,54 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
     <>
       <Box
         display="flex"
-        justifyContent="flex-start"
-        alignItems="flex-start"
+        justifyContent="center"
+        sx={{
+          flexDirection: "column",
+        }}
         mb={1}
       >
-        <Box sx={{ display: "flex", alignItems: "flex-start" }}>
-          <Button
-            startIcon={<ArrowBackRounded />}
-            onClick={() => router.back()}
-            sx={{ color: "black" }}
-          >
-            Back
-          </Button>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "flex-start" }}>
+            <Button
+              startIcon={<ArrowBackRounded />}
+              onClick={() => router.back()}
+              sx={{ color: "black" }}
+            >
+              Back
+            </Button>
+          </Box>
+
+          {/* Edit Button */}
+          <Box sx={{ marginLeft: "auto" }}>
+            <Button
+              startIcon={<EditRounded />}
+              onClick={handleOpenEditModal}
+              sx={{ color: "black" }}
+            >
+              Edit
+            </Button>
+          </Box>
         </Box>
-        <Box sx={{ marginLeft: "8vw" }}>
+        <Box sx={{ display: "flex", justifyContent: "center" }}>
           <Typography
             variant="h5"
             sx={{
               color: "black",
               textDecoration: "none",
-              fontSize: "1.5rem",
+              fontSize:isMobile?"1rem":isIpad?"2.5rem": "1.5rem",
               fontFamily: "monospace",
               fontStyle: "revert-layer",
               fontWeight: "bold",
+              
             }}
           >
             Ticket ID: F2FIN-{ticketDetailData?.ticketId}
           </Typography>
-        </Box>
-        {/* Edit Button */}
-        <Box sx={{ marginLeft: "auto" }}>
-          <Button
-            startIcon={<EditRounded />}
-            onClick={handleOpenEditModal}
-            sx={{ color: "black" }}
-          >
-            Edit
-          </Button>
         </Box>
       </Box>
 
@@ -216,7 +225,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
               <Typography
                 sx={{
                   color: "#172B4D",
-                  fontSize: "1rem",
+                  fontSize: isIpad?"1.4rem":"1rem",
                   mb: 1,
                   fontFamily: "",
                 }}
@@ -226,7 +235,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
                   component="span"
                   sx={{
                     color: "#5E6C84",
-                    fontSize: ".9rem",
+                    fontSize:isIpad?"1.4rem": ".9rem",
                     fontWeight: 500,
                   }}
                 >
@@ -240,7 +249,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
                   blackSpace: "normal",
                   fontFamily: "",
                   color: "#172B4D",
-                  fontSize: "1rem",
+                  fontSize: isIpad ? "1.4rem" : "1rem",
                   mb: 1,
                 }}
               >
@@ -249,7 +258,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
                   component="span"
                   sx={{
                     color: "#5E6C84",
-                    fontSize: ".9rem",
+                    fontSize: isIpad ? "1.4rem" : ".9rem",
                     fontWeight: 500,
                   }}
                 >
@@ -261,7 +270,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
               <Typography
                 sx={{
                   color: "#172B4D",
-                  fontSize: "1rem",
+                  fontSize: isIpad ? "1.4rem" : "1rem",
                   mb: 1,
                   fontFamily: "",
                 }}
@@ -271,7 +280,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
                   component="span"
                   sx={{
                     color: "#5E6C84",
-                    fontSize: ".9rem",
+                    fontSize: isIpad ? "1.4rem" : ".9rem",
                     fontWeight: 500,
                   }}
                 >
@@ -281,7 +290,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
               <Typography
                 sx={{
                   color: "#172B4D",
-                  fontSize: "1rem",
+                  fontSize: isIpad ? "1.4rem" : "1rem",
                   mb: 1,
                   fontFamily: "",
                 }}
@@ -291,7 +300,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
                   component="span"
                   sx={{
                     color: "#5E6C84",
-                    fontSize: ".9rem",
+                    fontSize: isIpad ? "1.4rem" : ".9rem",
                     fontWeight: 500,
                   }}
                 >
@@ -303,7 +312,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
               <Typography
                 sx={{
                   color: "#172B4D",
-                  fontSize: "1rem",
+                  fontSize: isIpad ? "1.4rem" : "1rem",
                   mb: 1,
                   fontFamily: "",
                 }}
@@ -313,7 +322,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
                   component="span"
                   sx={{
                     color: "#5E6C84",
-                    fontSize: ".9rem",
+                    fontSize: isIpad ? "1.4rem" : ".9rem",
                     fontWeight: 500,
                   }}
                 >
@@ -323,7 +332,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
               <Typography
                 sx={{
                   color: "#172B4D",
-                  fontSize: "1rem",
+                  fontSize: isIpad ? "1.4rem" : "1rem",
                   mb: 1,
                   fontFamily: "",
                 }}
@@ -333,7 +342,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
                   component="span"
                   sx={{
                     color: "#5E6C84",
-                    fontSize: ".9rem",
+                    fontSize: isIpad ? "1.4rem" : ".9rem",
                     fontWeight: 500,
                   }}
                 >
@@ -345,7 +354,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
               <Typography
                 sx={{
                   color: "#172B4D",
-                  fontSize: "1rem",
+                  fontSize: isIpad ? "1.4rem" : "1rem",
                   mb: 1,
                   fontFamily: "",
                 }}
@@ -355,7 +364,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
                   component="span"
                   sx={{
                     color: "#5E6C84",
-                    fontSize: ".9rem",
+                    fontSize: isIpad ? "1.4rem" : ".9rem",
                     fontWeight: 500,
                   }}
                 >
@@ -365,7 +374,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
               <Typography
                 sx={{
                   color: "#172B4D",
-                  fontSize: "1rem",
+                  fontSize: isIpad ? "1.4rem" : "1rem",
                   mb: 1,
                   fontFamily: "",
                 }}
@@ -375,7 +384,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
                   component="span"
                   sx={{
                     color: "#5E6C84",
-                    fontSize: ".9rem",
+                    fontSize: isIpad ? "1.4rem" : ".9rem",
                     fontWeight: 500,
                   }}
                 >
@@ -387,7 +396,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
               <Typography
                 sx={{
                   color: "#172B4D",
-                  fontSize: "1rem",
+                  fontSize: isIpad ? "1.4rem" : "1rem",
                   mb: 1,
                   fontFamily: "",
                 }}
@@ -397,7 +406,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
                   component="span"
                   sx={{
                     color: "#5E6C84",
-                    fontSize: ".9rem",
+                    fontSize: isIpad ? "1.4rem" : ".9rem",
                     fontWeight: 500,
                   }}
                 >
@@ -468,7 +477,7 @@ const TicketDetail = ({ ticketDetailData, isMobile, isTab }) => {
                     label="Loan Provider"
                     onChange={handleInputChange}
                   >
-                    {bankOptions.map((bank) => (
+                    {PROVIDER_OPTIONS.map((bank) => (
                       <MenuItem key={bank} value={bank}>
                         {bank}
                       </MenuItem>

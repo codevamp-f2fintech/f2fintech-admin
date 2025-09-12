@@ -16,17 +16,17 @@ export interface BudgetProps {
   value: number | string;
   amount?: number | null | undefined;
   Icon: any;
-  setDate?: ( date: string ) => void;
+  setDate?: (date: string) => void;
   iconColor?: string;
   iconBgColor?: string;
 }
 
-const formatAmountInIndianStyle = ( amount: string | number ) => {
-  const number = parseFloat( amount );
-  return new Intl.NumberFormat( 'hi-IN' ).format( number );
+const formatAmountInIndianStyle = (amount: string | number) => {
+  const number = parseFloat(amount);
+  return new Intl.NumberFormat("hi-IN").format(number);
 };
 
-export function Budget ( {
+export function Budget({
   name,
   sx,
   value,
@@ -35,9 +35,9 @@ export function Budget ( {
   setDate,
   iconColor = "#ffffff",
   iconBgColor = "#1976d2",
-}: BudgetProps ): React.JSX.Element {
+}: BudgetProps): React.JSX.Element {
   const theme = useTheme();
-  const isSmallScreen = useMediaQuery( theme.breakpoints.down( "sm" ) );
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
   return (
     <Card
@@ -51,7 +51,7 @@ export function Budget ( {
           transform: "translateY(-4px)",
           boxShadow: "0 8px 24px rgba(0, 0, 0, 0.15)",
         },
-        ...sx
+        ...sx,
       }}
     >
       <Box sx={{ ml: "1vw", mt: "1vh" }}>
@@ -63,20 +63,29 @@ export function Budget ( {
             width: "45px",
           }}
         >
-          {Icon && React.createElement( Icon, { sx: { fontSize: 20 } } )}
+          {Icon && React.createElement(Icon, { sx: { fontSize: 20 } })}
         </Avatar>
       </Box>
-      <CardContent sx={{
-        padding: isSmallScreen ? "12px" : "16px",
-        height: "100%",
-        boxSizing: "border-box"
-      }}>
-        <Box sx={{
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-        }}>
-          <Box sx={{ diaplay: "flex", flexDirection: "column" }}>
+      <CardContent
+        sx={{
+          padding: isSmallScreen ? "12px" : "16px",
+          height: "100%",
+          boxSizing: "border-box",
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
+          <Box
+            sx={{
+              diaplay: "flex",
+              flexDirection: "column",
+            }}
+          >
             <Tooltip title={name} placement="top" arrow>
               <Typography
                 color="text.secondary"
@@ -90,7 +99,7 @@ export function Budget ( {
                   WebkitBoxOrient: "vertical",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
-                  lineHeight: 1.3
+                  lineHeight: 1.3,
                 }}
               >
                 {name}
@@ -106,43 +115,48 @@ export function Budget ( {
               fontWeight: 600,
               color: "text.primary",
               lineHeight: 1.2,
-              wordBreak: "break-word"
+              wordBreak: "break-word",
             }}
           >
             {value}
           </Typography>
         </Box>
         <Box sx={{ flex: 1, minHeight: 0 }}>
-
-          <Box sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-end",
-            mt: 2
-          }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-end",
+              mt: 2,
+            }}
+          >
             <Box sx={{ flex: 1 }} />
 
-            <Box sx={{
-              display: "flex",
-              alignItems: "start",
-              justifyContent: "left",
-              gap: 2,
-              width: "30vw",
-            }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "start",
+                justifyContent: "left",
+                gap: 2,
+                width: "30vw",
+              }}
+            >
               {amount !== null && amount !== undefined && (
                 <Typography
                   variant="h5"
                   sx={{
                     fontSize: isSmallScreen ? "1.2rem" : "1.4rem",
                     fontWeight: "bold",
-                    color: theme.palette.mode === "dark" ? "primary.light" : "primary.dark",
-                    whiteSpace: "nowrap"
+                    color:
+                      theme.palette.mode === "dark"
+                        ? "primary.light"
+                        : "primary.dark",
+                    whiteSpace: "nowrap",
                   }}
                 >
-                  &#8377;{formatAmountInIndianStyle( amount )}
+                  &#8377;{formatAmountInIndianStyle(amount)}
                 </Typography>
               )}
-
             </Box>
           </Box>
         </Box>

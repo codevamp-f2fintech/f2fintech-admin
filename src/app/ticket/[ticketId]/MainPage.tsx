@@ -21,7 +21,7 @@ import {
   TextField,
 } from "@mui/material";
 import { ArrowForwardRounded } from "@mui/icons-material";
-import { ThemeProvider } from "@mui/material/styles";
+import { ThemeProvider, useTheme } from "@mui/material/styles";
 
 import Loader from "../../components/common/Loader";
 import Comments from "./Comments";
@@ -169,11 +169,15 @@ const Progress: React.FC = () => {
   const [ hasFetched, setHasFetched ] = useState( false ); // New state to track if data is already fetched
   const workLogRef = useRef( null );
   const isVisible = useIntersectionObserver( workLogRef );
+  const muiTheme = useTheme();
 
   const dispatch: AppDispatch = useDispatch();
   const params = useParams();
-  const isMobile = useMediaQuery( "(max-width:600px)" );
-  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
+  const isMobile = useMediaQuery( muiTheme.breakpoints.down( 'sm' ) ); // 0-599px
+  const isTablet = useMediaQuery( muiTheme.breakpoints.between( 'sm', 'md' ) ); // 600-899px
+  const isTab = useMediaQuery( muiTheme.breakpoints.between( 'sm', 'md' ) ); // 600-899px
+  const isIpad = useMediaQuery( muiTheme.breakpoints.between( 'md', 'lg' ) ); // 900-1199px
+  const isDesktop = useMediaQuery( muiTheme.breakpoints.up( 'lg' ) ); // 1200px+
   const ticketId = params?.ticketId;
   const {
     capitalizeFirstLetter,
@@ -188,18 +192,26 @@ const Progress: React.FC = () => {
   );
   const { modifyTicket } = useModifyTicket( "update-ticket" );
   const { value: userData } = useGetUsers( {} as User, "get-users", 1, 200 );
+  // const { modifyTicket } = useModifyTicket( "update-ticket" );
+  // const { value: userData } = useGetUsers( {} as User, "get-users", 1, 200 );
   const { value: workLog, refetch } = useGetTicketLogs(
     {} as TicketLogs,
     hasFetched ? `get-ticket-logs/${ ticketId }` : ""
+    // hasFetched ? `get-ticket-logs/${ ticketId }` : ""
   );
 
+  // useEffect( () => {
+  //   if ( isVisible && !hasFetched )
+  //   {
   useEffect( () => {
     if ( isVisible && !hasFetched )
     {
       refetch();
+      // setHasFetched( true );
       setHasFetched( true );
     }
   }, [ isVisible, hasFetched ] );
+  // }, [ isVisible, hasFetched ] );
 
   // Updated useEffect for fetching ticket details
   useEffect( () => {
@@ -253,7 +265,14 @@ const Progress: React.FC = () => {
       fetchTicketDetails();
     }
   }, [ ticketId ] );
+  // }, [ ticketId ] );
 
+  // useEffect( () => {
+  //   if ( workLog?.data )
+  //   {
+  //     const totalHours = workLog?.data?.reduce( ( acc: number, ticket: any ) => {
+  //       return acc + parseTimeSpent( ticket.time_spent ?? 0 );
+  //     }, 0 );
   useEffect( () => {
     if ( workLog?.data )
     {
@@ -261,26 +280,35 @@ const Progress: React.FC = () => {
         return acc + parseTimeSpent( ticket.time_spent ?? 0 );
       }, 0 );
 
+      // const finalTime = convertHoursToDaysAndHours( totalHours );
+      // setTimeLoggingEstimate( {
       const finalTime = convertHoursToDaysAndHours( totalHours );
       setTimeLoggingEstimate( {
         ...timeLoggingEstimate,
         timeSpent: finalTime,
       } );
+      // } );
       const originalEstimate = parseTimeSpent(
         timeLoggingEstimate.originalEstimate
       );
 
+      // if ( originalEstimate > 0 )
+      // {
       if ( originalEstimate > 0 )
       {
         const calculatedProgress = Math.min(
           ( totalHours / originalEstimate ) * 100,
+          // ( totalHours / originalEstimate ) * 100,
           100
         );
         const calculatedOverage =
           totalHours > originalEstimate
             ? ( ( totalHours - originalEstimate ) / originalEstimate ) * 100
+            // ? ( ( totalHours - originalEstimate ) / originalEstimate ) * 100
             : 0;
 
+        // setProgress( calculatedProgress );
+        // setOverage( calculatedOverage );
         setProgress( calculatedProgress );
         setOverage( calculatedOverage );
       }
@@ -334,6 +362,7 @@ const Progress: React.FC = () => {
         ticket_id: ticketId,
         action: historyMessage,
       } );
+      // } );
 
       if ( newStatus === "disbursed" && disbursedDate && disbursedAmount )
       { toastAndNavigate( dispatch, true, "info", "Status Changed Successfully" ); }
@@ -347,6 +376,9 @@ const Progress: React.FC = () => {
       }
       await refetch();
     } catch ( error )
+    // {
+    //   toastAndNavigate( dispatch, true, "error", "Error Changing Status" );
+    // } catch ( error )
     {
       toastAndNavigate( dispatch, true, "error", "Error Changing Status" );
     }
@@ -425,6 +457,10 @@ const Progress: React.FC = () => {
     }
   };
 
+  // const handleForwardAutocomplete = async ( value: any ) => {
+  //   setSelectedUser( value );
+  //   try
+  //   {
   const handleForwardAutocomplete = async ( value: any ) => {
     setSelectedUser( value );
     try
@@ -440,6 +476,7 @@ const Progress: React.FC = () => {
       };
 
       let historyMessage = `${ loggedInUser } forwarded the ticket to ${ value.username }`;
+      // let historyMessage = `${ loggedInUser } forwarded the ticket to ${ value.username }`;
 
       if ( employeeRole === "credit" )
       {
@@ -449,20 +486,30 @@ const Progress: React.FC = () => {
       {
         updatePayload.status = "under credit review";
       }
+      // await modifyTicket( +ticketId, updatePayload );
       await modifyTicket( +ticketId, updatePayload );
 
+      // await createTicketHistory( {
       await createTicketHistory( {
         ticket_id: ticketId,
         action: historyMessage,
       } );
+      // toastAndNavigate( dispatch, true, "info", "File Forwarded Successfully" );
+      // } );
       toastAndNavigate( dispatch, true, "info", "File Forwarded Successfully" );
       await refetch();
+      // } catch ( error )
+      // {
+      //   toastAndNavigate( dispatch, true, "error", "Error Forwarding File" );
     } catch ( error )
     {
       toastAndNavigate( dispatch, true, "error", "Error Forwarding File" );
     }
   };
 
+  // const showComments = () => setActiveSection( "Comments" );
+  // const showHistory = () => setActiveSection( "History" );
+  // const showWorkLog = () => setActiveSection( "WorkLog" );
   const showComments = () => setActiveSection( "Comments" );
   const showHistory = () => setActiveSection( "History" );
   const showWorkLog = () => setActiveSection( "WorkLog" );
@@ -471,69 +518,86 @@ const Progress: React.FC = () => {
     <ThemeProvider theme={theme}>
       <ColorModeContext.Provider value={colorMode}>
         <Container
+          maxWidth={false}
           sx={{
-            display: "flex",
-            justifyContent: isMobile ? "" : isTab ? "" : "center",
-            alignItems: isMobile ? "" : isTab ? "" : "center",
-            width: isMobile ? "95vw" : isTab ? "92vw" : "76vw",
+            px: { xs: 1, sm: 2, md: 3 },
+            py: { xs: 1, sm: 2 },
+            minHeight: '100vh',
           }}
         >
           <Grid
             container
-            spacing={3}
-            sx={{ mt: 0, display: "flex" }}
-            padding={0}
+            spacing={{ xs: 1, sm: 2, md: 3 }}
+            sx={{
+              justifyContent: 'center',
+              alignItems: 'flex-start',
+            }}
           >
-            <Grid item xs={12} md={8}>
+            {/* Main Content Section */}
+            <Grid
+              item
+              xs={12}
+              lg={8}
+              sx={{
+                order: { xs: 1, lg: 1 },
+              }}
+            >
               <Paper
                 elevation={5}
                 sx={{
-                  padding: isMobile ? 3 : isTab ? 3 : 4,
-                  backgroundImage:
-                    "linear-gradient(135deg, #fff 0%, #f8f8f8 100%)",
+                  p: { xs: 2, sm: 3, md: 4 },
+                  backgroundImage: "linear-gradient(135deg, #fff 0%, #f8f8f8 100%)",
                   backgroundBlendMode: "multiply, screen, normal",
-                  borderRadius: "20px",
+                  borderRadius: 3,
+                  width: '100%',
                 }}
               >
                 <TicketDetail
                   ticketDetailData={ticketDetailData}
                   isMobile={isMobile}
-                  isTab={isTab}
+                  isTab={isTablet}
+                  isIpad={isIpad}
                 />
 
                 <TicketDocuments
                   isMobile={isMobile}
-                  isTab={isTab}
+                  isTab={isTablet}
+                  isIpad={isIpad}
                   documents={ticketDetailData?.customerDocuments ?? []}
-                  customerId={ticketDetailData?.customer_id || ticketDetailData?.customerId}
-
+                  customerId={
+                    ticketDetailData?.customer_id ||
+                    ticketDetailData?.customerId
+                  }
                 />
+
                 <TicketVoiceNotes
                   isMobile={isMobile}
-                  isTab={isTab}
+                  isTab={isTablet}
+                  isIpad={isIpad}
                   ticketDetailData={ticketDetailData}
                 />
+
+                {/* Activity Section */}
                 <Box
-                  mt={4}
-                  mb={4}
                   sx={{
-                    height: "7vh",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    borderRadius: "10px",
-                    width: isMobile ? "73vw" : isTab ? "65vw" : "43.5vw", // Adjusted tab width
-                    bgcolor: "#e9ecef",
+                    mt: 4,
+                    mb: 4,
+                    display: 'flex',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    borderRadius: 2,
+                    bgcolor: '#e9ecef',
+                    p: { xs: 2, sm: 1 },
+                    gap: { xs: 2, sm: 0 },
                   }}
                 >
                   <Box
                     sx={{
-                      width: isMobile ? "10vw" : isTab ? "15vw" : "10vw", // Adjusted tab width
-                      height: "7vh",
-                      borderRadius: "10px 0px 0px 10px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      // minWidth: { xs: 'auto', sm: 120 },
                     }}
                   >
                     <Typography
@@ -552,6 +616,7 @@ const Progress: React.FC = () => {
                       Activity:
                     </Typography>
                   </Box>
+
                   <Box
                     sx={{
                       width: isMobile ? "60vw" : isTab ? "48vw" : "20vw", // Adjusted tab width
@@ -629,11 +694,11 @@ const Progress: React.FC = () => {
                   </Box>
                 </Box>
 
+                {/* Content Sections */}
                 {activeSection === "Comments" && (
                   <Comments storedTicketId={ticketId} userData={userData} />
                 )}
 
-                {/* History Section */}
                 {activeSection === "History" && (
                   <History ticketId={ticketId} activeSection={activeSection} />
                 )}
@@ -643,7 +708,16 @@ const Progress: React.FC = () => {
                 )}
               </Paper>
             </Grid>
-            <Grid item xs={12} md={2}>
+
+            {/* Sidebar Section */}
+            <Grid
+              item
+              xs={12}
+              lg={4}
+              sx={{
+                order: { xs: 2, lg: 2 },
+              }}
+            >
               <Paper
                 elevation={4}
                 sx={{
@@ -664,46 +738,62 @@ const Progress: React.FC = () => {
                 }}
 
               >
-                <Grid item xs={6} md={5} mt={0}>
+                {/* Forward Button */}
+                <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
                   <Button
                     color="info"
                     endIcon={<ArrowForwardRounded />}
-                    size="small"
+                    size={isMobile ? "small" : "medium"}
                     variant="contained"
+                    // onClick={() => setNewEmployeeStatus( "forwarded" )}
                     onClick={() => setNewEmployeeStatus( "forwarded" )}
                     sx={{
-                      bgcolor: "#155fcc",
-                      textAlign: "center",
-                      textTransform: "uppercase",
-                      backgroundSize: "200% auto",
-                      color: "white",
-                      borderRadius: "10px",
-                      margin: ".4rem",
+                      bgcolor: '#155fcc',
+                      textTransform: 'uppercase',
+                      borderRadius: { xs: 1.5, sm: 2 },
+                      py: { xs: 1, sm: 1.5, md: 1 },
+                      px: { xs: 1, sm: 2 },
+                      fontSize: {
+                        xs: '0.75rem',
+                        sm: '0.8rem',
+                        md: '0.85rem'
+                      },
+                      minHeight: { xs: '36px', sm: '42px' },
+                      '&:hover': {
+                        bgcolor: '#1248a8',
+                      },
                     }}
                   >
                     Forward
                   </Button>
-                </Grid>
-                {/* Conditionally render the dropdown if the status is forwarded */}
-                {newEmployeeStatus === "forwarded" && (
-                  <UserAutocomplete
-                    isMobile={isMobile}
-                    isTab={isTab}
-                    newEmployeeStatus={newEmployeeStatus}
-                    selectedUser={selectedUser}
-                    setSelectedUser={setSelectedUser}
-                    handleForwardAutocomplete={handleForwardAutocomplete}
-                    userData={userData}
-                    ticketId={ticketId}
-                    userId={ticketDetailData?.userId}
-                    isForwarded={ticketDetailData?.isForwarded}
-                    ticketDetailData={ticketDetailData}
-                    currentUserRole={decodedToken()?.role}
-                  />
-                )}
-                <Divider sx={{ my: 1 }} />
+                </Box>
 
-                {/* Employee Status FormControl */}
+                {/* User Autocomplete */}
+                {newEmployeeStatus === "forwarded" && (
+                  <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
+                    <UserAutocomplete
+                      isMobile={isMobile}
+                      isTab={isTablet}
+                      newEmployeeStatus={newEmployeeStatus}
+                      selectedUser={selectedUser}
+                      setSelectedUser={setSelectedUser}
+                      handleForwardAutocomplete={handleForwardAutocomplete}
+                      userData={userData}
+                      ticketId={ticketId}
+                      userId={ticketDetailData?.userId}
+                      isForwarded={ticketDetailData?.isForwarded}
+                      ticketDetailData={ticketDetailData}
+                      currentUserRole={decodedToken()?.role}
+                    />
+                  </Box>
+                )}
+
+                <Divider sx={{
+                  my: { xs: 1.5, sm: 2 },
+                  borderColor: '#e0e0e0'
+                }} />
+
+                {/* File Status */}
                 {decodedToken()?.role !== "credit" && (
                   <>
                     <Box
@@ -934,151 +1024,207 @@ const Progress: React.FC = () => {
 
 
                 <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="center"
                   sx={{
-                    padding: 2,
-                    border: "1px solid white",
-                    borderRadius: "15px",
-                    fontSize: "1rem",
-                    mt: "1rem",
-                    bgcolor: "#b39ddb",
-
-                    "&:hover": {
-                      transform: "scale(1.02)",
-                      transition: "transform 0.3s ease",
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: { xs: 1, sm: 1.5, md: 2 },
+                    p: { xs: 1.5, sm: 2 },
+                    borderRadius: { xs: 1.5, sm: 2 },
+                    bgcolor: '#b39ddb',
+                    mb: { xs: 1.5, sm: 2 },
+                    transition: 'transform 0.3s ease',
+                    '&:hover': {
+                      transform: 'scale(1.02)',
                     },
                   }}
                 >
                   <Typography
                     variant="subtitle1"
-                    color="text.primary"
                     sx={{
-                      color: "white",
-                      fontWeight: "bold",
-                      fontFamily: "",
+                      color: 'white',
+                      fontWeight: 'bold',
+                      fontSize: {
+                        xs: '0.8rem',
+                        sm: '0.9rem',
+                        md: '1rem'
+                      },
+                      lineHeight: 1.2,
                     }}
                   >
                     Loan Status:
                   </Typography>
 
-                  <Grid item xs={6} md={5} mt={0}>
-                    <FormControl
-                      variant="filled"
+                  <FormControl
+                    variant="filled"
+                    fullWidth
+                    size={isMobile ? "small" : "medium"}
+                    sx={{
+                      bgcolor: 'white',
+                      borderRadius: { xs: 1.5, sm: 2 },
+                      '& .MuiFilledInput-root': {
+                        fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                        minHeight: { xs: '40px', sm: '48px' },
+                        paddingTop: { xs: '24px', sm: '.4rem' },
+                      },
+                      '& .MuiInputLabel-root': {
+                        fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                        transform: isMobile ? 'translate(12px, 12px) scale(1)' : 'translate(12px, 16px) scale(1)',
+                      },
+                      '& .MuiInputLabel-shrink': {
+                        transform: isMobile ? 'translate(12px, 4px) scale(0.75)' : 'translate(12px, 6px) scale(0.75)',
+                      },
+                      '& .MuiFilledInput-underline:before': {
+                        borderBottom: 'none',
+                      },
+                      '& .MuiFilledInput-underline:after': {
+                        borderBottom: 'none',
+                      },
+                      '& .MuiFilledInput-underline:hover:before': {
+                        borderBottom: 'none !important',
+                      },
+                    }}
+                  >
+                    <InputLabel>Loan Status</InputLabel>
+                    <Select
+                      value={newLoanStatus}
+                      onChange={handleChangeLoanStatus}
                       sx={{
-                        background: "white",
-                        borderRadius: "15px",
-
-                        "& .MuiFilledInput-underline:before": {
-                          borderBottom: "none", // Removes the underline in normal state
-                        },
-                        "& .MuiFilledInput-underline:after": {
-                          borderBottom: "none", // Removes the underline in focused state
-                        },
-
-                        "& .MuiFilledInput-underline:hover:before": {
-                          borderBottom: "none !important", // Remove underline on hover
-                        },
+                        borderRadius: 1,
+                        '& .MuiSelect-select': {
+                          fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                          py: { xs: 1, sm: 1.5 },
+                        }
+                      }}
+                      MenuProps={{
+                        PaperProps: {
+                          sx: {
+                            maxHeight: 200,
+                            '& .MuiMenuItem-root': {
+                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                              minHeight: { xs: '36px', sm: '48px' },
+                            }
+                          }
+                        }
                       }}
                     >
-                      <InputLabel>Loan Status</InputLabel>
-                      <Select
-                        label="Loan Status"
-                        variant="filled"
-                        value={newLoanStatus}
-                        onChange={handleChangeLoanStatus}
-                        sx={{
-                          borderRadius: "5px",
-                          width: isMobile ? "30vw" : "8vw",
-                        }}
-                      >
-                        <MenuItem value="submitted">Submitted</MenuItem>
-                        <MenuItem value="under credit review">
-                          Under Credit Review
-                        </MenuItem>
-                        <MenuItem value="login">Login</MenuItem>
-                        <MenuItem value="approved">Approved</MenuItem>
-                        <MenuItem value="disbursed">Disbursed</MenuItem>
-                        <MenuItem value="carry forward">Carry Forward</MenuItem>
-                        <MenuItem value="hold">Hold</MenuItem>
-                        <MenuItem value="drop">Drop</MenuItem>
-                        <MenuItem value="rejected">Rejected</MenuItem>
-                        <MenuItem value="relook">Relook</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Grid>
+                      <MenuItem value="submitted">Submitted</MenuItem>
+                      <MenuItem value="under credit review">Under Credit Review</MenuItem>
+                      <MenuItem value="login">Login</MenuItem>
+                      <MenuItem value="approved">Approved</MenuItem>
+                      <MenuItem value="disbursed">Disbursed</MenuItem>
+                      <MenuItem value="carry forward">Carry Forward</MenuItem>
+                      <MenuItem value="hold">Hold</MenuItem>
+                      <MenuItem value="drop">Drop</MenuItem>
+                      <MenuItem value="rejected">Rejected</MenuItem>
+                      <MenuItem value="relook">Relook</MenuItem>
+                    </Select>
+                  </FormControl>
                 </Box>
 
+                {/* Assignee */}
                 <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="center"
-                  mt={2}
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    p: { xs: 0.5, sm: 1 },
+                    mb: { xs: 1.5, sm: 2 },
+                    bgcolor: { xs: '#f5f5f5', sm: 'transparent' },
+                    borderRadius: { xs: 1, sm: 0 },
+                  }}
                 >
-                  <Box>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontSize: {
+                        xs: '0.75rem',
+                        sm: '0.8rem',
+                        md: '0.9rem',
+                        lg: '1rem'
+                      },
+                      fontWeight: 'bold',
+                      color: 'black',
+                    }}
+                  >
+                    Assignee
+                  </Typography>
+
+                  <Box sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: { xs: 0.5, sm: 1 },
+                    flexShrink: 0,
+                  }}>
                     <Typography
                       variant="body2"
                       sx={{
-                        fontSize: isMobile ? ".8rem" : isTab ? ".9rem" : "16px",
-                        fontWeight: "bold",
-                        color: "black",
-                        marginLeft: ".5rem",
-                        fontFamily: "",
+                        color: 'black',
+                        fontSize: {
+                          xs: '0.7rem',
+                          sm: '0.75rem',
+                          md: '0.8rem'
+                        },
+                        maxWidth: { xs: '80px', sm: '120px' },
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
                       }}
                     >
-                      Assignee
-                    </Typography>
-                  </Box>
-
-                  <Box display="flex" alignItems="center">
-                    <Typography
-                      variant="body2"
-                      sx={{ mr: "1vw", color: "black", fontFamily: "" }}
-                    >
+                      {capitalizeFirstLetter( decodedToken()?.username )}
                       {capitalizeFirstLetter( decodedToken()?.username )}
                     </Typography>
                     <Avatar
                       sx={{
-                        bgcolor: "#ADB5BD",
-                        mr: ".8rem",
-                        color: "white",
+                        bgcolor: '#ADB5BD',
+                        color: 'white',
+                        width: { xs: 28, sm: 32, md: 40 },
+                        // height: { xs: 28, sm: 32, md: 40 },
+                        fontSize: { xs: '0.7rem', sm: '0.8rem', md: '1rem' },
                       }}
                       alt={capitalizeFirstLetter( decodedToken()?.username )}
                       src={capitalizeFirstLetter( decodedToken()?.username )}
+                      // alt={capitalizeFirstLetter( decodedToken()?.username )}
+                      // src={capitalizeFirstLetter( decodedToken()?.username )}
                     />
                   </Box>
                 </Box>
-                <OriginalEstimateField
-                  ticketId={ticketId}
-                  initialEstimate={ticketDetailData?.originalEstimate}
-                  userRole={decodedToken()?.role}
-                />
-                <Box display="flex" justifyContent="space-between" mt={2}>
+
+                {/* Original Estimate Field */}
+                <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
+                  <OriginalEstimateField
+                    ticketId={ticketId}
+                    initialEstimate={ticketDetailData?.originalEstimate}
+                    userRole={decodedToken()?.role}
+                  />
+                </Box>
+
+                {/* Time Tracking */}
+                <Box sx={{ mt: { xs: 1.5, sm: 2 } }}>
                   <Typography
                     variant="body2"
-                    fontWeight="bold"
                     sx={{
-                      fontSize: isMobile ? ".8rem" : isTab ? ".9rem" : "16px",
-                      fontWeight: "bold",
-                      color: "black",
-                      marginLeft: ".5rem",
-                      fontFamily: "",
+                      fontSize: {
+                        xs: '0.75rem',
+                        sm: '0.8rem',
+                        md: '0.9rem',
+                        lg: '.9rem'
+                      },
+                      ml: ".6vw",
+                      fontWeight: 'bold',
+                      color: 'black',
+                      // mb: { xs: 0.5, sm: 1 },
                     }}
                   >
                     Time Tracking
                   </Typography>
 
                   <Box
-                    display="flex"
-                    mt={2}
                     sx={{
-                      width: isMobile ? "25vh" : isTab ? "20vw" : "25vh",
-                      color: "black",
-                      mr: ".5vw",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
+                      width: '100%',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      mt: { xs: 0.5, sm: 1, lg: 2 },
+                      px: { xs: 0, sm: 1 },
                     }}
                   >
                     <ProgressBar
@@ -1115,3 +1261,4 @@ const Progress: React.FC = () => {
 };
 
 export default React.memo( Progress );
+// export default React.memo( Progress );

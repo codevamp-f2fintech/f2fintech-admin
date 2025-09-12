@@ -118,10 +118,9 @@ function renderNavItems({
       if (item.title === "Loan Provider" && userRole !== "admin") {
         return acc;
       }
-      if ( item.title === "Archived" && userRole !== "admin" )
-      {
+      if (item.title === "Archived" && userRole !== "admin") {
         return acc;
-        }
+      }
 
       acc.push(
         <NavItem

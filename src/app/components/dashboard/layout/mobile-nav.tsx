@@ -58,7 +58,7 @@ export function MobileNav({
           flexDirection: "column",
           maxWidth: "100%",
           scrollbarWidth: "none",
-          width: isMobile ? "35vw" : isTab ? "30vw" : "",
+          width: isMobile ? "45vw" : isTab ? "30vw" : "",
           zIndex: "var(--MobileNav-zIndex)",
           "&::-webkit-scrollbar": { display: "none" },
         },
@@ -74,7 +74,7 @@ export function MobileNav({
             display: isMobile ? "flex" : isTab ? "flex" : "",
             alignItems: isMobile ? "center" : "",
             justifyContent: isMobile ? "center" : "",
-            width: isMobile ? "23vw" : isTab ? "15vw" : "",
+            width: isMobile ? "auto" : isTab ? "15vw" : "",
           }}
         >
           <Logo color="light" height={32} width={122} />

@@ -19,11 +19,11 @@ import {
   Typography,
   useMediaQuery,
   CircularProgress,
+  useTheme,
 } from "@mui/material";
-import DownloadIcon from '@mui/icons-material/Download';
+import DownloadIcon from "@mui/icons-material/Download";
 import TableViewIcon from "@mui/icons-material/TableView";
 import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
 
 import ApplicationCard from "../components/common/ApplicationCard";
 import FilterPanel from "../components/common/FilterPanel";
@@ -51,7 +51,7 @@ const Ticket = () => {
   const [ startDate, setStartDate ] = useState<string | null>( null );
   const [ endDate, setEndDate ] = useState<string | null>( null );
   const [ disbursedAmount, setDisbursedAmount ] = useState<number>( 0 );
-  const [ toggleListView, setToggleListView ] = useState( 'table' );
+  const [ toggleListView, setToggleListView ] = useState( "table" );
   const [ currentPage, setCurrentPage ] = useState<number>( 1 );
   const [ hasMoreData, setHasMoreData ] = useState<boolean>( true );
   const { ticket } = useSelector( ( state: RootState ) => state.tickets );
@@ -149,27 +149,28 @@ const Ticket = () => {
       const exportParams = new URLSearchParams();
 
       // Set a high limit to get all records or implement pagination
-      exportParams.set( 'page', '1' );
-      exportParams.set( 'limit', '10000' ); // Adjust based on your needs
+      exportParams.set( "page", "1" );
+      exportParams.set( "limit", "10000" ); // Adjust based on your needs
 
       // Add date filters if present
       if ( startDate )
       {
-        exportParams.set( 'startDate', startDate );
+        exportParams.set( "startDate", startDate );
       }
       if ( endDate )
       {
-        exportParams.set( 'endDate', endDate );
+        exportParams.set( "endDate", endDate );
       }
 
       // Add search filter if present
       if ( filter )
       {
-        exportParams.set( 'name', filter );
+        exportParams.set( "name", filter );
       }
 
       // Combine endpoint with parameters
-      const finalEndpoint = `${ exportApiEndpoint }${ exportApiEndpoint.includes( '?' ) ? '&' : '?' }${ exportParams.toString() }`;
+      const finalEndpoint = `${ exportApiEndpoint }${ exportApiEndpoint.includes( "?" ) ? "&" : "?"
+        }${ exportParams.toString() }`;
 
       // Fetch all tickets data for export
       const exportData = await fetcher( finalEndpoint );
@@ -184,20 +185,38 @@ const Ticket = () => {
       // Calculate report period
       let reportPeriod = "All Time";
       const currentDate = new Date();
-      const monthNames = [ "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December" ];
+      const monthNames = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ];
       const currentMonth = monthNames[ currentDate.getMonth() ];
       const currentYear = currentDate.getFullYear();
 
       if ( startDate && endDate )
       {
-        reportPeriod = `${ new Date( startDate ).toLocaleDateString() } to ${ new Date( endDate ).toLocaleDateString() }`;
+        reportPeriod = `${ new Date(
+          startDate
+        ).toLocaleDateString() } to ${ new Date( endDate ).toLocaleDateString() }`;
       } else if ( startDate )
       {
-        reportPeriod = `From ${ new Date( startDate ).toLocaleDateString() } to ${ currentDate.toLocaleDateString() }`;
+        reportPeriod = `From ${ new Date(
+          startDate
+        ).toLocaleDateString() } to ${ currentDate.toLocaleDateString() }`;
       } else if ( endDate )
       {
-        reportPeriod = `All records until ${ new Date( endDate ).toLocaleDateString() }`;
+        reportPeriod = `All records until ${ new Date(
+          endDate
+        ).toLocaleDateString() }`;
       } else
       {
         reportPeriod = `All records of ${ currentMonth } ${ currentYear } until ${ currentDate.toLocaleDateString() }`;
@@ -212,7 +231,8 @@ const Ticket = () => {
         Amount: t?.applicationAmount || "-",
         Provider: t?.applicationProvider || "-",
         Tenure: t?.applicationTenure
-          ? `${ t.applicationTenure } ${ t.applicationTenure > 1 ? "Years" : "Year" }`
+          ? `${ t.applicationTenure } ${ t.applicationTenure > 1 ? "Years" : "Year"
+          }`
           : "-",
         Status: t?.ticketStatus || "-",
         Location: `${ t?.customerLocation || "-" }, ${ t?.customerState || "-" }`,
@@ -225,25 +245,38 @@ const Ticket = () => {
       const worksheet = XLSX.utils.json_to_sheet( formattedData );
 
       // Add metadata at the bottom
-      const range = XLSX.utils.decode_range( worksheet[ '!ref' ] || 'A1' );
+      const range = XLSX.utils.decode_range( worksheet[ "!ref" ] || "A1" );
       const nextRow = range.e.r + 2;
 
-      XLSX.utils.sheet_add_aoa( worksheet, [
-        [],
-        [],
-        [],
-        [ "Report Generated By:", userName ],
-        [ "User Role:", currentUserRole ],
-        [ "Report Period:", reportPeriod ],
-        [ "Filters Applied:", `Status: ${ sortBy } , Provider: ${ loanProvider }${ filter ? `, Search: ${ filter }` : '' }` ],
-        [ "Generated On:", new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString() ],
-        [ "Total Records:", exportData.data.results.length ],
-      ], { origin: `A${ nextRow }` } );
+      XLSX.utils.sheet_add_aoa(
+        worksheet,
+        [
+          [],
+          [],
+          [],
+          [ "Report Generated By:", userName ],
+          [ "User Role:", currentUserRole ],
+          [ "Report Period:", reportPeriod ],
+          [
+            "Filters Applied:",
+            `Status: ${ sortBy } , Provider: ${ loanProvider }${ filter ? `, Search: ${ filter }` : ""
+            }`,
+          ],
+          [
+            "Generated On:",
+            new Date().toLocaleDateString() +
+            " " +
+            new Date().toLocaleTimeString(),
+          ],
+          [ "Total Records:", exportData.data.results.length ],
+        ],
+        { origin: `A${ nextRow }` }
+      );
 
       // Update worksheet range
-      const updatedRange = XLSX.utils.decode_range( worksheet[ '!ref' ] || 'A1' );
+      const updatedRange = XLSX.utils.decode_range( worksheet[ "!ref" ] || "A1" );
       updatedRange.e.r += 9;
-      worksheet[ '!ref' ] = XLSX.utils.encode_range( updatedRange );
+      worksheet[ "!ref" ] = XLSX.utils.encode_range( updatedRange );
 
       // Create and export workbook
       const workbook = XLSX.utils.book_new();
@@ -254,8 +287,13 @@ const Ticket = () => {
         type: "array",
       } );
 
-      const data = new Blob( [ excelBuffer ], { type: "application/octet-stream" } );
-      const fileName = `Tickets_${ currentUserRole }_${ userName.replace( /\s+/g, '_' ) }_${ new Date().toISOString().slice( 0, 10 ) }.xlsx`;
+      const data = new Blob( [ excelBuffer ], {
+        type: "application/octet-stream",
+      } );
+      const fileName = `Tickets_${ currentUserRole }_${ userName.replace(
+        /\s+/g,
+        "_"
+      ) }_${ new Date().toISOString().slice( 0, 10 ) }.xlsx`;
 
       // Use saveAs and wait for it to complete
       await new Promise<void>( ( resolve, reject ) => {
@@ -274,7 +312,6 @@ const Ticket = () => {
 
       // Stop loading after successful download
       setExportLoading( false );
-
     } catch ( error )
     {
       console.error( "Error exporting tickets:", error );
@@ -285,9 +322,9 @@ const Ticket = () => {
 
   // Function to handle view toggle and save to sessionStorage
   useEffect( () => {
-    if ( typeof window !== 'undefined' )
+    if ( typeof window !== "undefined" )
     {
-      const savedView = sessionStorage.getItem( 'ticketViewPreference' );
+      const savedView = sessionStorage.getItem( "ticketViewPreference" );
       if ( savedView !== null )
       {
         try
@@ -296,14 +333,14 @@ const Ticket = () => {
           setToggleListView( parsedView );
         } catch ( error )
         {
-          console.error( 'Error parsing saved view preference:', error );
+          console.error( "Error parsing saved view preference:", error );
           // Fall back to default
-          setToggleListView( 'list' );
+          setToggleListView( "list" );
         }
       }
     }
   }, [] );
-  console.log( "handleExportToExcel", handleExportToExcel )
+  console.log( "handleExportToExcel", handleExportToExcel );
   useEffect( () => {
     if ( ticket?.results?.length )
     {
@@ -313,16 +350,15 @@ const Ticket = () => {
 
   // Load view preference from sessionStorage on component mount
   useEffect( () => {
-    if ( typeof window !== 'undefined' )
+    if ( typeof window !== "undefined" )
     {
-      const savedView = sessionStorage.getItem( 'ticketViewPreference' );
+      const savedView = sessionStorage.getItem( "ticketViewPreference" );
       if ( savedView !== null )
       {
         setToggleListView( JSON.parse( savedView ) );
       }
     }
   }, [] );
-
 
   useEffect( () => {
     // Fetch user data only if user is admin
@@ -615,8 +651,9 @@ const Ticket = () => {
     window.location.reload();
     return deleteTicketResp;
   };
-
-
+  const theme = useTheme();
+  const isMobileOrTablet = useMediaQuery( theme.breakpoints.down( "md" ) );
+  const isTablet = useMediaQuery( theme.breakpoints.between( "sm", "md" ) );
   return (
     <Box
       sx={{
@@ -627,21 +664,23 @@ const Ticket = () => {
         position: "relative",
         height: "100%",
         width: "100%",
-        padding: { xs: "0 10px", sm: "0 15px", md: "0" },
+        padding: { sm: "0 15px", md: "0" },
       }}
     >
       <Box
         sx={{
-          width: "100%",
           display: "flex",
           flexDirection: { xs: "column", md: "row" },
           justifyContent: "space-between",
           alignItems: { xs: "stretch", md: "center" },
-          gap: 2,
-          p: 2,
+          gap: { xs: 1, sm: 1.5, md: 2 },
+          p: { xs: 1, sm: 1.5, md: 2 },
           backgroundColor: "#cfd8dc",
-          borderRadius: 2,
-          boxShadow: 1
+          borderRadius: { xs: 1, sm: 1.5, md: 2 },
+          boxShadow: 1,
+          width: { xs: "100%", sm: "98%", md: "100%" },
+          margin: { xs: "8px auto", sm: "12px auto", md: "0" },
+          marginTop: "0 !important",
         }}
       >
         {/* Filter Panel Container */}
@@ -662,7 +701,7 @@ const Ticket = () => {
               },
               position: "relative",
               width: "100%",
-              gap: 2,
+              gap: { xs: 1, sm: 1.5, md: 2 },
             }}
           >
             <FilterPanel
@@ -686,83 +725,102 @@ const Ticket = () => {
               handleFilterChange={handleFilterChange}
             />
           </Box>
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              ml: 2,
-            }}
-          >
-            <Tooltip title="Download Report">
-              <Button
-                onClick={handleExportToExcel}
-                disabled={exportLoading}
-                sx={{
-                  minWidth: "48px",
-                  height: "48px",
-                  background: "linear-gradient(135deg, #3f50b5 30%, #80adc9ff 90%)",
-                  color: "#fff",
-                  borderRadius: "12px",
-                  boxShadow: "0 4px 10px rgba(76, 175, 80, 0.3)",
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    background: "linear-gradient(135deg, #3f50b5 30%, #a0bcd7ff 90%)",
-                    boxShadow: "0 6px 14px rgba(76, 175, 80, 0.5)",
-                    transform: "translateY(-2px)",
-                  },
-                }}
-              >
-                {exportLoading ? (
-                  <CircularProgress
-                    size={24}
-                    sx={{ color: "white" }}
-                  />
-                ) : (
-                  <DownloadIcon />
-                )}
-              </Button>
-            </Tooltip>
-          </Box>
-
-
         </Box>
-
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            position: "relative",
+            ml: { xs: 0, sm: 1, md: 2 },
+            mt: { xs: 1, sm: 0 },
+            top: {
+              xs: 36,
+              md: "inherit",
+              sm: 40,
+            },
+            right: {
+              md: 25,
+              sm: -160,
+              xs: -40,
+            },
+          }}
+        >
+          <Tooltip title="Download Report">
+            <Button
+              onClick={handleExportToExcel}
+              disabled={exportLoading}
+              sx={{
+                minWidth: { xs: "40px", sm: "44px", md: "48px" },
+                height: { xs: "40px", sm: "44px", md: "48px" },
+                background:
+                  "linear-gradient(135deg, #3f50b5 30%, #80adc9ff 90%)",
+                color: "#fff",
+                borderRadius: { xs: "8px", sm: "10px", md: "12px" },
+                boxShadow: "0 4px 10px rgba(76, 175, 80, 0.3)",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  background:
+                    "linear-gradient(135deg, #3f50b5 30%, #a0bcd7ff 90%)",
+                  boxShadow: "0 6px 14px rgba(76, 175, 80, 0.5)",
+                  transform: "translateY(-2px)",
+                },
+                position: "absolute",
+              }}
+            >
+              {exportLoading ? (
+                <CircularProgress size={24} sx={{ color: "white" }} />
+              ) : (
+                <DownloadIcon />
+              )}
+            </Button>
+          </Tooltip>
+        </Box>
         {/* View Toggle Container */}
         <Box
           sx={{
             display: "flex",
             alignItems: "center",
-            border: "1px solid",
             borderColor: "divider",
-            borderRadius: "12px",
-            p: 0.5,
+            borderRadius: { xs: "8px", sm: "10px", md: "12px" },
+            p: { xs: 0.3, sm: 0.4, md: 0.5 },
             backgroundColor: "background.default",
             boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
             width: "fit-content",
             height: { xs: "auto", md: "56px" },
             alignSelf: { xs: "flex-end", md: "center" },
-            ml: "auto"
+            ml: { xs: 0, md: "auto" },
+            mt: { xs: 1, md: 0 },
           }}
         >
           <Tooltip title="Grid View">
             <IconButton
               onClick={() => {
-                setToggleListView( 'grid' );
-                if ( typeof window !== 'undefined' )
+                setToggleListView( "grid" );
+                if ( typeof window !== "undefined" )
                 {
-                  sessionStorage.setItem( 'ticketViewPreference', JSON.stringify( 'grid' ) );
+                  sessionStorage.setItem(
+                    "ticketViewPreference",
+                    JSON.stringify( "grid" )
+                  );
                 }
               }}
               sx={{
-                color: toggleListView === 'grid' ? "primary.main" : "action.disabled",
-                backgroundColor: toggleListView === 'grid' ? "action.selected" : "transparent",
+                color:
+                  toggleListView === "grid"
+                    ? "primary.main"
+                    : "action.disabled",
+                backgroundColor:
+                  toggleListView === "grid" ? "action.selected" : "transparent",
                 borderRadius: "8px",
                 p: 1,
                 transition: "all 0.2s ease",
-                '&:hover': {
-                  backgroundColor: toggleListView === 'grid' ? "primary.light" : "action.hover",
-                }
+                "&:hover": {
+                  backgroundColor:
+                    toggleListView === "grid"
+                      ? "primary.light"
+                      : "action.hover",
+                },
               }}
             >
               <GridViewIcon fontSize="small" />
@@ -772,21 +830,31 @@ const Ticket = () => {
           <Tooltip title="List View">
             <IconButton
               onClick={() => {
-                setToggleListView( 'list' );
-                if ( typeof window !== 'undefined' )
+                setToggleListView( "list" );
+                if ( typeof window !== "undefined" )
                 {
-                  sessionStorage.setItem( 'ticketViewPreference', JSON.stringify( 'list' ) );
+                  sessionStorage.setItem(
+                    "ticketViewPreference",
+                    JSON.stringify( "list" )
+                  );
                 }
               }}
               sx={{
-                color: toggleListView === 'list' ? "primary.main" : "action.disabled",
-                backgroundColor: toggleListView === 'list' ? "action.selected" : "transparent",
+                color:
+                  toggleListView === "list"
+                    ? "primary.main"
+                    : "action.disabled",
+                backgroundColor:
+                  toggleListView === "list" ? "action.selected" : "transparent",
                 borderRadius: "8px",
                 p: 1,
                 transition: "all 0.2s ease",
-                '&:hover': {
-                  backgroundColor: toggleListView === 'list' ? "primary.light" : "action.hover",
-                }
+                "&:hover": {
+                  backgroundColor:
+                    toggleListView === "list"
+                      ? "primary.light"
+                      : "action.hover",
+                },
               }}
             >
               <ViewListIcon fontSize="small" />
@@ -796,21 +864,33 @@ const Ticket = () => {
           <Tooltip title="Table View">
             <IconButton
               onClick={() => {
-                setToggleListView( 'table' );
-                if ( typeof window !== 'undefined' )
+                setToggleListView( "table" );
+                if ( typeof window !== "undefined" )
                 {
-                  sessionStorage.setItem( 'ticketViewPreference', JSON.stringify( 'table' ) );
+                  sessionStorage.setItem(
+                    "ticketViewPreference",
+                    JSON.stringify( "table" )
+                  );
                 }
               }}
               sx={{
-                color: toggleListView === 'table' ? "primary.main" : "action.disabled",
-                backgroundColor: toggleListView === 'table' ? "action.selected" : "transparent",
+                color:
+                  toggleListView === "table"
+                    ? "primary.main"
+                    : "action.disabled",
+                backgroundColor:
+                  toggleListView === "table"
+                    ? "action.selected"
+                    : "transparent",
                 borderRadius: "8px",
                 p: 1,
                 transition: "all 0.2s ease",
-                '&:hover': {
-                  backgroundColor: toggleListView === 'table' ? "primary.light" : "action.hover",
-                }
+                "&:hover": {
+                  backgroundColor:
+                    toggleListView === "table"
+                      ? "primary.light"
+                      : "action.hover",
+                },
               }}
             >
               <TableViewIcon fontSize="small" />
@@ -820,12 +900,16 @@ const Ticket = () => {
       </Box>
 
       {/* Updated View Toggle Box with Session Storage */}
+      {/* Updated View Toggle Box with Session Storage */}
 
       <Box
         sx={{
-          minWidth: "80vw",
+          width: "100%",
           minHeight: "90vh",
           marginTop: "7vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "start",
         }}
       >
         <Grid
@@ -836,6 +920,9 @@ const Ticket = () => {
             alignItems: "center",
             display: "flex",
             flexDirection: isMobile ? "column" : isTab ? "" : "",
+            width: "97%",
+            marginLeft: "0 !important",
+            marginTop: "0 !important",
           }}
         >
           {!ticket?.results?.length ? (
@@ -843,7 +930,7 @@ const Ticket = () => {
               sx={{
                 width: "100%",
                 textAlign: "center",
-                mt: "20vh",
+                // mt: "20vh",
                 color: "text.secondary",
               }}
             >
@@ -857,28 +944,76 @@ const Ticket = () => {
             </Typography>
           ) : (
             <>
-              {toggleListView === 'table' ? (
-                <Box sx={{ width: '100%', overflowX: 'auto' }}>
+              {toggleListView === "table" ? (
+                <Box
+                  sx={{
+                    width: "100%",
+                    overflowX: "auto",
+                  }}
+                >
                   <TableContainer
                     component={Paper}
                     elevation={2}
                     sx={{
                       borderRadius: 2,
-                      minWidth: '80vw',
-                      margin: '0 auto'
+                      overflowX: "auto",
+                      width: "100%",
+                      maxWidth: {
+                        xs: "90vw",
+                        sm: "90vw",
+                        md: "100vw",
+                        lg: "100vw",
+                      },
+                      // px: 1,
                     }}
                   >
-                    <Table sx={{
-                      tableLayout: "auto",
-                      '& .MuiTableCell-root': {
-                        padding: '8px'
-                      }
-                    }}>
+                    <Table
+                      sx={{
+                        tableLayout: "auto",
+                        "& .MuiTableCell-root": {
+                          padding: "8px",
+                        },
+                      }}
+                    >
                       <TableHead>
                         <TableRow sx={{ backgroundColor: "#3f50b5" }}>
-                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Name</TableCell>
+                          <TableCell
+                            sx={{
+                              fontWeight: "bold",
+                              color: "white",
+                              fontSize: {
+                                xs: "0.75rem",
+                                sm: "0.875rem",
+                                md: "1rem",
+                              },
+                              wordWrap: "break-word",
+                              minWidth: { xs: "60px", sm: "80px", md: "10px" },
+                            }}
+                          >
+                            S.no
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              fontWeight: "bold",
+                              color: "white",
+                              fontSize: "1rem",
+                              wordWrap: "break-word",
+                            }}
+                          >
+                            Name
+                          </TableCell>
                           {userRole !== "sales" && (
-                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Email</TableCell>
+                            <TableCell
+                              sx={{
+                                fontWeight: "bold",
+                                color: "white",
+                                fontSize: "1rem",
+                                wordWrap: "break-word",
+                                whiteSpace: "normal"
+                              }}
+                            >
+                              Email
+                            </TableCell>
                           )}
                           {/* {userRole == "sales" && (
                             <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Contact</TableCell>
@@ -897,6 +1032,7 @@ const Ticket = () => {
                         {ticket.results.map( ( ticket, index ) => (
                           <ApplicationCard
                             key={index}
+                            mainIndex={index + 1}
                             customerApplication={ticket}
                             userRole={userRole}
                             handleStartClick={() =>
@@ -945,7 +1081,7 @@ const Ticket = () => {
         </Grid>
       </Box>
       {swrLoading && <Loader />}
-    </Box >
+    </Box>
   );
 };
 
