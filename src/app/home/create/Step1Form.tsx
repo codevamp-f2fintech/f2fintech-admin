@@ -823,7 +823,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
               },
             }}
           >
-            {[ "3 Years", "5 Years", "8 Years" ].map( ( label ) => (
+            {[ "3 Years", "5 Years", "8 Years", "10 Years", "15 Years", "20 Years", "25 Years", "30 Years" ].map( ( label ) => (
               <MenuItem
                 key={label}
                 value={label}
@@ -941,7 +941,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                   flexDirection: "column",
                   alignItems: "center",
                   mb: 4,
-                  mt: { xs: 0, sm: 0, md: 30 },
+                  mt: { xs: 0, sm: 0, md: 30,lg: 15 },
                 }}
               >
                 <Typography
