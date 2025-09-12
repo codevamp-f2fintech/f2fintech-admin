@@ -18,6 +18,7 @@ import {
   FormControl,
   useMediaQuery,
   Button,
+  TextField,
 } from "@mui/material";
 import { ArrowForwardRounded } from "@mui/icons-material";
 import { ThemeProvider, useTheme } from "@mui/material/styles";
@@ -124,6 +125,37 @@ const Progress: React.FC = () => {
   const [ activeSection, setActiveSection ] = useState<string>( "Comments" );
   const [ selectedUser, setSelectedUser ] = useState<User>();
   const [ theme, colorMode ] = useMode();
+  const getTodayLocalDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String( today.getMonth() + 1 ).padStart( 2, '0' );
+    const day = String( today.getDate() ).padStart( 2, '0' );
+    return `${ year }-${ month }-${ day }`;
+  };
+
+  const [ disbursedDate, setDisbursedDate ] = useState( () => {
+    // Only set saved date if ticket already has disbursed_at date
+    return ticketDetailData?.disbursed_at
+      ? new Date( ticketDetailData.disbursed_at ).toISOString().split( 'T' )[ 0 ]
+      : "";
+  } );
+
+  const [ isDisbursedDateSaved, setIsDisbursedDateSaved ] = useState( () => {
+    // If ticket already has disbursed_at date, consider it as saved
+    return !!ticketDetailData?.disbursed_at;
+  } );
+
+  // Disbursed Amount States
+  const [ disbursedAmount, setDisbursedAmount ] = useState( () => {
+    return ticketDetailData?.disbursed_amount
+      ? ticketDetailData.disbursed_amount.toString()
+      : "";
+  } );
+
+  const [ isDisbursedAmountSaved, setIsDisbursedAmountSaved ] = useState( () => {
+    return !!ticketDetailData?.disbursed_amount;
+  } );
+
 
   const [ progress, setProgress ] = useState( 0 ); // State to store progress percentage
   const [ overage, setOverage ] = useState( 0 ); // Orange part (exceeding estimated time)
@@ -143,6 +175,7 @@ const Progress: React.FC = () => {
   const params = useParams();
   const isMobile = useMediaQuery( muiTheme.breakpoints.down( 'sm' ) ); // 0-599px
   const isTablet = useMediaQuery( muiTheme.breakpoints.between( 'sm', 'md' ) ); // 600-899px
+  const isTab = useMediaQuery( muiTheme.breakpoints.between( 'sm', 'md' ) ); // 600-899px
   const isIpad = useMediaQuery( muiTheme.breakpoints.between( 'md', 'lg' ) ); // 900-1199px
   const isDesktop = useMediaQuery( muiTheme.breakpoints.up( 'lg' ) ); // 1200px+
   const ticketId = params?.ticketId;
@@ -159,19 +192,28 @@ const Progress: React.FC = () => {
   );
   const { modifyTicket } = useModifyTicket( "update-ticket" );
   const { value: userData } = useGetUsers( {} as User, "get-users", 1, 200 );
+  // const { modifyTicket } = useModifyTicket( "update-ticket" );
+  // const { value: userData } = useGetUsers( {} as User, "get-users", 1, 200 );
   const { value: workLog, refetch } = useGetTicketLogs(
     {} as TicketLogs,
     hasFetched ? `get-ticket-logs/${ ticketId }` : ""
+    // hasFetched ? `get-ticket-logs/${ ticketId }` : ""
   );
 
+  // useEffect( () => {
+  //   if ( isVisible && !hasFetched )
+  //   {
   useEffect( () => {
     if ( isVisible && !hasFetched )
     {
       refetch();
+      // setHasFetched( true );
       setHasFetched( true );
     }
   }, [ isVisible, hasFetched ] );
+  // }, [ isVisible, hasFetched ] );
 
+  // Updated useEffect for fetching ticket details
   useEffect( () => {
     if ( ticketId )
     {
@@ -179,9 +221,7 @@ const Progress: React.FC = () => {
       const fetchTicketDetails = async () => {
         try
         {
-          const response: TicketDetailResponse = await fetcher(
-            `get-ticket-with-detail/${ ticketId }`
-          );
+          const response = await fetcher( `get-ticket-with-detail/${ ticketId }` );
           if ( response.statusCode === 200 )
           {
             setTicketDetailData( response.data );
@@ -191,6 +231,29 @@ const Progress: React.FC = () => {
             } );
             setNewLoanStatus( response.data.loanStatus );
             setNewEmployeeStatus( response.data.employeeStatus );
+
+            // Set disbursed date if ticket has one, otherwise keep empty
+            if ( response.data.disbursed_at )
+            {
+              setDisbursedDate( new Date( response.data.disbursed_at ).toISOString().split( 'T' )[ 0 ] );
+              setIsDisbursedDateSaved( true );
+            } else if ( response.data.employeeStatus === "disbursed" )
+            {
+              // If status is disbursed but no date saved, set today's date
+              setDisbursedDate( getTodayLocalDate() );
+              setIsDisbursedDateSaved( false );
+            }
+
+            if ( response.data.disbursed_amount )
+            {
+              setDisbursedAmount( response.data.disbursed_amount.toString() );
+              setIsDisbursedAmountSaved( true );
+            } else if ( response.data.employeeStatus === "disbursed" )
+            {
+              setDisbursedAmount( response.data.applicationAmount?.toString() || "" );
+              setIsDisbursedAmountSaved( false );
+            }
+
             setLoading( false );
           }
         } catch ( error )
@@ -202,7 +265,14 @@ const Progress: React.FC = () => {
       fetchTicketDetails();
     }
   }, [ ticketId ] );
+  // }, [ ticketId ] );
 
+  // useEffect( () => {
+  //   if ( workLog?.data )
+  //   {
+  //     const totalHours = workLog?.data?.reduce( ( acc: number, ticket: any ) => {
+  //       return acc + parseTimeSpent( ticket.time_spent ?? 0 );
+  //     }, 0 );
   useEffect( () => {
     if ( workLog?.data )
     {
@@ -210,31 +280,152 @@ const Progress: React.FC = () => {
         return acc + parseTimeSpent( ticket.time_spent ?? 0 );
       }, 0 );
 
+      // const finalTime = convertHoursToDaysAndHours( totalHours );
+      // setTimeLoggingEstimate( {
       const finalTime = convertHoursToDaysAndHours( totalHours );
       setTimeLoggingEstimate( {
         ...timeLoggingEstimate,
         timeSpent: finalTime,
       } );
+      // } );
       const originalEstimate = parseTimeSpent(
         timeLoggingEstimate.originalEstimate
       );
 
+      // if ( originalEstimate > 0 )
+      // {
       if ( originalEstimate > 0 )
       {
         const calculatedProgress = Math.min(
           ( totalHours / originalEstimate ) * 100,
+          // ( totalHours / originalEstimate ) * 100,
           100
         );
         const calculatedOverage =
           totalHours > originalEstimate
             ? ( ( totalHours - originalEstimate ) / originalEstimate ) * 100
+            // ? ( ( totalHours - originalEstimate ) / originalEstimate ) * 100
             : 0;
 
+        // setProgress( calculatedProgress );
+        // setOverage( calculatedOverage );
         setProgress( calculatedProgress );
         setOverage( calculatedOverage );
       }
     }
   }, [ workLog?.data, timeLoggingEstimate.originalEstimate ] );
+
+  // Update your handleChangeEmployeeStatus function
+
+  const handleChangeEmployeeStatus = async ( event: any ) => {
+    const oldStatus = newEmployeeStatus;
+    const newStatus = event.target.value;
+    setNewEmployeeStatus( newStatus );
+
+    if ( newStatus === "disbursed" && !disbursedDate )
+    {
+      setDisbursedDate( getTodayLocalDate() );
+    }
+    // Clear disbursed date if status is not disbursed
+    if ( newStatus !== "disbursed" )
+    {
+      setDisbursedDate( "" );
+    }
+
+    try
+    {
+      let updatePayload = { status: newStatus };
+
+      // If disbursed status is selected and date is provided, include it in payload
+      if ( newStatus === "disbursed" && disbursedDate && disbursedAmount )
+      {
+        updatePayload.disbursed_at = disbursedDate;
+        updatePayload.disbursed_amount = parseFloat( disbursedAmount );
+        await modifyTicket( +ticketId, updatePayload );
+      }
+
+      if ( newStatus !== "disbursed" )
+      {
+        await modifyTicket( +ticketId, updatePayload );
+      }
+
+      const loggedInUser = decodedToken()?.username;
+      let historyMessage = `${ loggedInUser } changed File Status from ${ oldStatus } to ${ newStatus }`;
+
+      // Add date info to history message if disbursed
+      if ( newStatus === "disbursed" && disbursedDate && disbursedAmount )
+      {
+        historyMessage += ` with disbursement date: ${ disbursedDate } and amount: ${ disbursedAmount }`;
+      }
+
+      await createTicketHistory( {
+        ticket_id: ticketId,
+        action: historyMessage,
+      } );
+      // } );
+
+      if ( newStatus === "disbursed" && disbursedDate && disbursedAmount )
+      { toastAndNavigate( dispatch, true, "info", "Status Changed Successfully" ); }
+      else
+      {
+        toastAndNavigate( dispatch, true, "info", "Status Changed to Disbursed. Please save the disbursement date." );
+      }
+      if ( newStatus !== "disbursed" )
+      {
+        toastAndNavigate( dispatch, true, "info", "Status Changed Successfully" );
+      }
+      await refetch();
+    } catch ( error )
+    // {
+    //   toastAndNavigate( dispatch, true, "error", "Error Changing Status" );
+    // } catch ( error )
+    {
+      toastAndNavigate( dispatch, true, "error", "Error Changing Status" );
+    }
+  };
+
+  // Combined handler for disbursed date and amount
+  const handleCombinedDisbursementSubmit = async () => {
+    if ( !disbursedDate )
+    {
+      toastAndNavigate( dispatch, true, "error", "Please enter disbursement date" );
+      return;
+    }
+
+    if ( !disbursedAmount || parseFloat( disbursedAmount ) <= 0 )
+    {
+      toastAndNavigate( dispatch, true, "error", "Please enter a valid disbursement amount" );
+      return;
+    }
+
+    try
+    {
+      const updatePayload = {
+        status: "disbursed",
+        disbursed_at: disbursedDate,
+        disbursed_amount: parseFloat( disbursedAmount )
+      };
+
+      await modifyTicket( +ticketId, updatePayload );
+
+      const loggedInUser = decodedToken()?.username;
+      const historyMessage = `${ loggedInUser } set disbursement details - Date: ${ disbursedDate }, Amount: ${ disbursedAmount }`;
+
+      await createTicketHistory( {
+        ticket_id: ticketId,
+        action: historyMessage,
+      } );
+
+      setIsDisbursedDateSaved( true );
+      setIsDisbursedAmountSaved( true );
+
+      toastAndNavigate( dispatch, true, "info", "Disbursement details saved successfully" );
+      await refetch();
+    } catch ( error )
+    {
+      toastAndNavigate( dispatch, true, "error", "Error saving disbursement details" );
+    }
+  };
 
   const handleChangeLoanStatus = async ( event: any ) => {
     const oldStatus = newLoanStatus;
@@ -266,29 +457,10 @@ const Progress: React.FC = () => {
     }
   };
 
-  const handleChangeEmployeeStatus = async ( event: any ) => {
-    const oldStatus = newEmployeeStatus;
-    const newStatus = event.target.value;
-    setNewEmployeeStatus( newStatus );
-
-    try
-    {
-      await modifyTicket( +ticketId, { status: newStatus } );
-
-      const loggedInUser = decodedToken()?.username;
-      const historyMessage = `${ loggedInUser } changed File Status from ${ oldStatus } to ${ newStatus }`;
-      await createTicketHistory( {
-        ticket_id: ticketId,
-        action: historyMessage,
-      } );
-      toastAndNavigate( dispatch, true, "info", "Status Changed Successfully" );
-      await refetch();
-    } catch ( error )
-    {
-      toastAndNavigate( dispatch, true, "error", "Error Changing Status" );
-    }
-  };
-
+  // const handleForwardAutocomplete = async ( value: any ) => {
+  //   setSelectedUser( value );
+  //   try
+  //   {
   const handleForwardAutocomplete = async ( value: any ) => {
     setSelectedUser( value );
     try
@@ -304,6 +476,7 @@ const Progress: React.FC = () => {
       };
 
       let historyMessage = `${ loggedInUser } forwarded the ticket to ${ value.username }`;
+      // let historyMessage = `${ loggedInUser } forwarded the ticket to ${ value.username }`;
 
       if ( employeeRole === "credit" )
       {
@@ -313,20 +486,30 @@ const Progress: React.FC = () => {
       {
         updatePayload.status = "under credit review";
       }
+      // await modifyTicket( +ticketId, updatePayload );
       await modifyTicket( +ticketId, updatePayload );
 
+      // await createTicketHistory( {
       await createTicketHistory( {
         ticket_id: ticketId,
         action: historyMessage,
       } );
+      // toastAndNavigate( dispatch, true, "info", "File Forwarded Successfully" );
+      // } );
       toastAndNavigate( dispatch, true, "info", "File Forwarded Successfully" );
       await refetch();
+      // } catch ( error )
+      // {
+      //   toastAndNavigate( dispatch, true, "error", "Error Forwarding File" );
     } catch ( error )
     {
       toastAndNavigate( dispatch, true, "error", "Error Forwarding File" );
     }
   };
 
+  // const showComments = () => setActiveSection( "Comments" );
+  // const showHistory = () => setActiveSection( "History" );
+  // const showWorkLog = () => setActiveSection( "WorkLog" );
   const showComments = () => setActiveSection( "Comments" );
   const showHistory = () => setActiveSection( "History" );
   const showWorkLog = () => setActiveSection( "WorkLog" );
@@ -420,9 +603,14 @@ const Progress: React.FC = () => {
                     <Typography
                       variant="h6"
                       sx={{
-                        color: 'black',
-                        fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' },
-                        fontWeight: 'bold',
+                        ml: 2,
+                        mt: 0,
+                        color: "black",
+                        fontSize: isMobile
+                          ? ".7rem"
+                          : isTab
+                            ? "0.9rem" // Slightly smaller for tab
+                            : "1.1rem",
                       }}
                     >
                       Activity:
@@ -431,40 +619,78 @@ const Progress: React.FC = () => {
 
                   <Box
                     sx={{
-                      display: 'flex',
-                      flexDirection: { xs: 'row', sm: 'row' },
-                      alignItems: 'center',
-                      justifyContent: { xs: 'center', sm: 'flex-end' },
-                      gap: { xs: 1, sm: 2 },
-                      flexWrap: 'wrap',
+                      width: isMobile ? "60vw" : isTab ? "48vw" : "20vw", // Adjusted tab width
+                      height: "7vh",
+                      borderRadius: "0px 10px 10px 0px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-evenly", // Better spacing for tab
                     }}
                   >
-                    {[ 'Comments', 'History', 'WorkLog' ].map( ( section ) => (
-                      <Typography
-                        key={section}
-                        component="span"
-                        sx={{
-                          backgroundColor: activeSection === section ? '#155fcc' : 'white',
-                          color: activeSection === section ? 'white' : 'black',
-                          fontSize: { xs: '0.5rem', sm: '0.85rem' },
-                          borderRadius: 1,
-                          px: { xs: 2, sm: 2.5 },
-                          py: { xs: 1, sm: 1.2 },
-                          cursor: 'pointer',
-                          whiteSpace: 'nowrap',
-                          textAlign: 'center',
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            transform: 'scale(1.05)',
-                          },
-                        }}
-                        onClick={section === 'Comments' ? showComments :
-                          section === 'History' ? showHistory : showWorkLog}
-                        ref={section === 'WorkLog' ? workLogRef : null}
-                      >
-                        {section === 'WorkLog' ? 'Work Log' : section}
-                      </Typography>
-                    ) )}
+                    <Typography
+                      component="span"
+                      sx={{
+                        backgroundColor:
+                          activeSection === "Comments" ? "#155fcc" : "white",
+                        color: activeSection === "Comments" ? "white" : "black",
+                        fontSize: isMobile
+                          ? ".7rem"
+                          : isTab
+                            ? "0.8rem"
+                            : "12px", // Adjusted tab font
+                        borderRadius: "4px",
+                        marginLeft: isTab ? "0" : "10px", // Remove extra margin on tab
+                        padding: isTab ? "0.3rem" : ".4rem", // Adjusted padding for tab
+                        cursor: "pointer",
+                        whiteSpace: "nowrap", // Prevent text wrapping
+                      }}
+                      onClick={showComments}
+                    >
+                      Comments
+                    </Typography>
+                    <Typography
+                      component="span"
+                      sx={{
+                        backgroundColor:
+                          activeSection === "History" ? "#155fcc" : "white",
+                        color: activeSection === "History" ? "white" : "black",
+                        fontSize: isMobile
+                          ? ".7rem"
+                          : isTab
+                            ? "0.8rem"
+                            : "12px", // Adjusted tab font
+                        borderRadius: "4px",
+                        marginLeft: isTab ? "0" : "10px", // Remove extra margin on tab
+                        padding: isTab ? "0.3rem" : "6px", // Adjusted padding for tab
+                        cursor: "pointer",
+                        whiteSpace: "nowrap", // Prevent text wrapping
+                      }}
+                      onClick={showHistory}
+                    >
+                      History
+                    </Typography>
+                    <Typography
+                      component="span"
+                      ref={workLogRef}
+                      sx={{
+                        backgroundColor:
+                          activeSection === "WorkLog" ? "#155fcc" : "white",
+                        color: activeSection === "WorkLog" ? "white" : "black",
+                        fontSize: isMobile
+                          ? ".7rem"
+                          : isTab
+                            ? "0.8rem"
+                            : "12px", // Adjusted tab font
+                        borderRadius: "4px",
+                        marginLeft: isTab ? "0" : "10px", // Remove extra margin on tab
+                        padding: isTab ? "0.3rem" : "6px", // Adjusted padding for tab
+                        cursor: "pointer",
+                        whiteSpace: "nowrap", // Prevent text wrapping
+                      }}
+                      onClick={showWorkLog}
+                    >
+                      Work Log
+                    </Typography>
                   </Box>
                 </Box>
 
@@ -495,50 +721,22 @@ const Progress: React.FC = () => {
               <Paper
                 elevation={4}
                 sx={{
-                  p: { xs: 1.5, sm: 2, md: 3 },
-                  borderRadius: { xs: 2, sm: 3 },
-                  position: { xs: 'static', lg: 'sticky' },
-                  top: { lg: 24 },
-                  height: {
-                    xs: "70vh",
-                    sm: "62vh",
-                    md: "50vh",
-                    lg: "100vh"
+                  padding: isMobile ? 2 : isTab ? 2 : 5,
+                  minHeight: "auto",
+                  height: isMobile ? "70vh" : isTab ? "60vh" : "75vh",
+                  maxHeight: "90vh",
+                  width: isMobile ? "85vw" : isTab ? "85vw" : "25vw",
+                  borderRadius: "20px",
+                  position: isMobile || isTab ? "relative" : "fixed",
+                  boxShadow: "0px 4px 20px rgba(149, 117, 205, 0.3)",
+                  backgroundImage: "linear-gradient(135deg, #fff 0%, #fff 100%)",
+                  overflowY: isMobile ? "none" : isTab ? "none" : "auto", "&::-webkit-scrollbar": {
+                    display: "none",
                   },
-                  maxHeight: {
-                    xs: "70vh",
-                    sm: "75vh",
-                    md: "80vh",
-                    lg: "100vh"
-                  },
-                  overflowY: 'auto',
-                  overflowX: 'hidden',
-                  boxShadow: {
-                    xs: '0px 2px 10px rgba(149, 117, 205, 0.2)',
-                    sm: '0px 4px 20px rgba(149, 117, 205, 0.3)'
-                  },
-                  backgroundImage: 'linear-gradient(135deg, #fff 0%, #fff 100%)',
-                  width: '100%',
-                  // Custom scrollbar styles for webkit browsers
-                  "&::-webkit-scrollbar": {
-                    width: "6px",
-                  },
-                  "&::-webkit-scrollbar-track": {
-                    background: "transparent",
-                  },
-                  "&::-webkit-scrollbar-thumb": {
-                    background: "rgba(149, 117, 205, 0.3)",
-                    borderRadius: "3px",
-                    "&:hover": {
-                      background: "rgba(149, 117, 205, 0.5)",
-                    },
-                  },
-                  // Hide scrollbar for Firefox
-                  scrollbarWidth: "thin",
-                  scrollbarColor: "rgba(149, 117, 205, 0.3) transparent",
-                  // Smooth scrolling
-                  scrollBehavior: 'smooth',
+                  "-ms-overflow-style": "none",
+                  "scrollbar-width": "none",
                 }}
+
               >
                 {/* Forward Button */}
                 <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
@@ -547,6 +745,7 @@ const Progress: React.FC = () => {
                     endIcon={<ArrowForwardRounded />}
                     size={isMobile ? "small" : "medium"}
                     variant="contained"
+                    // onClick={() => setNewEmployeeStatus( "forwarded" )}
                     onClick={() => setNewEmployeeStatus( "forwarded" )}
                     sx={{
                       bgcolor: '#155fcc',
@@ -596,112 +795,234 @@ const Progress: React.FC = () => {
 
                 {/* File Status */}
                 {decodedToken()?.role !== "credit" && (
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: { xs: 1, sm: 1.5, md: 2 },
-                      p: { xs: 1.5, sm: 2 },
-                      borderRadius: { xs: 1.5, sm: 2 },
-                      bgcolor: '#b39ddb',
-                      boxShadow: '0px 4px 20px rgba(149, 117, 205, 0.3)',
-                      mb: { xs: 1.5, sm: 2 },
-                      transition: 'transform 0.3s ease',
-                      '&:hover': {
-                        transform: 'scale(1.02)',
-                      },
-                    }}
-                  >
-                    <Typography
-                      variant="subtitle1"
+                  <>
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
                       sx={{
-                        color: 'white',
-                        fontWeight: 'bold',
-                        fontSize: {
-                          xs: '0.8rem',
-                          sm: '0.9rem',
-                          md: '1rem'
-                        },
-                        lineHeight: 1.2,
-                      }}
-                    >
-                      File Status:
-                    </Typography>
-
-                    <FormControl
-                      variant="filled"
-                      fullWidth
-                      size={isMobile ? "small" : "medium"}
-                      sx={{
-                        bgcolor: 'white',
-                        borderRadius: { xs: 1.5, sm: 2 },
-                        '& .MuiFilledInput-root': {
-                          fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                          minHeight: { xs: '48px', sm: '56px' },
-                          paddingTop: { xs: '24px', sm: '.4rem' },
-                        },
-                        '& .MuiInputLabel-root': {
-                          fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                          transform: isMobile ? 'translate(12px, 8px) scale(1)' : 'translate(12px, 10px) scale(1)',
-                          top: { xs: '-4px', sm: '-2px' },
-                        },
-                        '& .MuiInputLabel-shrink': {
-                          transform: isMobile ? 'translate(12px, 2px) scale(0.75)' : 'translate(12px, 4px) scale(0.75)',
-                          top: 0,
-                        },
-                        '& .MuiFilledInput-input': {
-                          paddingTop: { xs: '8px', sm: '12px' },
-                          paddingBottom: { xs: '8px', sm: '12px' },
-                        },
-                        '& .MuiSelect-select': {
-                          paddingTop: { xs: '8px', sm: '12px' } + ' !important',
-                          paddingBottom: { xs: '8px', sm: '12px' } + ' !important',
-                        },
-                        '& .MuiFilledInput-underline:before': {
-                          borderBottom: 'none',
-                        },
-                        '& .MuiFilledInput-underline:after': {
-                          borderBottom: 'none',
-                        },
-                        '& .MuiFilledInput-underline:hover:before': {
-                          borderBottom: 'none !important',
+                        padding: 2,
+                        border: "1px solid white",
+                        borderRadius: "15px",
+                        fontSize: "1rem",
+                        bgcolor: "#b39ddb",
+                        boxShadow: "0px 4px 20px rgba(149, 117, 205, 0.3)",
+                        "&:hover": {
+                          transform: "scale(1.02)",
+                          transition: "transform 0.3s ease",
                         },
                       }}
                     >
-                      <InputLabel>File Status</InputLabel>
-                      <Select
-                        value={newEmployeeStatus}
-                        onChange={handleChangeEmployeeStatus}
+                      {/* Left side: Typography */}
+                      <Typography
+                        variant="subtitle1"
+                        color="text.primary"
                         sx={{
-                          borderRadius: 1,
-                          '& .MuiSelect-select': {
-                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                            py: { xs: 1, sm: 1.5 },
-                          }
-                        }}
-                        MenuProps={{
-                          PaperProps: {
-                            sx: {
-                              maxHeight: 200,
-                              '& .MuiMenuItem-root': {
-                                fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                                minHeight: { xs: '36px', sm: '48px' },
-                              }
-                            }
-                          }
+                          color: "white",
+                          fontWeight: "bold",
+                          fontFamily: "",
+                          "&:hover": {
+                            transform: "scale(1.02)",
+                            transition: "transform 0.3s ease",
+                          },
                         }}
                       >
-                        {employeeStatusObj.map( ( status ) => (
-                          <MenuItem key={status.value} value={status.value}>
-                            {status.label}
-                          </MenuItem>
-                        ) )}
-                      </Select>
-                    </FormControl>
-                  </Box>
+                        File Status:
+                      </Typography>
+
+                      {/* Right side: FormControl in Grid */}
+                      <Grid item xs={6} md={5} mt={0}>
+                        <FormControl
+                          variant="filled"
+                          sx={{
+                            background: "white",
+                            borderRadius: "15px",
+                            "& .MuiFilledInput-underline:before": {
+                              borderBottom: "none",
+                            },
+                            "& .MuiFilledInput-underline:after": {
+                              borderBottom: "none",
+                            },
+                            "& .MuiFilledInput-underline:hover:before": {
+                              borderBottom: "none !important",
+                            },
+                          }}
+                        >
+                          <InputLabel>File Status</InputLabel>
+                          <Select
+                            label="Employee Status"
+                            variant="filled"
+                            value={newEmployeeStatus}
+                            onChange={handleChangeEmployeeStatus}
+                            sx={{
+                              borderRadius: "15px",
+                              width: isMobile ? "30vw" : "8vw",
+                            }}
+                          >
+                            {employeeStatusObj.map( ( status ) => (
+                              <MenuItem key={status.value} value={status.value}>
+                                {status.label}
+                              </MenuItem>
+                            ) )}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                    </Box>
+
+                    {/* Combined Disbursed Date and Amount Field - Shows only when status is "disbursed" */}
+                    {/* Combined Disbursed Date and Amount Field - Shows only when status is "disbursed" */}
+                    {newEmployeeStatus === "disbursed" && (
+                      <Box
+                        sx={{
+                          padding: 2,
+                          border: "1px solid white",
+                          borderRadius: "15px",
+                          fontSize: "1rem",
+                          mt: "1rem",
+                          bgcolor: ( isDisbursedDateSaved && isDisbursedAmountSaved ) ? "#b39ddb" : "#b39ddb",
+                          boxShadow: ( isDisbursedDateSaved && isDisbursedAmountSaved )
+                            ? "0px 4px 20px rgba(76, 175, 80, 0.3)"
+                            : "0px 4px 20px rgba(255, 152, 0, 0.3)",
+                          "&:hover": {
+                            transform: "scale(1.02)",
+                            transition: "transform 0.3s ease",
+                          },
+                        }}
+                      >
+                        {/* Title */}
+                        <Typography
+                          variant="subtitle1"
+                          sx={{
+                            color: "white",
+                            fontWeight: "bold",
+                            textAlign: "center",
+                            mb: 2,
+                            fontSize: isMobile ? "0.9rem" : "1rem",
+                          }}
+                        >
+                          Disbursement Details
+                        </Typography>
+
+                        {/* Fields Container */}
+                        <Box
+                          display="flex"
+                          flexDirection="column"
+                          gap={2}
+                          alignItems="center"
+                        >
+                          {/* Date and Amount Fields Row */}
+                          <Box
+                            display="flex"
+                            gap={isMobile ? 1 : 2}
+                            flexDirection={isMobile ? "column" : "row"}
+                            width="100%"
+                            justifyContent="center"
+                          >
+                            {/* Date Field */}
+                            <Box display="flex" flexDirection="column" alignItems="center" gap={0.5}>
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  color: "white",
+                                  fontSize: "0.75rem",
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                Date
+                              </Typography>
+                              <TextField
+                                type="date"
+                                value={disbursedDate}
+                                onChange={( e ) => setDisbursedDate( e.target.value )}
+                                size="small"
+                                sx={{
+                                  backgroundColor: "white",
+                                  borderRadius: "5px",
+                                  width: isMobile ? "70vw" : isTab ? "10vw" : "7vw",
+                                  minWidth: "120px",
+                                  "& .MuiOutlinedInput-root": {
+                                    borderRadius: "5px",
+                                  },
+                                  "& input": {
+                                    padding: "8px",
+                                    textAlign: "center",
+                                    fontSize: "0.85rem",
+                                  },
+                                }}
+                                InputLabelProps={{
+                                  shrink: true,
+                                }}
+                              />
+                            </Box>
+
+                            {/* Amount Field */}
+                            <Box display="flex" flexDirection="column" alignItems="center" gap={0.5}>
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  color: "white",
+                                  fontSize: "0.75rem",
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                Amount
+                              </Typography>
+                              <TextField
+                                type="number"
+                                value={disbursedAmount}
+                                onChange={( e ) => setDisbursedAmount( e.target.value )}
+                                size="small"
+                                placeholder="Enter amount"
+                                sx={{
+                                  backgroundColor: "white",
+                                  borderRadius: "5px",
+                                  width: isMobile ? "70vw" : isTab ? "10vw" : "7vw",
+                                  minWidth: "120px",
+                                  "& .MuiOutlinedInput-root": {
+                                    borderRadius: "5px",
+                                  },
+                                  "& input": {
+                                    padding: "8px",
+                                    textAlign: "center",
+                                    fontSize: "0.85rem",
+                                  },
+                                }}
+                                InputLabelProps={{
+                                  shrink: true,
+                                }}
+                              />
+                            </Box>
+                          </Box>
+
+                          {/* Single Save Button */}
+                          <Button
+                            variant="contained"
+                            size="small"
+                            onClick={handleCombinedDisbursementSubmit}
+                            disabled={!disbursedDate || !disbursedAmount || parseFloat( disbursedAmount ) <= 0}
+                            sx={{
+                              width: isMobile ? "60vw" : isTab ? "12vw" : "8vw",
+                              minWidth: "100px",
+                              bgcolor: "#2e7d32",
+                              fontSize: "0.8rem",
+                              "&:hover": {
+                                bgcolor: "#1b5e20",
+                              },
+                              "&:disabled": {
+                                bgcolor: "#ccc",
+                                color: "#666",
+                              },
+                            }}
+                          >
+                            Save Details
+                          </Button>
+                        </Box>
+                      </Box>
+                    )}
+                  </>
                 )}
 
-                {/* Loan Status */}
+
                 <Box
                   sx={{
                     display: 'flex',
@@ -850,17 +1171,20 @@ const Progress: React.FC = () => {
                       }}
                     >
                       {capitalizeFirstLetter( decodedToken()?.username )}
+                      {capitalizeFirstLetter( decodedToken()?.username )}
                     </Typography>
                     <Avatar
                       sx={{
                         bgcolor: '#ADB5BD',
                         color: 'white',
                         width: { xs: 28, sm: 32, md: 40 },
-                        height: { xs: 28, sm: 32, md: 40 },
+                        // height: { xs: 28, sm: 32, md: 40 },
                         fontSize: { xs: '0.7rem', sm: '0.8rem', md: '1rem' },
                       }}
                       alt={capitalizeFirstLetter( decodedToken()?.username )}
                       src={capitalizeFirstLetter( decodedToken()?.username )}
+                      // alt={capitalizeFirstLetter( decodedToken()?.username )}
+                      // src={capitalizeFirstLetter( decodedToken()?.username )}
                     />
                   </Box>
                 </Box>
@@ -937,3 +1261,4 @@ const Progress: React.FC = () => {
 };
 
 export default React.memo( Progress );
+// export default React.memo( Progress );

@@ -576,109 +576,25 @@ const Home: React.FC = () => {
                       {/* {userRole !== "sales" && (
                         <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Contact no</TableCell>
                       )} */}
-                      <TableCell
-                        sx={{
-                          fontWeight: "bold",
-                          color: "white",
-                          fontSize: {
-                            xs: "0.75rem",
-                            sm: "0.875rem",
-                            md: "1rem",
-                          },
-                          wordWrap: "break-word",
-                          minWidth: { xs: "60px", sm: "80px", md: "100px" },
-                        }}
-                      >
-                        Amount
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          fontWeight: "bold",
-                          color: "white",
-                          fontSize: {
-                            xs: "0.75rem",
-                            sm: "0.875rem",
-                            md: "1rem",
-                          },
-                          wordWrap: "break-word",
-                          minWidth: { xs: "70px", sm: "90px", md: "110px" },
-                        }}
-                      >
-                        Provider
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          fontWeight: "bold",
-                          color: "white",
-                          fontSize: {
-                            xs: "0.75rem",
-                            sm: "0.875rem",
-                            md: "1rem",
-                          },
-                          wordWrap: "break-word",
-                          minWidth: { xs: "60px", sm: "80px", md: "100px" },
-                        }}
-                      >
-                        Tenure
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          fontWeight: "bold",
-                          color: "white",
-                          fontSize: {
-                            xs: "0.75rem",
-                            sm: "0.875rem",
-                            md: "1rem",
-                          },
-                          wordWrap: "break-word",
-                          minWidth: { xs: "70px", sm: "90px", md: "110px" },
-                        }}
-                      >
-                        Location
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          fontWeight: "bold",
-                          color: "white",
-                          fontSize: {
-                            xs: "0.75rem",
-                            sm: "0.875rem",
-                            md: "1rem",
-                          },
-                          wordWrap: "break-word",
-                          minWidth: { xs: "80px", sm: "100px", md: "120px" },
-                        }}
-                      >
-                        Created At
-                      </TableCell>
-                      <TableRow
-                        sx={{
-                          backgroundColor: "#3f50b5",
-                          "& td": { borderBottom: "none" },
-                          borderBottom: "none",
-                        }}
-                      >
-                        {userRole !== "sales" ? (
-                          <TableCell
-                            sx={{
-                              fontWeight: "bold",
-                              color: "white",
-                              fontSize: {
-                                xs: "0.75rem",
-                                sm: "0.875rem",
-                                md: "0.9rem",
-                              },
-                              wordWrap: "break-word",
-                              borderBottom: "none",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              ml: { xs: "0.5vw", sm: "1vw", md: "1.5vw" },
-                              minWidth: { xs: "70px", sm: "90px", md: "110px" },
-                            }}
-                          >
-                            Actions
-                          </TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Amount</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Provider</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Tenure</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Location</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Application Date</TableCell>
+                      <TableRow sx={{
+                        backgroundColor: "#3f50b5",
+                        '& td': { borderBottom: 'none' },
+                        borderBottom: 'none',
+                      }}>
+                        {userRole !== 'sales' ? (
+                          <TableCell sx={{
+                            fontWeight: 'bold',
+                            color: "white",
+                            fontSize: ".9rem",
+                            wordWrap: 'break-word',
+                            borderBottom: 'none',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', ml: "1.5vw"
+                          }}>Actions</TableCell>
                         ) : null}
                       </TableRow>
                     </TableRow>
