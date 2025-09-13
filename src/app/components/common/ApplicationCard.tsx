@@ -2007,7 +2007,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
 
           {/* Email */}
           {userRole !== "sales" && (
-            <TableCell>
+            <TableCell sx={{ minWidth: "10vw", maxWidth: "15vw" }}>
               <Typography
                 variant="body2"
                 sx={{
