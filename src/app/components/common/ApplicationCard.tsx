@@ -2008,13 +2008,20 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
           {/* Email */}
           {userRole !== "sales" && (
             <TableCell>
-              <Typography variant="body2" sx={{ whiteSpace: "normal" }}>
-                {userRole === "admin" ||
-                  customerApplication.ticketStatus !== "disbursed"
+              <Typography
+                variant="body2"
+                sx={{
+                  whiteSpace: "normal",
+                  wordBreak: "break-word",   // breaks inside long words
+                  overflowWrap: "anywhere", // ensures even long emails wrap
+                }}
+              >
+                {userRole === "admin" || customerApplication.ticketStatus !== "disbursed"
                   ? customerApplication.customerEmail
                   : "N/A"}
               </Typography>
             </TableCell>
+
           )}
 
           {/* Amount */}
