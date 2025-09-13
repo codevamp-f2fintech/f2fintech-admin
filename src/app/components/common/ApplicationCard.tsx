@@ -181,11 +181,11 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
     formatTenure,
   } = Utility();
 
-  const [showOtpComponent, setShowOtpComponent] = useState<boolean>(false);
-  const isMobile = useMediaQuery("(max-width:600px)");
-  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const [ showOtpComponent, setShowOtpComponent ] = useState<boolean>( false );
+  const isMobile = useMediaQuery( "(max-width:600px)" );
+  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
   const isIpad = useMediaQuery( "(min-width:1000px) and (max-width:1300px)" );
-  const [deleteReason, setDeleteReason] = useState<string>("");
+  const [ deleteReason, setDeleteReason ] = useState<string>( "" );
 
 
   const handleDeleteClick = ( e: React.MouseEvent ) => {
@@ -1887,8 +1887,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
       </Grid>
     );
   };
-  const TableView = ( { index }: { index: any }  ) => {
-    console.log("index",index);
+  const TableView = ( { index }: { index: any } ) => {
+    console.log( "index", index );
     const [ showAttachment, setShowAttachment ] = useState( {} );
     const [ currentAttachment, setCurrentAttachment ] = useState( null );
 
@@ -1992,14 +1992,14 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
           }}
         >
           <TableCell>
-            <Typography variant="body2" sx={{ fontWeight: "bold", whiteSpace: isTab ? "normal" : "" }}>
+            <Typography variant="body2" sx={{ fontWeight: "bold", whiteSpace: isTab ? "normal" : "", }}>
               {index}
             </Typography>
           </TableCell>
 
           {/* Name */}
           <TableCell>
-            <Typography variant="body2" sx={{ fontWeight: "bold", whiteSpace: isTab ? "normal" : "normal" }}>
+            <Typography variant="body2" sx={{ fontWeight: "bold", whiteSpace: isTab ? "normal" : "normal", minWidth: isTab ? "15vw" : "", }}>
 
               {customerApplication.customerName?.toUpperCase()}
             </Typography>
@@ -2007,7 +2007,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
 
           {/* Email */}
           {userRole !== "sales" && (
-            <TableCell sx={{ minWidth: "10vw", maxWidth: "15vw" }}>
+            <TableCell sx={{ minWidth: isMobile ? "45vw" : isTab ? "15vw" : "10vw", maxWidth: "15vw" }}>
               <Typography
                 variant="body2"
                 sx={{
@@ -2022,7 +2022,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
               </Typography>
             </TableCell>
 
-          )}
+          )
+          }
 
           {/* Amount */}
           <TableCell>
@@ -2031,6 +2032,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
               sx={{
                 fontWeight: "medium",
                 color: "#00796B",
+                fontSize: ".9rem",
                 "&:hover": {
                   color: "#004D40",
                   cursor: "pointer",
@@ -2073,7 +2075,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
           </TableCell>
 
           {/* Application date */}
-          {!isApplication && <TableCell>
+          {!isApplication && <TableCell >
             <Typography variant="body2">
               {customerApplication?.applicationDate
                 ? new Date( customerApplication.applicationDate ).toLocaleDateString( 'en-IN', {
@@ -2230,273 +2232,279 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                 )}
             </Box>
           </TableCell>
-        </TableRow>
+        </TableRow >
 
         {/* History Row - appears when showHistory is true */}
-        {showHistory && customerApplication.ticketId && (
-          <TableRow>
-            <TableCell colSpan={11} sx={{ bgcolor: "#f5f5f5", p: 2 }}>
-              <Typography
-                variant="h6"
-                sx={{ color: "#333", mb: 2, fontWeight: "bold" }}
-              >
-                History
-              </Typography>
-              <Box sx={{ maxHeight: "200px", overflowY: "auto" }}>
-                {historyData.length > 0 ? (
-                  historyData.map( ( history, index ) => (
-                    <Box
-                      key={index}
-                      sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        mb: 2,
-                        p: 1.5,
-                        bgcolor: "white",
-                        borderRadius: 1,
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                      }}
-                    >
-                      <Typography
-                        variant="body2"
+        {
+          showHistory && customerApplication.ticketId && (
+            <TableRow>
+              <TableCell colSpan={11} sx={{ bgcolor: "#f5f5f5", p: 2 }}>
+                <Typography
+                  variant="h6"
+                  sx={{ color: "#333", mb: 2, fontWeight: "bold" }}
+                >
+                  History
+                </Typography>
+                <Box sx={{ maxHeight: "200px", overflowY: "auto" }}>
+                  {historyData.length > 0 ? (
+                    historyData.map( ( history, index ) => (
+                      <Box
+                        key={index}
                         sx={{
-                          color: "black",
-                          fontWeight: "medium",
-                          mb: 0.5,
+                          display: "flex",
+                          flexDirection: "column",
+                          mb: 2,
+                          p: 1.5,
+                          bgcolor: "white",
+                          borderRadius: 1,
+                          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
                         }}
                       >
-                        <strong>
-                          {capitalizeFirstLetter( history.action.split( " " )[ 0 ] )}
-                        </strong>
-                        {` ${ history.action.substring(
-                          history.action.indexOf( " " ) + 1
-                        ) }`}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: "#1976d2" }}>
-                        {new Date( history.created_at ).toLocaleDateString(
-                          "en-IN",
-                          {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          }
-                        )}{" "}
-                        ({calculateDaysAgo( history.created_at )} days ago)
-                      </Typography>
-                    </Box>
-                  ) )
-                ) : (
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "#666", textAlign: "center" }}
-                  >
-                    No history data available.
-                  </Typography>
-                )}
-              </Box>
-            </TableCell>
-          </TableRow>
-        )}
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: "black",
+                            fontWeight: "medium",
+                            mb: 0.5,
+                          }}
+                        >
+                          <strong>
+                            {capitalizeFirstLetter( history.action.split( " " )[ 0 ] )}
+                          </strong>
+                          {` ${ history.action.substring(
+                            history.action.indexOf( " " ) + 1
+                          ) }`}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: "#1976d2" }}>
+                          {new Date( history.created_at ).toLocaleDateString(
+                            "en-IN",
+                            {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            }
+                          )}{" "}
+                          ({calculateDaysAgo( history.created_at )} days ago)
+                        </Typography>
+                      </Box>
+                    ) )
+                  ) : (
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#666", textAlign: "center" }}
+                    >
+                      No history data available.
+                    </Typography>
+                  )}
+                </Box>
+              </TableCell>
+            </TableRow>
+          )
+        }
 
         {/* Comments Row - appears when showComment is true */}
-        {showComment && customerApplication.ticketId && (
-          <TableRow>
-            <TableCell colSpan={11} sx={{ bgcolor: "#f5f5f5", p: 2 }}>
-              <Typography
-                variant="h6"
-                sx={{ color: "#333", mb: 2, fontWeight: "bold" }}
-              >
-                Comments
-              </Typography>
-              <Box sx={{ maxHeight: "200px", overflowY: "auto" }}>
-                {commentData?.length > 0 ? (
-                  commentData.map( ( comment, idx ) => (
-                    <Box
-                      key={idx}
-                      sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        mb: 2,
-                        p: 1.5,
-                        bgcolor: "white",
-                        borderRadius: 1,
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                      }}
-                    >
-                      {/* User Name */}
-                      <Typography
-                        variant="subtitle2"
-                        sx={{ fontWeight: "bold", color: "black", mb: 0.5 }}
+        {
+          showComment && customerApplication.ticketId && (
+            <TableRow>
+              <TableCell colSpan={11} sx={{ bgcolor: "#f5f5f5", p: 2 }}>
+                <Typography
+                  variant="h6"
+                  sx={{ color: "#333", mb: 2, fontWeight: "bold" }}
+                >
+                  Comments
+                </Typography>
+                <Box sx={{ maxHeight: "200px", overflowY: "auto" }}>
+                  {commentData?.length > 0 ? (
+                    commentData.map( ( comment, idx ) => (
+                      <Box
+                        key={idx}
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          mb: 2,
+                          p: 1.5,
+                          bgcolor: "white",
+                          borderRadius: 1,
+                          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                        }}
                       >
-                        {capitalizeFirstLetter(
-                          comment?.user.username || "Anonymous"
+                        {/* User Name */}
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ fontWeight: "bold", color: "black", mb: 0.5 }}
+                        >
+                          {capitalizeFirstLetter(
+                            comment?.user.username || "Anonymous"
+                          )}
+                        </Typography>
+
+                        {/* Comment Text */}
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "black", fontStyle: "normal", mb: 0.5 }}
+                        >
+                          {capitalizeFirstLetter( comment.comment )}
+                        </Typography>
+
+                        {/* Attachment Section */}
+                        {comment.attachment && (
+                          <Box sx={{ mb: 0.5 }}>
+                            <Button
+                              onClick={() =>
+                                handleOpenAttachment(
+                                  comment.id,
+                                  comment.attachment
+                                )
+                              }
+                              variant="contained"
+                              size="small"
+                              sx={{
+                                textTransform: "none",
+                                bgcolor: "#0c66e4",
+                                color: "white",
+                                fontSize: "0.7rem",
+                                padding: "3px 6px",
+                                minHeight: "auto",
+                                "&:hover": {
+                                  bgcolor: "#085cb8",
+                                },
+                              }}
+                            >
+                              {isExcelAttachment( comment.attachment )
+                                ? "Open Excel"
+                                : isPdfAttachment( comment.attachment )
+                                  ? "Open PDF"
+                                  : "View Attachment"}
+                            </Button>
+                          </Box>
                         )}
-                      </Typography>
 
-                      {/* Comment Text */}
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "black", fontStyle: "normal", mb: 0.5 }}
-                      >
-                        {capitalizeFirstLetter( comment.comment )}
-                      </Typography>
-
-                      {/* Attachment Section */}
-                      {comment.attachment && (
-                        <Box sx={{ mb: 0.5 }}>
-                          <Button
-                            onClick={() =>
-                              handleOpenAttachment(
-                                comment.id,
-                                comment.attachment
-                              )
+                        {/* Meta Info */}
+                        <Typography variant="caption" sx={{ color: "#1976d2" }}>
+                          {new Date( comment.created_at ).toLocaleDateString(
+                            "en-IN",
+                            {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
                             }
-                            variant="contained"
-                            size="small"
-                            sx={{
-                              textTransform: "none",
-                              bgcolor: "#0c66e4",
-                              color: "white",
-                              fontSize: "0.7rem",
-                              padding: "3px 6px",
-                              minHeight: "auto",
-                              "&:hover": {
-                                bgcolor: "#085cb8",
-                              },
-                            }}
-                          >
-                            {isExcelAttachment( comment.attachment )
-                              ? "Open Excel"
-                              : isPdfAttachment( comment.attachment )
-                                ? "Open PDF"
-                                : "View Attachment"}
-                          </Button>
-                        </Box>
-                      )}
-
-                      {/* Meta Info */}
-                      <Typography variant="caption" sx={{ color: "#1976d2" }}>
-                        {new Date( comment.created_at ).toLocaleDateString(
-                          "en-IN",
-                          {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          }
-                        )}{" "}
-                        ({calculateDaysAgo( comment.created_at )} days ago)
-                      </Typography>
-                    </Box>
-                  ) )
-                ) : (
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "#666", textAlign: "center" }}
-                  >
-                    No comments available.
-                  </Typography>
-                )}
-              </Box>
-            </TableCell>
-          </TableRow>
-        )}
+                          )}{" "}
+                          ({calculateDaysAgo( comment.created_at )} days ago)
+                        </Typography>
+                      </Box>
+                    ) )
+                  ) : (
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#666", textAlign: "center" }}
+                    >
+                      No comments available.
+                    </Typography>
+                  )}
+                </Box>
+              </TableCell>
+            </TableRow>
+          )
+        }
 
         {/* Image Preview Modal */}
-        {currentAttachment && showAttachment[ currentAttachment.commentId ] && (
-          <Modal
-            open={showAttachment[ currentAttachment.commentId ]}
-            onClose={handleCloseAttachment}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Box
+        {
+          currentAttachment && showAttachment[ currentAttachment.commentId ] && (
+            <Modal
+              open={showAttachment[ currentAttachment.commentId ]}
+              onClose={handleCloseAttachment}
               sx={{
-                position: "relative",
-                bgcolor: "white",
-                borderRadius: "8px",
-                boxShadow: 24,
-                p: 2,
-                width: isMobile ? "95vw" : "80vw",
-                height: isMobile ? "80vh" : "85vh",
-                maxWidth: "90vw",
-                maxHeight: "90vh",
-                outline: "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
               <Box
                 sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  mb: 2,
-                  borderBottom: "1px solid #eee",
-                  pb: 1,
+                  position: "relative",
+                  bgcolor: "white",
+                  borderRadius: "8px",
+                  boxShadow: 24,
+                  p: 2,
+                  width: isMobile ? "95vw" : "80vw",
+                  height: isMobile ? "80vh" : "85vh",
+                  maxWidth: "90vw",
+                  maxHeight: "90vh",
+                  outline: "none",
                 }}
               >
-                <Typography variant="h6">Attachment Preview</Typography>
-                <IconButton
-                  onClick={handleCloseAttachment}
+                <Box
                   sx={{
-                    color: "red",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 2,
+                    borderBottom: "1px solid #eee",
+                    pb: 1,
                   }}
                 >
-                  <Close />
-                </IconButton>
-              </Box>
-
-              <Box
-                sx={{
-                  height: "calc(100% - 56px)",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  overflow: "hidden",
-                }}
-              >
-                {isImageAttachment( currentAttachment.url ) ? (
-                  <img
-                    src={currentAttachment.url}
-                    alt="Attachment Preview"
-                    style={{
-                      maxHeight: "100%",
-                      maxWidth: "100%",
-                      objectFit: "contain",
-                    }}
-                    onError={( e ) => {
-                      e.target.style.display = "none";
-                    }}
-                  />
-                ) : (
-                  <Box
+                  <Typography variant="h6">Attachment Preview</Typography>
+                  <IconButton
+                    onClick={handleCloseAttachment}
                     sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      height: "100%",
-                      color: "#666",
+                      color: "red",
                     }}
                   >
-                    <Typography variant="body1" sx={{ mb: 2 }}>
-                      File cannot be previewed
-                    </Typography>
-                    <Button
-                      href={currentAttachment.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      variant="contained"
+                    <Close />
+                  </IconButton>
+                </Box>
+
+                <Box
+                  sx={{
+                    height: "calc(100% - 56px)",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    overflow: "hidden",
+                  }}
+                >
+                  {isImageAttachment( currentAttachment.url ) ? (
+                    <img
+                      src={currentAttachment.url}
+                      alt="Attachment Preview"
+                      style={{
+                        maxHeight: "100%",
+                        maxWidth: "100%",
+                        objectFit: "contain",
+                      }}
+                      onError={( e ) => {
+                        e.target.style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: "100%",
+                        color: "#666",
+                      }}
                     >
-                      Download File
-                    </Button>
-                  </Box>
-                )}
+                      <Typography variant="body1" sx={{ mb: 2 }}>
+                        File cannot be previewed
+                      </Typography>
+                      <Button
+                        href={currentAttachment.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        variant="contained"
+                      >
+                        Download File
+                      </Button>
+                    </Box>
+                  )}
+                </Box>
               </Box>
-            </Box>
-          </Modal>
-        )}
+            </Modal>
+          )
+        }
       </>
     );
   };
@@ -2508,7 +2516,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
       ) : toggleListView === "grid" ? (
         <GridView />
       ) : (
-            <TableView index={mainIndex} />
+        <TableView index={mainIndex} />
       )}
 
       <Dialog
