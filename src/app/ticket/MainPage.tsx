@@ -987,7 +987,7 @@ const Ticket = () => {
                                 md: "1rem",
                               },
                               wordWrap: "break-word",
-                              minWidth: { xs: "60px", sm: "80px", md: "10px" },
+                              minWidth: { xs: "60px", sm: "30px", md: "10px" },
                             }}
                           >
                             S.no
