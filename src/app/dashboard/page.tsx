@@ -377,9 +377,9 @@ export default function Page(): React.JSX.Element {
 
     const normalizedNewApplications = totalNewApplications
       ? {
-          count: totalNewApplications.count,
-          amount: totalNewApplications.amount || null,
-        }
+        count: totalNewApplications.count,
+        amount: totalNewApplications.amount || null,
+      }
       : { count: null, amount: null };
 
     setAllCounts({
@@ -426,15 +426,14 @@ export default function Page(): React.JSX.Element {
       key: "totalTickets",
       color: "#009688",
       count: allCounts?.totalTickets,
-      link: `/ticket?status=all${
-        selectedMonth
+      link: `/ticket?status=all${selectedMonth
           ? `&month=${encodeURIComponent(
-              selectedMonth
-            )}&startDate=${getFirstDayOfMonth(
-              selectedMonth
-            )}&endDate=${getLastDayOfMonth(selectedMonth)}`
+            selectedMonth
+          )}&startDate=${getFirstDayOfMonth(
+            selectedMonth
+          )}&endDate=${getLastDayOfMonth(selectedMonth)}`
           : ""
-      }`,
+        }`,
     },
     {
       icon: WorkHistoryIcon,
@@ -442,15 +441,14 @@ export default function Page(): React.JSX.Element {
       key: "underCreditReview",
       color: "#827717",
       count: allCounts?.totalUnderCreditReview,
-      link: `/ticket?status=${decodeURIComponent("under credit review")}${
-        selectedMonth
+      link: `/ticket?status=${decodeURIComponent("under credit review")}${selectedMonth
           ? `&month=${encodeURIComponent(
-              selectedMonth
-            )}&startDate=${getFirstDayOfMonth(
-              selectedMonth
-            )}&endDate=${getLastDayOfMonth(selectedMonth)}`
+            selectedMonth
+          )}&startDate=${getFirstDayOfMonth(
+            selectedMonth
+          )}&endDate=${getLastDayOfMonth(selectedMonth)}`
           : ""
-      }`,
+        }`,
     },
     {
       icon: LoginRounded,
@@ -458,15 +456,14 @@ export default function Page(): React.JSX.Element {
       key: "operations",
       color: "#2196f3",
       count: allCounts?.totalOperations,
-      link: `/ticket?status=${decodeURIComponent("operations")}${
-        selectedMonth
+      link: `/ticket?status=${decodeURIComponent("operations")}${selectedMonth
           ? `&month=${encodeURIComponent(
-              selectedMonth
-            )}&startDate=${getFirstDayOfMonth(
-              selectedMonth
-            )}&endDate=${getLastDayOfMonth(selectedMonth)}`
+            selectedMonth
+          )}&startDate=${getFirstDayOfMonth(
+            selectedMonth
+          )}&endDate=${getLastDayOfMonth(selectedMonth)}`
           : ""
-      }`,
+        }`,
     },
     {
       icon: PendingActionsIcon,
@@ -474,15 +471,14 @@ export default function Page(): React.JSX.Element {
       key: "pendencyInFile",
       color: "#7c4dff",
       count: allCounts?.totalPendencyInFile,
-      link: `/ticket?status=${decodeURIComponent("pendency in file")}${
-        selectedMonth
+      link: `/ticket?status=${decodeURIComponent("pendency in file")}${selectedMonth
           ? `&month=${encodeURIComponent(
-              selectedMonth
-            )}&startDate=${getFirstDayOfMonth(
-              selectedMonth
-            )}&endDate=${getLastDayOfMonth(selectedMonth)}`
+            selectedMonth
+          )}&startDate=${getFirstDayOfMonth(
+            selectedMonth
+          )}&endDate=${getLastDayOfMonth(selectedMonth)}`
           : ""
-      }`,
+        }`,
     },
     {
       icon: SendRounded,
@@ -490,15 +486,14 @@ export default function Page(): React.JSX.Element {
       key: "fileSendToBanker",
       color: "#3f51b5",
       count: allCounts?.totalFileSendToBanker,
-      link: `/ticket?status=${decodeURIComponent("file send to banker")}${
-        selectedMonth
+      link: `/ticket?status=${decodeURIComponent("file send to banker")}${selectedMonth
           ? `&month=${encodeURIComponent(
-              selectedMonth
-            )}&startDate=${getFirstDayOfMonth(
-              selectedMonth
-            )}&endDate=${getLastDayOfMonth(selectedMonth)}`
+            selectedMonth
+          )}&startDate=${getFirstDayOfMonth(
+            selectedMonth
+          )}&endDate=${getLastDayOfMonth(selectedMonth)}`
           : ""
-      }`,
+        }`,
     },
     {
       icon: PauseCircleOutlineRounded,
@@ -506,15 +501,14 @@ export default function Page(): React.JSX.Element {
       key: "hold",
       color: "#ffeb3b",
       count: allCounts?.totalHold,
-      link: `/ticket?status=${decodeURIComponent("hold")}${
-        selectedMonth
+      link: `/ticket?status=${decodeURIComponent("hold")}${selectedMonth
           ? `&month=${encodeURIComponent(
-              selectedMonth
-            )}&startDate=${getFirstDayOfMonth(
-              selectedMonth
-            )}&endDate=${getLastDayOfMonth(selectedMonth)}`
+            selectedMonth
+          )}&startDate=${getFirstDayOfMonth(
+            selectedMonth
+          )}&endDate=${getLastDayOfMonth(selectedMonth)}`
           : ""
-      }`,
+        }`,
     },
     {
       icon: ThumbUpRounded,
@@ -522,15 +516,14 @@ export default function Page(): React.JSX.Element {
       key: "toBeApproved",
       color: "#aed581",
       count: allCounts?.totalToBeApproved,
-      link: `/ticket?status=${decodeURIComponent("to be approved")}${
-        selectedMonth
+      link: `/ticket?status=${decodeURIComponent("to be approved")}${selectedMonth
           ? `&month=${encodeURIComponent(
-              selectedMonth
-            )}&startDate=${getFirstDayOfMonth(
-              selectedMonth
-            )}&endDate=${getLastDayOfMonth(selectedMonth)}`
+            selectedMonth
+          )}&startDate=${getFirstDayOfMonth(
+            selectedMonth
+          )}&endDate=${getLastDayOfMonth(selectedMonth)}`
           : ""
-      }`,
+        }`,
     },
     {
       icon: ForwardRounded,
@@ -538,15 +531,14 @@ export default function Page(): React.JSX.Element {
       key: "toBeDisbursed",
       color: "#ffcc80",
       count: allCounts?.totalToBeDisbursed,
-      link: `/ticket?status=${decodeURIComponent("to be disbursed")}${
-        selectedMonth
+      link: `/ticket?status=${decodeURIComponent("to be disbursed")}${selectedMonth
           ? `&month=${encodeURIComponent(
-              selectedMonth
-            )}&startDate=${getFirstDayOfMonth(
-              selectedMonth
-            )}&endDate=${getLastDayOfMonth(selectedMonth)}`
+            selectedMonth
+          )}&startDate=${getFirstDayOfMonth(
+            selectedMonth
+          )}&endDate=${getLastDayOfMonth(selectedMonth)}`
           : ""
-      }`,
+        }`,
     },
     {
       icon: AccountBalanceRounded,
@@ -555,15 +547,14 @@ export default function Page(): React.JSX.Element {
       color: "#64dd17",
       count: allCounts?.totalApproved?.count,
       amount: allCounts?.totalApproved?.amount,
-      link: `/ticket?status=${decodeURIComponent("approved")}${
-        selectedMonth
+      link: `/ticket?status=${decodeURIComponent("approved")}${selectedMonth
           ? `&month=${encodeURIComponent(
-              selectedMonth
-            )}&startDate=${getFirstDayOfMonth(
-              selectedMonth
-            )}&endDate=${getLastDayOfMonth(selectedMonth)}`
+            selectedMonth
+          )}&startDate=${getFirstDayOfMonth(
+            selectedMonth
+          )}&endDate=${getLastDayOfMonth(selectedMonth)}`
           : ""
-      }`,
+        }`,
     },
     {
       icon: ReportRounded,
@@ -572,15 +563,14 @@ export default function Page(): React.JSX.Element {
       color: "#ff9800",
       count: allCounts?.totalDisbursed?.count,
       amount: allCounts?.totalDisbursed?.amount,
-      link: `/ticket?status=${decodeURIComponent("disbursed")}${
-        selectedMonth
+      link: `/ticket?status=${decodeURIComponent("disbursed")}${selectedMonth
           ? `&month=${encodeURIComponent(
-              selectedMonth
-            )}&startDate=${getFirstDayOfMonth(
-              selectedMonth
-            )}&endDate=${getLastDayOfMonth(selectedMonth)}`
+            selectedMonth
+          )}&startDate=${getFirstDayOfMonth(
+            selectedMonth
+          )}&endDate=${getLastDayOfMonth(selectedMonth)}`
           : ""
-      }`,
+        }`,
     },
     {
       icon: SendTimeExtensionIcon,
@@ -588,15 +578,14 @@ export default function Page(): React.JSX.Element {
       key: "caryForward",
       color: "pink",
       count: allCounts?.totalCarryForward,
-      link: `/ticket?status=${decodeURIComponent("carry forward")}${
-        selectedMonth
+      link: `/ticket?status=${decodeURIComponent("carry forward")}${selectedMonth
           ? `&month=${encodeURIComponent(
-              selectedMonth
-            )}&startDate=${getFirstDayOfMonth(
-              selectedMonth
-            )}&endDate=${getLastDayOfMonth(selectedMonth)}`
+            selectedMonth
+          )}&startDate=${getFirstDayOfMonth(
+            selectedMonth
+          )}&endDate=${getLastDayOfMonth(selectedMonth)}`
           : ""
-      }`,
+        }`,
     },
     {
       icon: CancelRounded,
@@ -604,15 +593,14 @@ export default function Page(): React.JSX.Element {
       key: "rejected",
       color: "#f44336",
       count: allCounts?.totalRejected,
-      link: `/ticket?status=${decodeURIComponent("rejected")}${
-        selectedMonth
+      link: `/ticket?status=${decodeURIComponent("rejected")}${selectedMonth
           ? `&month=${encodeURIComponent(
-              selectedMonth
-            )}&startDate=${getFirstDayOfMonth(
-              selectedMonth
-            )}&endDate=${getLastDayOfMonth(selectedMonth)}`
+            selectedMonth
+          )}&startDate=${getFirstDayOfMonth(
+            selectedMonth
+          )}&endDate=${getLastDayOfMonth(selectedMonth)}`
           : ""
-      }`,
+        }`,
     },
     {
       icon: DeleteForeverRounded,
@@ -620,28 +608,35 @@ export default function Page(): React.JSX.Element {
       key: "drop",
       color: "#ff5722",
       count: allCounts?.totalDrop,
-      link: `/ticket?status=${decodeURIComponent("drop")}${
-        selectedMonth
+      link: `/ticket?status=${decodeURIComponent("drop")}${selectedMonth
           ? `&month=${encodeURIComponent(
-              selectedMonth
-            )}&startDate=${getFirstDayOfMonth(
-              selectedMonth
-            )}&endDate=${getLastDayOfMonth(selectedMonth)}`
+            selectedMonth
+          )}&startDate=${getFirstDayOfMonth(
+            selectedMonth
+          )}&endDate=${getLastDayOfMonth(selectedMonth)}`
           : ""
-      }`,
+        }`,
+    },
+    {
+      icon: SendRounded,
+      label: "AI Leads",
+      key: "aiLeads",
+      color: "#00bcd4",
+      count: null,
+      link: "/ai-leads",
     },
 
     ...(role === "admin"
       ? [
-          {
-            icon: SupervisorAccountIcon,
-            label: "Total Agents",
-            key: "totalAgents",
-            color: "#90a4ae",
-            count: totalAgents,
-            link: "/users",
-          },
-        ]
+        {
+          icon: SupervisorAccountIcon,
+          label: "Total Agents",
+          key: "totalAgents",
+          color: "#90a4ae",
+          count: totalAgents,
+          link: "/users",
+        },
+      ]
       : []),
   ];
 
@@ -926,14 +921,14 @@ export default function Page(): React.JSX.Element {
                       boxShadow: "0 8px 25px rgba(0,0,0,0.15)",
                     },
 
-                    
+
                     // Icon styling
                     "& .MuiSvgIcon-root": {
                       fontSize: { xs: "1.5rem", sm: "1.8rem" },
                       // mb: { xs: 0.5, sm: 1 },
                       opacity: 0.9,
-                      display: "block",         
-                      margin: "0 auto",         
+                      display: "block",
+                      margin: "0 auto",
                     },
 
                     // Main label text styling - FIXED FOR MOBILE
