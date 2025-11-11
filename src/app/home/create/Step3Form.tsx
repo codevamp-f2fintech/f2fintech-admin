@@ -206,7 +206,7 @@ const Step3Form: React.FC<Step3FormProps> = ( {
                   alignItems: "center",
                   width: "30vw",
                   alignContent: "center",
-                  justifyContent: "center"
+                  justifyContent: "center",
                 }}
               >
                 {/* File picker with multiple file upload support */}

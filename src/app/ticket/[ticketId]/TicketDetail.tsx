@@ -47,10 +47,10 @@ const TicketDetail = ({ ticketDetailData, isTab }) => {
   );
   const muiTheme = useTheme();
   const userRole = decodedToken()?.role;
-    const isMobile = useMediaQuery( muiTheme.breakpoints.down( 'sm' ) ); // 0-599px
-    const isTablet = useMediaQuery( muiTheme.breakpoints.between( 'sm', 'md' ) ); // 600-899px
-    const isIpad = useMediaQuery( muiTheme.breakpoints.between( 'md', 'lg' ) ); // 900-1199px
-    const isDesktop = useMediaQuery( muiTheme.breakpoints.up( 'lg' ) ); // 1200px+
+    const isMobile = useMediaQuery( muiTheme.breakpoints.down( 'sm' ) );
+    const isTablet = useMediaQuery( muiTheme.breakpoints.between( 'sm', 'md' ) );
+    const isIpad = useMediaQuery( muiTheme.breakpoints.between( 'md', 'lg' ) );
+    const isDesktop = useMediaQuery( muiTheme.breakpoints.up( 'lg' ) );
 
     // Fetch loan providers
     const { value: providersData, swrLoading: providersLoading } =
@@ -141,7 +141,7 @@ const TicketDetail = ({ ticketDetailData, isTab }) => {
       setOpenEditModal(false);
     }
   };
-
+  console.log( "editedTicketData<<<<><<><>><>", editedTicketData )
   return (
     <>
       <Box
@@ -412,6 +412,29 @@ const TicketDetail = ({ ticketDetailData, isTab }) => {
                 >
                   {capitalizeFirstLetter(editedTicketData?.provider) ||
                     "No provider available"}{" "}
+                </Box>
+              </Typography>
+            </Grid>
+              <Grid item xs={12} sm={6}>
+              <Typography
+                sx={{
+                  color: "#172B4D",
+                  fontSize: isIpad ? "1.4rem" : "1rem",
+                  mb: 1,
+                  fontFamily: "",
+                }}
+              >
+                <strong>Loan Category:</strong>{" "}
+                <Box
+                  component="span"
+                  sx={{
+                    color: "#5E6C84",
+                    fontSize: isIpad ? "1.4rem" : ".9rem",
+                    fontWeight: 500,
+                  }}
+                >
+                  {capitalizeFirstLetter( editedTicketData?.loanCategory ) ||
+                    "No category available"}
                 </Box>
               </Typography>
             </Grid>

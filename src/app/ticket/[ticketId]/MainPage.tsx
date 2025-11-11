@@ -87,6 +87,7 @@ export interface TicketDetail {
   customerLocation: string;
   customerState: string;
   loanStatus: string;
+  loanCategory: string;
   userRole: string;
 }
 
@@ -115,6 +116,7 @@ interface TicketDetailResponse {
     customerDesignation: string;
     customerLocation: string;
     loanStatus: string;
+    loanCategory: string;
   };
 }
 
