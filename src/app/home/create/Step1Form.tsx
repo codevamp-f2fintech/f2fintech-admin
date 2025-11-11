@@ -23,7 +23,7 @@ import {
   Typography,
   CircularProgress,
 } from "@mui/material";
-import { CurrencyRupee as CurrencyRupeeIcon } from "@mui/icons-material";
+import { CurrencyRupee as CurrencyRupeeIcon, AccessTime } from "@mui/icons-material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
@@ -76,9 +76,15 @@ const Step1Form: React.FC<Step1FormProps> = ( {
   const [ amount, setAmount ] = useState<string>( "" );
   const [ tenure, setTenure ] = useState<string>( "" );
   const [ loanType, setLoanType ] = useState( "" );
+  const [ loanCategory, setLoanCategory ] = useState( "" );
   const [ provider, setProvider ] = useState<string>( "" );
   const [ loading, setLoading ] = useState<boolean>( false );
-  const [ errors, setErrors ] = useState<{ amount: string; tenure: string; provider: string }>( {
+  const [ errors, setErrors ] = useState<{
+    amount: string;
+    tenure: string;
+    provider: string;
+    loanType: string;
+  }>( {
     amount: "",
     tenure: "",
     provider: "",
@@ -89,6 +95,77 @@ const Step1Form: React.FC<Step1FormProps> = ( {
   const dispatch = useDispatch();
   const [ providers, setProviders ] = useState<string[]>( [] );
 
+  // Define loan types with categories
+  const loanTypes = {
+    secured: [
+      { value: "home loan", label: "Home Loan" },
+      { value: "lap", label: "LAP (Loan Against Property)" },
+      { value: "auto loan", label: "Auto Loan" },
+      { value: "machinery loan", label: "Machinery Loan" }
+    ],
+    unsecured: [
+      { value: "personal loan", label: "Personal Loan" },
+      { value: "business loan", label: "Business Loan" },
+      { value: "professional loan", label: "Professional Loan" },
+      { value: "education loan", label: "Education Loan" },
+      { value: "just inquiry", label: "Just Inquiry" }
+    ]
+  };
+
+  // Define tenure options based on loan category
+  const tenureOptions = {
+    secured: [
+      "5 Years",
+      "8 Years",
+      "10 Years",
+      "15 Years",
+      "20 Years",
+      "25 Years",
+      "30 Years"
+    ],
+    unsecured: [
+      "1 Year",
+      "2 Years",
+      "3 Years",
+      "4 Years",
+      "5 Years",
+      "6 Years",
+      "7 Years",
+      "8 Years"
+    ]
+  };
+
+  // Function to determine loan category based on loan type
+  const getLoanCategory = ( loanType: string ): string => {
+    const securedLoanTypes = [ "home loan", "lap", "auto loan", "machinery loan" ];
+    const unsecuredLoanTypes = [ "personal loan", "business loan", "professional loan", "education loan", "just inquiry" ];
+
+    if ( securedLoanTypes.includes( loanType ) )
+    {
+      return "secured";
+    } else if ( unsecuredLoanTypes.includes( loanType ) )
+    {
+      return "unsecured";
+    }
+    return "";
+  };
+
+  // Handle loan type change
+  const handleLoanTypeChange = ( value: string ) => {
+    console.log( "Selected Loan Type:", value );
+    setLoanType( value );
+
+    const category = getLoanCategory( value );
+    console.log( "Determined Loan Category:", category );
+
+    setLoanCategory( category );
+
+    // Reset tenure when loan type changes
+    setTenure( "" );
+
+    validateLoanType( value );
+  };
+
   const validateProviders = ( values: string[] ): void => {
     let error = "";
     if ( !values || values.length === 0 )
@@ -96,6 +173,15 @@ const Step1Form: React.FC<Step1FormProps> = ( {
       error = "Please select at least one provider";
     }
     setErrors( ( prev ) => ( { ...prev, provider: error } ) );
+  };
+
+  const validateLoanType = ( value: string ): void => {
+    let error = "";
+    if ( !value )
+    {
+      error = "This Field is required";
+    }
+    setErrors( ( prev ) => ( { ...prev, loanType: error } ) );
   };
 
   // Fetch loan providers
@@ -135,7 +221,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
     setErrors( ( prev ) => ( { ...prev, amount: error } ) );
   };
 
-  const validateProvider = ( value: string ): void => {
+  const validateTenure = ( value: string ): void => {
     let error = "";
     if ( !value )
     {
@@ -171,8 +257,6 @@ const Step1Form: React.FC<Step1FormProps> = ( {
     };
     fetchCustomerData();
   }, [ storedCustomerId ] );
-
-
 
   // Function to register the customer
   async function registerCustomer ( customer ) {
@@ -212,6 +296,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
     tenure,
     provider,
     loanType,
+    loanCategory
   ) {
     const { data: applicationResponse } =
       await axios.post(
@@ -224,6 +309,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
           tenure,
           provider,
           loan_type: loanType,
+          loan_category: loanCategory,
         } )
     return applicationResponse.data.applicationId;
   }
@@ -243,7 +329,6 @@ const Step1Form: React.FC<Step1FormProps> = ( {
     setLocalStorage( "customerInfo", customerInfo );
     location.reload();
   }
-
 
   // Create new customer with loan application
   const create = useCallback(
@@ -275,6 +360,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
             tenure,
             providerName,
             loanType,
+            loanCategory
           );
           await createLoanTracking( applicationId );
           return applicationNumberGenerated;
@@ -313,14 +399,12 @@ const Step1Form: React.FC<Step1FormProps> = ( {
         setLoading( false );
       }
     },
-    [ amount, tenure, providers, loanType ] // Updated dependency
+    [ amount, tenure, providers, loanType, loanCategory ] // Updated dependency
   );
 
   const PROVIDER_OPTIONS = providersLoading
     ? []
     : providersData?.data?.results?.map( provider => provider.title ) || [];
-
-  const LOAN_TYPES = [ "Term Loan", "Personal Loan", "Business Loan", "Professional Loan", "Home Loan", "Education Loan", "LAP", "Machinery Loan", "Auto Loan" ];
 
   // If application number and loan status exists, display success message without making user to fill the form again
   if ( applicationNumber )
@@ -394,11 +478,11 @@ const Step1Form: React.FC<Step1FormProps> = ( {
             color="primary"
             sx={{
               width: "100%",
-              borderRadius: "0px 0px 10px 0px",
-              bgcolor: "#f06292",
+              borderRadius: "10px 10px 10px 10px",
+              bgcolor: "#3244e6",
               color: "white",
               "&:hover": {
-                bgcolor: "#f06292",
+                bgcolor: "#5a68ec",
                 color: "white",
               },
             }}
@@ -413,7 +497,6 @@ const Step1Form: React.FC<Step1FormProps> = ( {
       </Box>
     );
   }
-
 
   // Initial form view with amount and tenure selection
   if ( !getStarted )
@@ -444,6 +527,305 @@ const Step1Form: React.FC<Step1FormProps> = ( {
           Get the loan best suited for your wish
         </Typography>
 
+        {/* Amount Field */}
+        <Box
+          sx={{
+            width: {
+              xs: "80%",
+              md: "45%",
+              sm: "45%",
+            },
+            marginBottom: 3,
+          }}
+        >
+          <TextField
+            autoComplete="off"
+            fullWidth
+            variant="filled"
+            name="amount"
+            label="Enter Amount*"
+            placeholder="How Much Loan Do You Require?"
+            value={amount}
+            onChange={( e ) => {
+              setAmount( e.target.value );
+              validateAmount( e.target.value );
+            }}
+            onBlur={() => validateAmount( amount )}
+            error={!!errors.amount}
+            helperText={errors.amount}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <CurrencyRupeeIcon />
+                </InputAdornment>
+              ),
+              style: {
+                color: "white",
+              },
+            }}
+            sx={{
+              fontSize: "13px",
+              borderRadius: "10px",
+              overflow: "hidden",
+              marginBottom: 1,
+              "& .MuiInputBase-root": {
+                backgroundColor: "transparent !important",
+              },
+              "& .MuiFormLabel-root": {
+                color: "white !important",
+              },
+              "& .MuiFormLabel-root.Mui-focused": {
+                color: "white !important",
+              },
+              "& input::placeholder": {
+                fontSize: "0.8rem",
+                color: "#ffffff",
+              },
+              "& .MuiFilledInput-underline:before": {
+                borderBottomColor: "rgba(255, 255, 255, 0.5)",
+              },
+              "& .MuiFilledInput-underline:hover:before": {
+                borderBottomColor: "#ffffff",
+              },
+              "& .MuiFilledInput-underline:after": {
+                borderBottomColor: "#039be5",
+              },
+            }}
+          />
+        </Box>
+
+        {/* Loan Type Field */}
+        <FormControl
+          autoComplete="off"
+          variant="filled"
+          error={!!errors.loanType}
+          sx={{
+            width: { xs: "90%", sm: "60%", md: "45%" },
+            mb: 3,
+            "& .MuiFilledInput-root": {
+              backgroundColor: "rgba(255, 255, 255, 0.08)",
+              borderRadius: "12px",
+              color: "white",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+              transition: "all 0.3s ease",
+
+              "& .MuiSelect-filled": {
+                color: "white !important",
+              },
+
+              "&:before, &:after": {
+                borderBottom: "none !important",
+              },
+
+              "&:hover": {
+                backgroundColor: "rgba(255,255,255,0.12)",
+              },
+              "&.Mui-focused": {
+                backgroundColor: "rgba(255,255,255,0.15)",
+                boxShadow: "0 0 0 2px rgba(144,202,249,0.4)",
+              },
+            },
+            "& .MuiInputLabel-root": {
+              color: "rgba(255,255,255,0.7)",
+              fontSize: "14px",
+            },
+            "& .Mui-focused": {
+              color: "#90caf9 !important",
+            },
+            "& .MuiSelect-icon": {
+              color: "white",
+            },
+          }}
+        >
+          <InputLabel>Loan Type*</InputLabel>
+          <Select
+            variant="filled"
+            name="loanType"
+            value={loanType}
+            onChange={( e ) => handleLoanTypeChange( e.target.value )}
+            onBlur={() => validateLoanType( loanType )}
+            startAdornment={
+              <InputAdornment position="start" sx={{ color: "white !important" }}>
+                <AccountBalanceIcon />
+              </InputAdornment>
+            }
+            MenuProps={{
+              PaperProps: {
+                sx: {
+                  bgcolor: "#1e1e1e",
+                  borderRadius: "10px",
+                  "& .MuiMenuItem-root": {
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "#333",
+                    },
+                    "&.Mui-selected": {
+                      backgroundColor: "#90caf9 !important",
+                      color: "#fff",
+                    },
+                  },
+                },
+              },
+            }}
+          >
+            {/* Secured Loans Group */}
+            <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#333", color: "#90caf9" }}>
+              Secured Loans
+            </MenuItem>
+            {loanTypes.secured.map( ( loan ) => (
+              <MenuItem
+                key={loan.value}
+                value={loan.value}
+                sx={{
+                  padding: "10px 16px",
+                  fontSize: "14px",
+                  borderRadius: "6px",
+                }}
+              >
+                {loan.label}
+              </MenuItem>
+            ) )}
+
+            {/* Unsecured Loans Group */}
+            <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#333", color: "#90caf9", mt: 1 }}>
+              Unsecured Loans
+            </MenuItem>
+            {loanTypes.unsecured.map( ( loan ) => (
+              <MenuItem
+                key={loan.value}
+                value={loan.value}
+                sx={{
+                  padding: "10px 16px",
+                  fontSize: "14px",
+                  borderRadius: "6px",
+                }}
+              >
+                {loan.label}
+              </MenuItem>
+            ) )}
+          </Select>
+          {errors.loanType && (
+            <Typography
+              color="error"
+              sx={{
+                mt: 0.5,
+                ml: 1,
+                fontSize: "11px",
+                fontFamily: "Verdana, sans-serif",
+              }}
+            >
+              {errors.loanType}
+            </Typography>
+          )}
+        </FormControl>
+
+        {/* Tenure Field */}
+        <FormControl
+          autoComplete="off"
+          variant="filled"
+          error={!!errors.tenure}
+          sx={{
+            width: { xs: "90%", sm: "60%", md: "45%" },
+            mb: 3,
+            "& .MuiFilledInput-root": {
+              backgroundColor: "rgba(255, 255, 255, 0.08)",
+              borderRadius: "12px",
+              color: "white",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+              transition: "all 0.3s ease",
+
+              "&:before, &:after": {
+                borderBottom: "none !important",
+              },
+
+              "&:hover": {
+                backgroundColor: "rgba(255,255,255,0.12)",
+              },
+              "&.Mui-focused": {
+                backgroundColor: "rgba(255,255,255,0.15)",
+                boxShadow: "0 0 0 2px rgba(144,202,249,0.4)",
+              },
+            },
+            "& .MuiInputLabel-root": {
+              color: "rgba(255,255,255,0.7)",
+              fontSize: "14px",
+            },
+            "& .Mui-focused": {
+              color: "#90caf9 !important",
+            },
+            "& .MuiSelect-icon": {
+              color: "white",
+            },
+          }}
+        >
+          <InputLabel>
+            {loanCategory ? `Select Tenure (${ loanCategory === 'secured' ? 'Long Term' : 'Short Term' })` : "Select A Comfortable Tenure"}
+          </InputLabel>
+          <Select
+            variant="filled"
+            name="tenure"
+            value={tenure}
+            onChange={( e ) => {
+              setTenure( e.target.value );
+              validateTenure( e.target.value );
+            }}
+            onBlur={() => validateTenure( tenure )}
+            disabled={!loanCategory}
+            startAdornment={
+              <InputAdornment position="start" sx={{ color: "white !important" }}>
+                <AccessTime />
+              </InputAdornment>
+            }
+            MenuProps={{
+              PaperProps: {
+                sx: {
+                  bgcolor: "#1e1e1e",
+                  borderRadius: "10px",
+                  "& .MuiMenuItem-root": {
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "#333",
+                    },
+                    "&.Mui-selected": {
+                      backgroundColor: "#90caf9 !important",
+                      color: "#fff",
+                    },
+                  },
+                },
+              },
+            }}
+          >
+            {( loanCategory ? tenureOptions[ loanCategory ] : [] ).map( ( label ) => (
+              <MenuItem
+                key={label}
+                value={label}
+                sx={{
+                  padding: "10px 16px",
+                  fontSize: "14px",
+                  borderRadius: "6px",
+                }}
+              >
+                {label}
+              </MenuItem>
+            ) )}
+          </Select>
+
+          {errors.tenure && (
+            <Typography
+              color="error"
+              sx={{
+                mt: 0.5,
+                ml: 1,
+                fontSize: "11px",
+                fontFamily: "Verdana, sans-serif",
+              }}
+            >
+              {errors.tenure || ( loanCategory ? "" : "Please select a loan type first" )}
+            </Typography>
+          )}
+        </FormControl>
+
+        {/* Providers Field */}
         <FormControl
           autoComplete="off"
           variant="filled"
@@ -534,14 +916,51 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                       backgroundColor: "#333",
                     },
                     "&.Mui-selected": {
-                      backgroundColor: "#90caf9 !important",
                       color: "#fff",
                     },
                   },
+             
+                  overflow: "auto",
+                  scrollbarWidth: "none",  
+                  "&::-webkit-scrollbar": {
+                    display: "none",  
+                  },
+                  msOverflowStyle: "none",  
                 },
               },
             }}
           >
+            {/* Special Option - Added at the top */}
+            <MenuItem
+              value="Let F2 Fintech decide your lender"
+              sx={{
+                backgroundColor: "rgba(50, 68, 230, 0.1)",
+                borderBottom: "1px solid rgba(255,255,255,0.1)",
+                "&:hover": {
+                  backgroundColor: "rgba(50, 68, 230, 0.2)",
+                },
+                "&.Mui-selected": {
+                  backgroundColor: "rgba(50, 68, 230, 0.4) !important",
+                },
+              }}
+            >
+              <Checkbox
+                checked={providers.indexOf( "Let F2 Fintech decide your lender" ) > -1}
+                sx={{
+                  color: "rgba(255,255,255,0.7)",
+                  '&.Mui-checked': {
+                    color: "#3244e6",
+                  },
+                }}
+              />
+              <Typography
+                variant="body2"
+                sx={{ fontWeight: 600, color: "#90caf9" }}
+              >
+                Let F2 Fintech decide your lender
+              </Typography>
+            </MenuItem>
+
             {PROVIDER_OPTIONS.map( ( providerName ) => (
               <MenuItem
                 key={providerName}
@@ -583,286 +1002,17 @@ const Step1Form: React.FC<Step1FormProps> = ( {
           )}
         </FormControl>
 
-        <FormControl
-          autoComplete="off"
-          variant="filled"
-          error={!!errors.loanType}
-          sx={{
-            width: { xs: "90%", sm: "60%", md: "45%" },
-            mb: 3,
-            "& .MuiFilledInput-root": {
-              backgroundColor: "rgba(255, 255, 255, 0.08)",
-              borderRadius: "12px",
-              color: "white",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-              transition: "all 0.3s ease",
-
-              "& .MuiSelect-filled": {
-                color: "white !important",
-              },
-
-              "&:before, &:after": {
-                borderBottom: "none !important",
-              },
-
-              "&:hover": {
-                backgroundColor: "rgba(255,255,255,0.12)",
-              },
-              "&.Mui-focused": {
-                backgroundColor: "rgba(255,255,255,0.15)",
-                boxShadow: "0 0 0 2px rgba(144,202,249,0.4)",
-              },
-            },
-            "& .MuiInputLabel-root": {
-              color: "rgba(255,255,255,0.7)",
-              fontSize: "14px",
-            },
-            "& .Mui-focused": {
-              color: "#90caf9 !important",
-            },
-            "& .MuiSelect-icon": {
-              color: "white",
-            },
-          }}
-        >
-          <InputLabel>Loan Type*</InputLabel>
-          <Select
-            variant="filled"
-            name="loanType"
-            value={loanType}
-            onChange={( e ) => {
-              setLoanType( e.target.value );
-              validateLoanType( e.target.value );
-            }}
-            onBlur={() => validateLoanType( loanType )}
-            startAdornment={
-              <InputAdornment position="start" sx={{ color: "white !important" }}>
-                <AccountBalanceIcon />
-              </InputAdornment>
-            }
-            MenuProps={{
-              PaperProps: {
-                sx: {
-                  bgcolor: "#1e1e1e",
-                  borderRadius: "10px",
-                  "& .MuiMenuItem-root": {
-                    color: "white",
-                    "&:hover": {
-                      backgroundColor: "#333",
-                    },
-                    "&.Mui-selected": {
-                      backgroundColor: "#90caf9 !important",
-                      color: "#fff",
-                    },
-                  },
-                },
-              },
-            }}
-          >
-            {LOAN_TYPES.map( ( type ) => (
-              <MenuItem
-                key={type}
-                value={type?.toLowerCase()}
-                sx={{
-                  padding: "10px 16px",
-                  fontSize: "14px",
-                  borderRadius: "6px",
-                }}
-              >
-                {type}
-              </MenuItem>
-            ) )}
-          </Select>
-          {errors.loanType && (
-            <Typography
-              color="error"
-              sx={{
-                mt: 0.5,
-                ml: 1,
-                fontSize: "11px",
-                fontFamily: "Verdana, sans-serif",
-              }}
-            >
-              {errors.loanType}
-            </Typography>
-          )}
-        </FormControl>
-
-        <Box
-          sx={{
-            width: {
-              xs: "80%",
-              md: "45%",
-              sm: "45%",
-            },
-            marginBottom: 3,
-          }}
-        >
-          <TextField
-            autoComplete="off"
-            fullWidth
-            variant="filled"
-            name="amount"
-            label="Enter Amount*"
-            placeholder="How Much Loan Do You Require?"
-            value={amount}
-            onChange={( e ) => {
-              setAmount( e.target.value );
-              validateAmount( e.target.value );
-            }}
-            onBlur={() => validateAmount( amount )}
-            error={!!errors.amount}
-            helperText={errors.amount}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <CurrencyRupeeIcon />
-                </InputAdornment>
-              ),
-              style: {
-                color: "white",
-              },
-            }}
-            sx={{
-              fontSize: "13px",
-              borderRadius: "10px",
-              overflow: "hidden",
-              marginBottom: 1,
-              "& .MuiInputBase-root": {
-                backgroundColor: "transparent !important",
-              },
-              // ✅ Label styles
-              "& .MuiFormLabel-root": {
-                color: "white !important", // label white
-              },
-              "& .MuiFormLabel-root.Mui-focused": {
-                color: "white !important",
-              },
-              // ✅ Placeholder styles
-              "& input::placeholder": {
-                fontSize: "0.8rem",
-                color: "#ffffff",
-              },
-              "& .MuiFilledInput-underline:before": {
-                borderBottomColor: "rgba(255, 255, 255, 0.5)",
-              },
-              "& .MuiFilledInput-underline:hover:before": {
-                borderBottomColor: "#ffffff",
-              },
-              "& .MuiFilledInput-underline:after": {
-                borderBottomColor: "#039be5",
-              },
-            }}
-          />
-
-        </Box>
-        <FormControl
-          autoComplete="off"
-          variant="filled"
-          error={!!errors.tenure}
-          sx={{
-            width: { xs: "90%", sm: "60%", md: "45%" },
-            mb: 3,
-            "& .MuiFilledInput-root": {
-              backgroundColor: "rgba(255, 255, 255, 0.08)",
-              borderRadius: "12px",
-              color: "white",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-              transition: "all 0.3s ease",
-
-              "&:before, &:after": {
-                borderBottom: "none !important",
-              },
-
-              "&:hover": {
-                backgroundColor: "rgba(255,255,255,0.12)",
-              },
-              "&.Mui-focused": {
-                backgroundColor: "rgba(255,255,255,0.15)",
-                boxShadow: "0 0 0 2px rgba(144,202,249,0.4)",
-              },
-            },
-            "& .MuiInputLabel-root": {
-              color: "rgba(255,255,255,0.7)",
-              fontSize: "14px",
-            },
-            "& .Mui-focused": {
-              color: "#90caf9 !important",
-            },
-            "& .MuiSelect-icon": {
-              color: "white",
-            },
-          }}
-        >
-          <InputLabel>Select A Comfortable Tenure</InputLabel>
-          <Select
-            variant="filled"
-            name="tenure"
-            value={tenure}
-            onChange={( e ) => {
-              setTenure( e.target.value );
-              validateTenure( e.target.value );
-            }}
-            onBlur={() => validateTenure( tenure )}
-            MenuProps={{
-              PaperProps: {
-                sx: {
-                  bgcolor: "#1e1e1e",
-                  borderRadius: "10px",
-                  "& .MuiMenuItem-root": {
-                    color: "white",
-                    "&:hover": {
-                      backgroundColor: "#333",
-                    },
-                    "&.Mui-selected": {
-                      backgroundColor: "#90caf9 !important",
-                      color: "#fff",
-                    },
-                  },
-                },
-              },
-            }}
-          >
-            {[ "3 Years", "5 Years", "8 Years", "10 Years", "15 Years", "20 Years", "25 Years", "30 Years" ].map( ( label ) => (
-              <MenuItem
-                key={label}
-                value={label}
-                sx={{
-                  padding: "10px 16px",
-                  fontSize: "14px",
-                  borderRadius: "6px",
-                }}
-              >
-                {label}
-              </MenuItem>
-            ) )}
-          </Select>
-
-          {errors.tenure && (
-            <Typography
-              color="error"
-              sx={{
-                mt: 0.5,
-                ml: 1,
-                fontSize: "11px",
-                fontFamily: "Verdana, sans-serif",
-              }}
-            >
-              {errors.tenure}
-            </Typography>
-          )}
-        </FormControl>
-
-
         <Button
           disabled={
             !!errors.amount ||
             !!errors.tenure ||
             !!errors.provider ||
+            !!errors.loanType ||
             !amount ||
             !tenure ||
             !providers ||
-            providers.length === 0
+            providers.length === 0 ||
+            !loanType
           }
           variant="contained"
           endIcon={<ArrowForwardIcon />}
@@ -890,6 +1040,8 @@ const Step1Form: React.FC<Step1FormProps> = ( {
       </Box>
     );
   }
+
+  // ... Rest of your form code remains the same ...
   // Main form view for getting customer details
   return (
     <Box
@@ -897,7 +1049,8 @@ const Step1Form: React.FC<Step1FormProps> = ( {
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #4444d3ff 0%, #16213e 50%, #0f3460 100%)',
         py: 2,
-        px: { xs: 2, sm: 3, md: 0 }
+        px: { xs: 2, sm: 3, md: 0 },
+        mt:10
       }}
     >
       <Formik
@@ -941,7 +1094,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                   flexDirection: "column",
                   alignItems: "center",
                   mb: 4,
-                  mt: { xs: 0, sm: 0, md: 30,lg: 15 },
+                  mt: { xs: 0, sm: 0, md: 30, lg: 15 },
                 }}
               >
                 <Typography
@@ -1490,7 +1643,6 @@ const Step1Form: React.FC<Step1FormProps> = ( {
         severity={toastInfo.toastSeverity}
       />
     </Box>
-
   );
 };
 

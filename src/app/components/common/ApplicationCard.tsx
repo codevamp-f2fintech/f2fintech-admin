@@ -62,6 +62,7 @@ interface ApplicationCardProps {
     customerState?: string;
     state?: string;
     applicationAmount: string;
+    loanCategory: string;
     applicationTenure: number;
     applicationDate: string;
     applicationId: number;
@@ -444,7 +445,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
         } ) );
       }
     };
-
+    console.log(customerApplication, 'this is it')
     return (
       <>
         <Grid item xs={20} key={customerApplication.customerId}>
@@ -560,11 +561,20 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                       />
                     )}
                     <InfoChip
+                      icon={<AccountBalanceIcon />}
+                      text={customerApplication?.loanCategory}
+                      color="#0c66e4"
+                    />
+                    <InfoChip
                       icon={<AccessTimeRounded />}
                       text={formatTenure( customerApplication.applicationTenure )}
                       color="#0c66e4"
                     />
-
+                    {/* <InfoChip
+                      icon={<AccessTimeRounded />}
+                      text={capitalizeFirstLetter( customerApplication.loan_category )}
+                      color="#0c66e4"
+                    /> */}
                     {userRole !== "sales" && (
                       <>
                         {userRole === "admin" ||
@@ -1120,8 +1130,6 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
     );
   };
 
-  // Ok or responsive //
-
   const GridView = () => {
     const isSalesUser =
       userRole === "sales" || decodedToken()?.role === "sales";
@@ -1370,7 +1378,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                       ? "42vh"
                       : isTab
                         ? "30vh"
-                        : "50vh",
+                        : "58vh",
                 }}
               >
                 {userRole !== "sales" && (
@@ -1400,22 +1408,21 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                     "No provider available...."
                   }
                 />
-                {customerApplication.customerLocation && (
+                <InfoRow
+                  icon={<AccountBalanceIcon />}
+                  text={
+                    capitalizeFirstLetter( customerApplication.loanCategory )
+
+                  }
+                />
+                {( customerApplication.customerLocation || customerApplication.customerState ) && (
                   <InfoRow
                     icon={<LocationOnRounded />}
-                    text={capitalizeFirstLetter(
-                      customerApplication.customerLocation
-                    )}
+                    text={`${ capitalizeFirstLetter( customerApplication.customerLocation || "" ) }${ customerApplication.customerLocation && customerApplication.customerState ? ", " : ""
+                      }${ capitalizeFirstLetter( customerApplication.customerState || "" ) }`}
                   />
                 )}
-                {customerApplication.customerState && (
-                  <InfoRow
-                    icon={<LocationOnRounded />}
-                    text={capitalizeFirstLetter(
-                      customerApplication.customerState
-                    )}
-                  />
-                )}
+
                 <InfoRow
                   icon={<AccessTimeRounded />}
                   text={
@@ -2048,9 +2055,27 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
           <TableCell>
             <Typography
               variant="body2"
-              sx={{ color: "#6A0DAD", fontWeight: 600 }}
+              sx={{
+                color: "#6A0DAD",
+                fontWeight: 600,
+                whiteSpace: "normal",
+                wordBreak: "break-word",
+                lineHeight: 1.2,
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+                textOverflow: "ellipsis"
+              }}
             >
               {customerApplication.applicationProvider || "N/A"}
+            </Typography>
+          </TableCell>
+
+          {/* Loan Category */}
+          <TableCell>
+            <Typography variant="body2">
+              {capitalizeFirstLetter( customerApplication.loanCategory )}
             </Typography>
           </TableCell>
 

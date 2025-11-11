@@ -89,8 +89,8 @@ const Ticket = () => {
             : `get-all-tickets/${ decodedToken()?.id }?appliedBy=sales&status=${ sortBy == "forwarded to me" || sortBy == "forwarded by me"
               ? sortBy.replace( /\s+/g, "" )
               : sortBy
-             }&provider=${loanProvider}${sortBy === "disbursed" ? "&onlyDisbursed=true" : ""}`
-        : `get-all-tickets${sortBy === "disbursed" ? "?onlyDisbursed=true" : ""}`;
+            }&provider=${ loanProvider }${ sortBy === "disbursed" ? "&onlyDisbursed=true" : "" }`
+          : `get-all-tickets${ sortBy === "disbursed" ? "?onlyDisbursed=true" : "" }`;
 
   const {
     value: ticketData,
@@ -654,6 +654,8 @@ const Ticket = () => {
   const theme = useTheme();
   const isMobileOrTablet = useMediaQuery( theme.breakpoints.down( "md" ) );
   const isTablet = useMediaQuery( theme.breakpoints.between( "sm", "md" ) );
+
+  console.log(ticket, "ticketttttt is not");
   return (
     <Box
       sx={{
@@ -1020,6 +1022,7 @@ const Ticket = () => {
                           )} */}
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Amount</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Provider</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Category</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Tenure</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Location</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Application Date</TableCell>

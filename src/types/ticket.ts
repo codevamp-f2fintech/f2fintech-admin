@@ -22,6 +22,7 @@ export interface JoinedTicketData {
   customerLocation: string;
   customerState: string;
   loanStatus: string;
+  loanCategory: string;
 }
 
 export interface Ticket {
