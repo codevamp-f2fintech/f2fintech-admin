@@ -89,6 +89,10 @@ export interface TicketDetail {
   loanStatus: string;
   loanCategory: string;
   userRole: string;
+  approved_at?: string | Date;
+  approved_amount?: number | string;
+  disbursed_at?: string | Date;
+  disbursed_amount?: number | string;
 }
 
 interface TicketDetailResponse {
@@ -159,6 +163,54 @@ const Progress: React.FC = () => {
   } );
 
 
+  // Add these state variables near your existing disbursed states
+  const [ approvedDate, setApprovedDate ] = useState( () => {
+    return ticketDetailData?.approved_at
+      ? new Date( ticketDetailData.approved_at ).toISOString().split( 'T' )[ 0 ]
+      : "";
+  } );
+
+  const [ isApprovedDateSaved, setIsApprovedDateSaved ] = useState( () => {
+    return !!ticketDetailData?.approved_at;
+  } );
+
+  // Format amount for display (removes unnecessary decimals)
+const formatDisplayAmount = (amount: string): string => {
+  if (!amount) return "";
+  
+  const numAmount = parseFloat(amount);
+  if (isNaN(numAmount)) return amount;
+  
+  // If it's a whole number, return without decimals
+  if (numAmount % 1 === 0) {
+    return numAmount.toString();
+  }
+  
+  // Otherwise return with 2 decimal places
+  return numAmount.toFixed(2);
+};
+
+// Format amount for storage (ensures proper number format)
+const formatDecimalAmount = (amount: string): string => {
+  if (!amount) return "";
+  
+  const numAmount = parseFloat(amount);
+  if (isNaN(numAmount)) return "";
+  
+  // Always return as number, letting toFixed handle the formatting
+  return numAmount.toString();
+};
+
+  const [ approvedAmount, setApprovedAmount ] = useState( () => {
+    return ticketDetailData?.approved_amount
+      ? ticketDetailData.approved_amount.toString()
+      : "";
+  } );
+  console.log( "approvedAmount>>>>>>>>>>>>>", approvedAmount )
+  const [ isApprovedAmountSaved, setIsApprovedAmountSaved ] = useState( () => {
+    return !!ticketDetailData?.approved_amount;
+  } );
+
   const [ progress, setProgress ] = useState( 0 );
   const [ overage, setOverage ] = useState( 0 );
   const [ newLoanStatus, setNewLoanStatus ] = useState( "" );
@@ -208,6 +260,7 @@ const Progress: React.FC = () => {
   }, [ isVisible, hasFetched ] );
 
   // Updated useEffect for fetching ticket details
+  // Updated useEffect for fetching ticket details
   useEffect( () => {
     if ( ticketId )
     {
@@ -226,14 +279,13 @@ const Progress: React.FC = () => {
             setNewLoanStatus( response.data.loanStatus );
             setNewEmployeeStatus( response.data.employeeStatus );
 
-            // Set disbursed date if ticket has one, otherwise keep empty
+            // Set disbursed date/amount if ticket has them
             if ( response.data.disbursed_at )
             {
               setDisbursedDate( new Date( response.data.disbursed_at ).toISOString().split( 'T' )[ 0 ] );
               setIsDisbursedDateSaved( true );
             } else if ( response.data.employeeStatus === "disbursed" )
             {
-              // If status is disbursed but no date saved, set today's date
               setDisbursedDate( getTodayLocalDate() );
               setIsDisbursedDateSaved( false );
             }
@@ -246,6 +298,27 @@ const Progress: React.FC = () => {
             {
               setDisbursedAmount( response.data.applicationAmount?.toString() || "" );
               setIsDisbursedAmountSaved( false );
+            }
+
+            // Set approved date/amount if ticket has them
+            if ( response.data.approved_at )
+            {
+              setApprovedDate( new Date( response.data.approved_at ).toISOString().split( 'T' )[ 0 ] );
+              setIsApprovedDateSaved( true );
+            } else if ( response.data.employeeStatus === "approved" )
+            {
+              setApprovedDate( getTodayLocalDate() );
+              setIsApprovedDateSaved( false );
+            }
+
+            if ( response.data.approved_amount )
+            {
+              setApprovedAmount( response.data.approved_amount.toString() );
+              setIsApprovedAmountSaved( true );
+            } else if ( response.data.employeeStatus === "approved" )
+            {
+              setApprovedAmount( response.data.applicationAmount?.toString() || "" );
+              setIsApprovedAmountSaved( false );
             }
 
             setLoading( false );
@@ -318,20 +391,49 @@ const Progress: React.FC = () => {
     const newStatus = event.target.value;
     setNewEmployeeStatus( newStatus );
 
-    if ( newStatus === "disbursed" && !disbursedDate )
+    // Set dates and amounts for both approved and disbursed statuses
+    if ( newStatus === "disbursed" )
     {
-      setDisbursedDate( getTodayLocalDate() );
+      if ( !disbursedDate )
+      {
+        setDisbursedDate( getTodayLocalDate() );
+      }
+      if ( !disbursedAmount && ticketDetailData?.applicationAmount )
+      {
+        setDisbursedAmount( ticketDetailData.applicationAmount.toString() );
+      }
     }
+
+    if ( newStatus === "approved" )
+    {
+      if ( !approvedDate )
+      {
+        setApprovedDate( getTodayLocalDate() );
+      }
+      // Set default approved amount from application amount
+      if ( !approvedAmount && ticketDetailData?.applicationAmount )
+      {
+        setApprovedAmount( ticketDetailData.applicationAmount.toString() );
+      }
+    }
+
+    // Clear dates when switching from these statuses
     if ( newStatus !== "disbursed" )
     {
       setDisbursedDate( "" );
+      setDisbursedAmount( "" );
+    }
+    if ( newStatus !== "approved" )
+    {
+      setApprovedDate( "" );
+      setApprovedAmount( "" );
     }
 
     try
     {
       let updatePayload = { status: newStatus };
 
-      // If disbursed status is selected and date is provided, include it in payload
+      // If disbursed status is selected and date/amount are provided, include them
       if ( newStatus === "disbursed" && disbursedDate && disbursedAmount )
       {
         updatePayload.disbursed_at = disbursedDate;
@@ -339,7 +441,16 @@ const Progress: React.FC = () => {
         await modifyTicket( +ticketId, updatePayload );
       }
 
-      if ( newStatus !== "disbursed" )
+      // If approved status is selected and date/amount are provided, include them
+      if ( newStatus === "approved" && approvedDate && approvedAmount )
+      {
+        updatePayload.approved_at = approvedDate;
+        updatePayload.approved_amount = parseFloat( approvedAmount );
+        await modifyTicket( +ticketId, updatePayload );
+      }
+
+      // If no special handling needed, just update status
+      if ( newStatus !== "disbursed" && newStatus !== "approved" )
       {
         await modifyTicket( +ticketId, updatePayload );
       }
@@ -347,31 +458,37 @@ const Progress: React.FC = () => {
       const loggedInUser = decodedToken()?.username;
       let historyMessage = `${ loggedInUser } changed File Status from ${ oldStatus } to ${ newStatus }`;
 
-      // Add date info to history message if disbursed
+      // Add date/amount info to history message
       if ( newStatus === "disbursed" && disbursedDate && disbursedAmount )
       {
         historyMessage += ` with disbursement date: ${ disbursedDate } and amount: ${ disbursedAmount }`;
+      }
+      if ( newStatus === "approved" && approvedDate && approvedAmount )
+      {
+        historyMessage += ` with approval date: ${ approvedDate } and amount: ${ approvedAmount }`;
       }
 
       await createTicketHistory( {
         ticket_id: ticketId,
         action: historyMessage,
       } );
-      // } );
 
-      if ( newStatus === "disbursed" && disbursedDate && disbursedAmount )
-      { toastAndNavigate( dispatch, true, "info", "Status Changed Successfully" ); }
-      else
+      // Show appropriate success messages
+      if ( ( newStatus === "disbursed" && disbursedDate && disbursedAmount ) ||
+        ( newStatus === "approved" && approvedDate && approvedAmount ) )
       {
-        toastAndNavigate( dispatch, true, "info", "Status Changed to Disbursed. Please save the disbursement date." );
-      }
-      if ( newStatus !== "disbursed" )
+        toastAndNavigate( dispatch, true, "info", "Status Changed Successfully" );
+      } else if ( newStatus === "disbursed" || newStatus === "approved" )
+      {
+        toastAndNavigate( dispatch, true, "info", "Status Changed. Please save the details." );
+      } else
       {
         toastAndNavigate( dispatch, true, "info", "Status Changed Successfully" );
       }
+
       await refetch();
     } catch ( error )
-{
+    {
       toastAndNavigate( dispatch, true, "error", "Error Changing Status" );
     }
   };
@@ -416,6 +533,49 @@ const Progress: React.FC = () => {
     } catch ( error )
     {
       toastAndNavigate( dispatch, true, "error", "Error saving disbursement details" );
+    }
+  };
+
+  // Handler for approved date and amount
+  const handleCombinedApprovalSubmit = async () => {
+    if ( !approvedDate )
+    {
+      toastAndNavigate( dispatch, true, "error", "Please enter approval date" );
+      return;
+    }
+
+    if ( !approvedAmount || parseInt( approvedAmount, 10 ) <= 0 )
+    {
+      toastAndNavigate( dispatch, true, "error", "Please enter a valid approval amount" );
+      return;
+    }
+
+    try
+    {
+      const updatePayload = {
+        status: "approved",
+        approved_at: approvedDate,
+        approved_amount: parseFloat( approvedAmount )
+      };
+
+      await modifyTicket( +ticketId, updatePayload );
+
+      const loggedInUser = decodedToken()?.username;
+      const historyMessage = `${ loggedInUser } set approval details - Date: ${ approvedDate }, Amount: ${ approvedAmount }`;
+
+      await createTicketHistory( {
+        ticket_id: ticketId,
+        action: historyMessage,
+      } );
+
+      setIsApprovedDateSaved( true );
+      setIsApprovedAmountSaved( true );
+
+      toastAndNavigate( dispatch, true, "info", "Approval details saved successfully" );
+      await refetch();
+    } catch ( error )
+    {
+      toastAndNavigate( dispatch, true, "error", "Error saving approval details" );
     }
   };
 
@@ -774,6 +934,8 @@ const Progress: React.FC = () => {
                   </Button>
                 </Box>
 
+               
+
                 {/* User Autocomplete */}
                 {newEmployeeStatus === "forwarded" && (
                   <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
@@ -905,6 +1067,157 @@ const Progress: React.FC = () => {
                             ) )}
                           </Select>
                         </FormControl>
+                      </Box>
+                    )}
+
+                    {newEmployeeStatus === "approved" && (
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: { xs: 1, sm: 1.5, md: 2 },
+                          p: { xs: 1.5, sm: 2 },
+                          borderRadius: { xs: 1.5, sm: 2 },
+                          bgcolor: '#b39ddb',
+                          boxShadow: '0px 4px 20px rgba(149, 117, 205, 0.3)',
+                          mb: { xs: 1.5, sm: 2 },
+                          transition: 'transform 0.3s ease',
+                          '&:hover': {
+                            transform: 'scale(1.02)',
+                          },
+                        }}
+                      >
+                        {/* Title */}
+                        <Typography
+                          variant="subtitle1"
+                          align="center"
+                          sx={{
+                            color: 'white',
+                            fontWeight: 'bold',
+                            fontSize: {
+                              xs: '0.8rem',
+                              sm: '0.9rem',
+                              md: '1rem',
+                            },
+                            lineHeight: 1.2,
+                          }}
+                        >
+                          Approval Details
+                        </Typography>
+
+                        {/* Date Field */}
+                        <TextField
+                          fullWidth
+                          type="date"
+                          label="Date"
+                          value={approvedDate}
+                          onChange={( e ) => setApprovedDate( e.target.value )}
+                          variant="filled"
+                          InputLabelProps={{ shrink: true }}
+                          sx={{
+                            bgcolor: 'white',
+                            borderRadius: { xs: 1.5, sm: 2 },
+                            '& .MuiFilledInput-root': {
+                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                              minHeight: { xs: '48px', sm: '56px' },
+                              paddingTop: { xs: '24px', sm: '.4rem' },
+                            },
+                            '& .MuiInputLabel-root': {
+                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                              transform: 'translate(12px, 10px) scale(1)',
+                            },
+                            '& .MuiInputLabel-shrink': {
+                              transform: 'translate(12px, 4px) scale(0.75)',
+                              top: 0,
+                            },
+                            '& .MuiFilledInput-input': {
+                              paddingTop: { xs: '8px', sm: '12px' },
+                              paddingBottom: { xs: '8px', sm: '12px' },
+                            },
+                            '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
+                              borderBottom: 'none',
+                            },
+                            '& .MuiFilledInput-underline:hover:before': {
+                              borderBottom: 'none !important',
+                            },
+                          }}
+                        />
+
+                        {/* Amount Field */}
+                        <TextField
+                          fullWidth
+                          type="number"
+                          label="Amount"
+                          value={formatDisplayAmount( approvedAmount )}
+                          placeholder="Enter amount"
+                          onChange={( e ) => {
+                            // Store the raw value but display formatted
+                            const rawValue = e.target.value;
+                            setApprovedAmount( rawValue );
+                          }}
+                          onBlur={( e ) => {
+                            // Format the amount when field loses focus
+                            if ( e.target.value )
+                            {
+                              const formatted = formatDecimalAmount( e.target.value );
+                              setApprovedAmount( formatted );
+                            }
+                          }}
+                          variant="filled"
+                          InputLabelProps={{ shrink: true }}
+                          sx={{
+                            bgcolor: 'white',
+                            borderRadius: { xs: 1.5, sm: 2 },
+                            '& .MuiFilledInput-root': {
+                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                              minHeight: { xs: '48px', sm: '56px' },
+                              paddingTop: { xs: '24px', sm: '.4rem' },
+                            },
+                            '& .MuiInputLabel-root': {
+                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                              transform: 'translate(12px, 10px) scale(1)',
+                            },
+                            '& .MuiInputLabel-shrink': {
+                              transform: 'translate(12px, 4px) scale(0.75)',
+                              top: 0,
+                            },
+                            '& .MuiFilledInput-input': {
+                              paddingTop: { xs: '8px', sm: '12px' },
+                              paddingBottom: { xs: '8px', sm: '12px' },
+                            },
+                            '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
+                              borderBottom: 'none',
+                            },
+                            '& .MuiFilledInput-underline:hover:before': {
+                              borderBottom: 'none !important',
+                            },
+                          }}
+                        />
+
+                        {/* Save Button */}
+                        <Box display="flex" justifyContent="center" mt={1}>
+                          <Button
+                            variant="contained"
+                            size="medium"
+                            onClick={handleCombinedApprovalSubmit}
+                            disabled={
+                              !approvedDate ||
+                              !( approvedAmount || ticketDetailData?.applicationAmount ) ||
+                              parseFloat( approvedAmount || ticketDetailData?.applicationAmount || 0 ) <= 0
+                            }
+                            sx={{
+                              bgcolor: "#2e7d32",
+                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                              borderRadius: { xs: 1.5, sm: 2 },
+                              px: { xs: 2, sm: 4 },
+                              py: { xs: 0.8, sm: 1.2 },
+                              '&:hover': { bgcolor: "#1b5e20" },
+                              '&:disabled': { bgcolor: "#ccc", color: "#666" },
+                            }}
+                          >
+                            Save Details
+                          </Button>
+                        </Box>
                       </Box>
                     )}
 

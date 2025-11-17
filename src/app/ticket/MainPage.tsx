@@ -340,7 +340,6 @@ const Ticket = () => {
       }
     }
   }, [] );
-  console.log( "handleExportToExcel", handleExportToExcel );
   useEffect( () => {
     if ( ticket?.results?.length )
     {
@@ -655,7 +654,6 @@ const Ticket = () => {
   const isMobileOrTablet = useMediaQuery( theme.breakpoints.down( "md" ) );
   const isTablet = useMediaQuery( theme.breakpoints.between( "sm", "md" ) );
 
-  console.log(ticket, "ticketttttt is not");
   return (
     <Box
       sx={{
@@ -902,7 +900,6 @@ const Ticket = () => {
       </Box>
 
       {/* Updated View Toggle Box with Session Storage */}
-      {/* Updated View Toggle Box with Session Storage */}
 
       <Box
         sx={{
@@ -951,11 +948,12 @@ const Ticket = () => {
                   sx={{
                     width: "100%",
                     overflowX: "auto",
+                      borderRadius: 2,
+                      boxShadow: 2,
                   }}
                 >
                   <TableContainer
                     component={Paper}
-                    elevation={2}
                     sx={{
                       borderRadius: 2,
                       overflowX: "auto",
@@ -966,7 +964,7 @@ const Ticket = () => {
                         md: "100vw",
                         lg: "100vw",
                       },
-                      // px: 1,
+                      minWidth: "100%",
                     }}
                   >
                     <Table
@@ -1028,6 +1026,7 @@ const Ticket = () => {
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Application Date</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Created At</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Disbursed At</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Approved At</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word', display: 'flex', alignItems: 'center', justifyContent: 'center', border: "none" }}>Actions</TableCell>
                         </TableRow>
                       </TableHead>
