@@ -22,8 +22,14 @@ import {
   TextField,
   Typography,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  Stack,
 } from "@mui/material";
-import { CurrencyRupee as CurrencyRupeeIcon, AccessTime } from "@mui/icons-material";
+import { CurrencyRupee as CurrencyRupeeIcon, AccessTime, Close, Edit } from "@mui/icons-material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
@@ -66,6 +72,11 @@ interface Step1FormProps {
   salary?: any;
 }
 
+interface ProviderAmount {
+  provider: string;
+  amount: string;
+}
+
 const Step1Form: React.FC<Step1FormProps> = ( {
   applicationNumber,
   setApplicationNumber,
@@ -74,6 +85,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
   salary,
 } ) => {
   const [ amount, setAmount ] = useState<string>( "" );
+  const [ providerAmounts, setProviderAmounts ] = useState<ProviderAmount[]>( [] );
   const [ tenure, setTenure ] = useState<string>( "" );
   const [ loanType, setLoanType ] = useState( "" );
   const [ loanCategory, setLoanCategory ] = useState( "" );
@@ -94,6 +106,8 @@ const Step1Form: React.FC<Step1FormProps> = ( {
   const toastInfo = useSelector( ( state: any ) => state.toast );
   const dispatch = useDispatch();
   const [ providers, setProviders ] = useState<string[]>( [] );
+  const [ amountDialogOpen, setAmountDialogOpen ] = useState( false );
+  const [ editingProvider, setEditingProvider ] = useState<string | null>( null );
 
   // Define loan types with categories
   const loanTypes = {
@@ -230,6 +244,81 @@ const Step1Form: React.FC<Step1FormProps> = ( {
     setErrors( ( prev ) => ( { ...prev, tenure: error } ) );
   };
 
+  // Handle provider selection
+  const handleProviderChange = ( selectedProviders: string[] ) => {
+    setProviders( selectedProviders );
+    validateProviders( selectedProviders );
+
+    // Initialize amounts for newly selected providers
+    const updatedAmounts = [ ...providerAmounts ];
+    selectedProviders.forEach( providerName => {
+      if ( !updatedAmounts.find( pa => pa.provider === providerName ) )
+      {
+        updatedAmounts.push( {
+          provider: providerName,
+          amount: amount || "" // Use the main amount if available, otherwise empty
+        } );
+      }
+    } );
+
+    // Remove amounts for deselected providers
+    const filteredAmounts = updatedAmounts.filter( pa =>
+      selectedProviders.includes( pa.provider )
+    );
+    setProviderAmounts( filteredAmounts );
+  };
+
+  // Handle provider removal
+  const handleProviderRemove = ( providerToRemove: string ) => {
+    const newProviders = providers.filter( p => p !== providerToRemove );
+    setProviders( newProviders );
+    validateProviders( newProviders );
+
+    // Remove from provider amounts
+    setProviderAmounts( prev =>
+      prev.filter( pa => pa.provider !== providerToRemove )
+    );
+  };
+
+  // Open amount dialog for a specific provider
+  const openAmountDialog = ( providerName: string ) => {
+    setEditingProvider( providerName );
+    setAmountDialogOpen( true );
+  };
+
+  // Update amount for a specific provider
+  const updateProviderAmount = ( providerName: string, newAmount: string ) => {
+    setProviderAmounts( prev =>
+      prev.map( pa =>
+        pa.provider === providerName ? { ...pa, amount: newAmount } : pa
+      )
+    );
+  };
+
+  // Validate all provider amounts
+  const validateAllProviderAmounts = (): boolean => {
+    for ( const pa of providerAmounts )
+    {
+      if ( !pa.amount )
+      {
+        return false;
+      }
+      if ( isNaN( Number( pa.amount ) ) )
+      {
+        return false;
+      }
+      if ( Number( pa.amount ) < 50000 || Number( pa.amount ) > 100000000 )
+      {
+        return false;
+      }
+      if ( Number( pa.amount ) % 5 !== 0 )
+      {
+        return false;
+      }
+    }
+    return true;
+  };
+
   // Fetch application number and loan status using stored customer ID
   useEffect( () => {
     const fetchCustomerData = async () => {
@@ -350,13 +439,14 @@ const Step1Form: React.FC<Step1FormProps> = ( {
         const customerId = storedCustomerId || ( await registerCustomer( customer ) );
         await createCustomerInfo( customerId, restValues );
 
-        // Create applications for each selected provider
+        // Create applications for each selected provider with their specific amounts
         const applicationPromises = providers.map( async ( providerName ) => {
+          const providerAmount = providerAmounts.find( pa => pa.provider === providerName )?.amount || amount;
           const applicationNumberGenerated = randomNumberGenerator();
           const applicationId = await createCustomerApplication(
             customerId,
             applicationNumberGenerated,
-            amount,
+            providerAmount, // Use provider-specific amount
             tenure,
             providerName,
             loanType,
@@ -399,7 +489,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
         setLoading( false );
       }
     },
-    [ amount, tenure, providers, loanType, loanCategory ] // Updated dependency
+    [ amount, tenure, providers, providerAmounts, loanType, loanCategory ] // Updated dependency
   );
 
   const PROVIDER_OPTIONS = providersLoading
@@ -543,8 +633,8 @@ const Step1Form: React.FC<Step1FormProps> = ( {
             fullWidth
             variant="filled"
             name="amount"
-            label="Enter Amount*"
-            placeholder="How Much Loan Do You Require?"
+            label="Enter Net Amount*"
+            placeholder="Base Loan Amount (Can customize per provider)"
             value={amount}
             onChange={( e ) => {
               setAmount( e.target.value );
@@ -870,8 +960,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
             value={providers}
             onChange={( e ) => {
               const value = typeof e.target.value === 'string' ? e.target.value.split( ',' ) : e.target.value;
-              setProviders( value );
-              validateProviders( value );
+              handleProviderChange( value );
             }}
             onBlur={() => validateProviders( providers )}
             startAdornment={
@@ -894,9 +983,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                       },
                     }}
                     onDelete={() => {
-                      const newProviders = providers.filter( p => p !== value );
-                      setProviders( newProviders );
-                      validateProviders( newProviders );
+                      handleProviderRemove( value );
                     }}
                     onMouseDown={( event ) => {
                       event.stopPropagation();
@@ -919,13 +1006,12 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                       color: "#fff",
                     },
                   },
-             
                   overflow: "auto",
-                  scrollbarWidth: "none",  
+                  scrollbarWidth: "none",
                   "&::-webkit-scrollbar": {
-                    display: "none",  
+                    display: "none",
                   },
-                  msOverflowStyle: "none",  
+                  msOverflowStyle: "none",
                 },
               },
             }}
@@ -1002,6 +1088,82 @@ const Step1Form: React.FC<Step1FormProps> = ( {
           )}
         </FormControl>
 
+        {/* Provider Amounts Summary */}
+        {providers.length > 0 && (
+          <Box
+            sx={{
+              width: { xs: "90%", sm: "60%", md: "45%" },
+              mb: 3,
+              p: 2,
+              backgroundColor: "rgba(255, 255, 255, 0.08)",
+              borderRadius: "12px",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+            }}
+          >
+            <Typography
+              sx={{
+                color: "white",
+                fontSize: "14px",
+                fontWeight: "600",
+                mb: 2,
+              }}
+            >
+              Customize Amounts per Provider:
+            </Typography>
+            <Stack spacing={1}>
+              {providers.map( ( providerName ) => {
+                const providerAmount = providerAmounts.find( pa => pa.provider === providerName )?.amount || amount;
+                return (
+                  <Box
+                    key={providerName}
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      p: 1,
+                      backgroundColor: "rgba(255, 255, 255, 0.05)",
+                      borderRadius: "8px",
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        color: "white",
+                        fontSize: "13px",
+                        flex: 1,
+                      }}
+                    >
+                      {providerName}
+                    </Typography>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Typography
+                        sx={{
+                          color: "#90caf9",
+                          fontSize: "13px",
+                          fontWeight: "600",
+                        }}
+                      >
+                        ₹{providerAmount || "Not set"}
+                      </Typography>
+                      <IconButton
+                        size="small"
+                        onClick={() => openAmountDialog( providerName )}
+                        sx={{
+                          color: "#90caf9",
+                          '&:hover': {
+                            backgroundColor: "rgba(144, 202, 249, 0.1)",
+                          },
+                        }}
+                      >
+                        <Edit fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  </Box>
+                );
+              } )}
+            </Stack>
+          </Box>
+        )}
+
         <Button
           disabled={
             !!errors.amount ||
@@ -1012,7 +1174,8 @@ const Step1Form: React.FC<Step1FormProps> = ( {
             !tenure ||
             !providers ||
             providers.length === 0 ||
-            !loanType
+            !loanType ||
+            !validateAllProviderAmounts()
           }
           variant="contained"
           endIcon={<ArrowForwardIcon />}
@@ -1037,11 +1200,90 @@ const Step1Form: React.FC<Step1FormProps> = ( {
         >
           LET&apos;S GET STARTED
         </Button>
+
+        {/* Provider Amount Dialog */}
+        <Dialog
+          open={amountDialogOpen}
+          onClose={() => setAmountDialogOpen( false )}
+          PaperProps={{
+            sx: {
+              backgroundColor: "rgba(26, 26, 46, 0.95)",
+              backdropFilter: "blur(10px)",
+              color: "white",
+              borderRadius: "12px",
+            },
+          }}
+        >
+          <DialogTitle sx={{ color: "white", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+            Set Amount for {editingProvider}
+            <IconButton
+              onClick={() => setAmountDialogOpen( false )}
+              sx={{
+                position: "absolute",
+                right: 8,
+                top: 8,
+                color: "white",
+              }}
+            >
+              <Close />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent sx={{ pt: 3 }}>
+            <TextField
+              autoComplete="off"
+              fullWidth
+              variant="filled"
+              label="Loan Amount"
+              placeholder="Enter amount for this provider"
+              value={providerAmounts.find( pa => pa.provider === editingProvider )?.amount || amount}
+              onChange={( e ) => {
+                if ( editingProvider )
+                {
+                  updateProviderAmount( editingProvider, e.target.value );
+                }
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <CurrencyRupeeIcon sx={{ color: "white" }} />
+                  </InputAdornment>
+                ),
+                style: {
+                  color: "white",
+                },
+              }}
+              sx={{
+                "& .MuiFilledInput-root": {
+                  backgroundColor: "rgba(255, 255, 255, 0.08)",
+                  borderRadius: "8px",
+                  color: "white",
+                  "&:before, &:after": {
+                    borderBottom: "none !important",
+                  },
+                },
+                "& .MuiInputLabel-root": {
+                  color: "rgba(255,255,255,0.7)",
+                },
+              }}
+            />
+            <Typography sx={{ color: "rgba(255,255,255,0.7)", fontSize: "12px", mt: 1 }}>
+              Amount must be between 50,000 and 10,00,00,000 and divisible by 5
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => setAmountDialogOpen( false )}
+              sx={{ color: "#90caf9" }}
+            >
+              Done
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     );
   }
 
-  // ... Rest of your form code remains the same ...
+  // ... Rest of your form code remains exactly the same ...
   // Main form view for getting customer details
   return (
     <Box
@@ -1050,7 +1292,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
         background: 'linear-gradient(135deg, #4444d3ff 0%, #16213e 50%, #0f3460 100%)',
         py: 2,
         px: { xs: 2, sm: 3, md: 0 },
-        mt:10
+        mt: 10
       }}
     >
       <Formik

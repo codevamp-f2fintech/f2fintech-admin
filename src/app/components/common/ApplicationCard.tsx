@@ -74,6 +74,8 @@ interface ApplicationCardProps {
     showDeleteButton?: boolean;
     disbursed_At?: string;
     disbursed_Amount?: number;
+    approved_At?: string;
+    approved_Amount?: number;
     onDelete: ( applicationId: string, customerName: string ) => void;
   };
   handleStartClick?: ( ticketId: number ) => void;
@@ -617,6 +619,19 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                       text={
                         customerApplication?.disbursedAt
                           ? `Disbursed: ${ new Date( customerApplication.disbursedAt ).toLocaleDateString( 'en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          } ) }`
+                          : "Not Disbursed"
+                      }
+                      color="#33415c"
+                    />
+                    <InfoChip
+                      icon={<AccessTimeRounded />}
+                      text={
+                        customerApplication?.approved_At
+                          ? `Disbursed: ${ new Date( customerApplication.approved_At ).toLocaleDateString( 'en-IN', {
                             day: '2-digit',
                             month: 'short',
                             year: 'numeric',
@@ -1435,6 +1450,18 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                       : "Not Disbursed"
                   }
                 />
+                <InfoRow
+                  icon={<AccessTimeRounded />}
+                  text={
+                    customerApplication.approved_At
+                      ? `Disbursed At: ${ new Date( customerApplication.approved_At ).toLocaleDateString( 'en-IN', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                      } ) }`
+                      : "Not Approved"
+                  }
+                />
               </Box>
             ) : showHistory ? (
               <Box
@@ -2108,7 +2135,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                   month: 'short',
                   year: 'numeric',
                 } )
-                : "Not Disbursed"}
+                : "N/A"}
             </Typography>
           </TableCell>}
 
@@ -2135,6 +2162,21 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                     year: 'numeric',
                   } )
                   : "Not Disbursed"}
+              </Typography>
+            </TableCell>
+          }
+
+          {/* Approved At */}
+          {!isApplication &&
+            <TableCell>
+              <Typography variant="body2">
+                {customerApplication?.approvedAt
+                  ? new Date( customerApplication.approvedAt ).toLocaleDateString( 'en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                  } )
+                  : "Not Approved"}
               </Typography>
             </TableCell>
           }
