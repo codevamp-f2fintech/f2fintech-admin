@@ -85,7 +85,9 @@ export function Budget ( {
             width: { xs: 28, sm: 32 },
             boxShadow: "0 2px 4px rgba(0,0,0,0.15)",
             flexShrink: 0,
-            mb:5
+            mb:{
+              xs:5, sm:0, md:0, lg:0
+            }
           }}
         >
           {Icon && React.createElement( Icon, { sx: { fontSize: { xs: 16, sm: 18 } } } )}
