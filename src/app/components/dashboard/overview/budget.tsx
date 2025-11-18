@@ -25,7 +25,7 @@ export function Budget ( {
   amount,
   Icon,
   iconColor = "#fff",
-  iconBgColor = "#3f51b5",
+  iconBgColor,
 }: BudgetProps ): React.JSX.Element {
   const hasAmount = amount !== null && amount !== undefined;
   const isDesktop = useMediaQuery( "(min-width:900px)" );

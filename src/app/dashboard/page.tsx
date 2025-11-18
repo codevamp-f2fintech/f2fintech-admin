@@ -434,6 +434,7 @@ export default function Page (): React.JSX.Element {
       label: "Total Applications",
       key: "totalApplications",
       color: "#f5f7fa",
+      iconBgColor: "#1de9b6",
       count: allCounts?.totalApplications,
       link: "#",
     },
@@ -442,6 +443,7 @@ export default function Page (): React.JSX.Element {
       label: "Fresh Applications",
       key: "totalNewApplications",
       color: "#f5f7fa",
+      iconBgColor: "#00e5ff",
       count: allCounts?.totalNewApplications?.count,
       amount: allCounts?.totalNewApplications?.amount,
       link: "/",
@@ -451,6 +453,7 @@ export default function Page (): React.JSX.Element {
       label: "Total Tickets",
       key: "totalTickets",
       color: "#f5f7fa",
+      iconBgColor: "#cddc39",
       count: allCounts?.totalTickets,
       link: `/ticket?status=all${ selectedMonth
         ? `&month=${ encodeURIComponent(
@@ -466,6 +469,7 @@ export default function Page (): React.JSX.Element {
       label: "Under Credit Review",
       key: "underCreditReview",
       color: "#f5f7fa",
+      iconBgColor: "#8bc34a",
       count: allCounts?.totalUnderCreditReview,
       link: `/ticket?status=${ decodeURIComponent( "under credit review" ) }${ selectedMonth
         ? `&month=${ encodeURIComponent(
@@ -481,6 +485,7 @@ export default function Page (): React.JSX.Element {
       label: "Operations",
       key: "operations",
       color: "#f5f7fa",
+      iconBgColor: "#ffa726",
       count: allCounts?.totalOperations,
       link: `/ticket?status=${ decodeURIComponent( "operations" ) }${ selectedMonth
         ? `&month=${ encodeURIComponent(
@@ -496,6 +501,7 @@ export default function Page (): React.JSX.Element {
       label: "Pendency in File",
       key: "pendencyInFile",
       color: "#f5f7fa",
+      iconBgColor: "#ff7043",
       count: allCounts?.totalPendencyInFile,
       link: `/ticket?status=${ decodeURIComponent( "pendency in file" ) }${ selectedMonth
         ? `&month=${ encodeURIComponent(
@@ -511,6 +517,7 @@ export default function Page (): React.JSX.Element {
       label: "File Send to Banker",
       key: "fileSendToBanker",
       color: "#f5f7fa",
+      iconBgColor: "#bdbdbd",
       count: allCounts?.totalFileSendToBanker,
       link: `/ticket?status=${ decodeURIComponent( "file send to banker" ) }${ selectedMonth
         ? `&month=${ encodeURIComponent(
@@ -526,6 +533,7 @@ export default function Page (): React.JSX.Element {
       label: "Hold",
       key: "hold",
       color: "#f5f7fa",
+      iconBgColor: "#ffff00",
       count: allCounts?.totalHold,
       link: `/ticket?status=${ decodeURIComponent( "hold" ) }${ selectedMonth
         ? `&month=${ encodeURIComponent(
@@ -541,6 +549,7 @@ export default function Page (): React.JSX.Element {
       label: "To be Approved",
       key: "toBeApproved",
       color: "#f5f7fa",
+      iconBgColor: "#26c6da",
       count: allCounts?.totalToBeApproved,
       link: `/ticket?status=${ decodeURIComponent( "to be approved" ) }${ selectedMonth
         ? `&month=${ encodeURIComponent(
@@ -556,6 +565,7 @@ export default function Page (): React.JSX.Element {
       label: "To be Disbursed",
       key: "toBeDisbursed",
       color: "#f5f7fa",
+      iconBgColor: "#a5d6a7",
       count: allCounts?.totalToBeDisbursed,
       link: `/ticket?status=${ decodeURIComponent( "to be disbursed" ) }${ selectedMonth
         ? `&month=${ encodeURIComponent(
@@ -571,6 +581,7 @@ export default function Page (): React.JSX.Element {
       label: "Approved",
       key: "approved",
       color: "#f5f7fa",
+      iconBgColor: "#69f0ae",
       count: allCounts?.totalApproved?.count,
       amount: allCounts?.totalApproved?.amount,
       link: `/ticket?status=${ decodeURIComponent( "approved" ) }${ selectedMonth
@@ -587,6 +598,7 @@ export default function Page (): React.JSX.Element {
       label: "Disbursed",
       key: "disbursed",
       color: "#f5f7fa",
+      iconBgColor: "#ff9800",
       count: allCounts?.totalDisbursed?.count,
       amount: allCounts?.totalDisbursed?.amount,
       link: `/ticket?status=${ decodeURIComponent( "disbursed" ) }${ selectedMonth
@@ -603,6 +615,7 @@ export default function Page (): React.JSX.Element {
       label: "Carry Forward",
       key: "caryForward",
       color: "#f5f7fa",
+      iconBgColor: "#795548",
       count: allCounts?.totalCarryForward,
       link: `/ticket?status=${ decodeURIComponent( "carry forward" ) }${ selectedMonth
         ? `&month=${ encodeURIComponent(
@@ -618,6 +631,7 @@ export default function Page (): React.JSX.Element {
       label: "Rejected",
       key: "rejected",
       color: "#f5f7fa",
+      iconBgColor: "#dd2c00",
       count: allCounts?.totalRejected,
       link: `/ticket?status=${ decodeURIComponent( "rejected" ) }${ selectedMonth
         ? `&month=${ encodeURIComponent(
@@ -633,6 +647,7 @@ export default function Page (): React.JSX.Element {
       label: "Drop",
       key: "drop",
       color: "#f5f7fa",
+      iconBgColor: "#ff6e40",
       count: allCounts?.totalDrop,
       link: `/ticket?status=${ decodeURIComponent( "drop" ) }${ selectedMonth
         ? `&month=${ encodeURIComponent(
@@ -648,6 +663,7 @@ export default function Page (): React.JSX.Element {
       label: "AI Leads",
       key: "aiLeads",
       color: "#f5f7fa",
+      iconBgColor: "#00e676",
       count: null,
       link: "/ai-leads",
     },
@@ -659,6 +675,7 @@ export default function Page (): React.JSX.Element {
           label: "Total Agents",
           key: "totalAgents",
           color: "#f5f7fa",
+          iconBgColor: "#9fa8da",
           count: totalAgents,
           link: "/users",
         },
@@ -919,6 +936,7 @@ export default function Page (): React.JSX.Element {
                   Icon={item.icon}
                   name={item.label}
                   value={item.count}
+                  iconBgColor={item.iconBgColor}
                   amount={item.amount !== null ? item.amount : null}
                   sx={{
                     width: "100%",
