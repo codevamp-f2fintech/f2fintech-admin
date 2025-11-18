@@ -56,10 +56,10 @@ export function Budget ( {
 
         // 💻 Laptop & Desktop — INCREASE HEIGHT HERE
         "@media (min-width: 1280px)": {
-          height: "19vh",    // 🔥 You can make 70vh or 80vh also
+          height: "20vh",    // 🔥 You can make 70vh or 80vh also
           display: "flex",
           flexDirection: "column",
-          p: 2
+          p: 2,
         },
 
         ...sx,
@@ -84,20 +84,13 @@ export function Budget ( {
             color: "text.secondary",
             lineHeight: 1.3,
             flex: 1,
-
-            // Mobile: wrap to multiple lines (NO truncation)
-            // Desktop: single line with ellipsis
-
             whiteSpace: { xs: "normal", md: "nowrap" },
             overflow: { xs: "visible", md: "hidden" },
             textOverflow: { xs: "clip", md: "ellipsis" },
             wordBreak: "break-word",
-
-            // ⭐ MOST IMPORTANT — wrap enable on mobile
             width: { xs: "20vw", md: "auto" },
             height: { xs: "10vh", md: "auto" },
-
-
+            
             "@media (max-width: 375px)": {
               fontSize: "0.7rem",
               lineHeight: 1.2,
@@ -137,11 +130,10 @@ export function Budget ( {
           md: 'inherit',
           lg: 'inherit',
           sm: 'inherit',
-          marginTop: "10px"
         },
         width: "100%",
       }}>
-      
+
 
         {/* Amount */}
         {hasAmount && (
