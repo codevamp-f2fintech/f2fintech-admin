@@ -33,6 +33,7 @@ export function Budget ( {
     <Card
       sx={{
         borderRadius: "12px",
+        border: "1px solid red",
         boxShadow: "0 3px 10px rgba(0,0,0,0.10)",
         padding: "12px",
         height: isDesktop ? "50vh" : "auto",
@@ -55,7 +56,10 @@ export function Budget ( {
 
         // 💻 Laptop & Desktop — INCREASE HEIGHT HERE
         "@media (min-width: 1280px)": {
-          height: "20vh",    // 🔥 You can make 70vh or 80vh also
+          height: "19vh",    // 🔥 You can make 70vh or 80vh also
+          display: "flex",
+          flexDirection: "column",
+          p: 2
         },
 
         ...sx,
@@ -64,27 +68,15 @@ export function Budget ( {
       {/* Header - Flexible height on mobile */}
       <Box sx={{
         display: "flex",
-        alignItems: "center",
+        alignItems: "start",
+        justifyContent: "space-between",
         gap: { xs: 1, sm: 1.5 },
         minHeight: { xs: "32px", sm: "40px" },
         flexShrink: 0,
+        width: "100%",
       }}>
 
-        <Avatar
-          sx={{
-            backgroundColor: iconBgColor,
-            color: iconColor,
-            height: { xs: 28, sm: 32 },
-            width: { xs: 28, sm: 32 },
-            boxShadow: "0 2px 4px rgba(0,0,0,0.15)",
-            flexShrink: 0,
-            mb: {
-              xs: 5, sm: 0, md: 0, lg: 0
-            }
-          }}
-        >
-          {Icon && React.createElement( Icon, { sx: { fontSize: { xs: 16, sm: 18 } } } )}
-        </Avatar>
+
         <Typography
           sx={{
             fontSize: { xs: "0.75rem", sm: "0.85rem", md: "0.9rem" },
@@ -114,14 +106,29 @@ export function Budget ( {
         >
           {name}
         </Typography>
+        <Avatar
+          sx={{
+            backgroundColor: iconBgColor,
+            color: iconColor,
+            height: { xs: 28, sm: 32 },
+            width: { xs: 28, sm: 32 },
+            boxShadow: "0 2px 4px rgba(0,0,0,0.15)",
+            flexShrink: 0,
+            mb: {
+              xs: 5, sm: 0, md: 0, lg: 0
+            }
+          }}
+        >
+          {Icon && React.createElement( Icon, { sx: { fontSize: { xs: 16, sm: 18 } } } )}
+        </Avatar>
       </Box>
 
       {/* Content Area - Better spacing on mobile */}
       <Box sx={{
         flex: 1,
         display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
+        flexDirection: "row",
+        justifyContent: "space-between",
         alignItems: "center",
         gap: { xs: 0.25, sm: 0.5 },
         py: { xs: 0.5, sm: 1 },
@@ -132,19 +139,9 @@ export function Budget ( {
           sm: 'inherit',
           marginTop: "10px"
         },
+        width: "100%",
       }}>
-        {/* Main Count */}
-        <Typography
-          sx={{
-            fontSize: { xs: "1.25rem", sm: "1.4rem", md: "1.5rem" },
-            fontWeight: 700,
-            color: "#111",
-            lineHeight: 1.1,
-            marginRight: '15px'
-          }}
-        >
-          {value}
-        </Typography>
+      
 
         {/* Amount */}
         {hasAmount && (
@@ -171,6 +168,18 @@ export function Budget ( {
             ₹{new Intl.NumberFormat( "hi-IN" ).format( amount )}
           </Typography>
         )}
+        {/* Main Count */}
+        <Typography
+          sx={{
+            fontSize: { xs: "1.25rem", sm: "1.4rem", md: "1.5rem" },
+            fontWeight: 700,
+            color: "#111",
+            lineHeight: 1.1,
+            marginRight: '15px'
+          }}
+        >
+          {value}
+        </Typography>
       </Box>
     </Card>
   );
