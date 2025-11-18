@@ -33,7 +33,7 @@ export function Budget ( {
         borderRadius: "12px",
         boxShadow: "0 3px 10px rgba(0,0,0,0.10)",
         padding: "12px",
-        height: { xs: "auto", sm: "auto", md: "15vh" },
+        height: { xs: "auto", sm: "auto", md: "18vh" },
         minHeight: { xs: "120px", sm: "130px", md: "15vh" },
         display: "flex",
         flexDirection: "column",
@@ -51,7 +51,7 @@ export function Budget ( {
         // -----------------------------
         "@media (max-width: 360px)": {
           padding: "10px",
-  height:'12vh',
+          height: '12vh',
           gap: 0.5,
           borderRadius: "10px"
         },
@@ -85,8 +85,8 @@ export function Budget ( {
             width: { xs: 28, sm: 32 },
             boxShadow: "0 2px 4px rgba(0,0,0,0.15)",
             flexShrink: 0,
-            mb:{
-              xs:5, sm:0, md:0, lg:0
+            mb: {
+              xs: 5, sm: 0, md: 0, lg: 0
             }
           }}
         >
@@ -136,8 +136,8 @@ export function Budget ( {
           xs: 'relative',
           md: 'inherit',
           lg: 'inherit',
-          sm:'inherit',
-          marginTop:"10px"
+          sm: 'inherit',
+          marginTop: "10px"
         },
       }}>
         {/* Main Count */}
@@ -165,7 +165,7 @@ export function Budget ( {
                 xs: 'absolute',
                 md: 'inherit',
                 lg: 'inherit',
-                sm:'inherit',
+                sm: 'inherit',
 
               }, right: {
                 xs: '50px',
