@@ -517,7 +517,7 @@ export default function Page (): React.JSX.Element {
       label: "File Send to Banker",
       key: "fileSendToBanker",
       color: "#f5f7fa",
-      iconBgColor: "#bdbdbd",
+      iconBgColor: "#827717",
       count: allCounts?.totalFileSendToBanker,
       link: `/ticket?status=${ decodeURIComponent( "file send to banker" ) }${ selectedMonth
         ? `&month=${ encodeURIComponent(
@@ -533,7 +533,7 @@ export default function Page (): React.JSX.Element {
       label: "Hold",
       key: "hold",
       color: "#f5f7fa",
-      iconBgColor: "#ffff00",
+      iconBgColor: "#1a237e",
       count: allCounts?.totalHold,
       link: `/ticket?status=${ decodeURIComponent( "hold" ) }${ selectedMonth
         ? `&month=${ encodeURIComponent(
