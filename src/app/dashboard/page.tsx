@@ -923,15 +923,16 @@ export default function Page (): React.JSX.Element {
                   sx={{
                     width: "100%",
                     backgroundColor: item.color,
-                    borderRadius: "6px",
+                    borderRadius: "20px",
                     minHeight: "65px",
                     padding: "6px 8px",
                     border: "1px solid rgba(0,0,0,0.05)",
                     transition: "all 120ms ease-in-out",
 
-                    // IMPORTANT: use column layout here
+                    // Use row layout for the main content
                     display: "flex",
-                    flexDirection: "column",
+                    flexDirection: "row",
+                    alignItems: "center",
                     justifyContent: "space-between",
 
                     ":hover": {
@@ -939,13 +940,12 @@ export default function Page (): React.JSX.Element {
                       boxShadow: "0 1px 6px rgba(0,0,0,0.10)",
                     },
 
-                    // FIRST ROW — Icon + Label
-                    "& .top-row": {
+                    // FIRST ROW - Icon + Label + Count in one row
+                    "& .first-row": {
                       display: "flex",
                       alignItems: "center",
-                      gap: "6px",
-                      marginBottom: "2px",
-                      justifyContent: "flex-start",
+                      gap: "8px",
+                      flex: 1,
                     },
 
                     "& .MuiSvgIcon-root": {
@@ -959,23 +959,26 @@ export default function Page (): React.JSX.Element {
                       lineHeight: "1",
                       whiteSpace: "normal",
                       textAlign: "left",
+                      flex: 1,
                     },
 
-                    // COUNT (second row)
                     "& .count-text": {
                       fontSize: ".9rem",
                       fontWeight: 700,
-                      textAlign: "center",
                       lineHeight: "1.1",
+                      minWidth: "30px",
+                      textAlign: "right",
                     },
 
-                    // AMOUNT (third row)
+                    // AMOUNT (second row - below if exists)
                     "& .amount-text": {
                       fontSize: ".6rem",
                       opacity: 0.85,
                       fontWeight: 500,
                       lineHeight: "1",
                       textAlign: "center",
+                      width: "100%",
+                      marginTop: "2px",
                     },
                   }}
                 />

@@ -5,6 +5,7 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import { SxProps } from "@mui/material/styles";
+import { getIconColors } from "@/utils/iconColors";
 
 export interface BudgetProps {
   name: string;
@@ -32,10 +33,11 @@ export function Budget ( {
         borderRadius: "12px",
         boxShadow: "0 3px 10px rgba(0,0,0,0.10)",
         padding: "12px",
-        height: "130px",
+        height: { xs: "auto", sm: "auto", md: "15vh" },
+        minHeight: { xs: "120px", sm: "130px", md: "15vh" },
         display: "flex",
         flexDirection: "column",
-        gap: 1,
+        gap: { xs: 0.5, sm: 1, md: 1 },
         position: "relative",
         transition: "all 150ms ease",
         willChange: "transform",
@@ -43,80 +45,138 @@ export function Budget ( {
           transform: "scale(1.015)",
           boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
         },
+
+        // -----------------------------
+        // 📱 iPhone SE & Small Phones
+        // -----------------------------
+        "@media (max-width: 360px)": {
+          padding: "10px",
+  height:'12vh',
+          gap: 0.5,
+          borderRadius: "10px"
+        },
+
+        // -----------------------------------
+        // 📱 iPad Pro (width: 1024px – 1366px)
+        // -----------------------------------
+        "@media (min-width: 1024px) and (max-width: 1366px)": {
+          height: "10vh",
+          padding: "14px",
+          gap: 1.2,
+        },
+
         ...sx,
       }}
     >
-
-      {/* Header - Fixed height */}
+      {/* Header - Flexible height on mobile */}
       <Box sx={{
         display: "flex",
         alignItems: "center",
-        gap: 1.5,
-        height: "40px",
-        flexShrink: 0
+        gap: { xs: 1, sm: 1.5 },
+        minHeight: { xs: "32px", sm: "40px" },
+        flexShrink: 0,
       }}>
+
         <Avatar
           sx={{
             backgroundColor: iconBgColor,
             color: iconColor,
-            height: 32,
-            width: 32,
+            height: { xs: 28, sm: 32 },
+            width: { xs: 28, sm: 32 },
             boxShadow: "0 2px 4px rgba(0,0,0,0.15)",
-            flexShrink: 0
+            flexShrink: 0,
+            mb:5
           }}
         >
-          {Icon && React.createElement( Icon, { sx: { fontSize: 18 } } )}
+          {Icon && React.createElement( Icon, { sx: { fontSize: { xs: 16, sm: 18 } } } )}
         </Avatar>
-
         <Typography
           sx={{
-            fontSize: "0.9rem",
+            fontSize: { xs: "0.75rem", sm: "0.85rem", md: "0.9rem" },
             fontWeight: 600,
             color: "text.secondary",
-            lineHeight: 1.2,
+            lineHeight: 1.3,
             flex: 1,
+
+            // Mobile: wrap to multiple lines (NO truncation)
+            // Desktop: single line with ellipsis
+
+            whiteSpace: { xs: "normal", md: "nowrap" },
+            overflow: { xs: "visible", md: "hidden" },
+            textOverflow: { xs: "clip", md: "ellipsis" },
+            wordBreak: "break-word",
+
+            // ⭐ MOST IMPORTANT — wrap enable on mobile
+            width: { xs: "20vw", md: "auto" },
+            height: { xs: "10vh", md: "auto" },
+
+
+            "@media (max-width: 375px)": {
+              fontSize: "0.7rem",
+              lineHeight: 1.2,
+            }
           }}
         >
           {name}
         </Typography>
       </Box>
 
-      {/* Content Area - Flexible but constrained */}
+      {/* Content Area - Better spacing on mobile */}
       <Box sx={{
         flex: 1,
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
-        gap: 0.5
+        gap: { xs: 0.25, sm: 0.5 },
+        py: { xs: 0.5, sm: 1 },
+        position: {
+          xs: 'relative',
+          md: 'inherit',
+          lg: 'inherit',
+          sm:'inherit',
+          marginTop:"10px"
+        },
       }}>
         {/* Main Count */}
         <Typography
           sx={{
-            fontSize: "1.5rem",
+            fontSize: { xs: "1.25rem", sm: "1.4rem", md: "1.5rem" },
             fontWeight: 700,
             color: "#111",
             lineHeight: 1.1,
+            marginRight: '15px'
           }}
         >
           {value}
         </Typography>
 
-        {/* Amount - Smaller text to fit */}
+        {/* Amount */}
         {hasAmount && (
           <Typography
             sx={{
-              fontSize: "1rem",
+              fontSize: { xs: "0.65rem", sm: "0.95rem", md: "1rem" },
               fontWeight: 600,
               color: "#666",
-              lineHeight: 1.9,
+              lineHeight: 1.2,
+              position: {
+                xs: 'absolute',
+                md: 'inherit',
+                lg: 'inherit',
+                sm:'inherit',
+
+              }, right: {
+                xs: '50px',
+                md: 'inheirit',
+                lg: 'inherit'
+              }
+
             }}
           >
             ₹{new Intl.NumberFormat( "hi-IN" ).format( amount )}
           </Typography>
         )}
       </Box>
-
     </Card>
   );
 }
