@@ -5,7 +5,6 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import { SxProps } from "@mui/material/styles";
-import { getIconColors } from "@/utils/iconColors";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
 export interface BudgetProps {
@@ -33,18 +32,21 @@ export function Budget ( {
     <Card
       sx={{
         borderRadius: "12px",
-        border: "1px solid red",
         boxShadow: "0 3px 10px rgba(0,0,0,0.10)",
         padding: "12px",
         height: isDesktop ? "50vh" : "auto",
         minHeight: { xs: "120px", sm: "130px", md: "50vh" },
 
         // 📱 Small Mobile
-        "@media (max-width: 360px)": {
+        "@media (max-width: 1000px)": {
           padding: "10px",
           height: "12vh",
           gap: 0.5,
           borderRadius: "10px",
+          width: "100%",
+          display: "flex",
+          flexDirection: "column",
+
         },
 
         // 📱 iPad & Tablets
@@ -52,11 +54,13 @@ export function Budget ( {
           height: "10vh",
           padding: "14px",
           gap: 1.2,
+          display: "flex",
+          flexDirection: "column",
         },
 
         // 💻 Laptop & Desktop — INCREASE HEIGHT HERE
         "@media (min-width: 1280px)": {
-          height: "20vh",    // 🔥 You can make 70vh or 80vh also
+          height: "20vh",
           display: "flex",
           flexDirection: "column",
           p: 2,
@@ -74,8 +78,8 @@ export function Budget ( {
         minHeight: { xs: "32px", sm: "40px" },
         flexShrink: 0,
         width: "100%",
+        height: "30%",
       }}>
-
 
         <Typography
           sx={{
@@ -89,12 +93,7 @@ export function Budget ( {
             textOverflow: { xs: "clip", md: "ellipsis" },
             wordBreak: "break-word",
             width: { xs: "20vw", md: "auto" },
-            height: { xs: "10vh", md: "auto" },
-            
-            "@media (max-width: 375px)": {
-              fontSize: "0.7rem",
-              lineHeight: 1.2,
-            }
+            height: { xs: "10vh", md: "5vh" },
           }}
         >
           {name}
@@ -134,7 +133,6 @@ export function Budget ( {
         width: "100%",
       }}>
 
-
         {/* Amount */}
         {hasAmount && (
           <Typography
@@ -150,7 +148,7 @@ export function Budget ( {
                 sm: 'inherit',
 
               }, right: {
-                xs: '50px',
+                xs: '0px',
                 md: 'inheirit',
                 lg: 'inherit'
               }
