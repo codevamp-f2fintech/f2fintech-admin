@@ -6,6 +6,7 @@ import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import { SxProps } from "@mui/material/styles";
 import { getIconColors } from "@/utils/iconColors";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 export interface BudgetProps {
   name: string;
@@ -27,42 +28,34 @@ export function Budget ( {
   iconBgColor = "#3f51b5",
 }: BudgetProps ): React.JSX.Element {
   const hasAmount = amount !== null && amount !== undefined;
+  const isDesktop = useMediaQuery( "(min-width:900px)" );
   return (
     <Card
       sx={{
         borderRadius: "12px",
         boxShadow: "0 3px 10px rgba(0,0,0,0.10)",
         padding: "12px",
-        height: { xs: "auto", sm: "auto", md: "20vh" },
-        // minHeight: { xs: "120px", sm: "130px", md: "30vh" },
-        display: "flex",
-        flexDirection: "column",
-        gap: { xs: 0.5, sm: 1, md: 1 },
-        position: "relative",
-        transition: "all 150ms ease",
-        willChange: "transform",
-        ":hover": {
-          transform: "scale(1.015)",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-        },
+        height: isDesktop ? "50vh" : "auto",
+        minHeight: { xs: "120px", sm: "130px", md: "50vh" },
 
-        // -----------------------------
-        // 📱 iPhone SE & Small Phones
-        // -----------------------------
+        // 📱 Small Mobile
         "@media (max-width: 360px)": {
           padding: "10px",
-          height: '12vh',
+          height: "12vh",
           gap: 0.5,
-          borderRadius: "10px"
+          borderRadius: "10px",
         },
 
-        // -----------------------------------
-        // 📱 iPad Pro (width: 1024px – 1366px)
-        // -----------------------------------
+        // 📱 iPad & Tablets
         "@media (min-width: 1024px) and (max-width: 1366px)": {
           height: "10vh",
           padding: "14px",
           gap: 1.2,
+        },
+
+        // 💻 Laptop & Desktop — INCREASE HEIGHT HERE
+        "@media (min-width: 1280px)": {
+          height: "20vh",    // 🔥 You can make 70vh or 80vh also
         },
 
         ...sx,
