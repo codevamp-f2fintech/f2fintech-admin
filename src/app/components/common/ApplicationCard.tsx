@@ -636,7 +636,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                             month: 'short',
                             year: 'numeric',
                           } ) }`
-                          : "Not Disbursed"
+                          : "Not Approved"
                       }
                       color="#33415c"
                     />
