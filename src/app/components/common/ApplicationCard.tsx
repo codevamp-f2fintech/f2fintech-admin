@@ -1254,7 +1254,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
             backgroundImage: "linear-gradient(135deg, #fff 0%, #fff 100%)",
             backgroundBlendMode: "multiply, screen, normal",
             pt: isMobile ? 3 : isTab ? 4 : 5,
-            minHeight: isMobile ? "220px" : isTab ? "280px" : "300px",
+            minHeight: isMobile ? "220px" : isTab ? "280px" : "320px",
             height: "auto",
             mt: 5,
           }}
@@ -1280,7 +1280,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
               <DeleteOutline fontSize="small" />
             </IconButton>
           )}
-          <CardContent sx={{ pt: 0, pb: 3 }}>
+          <CardContent sx={{ pt: 0, pb: 3}}>
             <Box
               sx={{
                 display: "flex",
@@ -1319,6 +1319,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
+                p:.5,
               }}
             >
               <Typography
@@ -1333,9 +1334,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                   textOverflow: "ellipsis",
                   maxWidth: "100%",
                   textAlign: "center",
-                  fontSize: isTab ? "1rem" : "1.3rem",
+                  fontSize: isTab ? "1rem" : "1rem",
                   height: isMobile ? "7vh" : isIpad ? "7vh" : isTab ? "5vh" : "8vh",
-
                   width: isMobile ? "80vw" : isTab ? "25vw" : "30vw",
                   display: "flex",
                   alignItems: "center",
@@ -1398,7 +1398,10 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
               >
                 {userRole !== "sales" && (
                   <InfoRow
-                    icon={<MailRounded />}
+                    icon={<MailRounded 
+                      sx={{
+                        fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
+                      }} />}
                     text={
                       userRole === "admin" ||
                         customerApplication.ticketStatus !== "disbursed"
@@ -1409,37 +1412,49 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                 )}
 
                 <InfoRow
-                  icon={<CurrencyRupeeIcon />}
+                  icon={<CurrencyRupeeIcon 
+                    sx={{
+                      fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
+                    }} />}
                   text={formatRupees( customerApplication.applicationAmount )}
                 />
                 <InfoRow
-                  icon={<AccessTimeRounded />}
+                  icon={<AccessTimeRounded 
+                    sx={{
+                      fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
+                    }} />}
                   text={formatTenure( customerApplication.applicationTenure )}
                 />
                 <InfoRow
-                  icon={<AccountBalanceIcon />}
+                  icon={<AccountBalanceIcon 
+                    sx={{
+                      fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
+                    }} />}
                   text={
-                    customerApplication.applicationProvider ||
-                    "No provider available...."
-                  }
-                />
-                <InfoRow
-                  icon={<AccountBalanceIcon />}
-                  text={
-                    capitalizeFirstLetter( customerApplication.loanCategory )
-
+                    `${ customerApplication.applicationProvider
+                      ? capitalizeFirstLetter( customerApplication.applicationProvider )
+                      : "No provider available"
+                    }${ customerApplication.loanCategory ?
+                      `, ${ capitalizeFirstLetter( customerApplication.loanCategory ) }`
+                      : ""
+                    }`
                   }
                 />
                 {( customerApplication.customerLocation || customerApplication.customerState ) && (
                   <InfoRow
-                    icon={<LocationOnRounded />}
+                    icon={<LocationOnRounded 
+                      sx={{
+                        fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
+                      }} />}
                     text={`${ capitalizeFirstLetter( customerApplication.customerLocation || "" ) }${ customerApplication.customerLocation && customerApplication.customerState ? ", " : ""
                       }${ capitalizeFirstLetter( customerApplication.customerState || "" ) }`}
                   />
                 )}
 
                 <InfoRow
-                  icon={<AccessTimeRounded />}
+                  icon={<AccessTimeRounded sx={{
+                    fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
+                  }} />}
                   text={
                     customerApplication.disbursedAt
                       ? `Disbursed At: ${ new Date( customerApplication.disbursedAt ).toLocaleDateString( 'en-IN', {
@@ -1451,7 +1466,9 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                   }
                 />
                 <InfoRow
-                  icon={<AccessTimeRounded />}
+                  icon={<AccessTimeRounded sx={{
+                    fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
+                  }} />}
                   text={
                     customerApplication.approved_At
                       ? `Disbursed At: ${ new Date( customerApplication.approved_At ).toLocaleDateString( 'en-IN', {
@@ -1788,7 +1805,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                     sx={{
                       py: 1.25,
                       px: 2,
-                      height: "44px",
+                      height: "40px",
                       borderRadius: "8px",
                       bgcolor: "#0066cc",
                       color: "white",
@@ -1817,7 +1834,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                   sx={{
                     py: 1.25,
                     px: 2,
-                    height: "44px",
+                    height: "40px",
                     borderRadius: "8px",
                     borderWidth: "1.5px",
                     borderColor: "#d1d5db",
