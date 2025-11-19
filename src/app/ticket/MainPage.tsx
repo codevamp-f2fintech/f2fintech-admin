@@ -948,8 +948,8 @@ const Ticket = () => {
                   sx={{
                     width: "100%",
                     overflowX: "auto",
-                      borderRadius: 2,
-                      boxShadow: 2,
+                    borderRadius: 2,
+                    boxShadow: 2,
                   }}
                 >
                   <TableContainer
@@ -1026,7 +1026,7 @@ const Ticket = () => {
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Application Date</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Created At</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Disbursed At</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Approved At</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Approved At</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word', display: 'flex', alignItems: 'center', justifyContent: 'center', border: "none" }}>Actions</TableCell>
                         </TableRow>
                       </TableHead>
