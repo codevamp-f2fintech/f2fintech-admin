@@ -268,6 +268,7 @@ const Login = (): JSX.Element => {
                     fullWidth
                     variant="contained"
                     sx={{
+                      mt:.7,
                       mb: 2,
                       borderRadius: "8px",
                       background: "linear-gradient(45deg, #2C3CE3, #1976D2)",
