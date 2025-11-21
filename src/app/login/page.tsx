@@ -130,9 +130,9 @@ const Login = (): JSX.Element => {
             position: "absolute",
             top: { xs: "5%", sm: "0%" },
             left: { xs: "5%", sm: "20%", md: "30%" },
-            height: { xs: "85vh", sm: "80vh" },
+            height: { xs: "85vh", sm: "89vh" },
             width: { xs: "90vw", sm: "60vw", md: "40vw" },
-            mt: { xs: 5, sm: 10, md: 15 },
+            mt: { xs: 5, sm: 10, md: 9 },
             borderRadius: "10px 10px 0px 0px",
             background: "linear-gradient(135deg, #fff 0%, #fff 100%)",
             boxShadow:
@@ -205,8 +205,6 @@ const Login = (): JSX.Element => {
                           <Email sx={{ color: "black" }} />
                         </InputAdornment>
                       ),
-
-                      sx: { color: "white" },
                       sx: {
                         color: "black", // 🟢 text inside input
                         "& input::placeholder": {
@@ -220,9 +218,7 @@ const Login = (): JSX.Element => {
                     FormHelperTextProps={{
                       sx: { color: "black" }, // 🟢 helper/error text color
                     }}
-                    InputLabelProps={{
-                      style: { color: "black" },
-                    }}
+
                     error={touched.email && Boolean(errors.email)}
                     helperText={touched.email && errors.email}
                   />
@@ -272,7 +268,6 @@ const Login = (): JSX.Element => {
                     fullWidth
                     variant="contained"
                     sx={{
-                      mt: 2,
                       mb: 2,
                       borderRadius: "8px",
                       background: "linear-gradient(45deg, #2C3CE3, #1976D2)",
