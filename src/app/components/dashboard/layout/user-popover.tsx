@@ -1,3 +1,5 @@
+// user-popover.tsx
+
 import * as React from "react";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
@@ -11,62 +13,53 @@ import { alpha } from "@mui/material/styles";
 import { SignOut as SignOutIcon } from "@phosphor-icons/react/dist/ssr/SignOut";
 
 import { Utility } from "@/utils";
-import { UserAPI } from "@/apis/UserAPI";
-
 export interface UserPopoverProps {
   anchorEl: Element | null;
   onClose: () => void;
   open: boolean;
 }
 
-export function UserPopover({
+export function UserPopover ( {
   anchorEl,
   onClose,
   open,
-}: UserPopoverProps): React.JSX.Element {
-  const popoverRef = React.useRef<HTMLDivElement | null>(null);
-  const [userProfile, setUserProfile] = React.useState(null);
+}: UserPopoverProps ): React.JSX.Element {
+  const popoverRef = React.useRef<HTMLDivElement | null>( null );
+  const [ userProfile, setUserProfile ] = React.useState( null );
   const { capitalizeFirstLetter, decodedToken } = Utility();
-  const userId = decodedToken()?.id;
 
-  const fetchUserProfile = React.useCallback(async () => {
-    if (userId) {
-      try {
-        const { data: response } = await UserAPI.getUserProfile(userId);
-        setUserProfile(response.data);
-        if (response.statusCode === 200) {
-          const nameLength = response.data.username?.length || 0;
-          const emailLength = response.data.email?.length || 0;
-          const longestTextLength = Math.max(nameLength, emailLength);
-          // Calculate the required width dynamically based on text length
-          const requiredWidth = Math.min(
-            400, // Max width
-            Math.max(230, longestTextLength * 10) // Min width and dynamic scaling
-          );
-          localStorage.setItem("email", response.data.email);
+  // Get user info including company_id from token
+  const userInfo = decodedToken();
 
-          if (popoverRef.current) {
-            popoverRef.current.style.width = `${requiredWidth}px`;
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-      }
-    }
-  }, [userId]);
+  console.log( "User Profile:", userProfile );
+  // console.log( "User Info from token:", userInfo );
 
-  React.useEffect(() => {
-    fetchUserProfile();
-  }, [fetchUserProfile]);
-
-  const handleSignOut = React.useCallback(async (): Promise<void> => {
-    try {
+  const handleSignOut = React.useCallback( async (): Promise<void> => {
+    try
+    {
+      // Clear token cookie
       document.cookie = "token=; path=/; max-age=0; secure; samesite=strict";
+
+      // Clear all user data cookies
+      document.cookie = "userId=; path=/; max-age=0; secure; samesite=strict";
+      document.cookie = "userRole=; path=/; max-age=0; secure; samesite=strict";
+      document.cookie = "companyId=; path=/; max-age=0; secure; samesite=strict";
+      document.cookie = "companyName=; path=/; max-age=0; secure; samesite=strict";
+
+      // Clear localStorage
+      localStorage.removeItem( 'userId' );
+      localStorage.removeItem( 'companyId' );
+      localStorage.removeItem( 'companyName' );
+      localStorage.removeItem( 'userRole' );
+      localStorage.removeItem( 'email' );
+
+      console.log( 'All storage cleared successfully' );
       location.reload();
-    } catch (err) {
-      console.log("Sign out error", err);
+    } catch ( err )
+    {
+      console.log( "Sign out error", err );
     }
-  }, []);
+  }, [] );
 
   return (
     <Popover
@@ -93,10 +86,10 @@ export function UserPopover({
       <Box
         sx={{
           p: "16px 20px",
-          background: (theme) =>
+          background: ( theme ) =>
             `linear-gradient(135deg, #0c66e4 0%, #0c66e4 100%)`,
-          borderTopLeftRadius: (theme) => theme.shape.borderRadius * 2,
-          borderTopRightRadius: (theme) => theme.shape.borderRadius * 2,
+          borderTopLeftRadius: ( theme ) => theme.shape.borderRadius * 2,
+          borderTopRightRadius: ( theme ) => theme.shape.borderRadius * 2,
           color: "white",
           display: "flex",
           alignItems: "center",
@@ -105,8 +98,6 @@ export function UserPopover({
       >
         {/* User Avatar */}
         <Avatar
-          src={userProfile?.username}
-          alt={userProfile?.username}
           sx={{
             width: 44,
             height: 44,
@@ -129,22 +120,7 @@ export function UserPopover({
               width: "100%",
             }}
           >
-            {capitalizeFirstLetter(userProfile?.username)}
-          </Typography>
-
-          {/* User Email */}
-          <Typography
-            variant="body2"
-            color="inherit"
-            sx={{
-              opacity: 0.8,
-              overflowWrap: "break-word",
-              wordWrap: "break-word",
-              whiteSpace: "normal",
-              width: "100%",
-            }}
-          >
-            {userProfile?.email}
+            {capitalizeFirstLetter( userInfo?.username || 'User' )}
           </Typography>
 
           {/* User Role */}
@@ -159,8 +135,28 @@ export function UserPopover({
               width: "100%",
             }}
           >
-            {userProfile?.designation ? capitalizeFirstLetter(userProfile.designation) : capitalizeFirstLetter(userProfile?.role)}
+            {userProfile?.designation
+              ? capitalizeFirstLetter( userProfile.designation )
+              : capitalizeFirstLetter( userProfile?.role || userInfo?.role || 'User' )}
           </Typography>
+
+          {/* Company Info - Add this if you want to show company */}
+          {userProfile?.company?.name && (
+            <Typography
+              variant="body2"
+              color="inherit"
+              sx={{
+                opacity: 0.8,
+                overflowWrap: "break-word",
+                wordWrap: "break-word",
+                whiteSpace: "normal",
+                width: "100%",
+                fontStyle: 'italic',
+              }}
+            >
+              {userProfile.company.name}
+            </Typography>
+          )}
         </Box>
       </Box>
 
@@ -174,8 +170,8 @@ export function UserPopover({
             borderRadius: 1,
             transition: "all 0.2s ease",
             "&:hover": {
-              backgroundColor: (theme) =>
-                alpha(theme.palette.primary.main, 0.08),
+              backgroundColor: ( theme ) =>
+                alpha( theme.palette.primary.main, 0.08 ),
               transform: "translateX(4px)",
             },
           },

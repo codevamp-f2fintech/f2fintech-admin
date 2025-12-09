@@ -8,23 +8,23 @@ interface TimeLoggingEstimate {
 }
 
 interface ProgressBarProps {
-  setOpenDialog: (open: boolean) => void;
+  setOpenDialog: ( open: boolean ) => void;
   timeLoggingEstimate: TimeLoggingEstimate;
   progress: number;
   overage: number;
 }
 
 const ProgressBar: React.FC<ProgressBarProps> = React.memo(
-  ({
+  ( {
     setOpenDialog,
     timeLoggingEstimate,
     progress,
     overage,
-  }) => {
+  } ) => {
     return (
       <Box
         sx={{ position: "relative", width: "100%", height: 8, cursor: "pointer" }}
-        onClick={() => setOpenDialog(true)}
+        onClick={() => setOpenDialog( true )}
       >
         {/* Green Progress (within estimate) */}
         <LinearProgress
@@ -57,7 +57,7 @@ const ProgressBar: React.FC<ProgressBarProps> = React.memo(
               sx={{
                 height: 8,
                 borderRadius: 2,
-                width: `${100 - overage}%`,
+                width: `${ 100 - overage }%`,
                 backgroundColor: "#36B37E",
               }}
             />
@@ -66,7 +66,7 @@ const ProgressBar: React.FC<ProgressBarProps> = React.memo(
               sx={{
                 height: 8,
                 borderRadius: 2,
-                width: `${overage}%`,
+                width: `${ overage }%`,
                 backgroundColor: "#FFAB00",
               }}
             />

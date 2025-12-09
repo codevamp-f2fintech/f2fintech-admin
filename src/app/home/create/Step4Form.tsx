@@ -1,6 +1,6 @@
 'use client';
 
-import axios from "axios";
+import { axiosInstance } from "@/apis/config/axiosConfig";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Formik, Form, ErrorMessage } from "formik";
@@ -164,7 +164,7 @@ const Step4Form: React.FC<Step4FormProps> = ( {
   const handleToast = ( message: string, severity: "success" | "error" ) => {
     setToast( { open: true, message, severity } );
   };
-  
+
 
   const handleFileChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -184,7 +184,7 @@ const Step4Form: React.FC<Step4FormProps> = ( {
   const uploadFileToS3 = async ( file: File, type: string, customerId: string ) => {
     try
     {
-      const uploadResponse = await axios.post(
+      const uploadResponse = await axiosInstance.post(
         `${ process.env.NEXT_PUBLIC_WEB_URL }/upload-to-s3`,
         {
           document: file,
@@ -200,7 +200,7 @@ const Step4Form: React.FC<Step4FormProps> = ( {
 
       if ( attachmentUrl )
       {
-        await axios.post(
+        await axiosInstance.post(
           `${ process.env.NEXT_PUBLIC_WEB_URL }/create-document`,
           {
             customer_id: customerId,
@@ -276,18 +276,18 @@ const Step4Form: React.FC<Step4FormProps> = ( {
     [ dispatch, handleNext ]
   );
 
-   useEffect( () => {
-      const handleOnline = () => handleToast( "Back online", "success" );
-      const handleOffline = () => handleToast( "You are offline", "error" );
-  
-      window.addEventListener( "online", handleOnline );
-      window.addEventListener( "offline", handleOffline );
-  
-      return () => {
-        window.removeEventListener( "online", handleOnline );
-        window.removeEventListener( "offline", handleOffline );
-      };
-    }, [] );
+  useEffect( () => {
+    const handleOnline = () => handleToast( "Back online", "success" );
+    const handleOffline = () => handleToast( "You are offline", "error" );
+
+    window.addEventListener( "online", handleOnline );
+    window.addEventListener( "offline", handleOffline );
+
+    return () => {
+      window.removeEventListener( "online", handleOnline );
+      window.removeEventListener( "offline", handleOffline );
+    };
+  }, [] );
 
   return (
     <>
@@ -475,22 +475,22 @@ const Step4Form: React.FC<Step4FormProps> = ( {
           </Form>
         )}
       </Formik>
-     {/* MUI Snackbar for toast messages */}
-          <Snackbar
-            open={toast.open}
-            autoHideDuration={2000}
-            onClose={() => setToast( ( prev ) => ( { ...prev, open: false } ) )}
-            anchorOrigin={{ vertical: "top", horizontal: "center" }}
-          >
-            <Alert
-              onClose={() => setToast( ( prev ) => ( { ...prev, open: false } ) )}
-              severity={toast.severity}
-              sx={{ width: "100%" }}
-              variant="filled"
-            >
-              {toast.message}
-            </Alert>
-          </Snackbar>
+      {/* MUI Snackbar for toast messages */}
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={2000}
+        onClose={() => setToast( ( prev ) => ( { ...prev, open: false } ) )}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setToast( ( prev ) => ( { ...prev, open: false } ) )}
+          severity={toast.severity}
+          sx={{ width: "100%" }}
+          variant="filled"
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
     </>
   );
 };

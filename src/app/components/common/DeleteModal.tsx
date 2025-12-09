@@ -29,7 +29,7 @@ interface DeleteModalProps {
     showWarningIcon?: boolean;
 }
 
-const DeleteModal: React.FC<DeleteModalProps> = ({
+const DeleteModal: React.FC<DeleteModalProps> = ( {
     open,
     onClose,
     onConfirm,
@@ -40,7 +40,7 @@ const DeleteModal: React.FC<DeleteModalProps> = ({
     cancelText = "Cancel",
     isLoading = false,
     showWarningIcon = true,
-}) => {
+} ) => {
     const handleConfirm = () => {
         onConfirm();
     };

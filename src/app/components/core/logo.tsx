@@ -14,10 +14,10 @@ export interface LogoProps {
   collapsed?: boolean;
 }
 
-export function Logo({
+export function Logo ( {
   collapsed,
 }: // width = DEFAULT_WIDTH,
-LogoProps): React.JSX.Element {
+  LogoProps ): React.JSX.Element {
   const url = "/img/f2Fintechlogo.png"; // Path to your image
 
   return (
@@ -41,16 +41,16 @@ export interface DynamicLogoProps {
   width?: number;
 }
 
-export function DynamicLogo({
+export function DynamicLogo ( {
   height = DEFAULT_HEIGHT,
   width = DEFAULT_WIDTH,
   ...props
-}: DynamicLogoProps): React.JSX.Element {
+}: DynamicLogoProps ): React.JSX.Element {
   const { colorScheme } = useColorScheme();
 
   return (
     <NoSsr
-      fallback={<Box sx={{ height: `${height}px`, width: `${width}px` }} />}
+      fallback={<Box sx={{ height: `${ height }px`, width: `${ width }px` }} />}
     >
       <Logo height={height} width={width} {...props} />
     </NoSsr>

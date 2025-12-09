@@ -39,20 +39,20 @@ import PublicIcon from "@mui/icons-material/Public";
 const ITEMS_PER_PAGE = 100;
 
 const LoanProviderPage = () => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [hasMoreData, setHasMoreData] = useState(true);
-  const [noMoreData, setNoMoreData] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [snackbar, setSnackbar] = useState({
+  const [ currentPage, setCurrentPage ] = useState( 1 );
+  const [ hasMoreData, setHasMoreData ] = useState( true );
+  const [ noMoreData, setNoMoreData ] = useState( false );
+  const [ deleteDialogOpen, setDeleteDialogOpen ] = useState( false );
+  const [ selectedProvider, setSelectedProvider ] = useState( null );
+  const [ isDeleting, setIsDeleting ] = useState( false );
+  const [ snackbar, setSnackbar ] = useState( {
     open: false,
     message: "",
     severity: "success",
-  });
+  } );
 
   const { loanProvider, reduxLoading } = useSelector(
-    (state: RootState) => state.loanProviders
+    ( state: RootState ) => state.loanProviders
   );
   const { debounceScroll } = Utility();
 
@@ -71,36 +71,39 @@ const LoanProviderPage = () => {
   const router = useRouter();
 
   // Set loan providers when data changes
-  useEffect(() => {
-    if (data?.data?.results) {
-      dispatch(setLoanProviders(data?.data?.results));
-      setHasMoreData(data.data.results.length === ITEMS_PER_PAGE);
-    } else {
-      setHasMoreData(false);
+  useEffect( () => {
+    if ( data?.data?.results )
+    {
+      dispatch( setLoanProviders( data?.data?.results ) );
+      setHasMoreData( data.data.results.length === ITEMS_PER_PAGE );
+    } else
+    {
+      setHasMoreData( false );
     }
-  }, [data?.data?.results, dispatch]);
+  }, [ data?.data?.results, dispatch ] );
 
-  const [searchTerm, setSearchTerm] = useState("");
+  const [ searchTerm, setSearchTerm ] = useState( "" );
 
-  const filteredLoanProviders = useMemo(() => {
-    return (loanProvider || []).filter((provider) =>
-      provider.title?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredLoanProviders = useMemo( () => {
+    return ( loanProvider || [] ).filter( ( provider ) =>
+      provider.title?.toLowerCase().includes( searchTerm.toLowerCase() )
     );
-  }, [searchTerm, loanProvider]);
+  }, [ searchTerm, loanProvider ] );
 
   // Delete functionality
-  const handleDeleteClick = (provider) => {
-    setSelectedProvider(provider);
-    setDeleteDialogOpen(true);
+  const handleDeleteClick = ( provider ) => {
+    setSelectedProvider( provider );
+    setDeleteDialogOpen( true );
   };
 
   const handleDeleteConfirm = async () => {
-    if (!selectedProvider) return;
+    if ( !selectedProvider ) return;
 
-    setIsDeleting(true);
-    try {
+    setIsDeleting( true );
+    try
+    {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/delete-loan-provider/${selectedProvider.id}`,
+        `${ process.env.NEXT_PUBLIC_API_URL }/delete-loan-provider/${ selectedProvider.id }`,
         {
           method: "DELETE",
           headers: {
@@ -109,67 +112,74 @@ const LoanProviderPage = () => {
         }
       );
 
-      if (response.ok) {
+      if ( response.ok )
+      {
         // Remove the deleted provider from Redux store
         const updatedProviders = loanProvider.filter(
-          (p) => p.id !== selectedProvider.id
+          ( p ) => p.id !== selectedProvider.id
         );
-        dispatch(setLoanProviders(updatedProviders));
+        dispatch( setLoanProviders( updatedProviders ) );
 
-        setSnackbar({
+        setSnackbar( {
           open: true,
           message: "Loan provider deleted successfully",
           severity: "success",
-        });
+        } );
 
         refetch();
-      } else {
+      } else
+      {
         const errorData = await response.json();
-        setSnackbar({
+        setSnackbar( {
           open: true,
           message: errorData.message || "Failed to delete loan provider",
           severity: "error",
-        });
+        } );
       }
-    } catch (error) {
-      console.error("Error deleting loan provider:", error);
-      setSnackbar({
+    } catch ( error )
+    {
+      console.error( "Error deleting loan provider:", error );
+      setSnackbar( {
         open: true,
         message: "An error occurred while deleting the loan provider",
         severity: "error",
-      });
-    } finally {
-      setIsDeleting(false);
-      setDeleteDialogOpen(false);
-      setSelectedProvider(null);
+      } );
+    } finally
+    {
+      setIsDeleting( false );
+      setDeleteDialogOpen( false );
+      setSelectedProvider( null );
     }
   };
 
   const handleDeleteCancel = () => {
-    setDeleteDialogOpen(false);
-    setSelectedProvider(null);
+    setDeleteDialogOpen( false );
+    setSelectedProvider( null );
   };
 
   const handleScroll = useCallback(
-    debounceScroll(() => {
+    debounceScroll( () => {
       const nearBottom =
         window.innerHeight + window.scrollY >= document.body.offsetHeight - 400;
 
-      if (nearBottom) {
-        if (!swrLoading && hasMoreData) {
-          setCurrentPage((prevPage) => prevPage + 1);
-        } else if (!hasMoreData) {
-          setNoMoreData(true);
+      if ( nearBottom )
+      {
+        if ( !swrLoading && hasMoreData )
+        {
+          setCurrentPage( ( prevPage ) => prevPage + 1 );
+        } else if ( !hasMoreData )
+        {
+          setNoMoreData( true );
         }
       }
-    }, 500),
-    [swrLoading, hasMoreData]
+    }, 500 ),
+    [ swrLoading, hasMoreData ]
   );
 
-  useEffect(() => {
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
+  useEffect( () => {
+    window.addEventListener( "scroll", handleScroll );
+    return () => window.removeEventListener( "scroll", handleScroll );
+  }, [ handleScroll ] );
 
   return (
     <Box
@@ -192,7 +202,7 @@ const LoanProviderPage = () => {
             variant="outlined"
             size="small"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={( e ) => setSearchTerm( e.target.value )}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -201,7 +211,7 @@ const LoanProviderPage = () => {
               ),
               endAdornment: searchTerm && (
                 <InputAdornment position="end">
-                  <IconButton size="small" onClick={() => setSearchTerm("")}>
+                  <IconButton size="small" onClick={() => setSearchTerm( "" )}>
                     <ClearRounded sx={{ fontSize: 16 }} />
                   </IconButton>
                 </InputAdornment>
@@ -222,7 +232,7 @@ const LoanProviderPage = () => {
           <Button
             variant="contained"
             startIcon={<PersonAddRounded />}
-            onClick={() => router.push("/loan-provider/create")}
+            onClick={() => router.push( "/loan-provider/create" )}
             sx={{
               borderRadius: "100px",
               px: 3,
@@ -237,14 +247,14 @@ const LoanProviderPage = () => {
               },
             }}
           >
-            Create
+            Create Loan Providers
           </Button>
         </Box>
 
         {/* Loan Provider Grid */}
         {filteredLoanProviders.length > 0 ? (
           <Grid container spacing={3}>
-            {filteredLoanProviders.map((provider) => (
+            {filteredLoanProviders.map( ( provider ) => (
               <Grid item xs={12} md={6} key={provider.id}>
                 <Card
                   sx={{
@@ -277,7 +287,7 @@ const LoanProviderPage = () => {
                   >
                     <IconButton
                       size="small"
-                      onClick={() => handleDeleteClick(provider)}
+                      onClick={() => handleDeleteClick( provider )}
                       sx={{
                         bgcolor: "rgba(255, 255, 255, 0.9)",
                         "&:hover": { bgcolor: "rgba(255, 255, 255, 1)" },
@@ -288,7 +298,7 @@ const LoanProviderPage = () => {
                     <IconButton
                       size="small"
                       onClick={() =>
-                        router.push(`/loan-provider/edit/${provider.id}`)
+                        router.push( `/loan-provider/edit/${ provider.id }` )
                       }
                       sx={{
                         bgcolor: "rgba(255, 255, 255, 0.9)",
@@ -342,8 +352,9 @@ const LoanProviderPage = () => {
                       {/* Text */}
                       <Box
                         sx={{
-                          width: { xs: "100%", md: "55%" },
+                          width: { xs: "100%", md: "60%" },
                           paddingLeft: { xs: 0, md: 2 },
+                          marginTop: { xs: 0, md: 3 },
                         }}
                       >
                         <Typography
@@ -395,7 +406,7 @@ const LoanProviderPage = () => {
                   </CardContent>
                 </Card>
               </Grid>
-            ))}
+            ) )}
 
             {!hasMoreData && !swrLoading && (
               <Grid item xs={12}>
@@ -473,11 +484,11 @@ const LoanProviderPage = () => {
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        onClose={() => setSnackbar( { ...snackbar, open: false } )}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          onClose={() => setSnackbar( { ...snackbar, open: false } )}
           severity={snackbar.severity}
           sx={{ width: "100%" }}
         >

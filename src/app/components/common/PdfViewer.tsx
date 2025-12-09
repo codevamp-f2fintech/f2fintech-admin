@@ -1,6 +1,6 @@
 import React from "react";
 
-const PdfViewer: React.FC = ({ src }) => {
+const PdfViewer: React.FC = ( { src } ) => {
   return (
     <div>
       <a href={src} target="_blank" rel="noopener noreferrer">

@@ -24,7 +24,7 @@ import { Formik, Field, Form, ErrorMessage } from "formik";
 import validationSchema from "../../validationSchema";
 import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import axios from "axios";
+import { axiosInstance } from "@/apis/config/axiosConfig";
 
 const initialValues = {
   max_tenure: "",
@@ -54,7 +54,7 @@ const LoanFormPage = () => {
       if (loanProviderId) {
         try {
           setDataLoading(true);
-          const { data: response } = await axios.get(
+          const { data: response } = await axiosInstance.get(
             `${process.env.NEXT_PUBLIC_API_URL}/get-loan-provider-by-id/${loanProviderId}`
           );
 
@@ -81,7 +81,7 @@ const LoanFormPage = () => {
     try {
       const url = `${process.env.NEXT_PUBLIC_API_URL}/update-loan-provider/${loanProviderId}`;
 
-      const { data: response } = await axios.put(url, values, {
+      const { data: response } = await axiosInstance.put(url, values, {
         headers: {
           "Content-Type": "application/json",
         },

@@ -17,20 +17,20 @@ import { UserPopover } from "./user-popover";
 import { Utility } from "@/utils";
 import { usePopover } from "@/hooks/use-popover";
 
-export function AppBarNav(): React.JSX.Element {
-  const [openNav, setOpenNav] = React.useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = React.useState<string>("");
+export function AppBarNav (): React.JSX.Element {
+  const [ openNav, setOpenNav ] = React.useState<boolean>( false );
+  const [ searchQuery, setSearchQuery ] = React.useState<string>( "" );
   const pathname = usePathname();
   const userPopover = usePopover<HTMLDivElement>();
 
   const { decodedToken } = Utility();
 
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
+  const handleSearchChange = ( event: React.ChangeEvent<HTMLInputElement> ) => {
+    setSearchQuery( event.target.value );
   };
 
   // Hide AppBarNav on login page
-  if (pathname === "/login") return <></>;
+  if ( pathname === "/login" ) return <></>;
 
   return (
     <React.Fragment>
@@ -60,7 +60,7 @@ export function AppBarNav(): React.JSX.Element {
             <Stack sx={{ alignItems: "center" }} direction="row" spacing={2}>
               <IconButton
                 onClick={(): void => {
-                  setOpenNav(true);
+                  setOpenNav( true );
                 }}
                 sx={{ display: { lg: "none" } }}
               >
@@ -81,7 +81,7 @@ export function AppBarNav(): React.JSX.Element {
                 ref={userPopover.anchorRef}
                 sx={{ cursor: "pointer" }}
               >
-                {decodedToken()?.username?.charAt(0).toUpperCase()}
+                {decodedToken()?.username?.charAt( 0 ).toUpperCase()}
               </Avatar>
             </Stack>
           </Stack>
@@ -96,7 +96,7 @@ export function AppBarNav(): React.JSX.Element {
 
       <MobileNav
         onClose={() => {
-          setOpenNav(false);
+          setOpenNav( false );
         }}
         open={openNav}
       />

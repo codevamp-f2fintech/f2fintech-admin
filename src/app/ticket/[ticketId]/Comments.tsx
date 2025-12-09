@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 /* eslint-disable react-hooks/exhaustive-deps */
-import axios from "axios";
+import { axiosInstance } from "@/apis/config/axiosConfig";
 import React, { useState, useCallback, useRef, useEffect, memo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -127,7 +127,7 @@ const Comments = ( { storedTicketId, userData }: CommentsProps ) => {
           formData.append( "document", attachment );
           formData.append( "folder", `comment/${ attachment.name }` );
 
-          const uploadResponse = await axios.post(
+          const uploadResponse = await axiosInstance.post(
             `${ process.env.NEXT_PUBLIC_WEB_URL }/upload-to-s3`,
             formData,
             {

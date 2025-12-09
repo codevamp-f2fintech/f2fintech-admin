@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import axios from "axios";
+import { axiosInstance } from "@/apis/config/axiosConfig";
 import { Box, Grid, Paper, Typography, IconButton } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AudioFileIcon from "@mui/icons-material/Audiotrack";
@@ -12,50 +12,54 @@ import { AppDispatch, RootState } from "@/redux/store";
 import { useModifyTicket } from "@/hooks/ticket";
 import Loader from "@/app/components/common/Loader";
 
-const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
-  const [currentPage, setCurrentPage] = useState(1);
+const TicketVoiceNotes = ( { isMobile, isTab, ticketDetailData } ) => {
+  const [ currentPage, setCurrentPage ] = useState( 1 );
   const itemsPerPage = 3;
-  const [selectedAudioFile, setSelectedAudioFile] = useState();
-  const [loading, setLoading] = useState(false);
-  const [uploaded, setUploaded] = useState(false);
-  const [voiceNote, setVoiceNote] = useState("");
-  const inputRef = useRef(null);
+  const [ selectedAudioFile, setSelectedAudioFile ] = useState();
+  const [ loading, setLoading ] = useState( false );
+  const [ uploaded, setUploaded ] = useState( false );
+  const [ voiceNote, setVoiceNote ] = useState( "" );
+  const inputRef = useRef( null );
   const dispatch: AppDispatch = useDispatch();
-  const { toast } = useSelector((state: RootState) => state.toast);
+  const { toast } = useSelector( ( state: RootState ) => state.toast );
   const { toastAndNavigate } = Utility();
-  const { modifyTicket } = useModifyTicket("update-ticket");
+  const { modifyTicket } = useModifyTicket( "update-ticket" );
 
   // Calculate the notes to display on the current page
-  const startIndex = (currentPage - 1) * itemsPerPage;
+  const startIndex = ( currentPage - 1 ) * itemsPerPage;
   // const displayedNotes = notes?.slice(startIndex, startIndex + itemsPerPage);
 
-  useEffect(() => {
-    if (ticketDetailData?.voiceNoteUrl) {
-      setVoiceNote(ticketDetailData.voiceNoteUrl);
-      console.log("Updated Voice Note URL:", ticketDetailData.voiceNoteUrl);
+  useEffect( () => {
+    if ( ticketDetailData?.voiceNoteUrl )
+    {
+      setVoiceNote( ticketDetailData.voiceNoteUrl );
+      console.log( "Updated Voice Note URL:", ticketDetailData.voiceNoteUrl );
     }
-  }, [ticketDetailData]);
+  }, [ ticketDetailData ] );
 
   const handleAttachmentAudioDelete = async () => {
-    setLoading(true);
-    const deleteResponse = await modifyTicket(ticketDetailData?.ticketId, {
+    setLoading( true );
+    const deleteResponse = await modifyTicket( ticketDetailData?.ticketId, {
       voice_note_url: null,
-    });
-    if (deleteResponse?.statusCode === 200) {
-      setVoiceNote("");
-      setSelectedAudioFile(null);
-      setLoading(false);
+    } );
+    if ( deleteResponse?.statusCode === 200 )
+    {
+      setVoiceNote( "" );
+      setSelectedAudioFile( null );
+      setLoading( false );
       toastAndNavigate(
         dispatch,
         true,
         "success",
         "Voice note deleted successfully"
       );
-      if (inputRef.current) {
+      if ( inputRef.current )
+      {
         inputRef.current.value = ""; // Clear the file input value
       }
-    } else {
-      setLoading(false);
+    } else
+    {
+      setLoading( false );
       toastAndNavigate(
         dispatch,
         true,
@@ -66,16 +70,18 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
   };
 
   // Create comment handler, memoized
-  const handleVoiceNoteUpload = useCallback(async () => {
-    setLoading(true);
-    if (selectedAudioFile) {
-      try {
+  const handleVoiceNoteUpload = useCallback( async () => {
+    setLoading( true );
+    if ( selectedAudioFile )
+    {
+      try
+      {
         const formData = new FormData();
-        formData.append("document", selectedAudioFile);
-        formData.append("folder", `voice-note/${selectedAudioFile?.name}`);
+        formData.append( "document", selectedAudioFile );
+        formData.append( "folder", `voice-note/${ selectedAudioFile?.name }` );
 
-        const uploadResponse = await axios.post(
-          `${process.env.NEXT_PUBLIC_WEB_URL}/upload-to-s3`,
+        const uploadResponse = await axiosInstance.post(
+          `${ process.env.NEXT_PUBLIC_WEB_URL }/upload-to-s3`,
           formData,
           {
             headers: {
@@ -86,23 +92,24 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
           }
         );
         const attachmentUrl = uploadResponse?.data?.data;
-        await modifyTicket(ticketDetailData?.ticketId, {
+        await modifyTicket( ticketDetailData?.ticketId, {
           voice_note_url: attachmentUrl,
-        });
+        } );
 
-        setVoiceNote(attachmentUrl);
-        setUploaded(true);
-        setSelectedAudioFile(null);
-        setLoading(false);
+        setVoiceNote( attachmentUrl );
+        setUploaded( true );
+        setSelectedAudioFile( null );
+        setLoading( false );
         toastAndNavigate(
           dispatch,
           true,
           "success",
           "Voice note uploaded successfully"
         );
-      } catch (err) {
-        console.log("Error uploading attachment:", err);
-        setLoading(false);
+      } catch ( err )
+      {
+        console.log( "Error uploading attachment:", err );
+        setLoading( false );
         toastAndNavigate(
           dispatch,
           true,
@@ -111,11 +118,11 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
         );
       }
     }
-  }, [selectedAudioFile, toastAndNavigate]);
+  }, [ selectedAudioFile, toastAndNavigate ] );
 
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    setSelectedAudioFile(file);
+  const handleFileChange = ( e ) => {
+    const file = e.target.files?.[ 0 ];
+    setSelectedAudioFile( file );
   };
 
   return (
@@ -161,7 +168,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
         )}
 
         {/* Display selected audio files */}
-        {(voiceNote || selectedAudioFile) && (
+        {( voiceNote || selectedAudioFile ) && (
           <Box
             sx={{
               width: "inherit",
@@ -190,7 +197,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, ticketDetailData }) => {
               <audio controls style={{ width: "100%" }}>
                 {selectedAudioFile ? (
                   <source
-                    src={URL.createObjectURL(selectedAudioFile)}
+                    src={URL.createObjectURL( selectedAudioFile )}
                     type={
                       selectedAudioFile.type === "audio/mpeg"
                         ? "audio/mpeg"

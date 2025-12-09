@@ -10,68 +10,123 @@ import { axiosInstance } from "@/apis/config/axiosConfig";
 import { defineCancelApiObject } from "@/apis/config/axiosUtils";
 
 export const UserAPI = {
-  /** Login user
-   */
-  login: async (loginInfo, cancel = false) => {
-    return await axiosInstance.request({
+  /** Login user */
+  login: async ( loginInfo, cancel = false ) => {
+    return await axiosInstance.request( {
       url: `/login`,
       method: "POST",
       data: loginInfo,
       signal: cancel
-        ? cancelApiObject[this.login.name].handleRequestCancellation().signal
+        ? cancelApiObject[ this.login.name ].handleRequestCancellation().signal
         : undefined,
-    });
+    } );
   },
 
   /** Register user */
-  create: async (registerInfo, cancel = false) => {
-    return await axiosInstance.request({
+  create: async ( registerInfo, cancel = false ) => {
+    return await axiosInstance.request( {
       url: `create-user`,
       method: "POST",
       data: registerInfo,
       signal: cancel
-        ? cancelApiObject[this.register.name].handleRequestCancellation().signal
+        ? cancelApiObject[ this.create.name ].handleRequestCancellation().signal
         : undefined,
-    });
+    } );
   },
 
-  getUserProfile: async (userId, cancel = false) => {
-    return await axiosInstance.request({
-      url: `get-user-by-id/${userId}`,
+  /** Get user profile with company_id support */
+  getUserProfile: async ( userId, company_id = null, cancel = false ) => {
+    const params = {};
+
+    // Add company_id as query parameter if provided
+    if ( company_id ) {
+      params.company_id = company_id;
+    }
+
+    return await axiosInstance.request( {
+      url: `get-user-by-id/${ userId }`,
       method: "GET",
+      params: params,
       signal: cancel
-        ? cancelApiObject[this.getuserProfile.name].handleRequestCancellation()
-            .signal
+        ? cancelApiObject[ this.getUserProfile.name ].handleRequestCancellation().signal
         : undefined,
-    });
+    } );
   },
 
-  updateUserProfile: async (newData) => {
-    return await axiosInstance.request({
+  /** Update user profile */
+  updateUserProfile: async ( newData ) => {
+    return await axiosInstance.request( {
       url: `update-user`,
       method: "PATCH",
       data: newData,
-    });
+    } );
   },
 
-  getInactiveUsers: async ( page = 1, limit = 10, cancel = false ) => {
+  /** Get inactive users with company filtering */
+  getInactiveUsers: async ( page = 1, limit = 10, company_id = null, cancel = false ) => {
+    const params = {
+      page,
+      limit,
+      company_id,
+    };
+
+    // Add company_id as query parameter if provided
+    if ( company_id ) {
+      params.company_id = company_id;
+    }
+
+    console.log( "company", company_id )
+
     return await axiosInstance.request( {
       url: `/get-inactive-users`,
+      method: "GET",
+      params: params,
+      signal: cancel
+        ? cancelApiObject[ UserAPI.getInactiveUsers.name ].handleRequestCancellation().signal
+        : undefined,
+    } );
+  },
+
+  /** Get all users with company filtering */
+  getAllUsers: async ( page = 1, limit = 10, company_id = null, cancel = false ) => {
+    const params = {
+      page,
+      limit
+    };
+
+    // Add company_id as query parameter if provided
+    if ( company_id ) {
+      params.company_id = company_id;
+    }
+
+    return await axiosInstance.request( {
+      url: `/get-all-users`,
+      method: "GET",
+      params: params,
+      signal: cancel
+        ? cancelApiObject[ UserAPI.getAllUsers.name ].handleRequestCancellation().signal
+        : undefined,
+    } );
+  },
+
+  /** Get users by company */
+  getUsersByCompany: async ( company_id, page = 1, limit = 10, cancel = false ) => {
+    return await axiosInstance.request( {
+      url: `/get-users-by-company/${ company_id }`,
       method: "GET",
       params: {
         page,
         limit
       },
       signal: cancel
-        ? cancelApiObject[ UserAPI.getInactiveUsers.name ].handleRequestCancellation()
-          .signal
+        ? cancelApiObject[ UserAPI.getUsersByCompany.name ].handleRequestCancellation().signal
         : undefined,
     } );
   },
 
-  // upload document to S3 Bucket
-  uploadDocument: async (document, cancel = false) => {
-    return await axiosInstance.request({
+  /** Upload document to S3 Bucket */
+  uploadDocument: async ( document, cancel = false ) => {
+    return await axiosInstance.request( {
       url: `/upload-to-s3`,
       headers: {
         "Content-Type": "multipart/form-data",
@@ -79,12 +134,26 @@ export const UserAPI = {
       method: "POST",
       data: document,
       signal: cancel
-        ? cancelApiObject[this.uploadDocument.name].handleRequestCancellation()
-            .signal
+        ? cancelApiObject[ this.uploadDocument.name ].handleRequestCancellation().signal
         : undefined,
-    });
+    } );
+  },
+
+  /** Get all companies */
+  getAllCompanies: async ( page = 1, limit = 10, cancel = false ) => {
+    return await axiosInstance.request( {
+      url: `/companies`,
+      method: "GET",
+      params: {
+        page,
+        limit
+      },
+      signal: cancel
+        ? cancelApiObject[ UserAPI.getAllCompanies.name ].handleRequestCancellation().signal
+        : undefined,
+    } );
   },
 };
 
 // defining the cancel API object for UserAPI
-const cancelApiObject = defineCancelApiObject(UserAPI);
+const cancelApiObject = defineCancelApiObject( UserAPI );

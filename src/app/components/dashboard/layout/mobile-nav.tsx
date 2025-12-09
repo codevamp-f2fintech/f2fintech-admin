@@ -25,13 +25,13 @@ export interface MobileNavProps {
   items?: NavItemConfig[];
 }
 
-export function MobileNav({
+export function MobileNav ( {
   open,
   onClose,
-}: MobileNavProps): React.JSX.Element {
+}: MobileNavProps ): React.JSX.Element {
   const pathname = usePathname();
-  const isMobile = useMediaQuery("(max-width:600px)");
-  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const isMobile = useMediaQuery( "(max-width:600px)" );
+  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
   const { decodedToken } = Utility();
   const userRole = decodedToken()?.role;
 
@@ -82,14 +82,14 @@ export function MobileNav({
       </Stack>
       <Divider sx={{ borderColor: "var(--mui-palette-neutral-700)" }} />
       <Box component="nav" sx={{ flex: "1 1 auto", p: "12px" }}>
-        {renderNavItems({ pathname, items: navItems, userRole })}
+        {renderNavItems( { pathname, items: navItems, userRole } )}
       </Box>
       <Divider sx={{ borderColor: "var(--mui-palette-neutral-700)" }} />
     </Drawer>
   );
 }
 
-function renderNavItems({
+function renderNavItems ( {
   items = [],
   pathname,
   userRole,
@@ -97,18 +97,53 @@ function renderNavItems({
   items?: NavItemConfig[];
   pathname: string;
   userRole: string;
-}): React.JSX.Element {
-  const children = items.reduce<React.ReactNode[]>((acc, curr) => {
-    const { key, ...item } = curr;
-
-    // Conditionally exclude "Users" for non-admin roles
-    if (item.title === "Users" && userRole !== "admin") {
-      return acc; // Skip if not admin
+} ): React.JSX.Element {
+  // Filter nav items based on user role
+  const filteredItems = items.filter( ( item ) => {
+    // SUPERADMIN can only see Company and User
+    if ( userRole === "super admin" )
+    {
+      return item.title === "Company" || item.title === "Users" || item.title === "SuperAdminDashboard";
     }
 
-    acc.push(<NavItem key={key} pathname={pathname} {...item} />);
-    return acc;
-  }, []);
+    // ADMIN should NOT see Company and Admin User, but SHOULD see Users
+    if ( userRole === "admin" )
+    {
+      if ( item.title === "Company" || item.title === "Admin User" )
+      {
+        return false;
+      }
+      // Admin SHOULD see Users, Loan Provider, Archived
+      return true;
+    }
+
+    // For non-admin roles (operations, credit, etc.)
+    if ( item.title === "Users" && userRole !== "admin" )
+    {
+      return false;
+    }
+    if ( item.title === "Company" && userRole !== "admin" )
+    {
+      return false;
+    }
+
+    if ( item.title === "Loan Provider" && userRole !== "admin" )
+    {
+      return false;
+    }
+
+    if ( item.title === "Archived" && userRole !== "admin" )
+    {
+      return false;
+    }
+
+    return true;
+  } );
+
+  const children = filteredItems.map( ( item ) => {
+    const { key, ...itemProps } = item;
+    return <NavItem key={key} pathname={pathname} {...itemProps} />;
+  } );
 
   return (
     <Stack component="ul" spacing={1} sx={{ listStyle: "none", m: 0, p: 0 }}>
@@ -121,7 +156,7 @@ interface NavItemProps extends Omit<NavItemConfig, "items"> {
   pathname: string;
 }
 
-function NavItem({
+function NavItem ( {
   disabled,
   external,
   href,
@@ -129,27 +164,27 @@ function NavItem({
   matcher,
   pathname,
   title,
-}: NavItemProps): React.JSX.Element {
-  const active = isNavItemActive({
+}: NavItemProps ): React.JSX.Element {
+  const active = isNavItemActive( {
     disabled,
     external,
     href,
     matcher,
     pathname,
-  });
-  const Icon = icon ? navIcons[icon] : null;
+  } );
+  const Icon = icon ? navIcons[ icon ] : null;
 
   return (
     <li>
       <Box
-        {...(href
+        {...( href
           ? {
-              component: external ? "a" : RouterLink,
-              href,
-              target: external ? "_blank" : undefined,
-              rel: external ? "noreferrer" : undefined,
-            }
-          : { role: "button" })}
+            component: external ? "a" : RouterLink,
+            href,
+            target: external ? "_blank" : undefined,
+            rel: external ? "noreferrer" : undefined,
+          }
+          : { role: "button" } )}
         sx={{
           alignItems: "center",
           borderRadius: 1,

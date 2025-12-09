@@ -4,7 +4,7 @@ import useSWR, { mutate } from "swr";
 
 import { fetcher, creator, modifier, deleter } from "@/apis/apiClient";
 import { Ticket, JoinedTicketData } from "@/types/ticket";
-import axios from "axios";
+import { axiosInstance } from "@/apis/config/axiosConfig";
 
 /**
  * Hook for fetching tickets with SWR (stale-while-revalidate) strategy.
@@ -85,9 +85,21 @@ export const useCreateTicket = (pathKey: string) => {
     setLoading(true);
     setError(null);
     try {
+      console.log( 'Creating ticket with data:', dataObj );
+      console.log( 'Path key:', pathKey );
+
+      // Log cookies to check companyId availability
+      if ( typeof window !== 'undefined' )
+      {
+        const cookies = document.cookie;
+        console.log( 'Cookies:', cookies );
+      }
       const response = await creator(pathKey, dataObj);
+      console.log( 'Ticket creation response:', response );
       return response;
     } catch (err) {
+      console.error( 'Error creating ticket:', err );
+      console.error( 'Error details:', err.response?.data || err.message );
       setError(err as Error);
       return null;
     } finally {
@@ -145,7 +157,7 @@ export const useDeleteTicket = () => {
     setError(null);
     try {
       const apiPath = `${ process.env.NEXT_PUBLIC_API_URL}/${pathKey}/${ticketId}`;
-      const ticket = await axios.post(
+      const ticket = await axiosInstance.post(
         apiPath,
         { ticketId, reason, archivedBy: archivedByUserId }, 
         {

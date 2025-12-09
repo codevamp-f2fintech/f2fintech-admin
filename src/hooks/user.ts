@@ -17,7 +17,7 @@ export const useGetUsers = (
     initialData: User | null,
     pathKey: string,
     page: number = 1,
-    limit: number = 6
+    limit: number = 6,
 ) => {
     const { data: swrData, error, isValidating } = useSWR<User | null>(
         `${pathKey}?page=${page}&limit=${limit}`,

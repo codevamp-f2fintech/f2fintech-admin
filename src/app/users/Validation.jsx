@@ -25,6 +25,13 @@ const UserSchema = Yup.object().shape({
         .string()
         .required("This field is required"),
     gender: Yup.string(),
+
+    companyId: Yup.string()
+        .when( '$isSuperAdminCreate', {
+            is: true,
+            then: ( schema ) => schema.required( 'Company is required' ),
+            otherwise: ( schema ) => schema.notRequired()
+        } )
 });
 
 export default UserSchema;

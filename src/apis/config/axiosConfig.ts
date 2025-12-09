@@ -1,71 +1,73 @@
 import { Utility } from "@/utils";
 import axios, { AxiosInstance, AxiosError, AxiosResponse } from "axios";
-import { cookies } from "next/headers";
 
-// const ENV = import.meta.env;
 /**
  * Creates a custom Axios instance with predefined configurations.
- * This instance is configured with a base URL for the API, a request timeout,
- * and default headers that will be applied to every request made using this instance.
- *
- * @constant
- * @type {AxiosInstance}
  */
-export const axiosInstance: AxiosInstance = axios.create({
-  baseURL: `${process.env.NEXT_PUBLIC_API_URL}`,
+export const axiosInstance: AxiosInstance = axios.create( {
+  baseURL: `${ process.env.NEXT_PUBLIC_API_URL }`,
   withCredentials: true,
-  validateStatus: (status) => (status >= 200 && status < 300) || status == 404,
+  validateStatus: ( status ) => ( status >= 200 && status < 300 ) || status == 404,
   timeout: 40000,
   headers: {
     Accept: "application/json, text/plain, */*",
     "Content-Type": "application/json; charset=utf-8",
   },
-});
+} );
 
 /**
- * Custom error handler for the Axios instance.
- * This function intercepts all errors returned from the API requests made using the axiosInstance.
- * It checks the status code of the error and logs it if it's not a 401 (Unauthorized) error.
- * The error is then re-thrown for further handling.
- *
- * @param {AxiosError} error - The error object returned by Axios.
- * @returns {Promise<never>} - A rejected promise containing the error.
- * @throws {AxiosError} - Throws the error if it's not a 401 error.
+ * Custom error handler for Axios.
  */
-const errorHandler = (error: AxiosError): Promise<never> => {
+const errorHandler = ( error: AxiosError ): Promise<never> => {
   const statusCode = error.response?.status;
 
-  // logging only errors that are not 401
-  if (statusCode && statusCode !== 401) {
+  if ( statusCode && statusCode !== 401 )
+  {
     throw error;
   }
 
-  return Promise.reject(error);
+  return Promise.reject( error );
 };
 
-// Registering the custom error handler to the 'axiosInstance' so that errorHandler function is called automatically.
+// Response interceptor
 axiosInstance.interceptors.response.use(
-  (response: AxiosResponse) => response,
-  (error: AxiosError) => errorHandler(error)
+  ( response: AxiosResponse ) => response,
+  ( error: AxiosError ) => errorHandler( error )
 );
 
-// Adding a request interceptor to include the token
+// Request interceptor (Token + CompanyId)
 axiosInstance.interceptors.request.use(
-  (config) => {
-    // Get the cookies
+  ( config ) => {
     const { getCookies } = Utility();
-    const cookies = getCookies();
-    const token = cookies.token; // Retrieve the token from cookies
+    const cookieStore = getCookies() as {
+      token?: string;
+      companyId?: string;
+      userRole?: string;
+      [ key: string ]: any;
+    };
 
-    if (token) {
-      // If token is present, add it to the headers
-      config.headers["x-access-token"] = token;
+    const token = cookieStore.token;
+    const companyId = cookieStore.companyId;
+    const userRole = cookieStore.userRole;
+
+    // Add token to request header
+    if ( token )
+    {
+      config.headers[ "x-access-token" ] = token;
+      config.headers[ "userrole" ] = userRole;
     }
 
-    return config; // Return the modified config
+    // Add companyId to every request as query param
+    if ( companyId && userRole !== "super admin" )
+    {
+      config.headers[ "CompanyId" ] = companyId;
+    } else if ( userRole === "super admin" )
+    {
+      console.log( '- companyId exists?', !!companyId );
+      console.log( '- userRole is super admin?', userRole === 'super admin' );
+    }
+
+    return config;
   },
-  (error) => {
-    // Handle the request error
-    return Promise.reject(error);
-  }
+  ( error ) => Promise.reject( error )
 );

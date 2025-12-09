@@ -19,18 +19,17 @@ import { navIcons } from "./nav-icons";
 import { Utility } from "@/utils";
 import { Logo } from "../../core/logo";
 
-export function SideNav(): React.JSX.Element {
+export function SideNav (): React.JSX.Element {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = React.useState(true); // Collapse state
+  const [ collapsed, setCollapsed ] = React.useState( true );
   const { decodedToken } = Utility();
 
   const userRole = decodedToken()?.role;
 
-  // Toggle collapse state
-  const handleToggleCollapse = () => setCollapsed((prev) => !prev);
+  const handleToggleCollapse = () => setCollapsed( ( prev ) => !prev );
 
-  // Hide SideNav if on login page
-  if (pathname === "/login") {
+  if ( pathname === "/login" )
+  {
     return <></>;
   }
 
@@ -45,8 +44,7 @@ export function SideNav(): React.JSX.Element {
         "--NavItem-active-color": "var(--mui-palette-primary-contrastText)",
         "--NavItem-disabled-color": "var(--mui-palette-neutral-500)",
         "--NavItem-icon-color": "var(--mui-palette-neutral-400)",
-        "--NavItem-icon-active-color":
-          "var(--mui-palette-primary-contrastText)",
+        "--NavItem-icon-active-color": "var(--mui-palette-primary-contrastText)",
         "--NavItem-icon-disabled-color": "var(--mui-palette-neutral-600)",
         backgroundImage: "linear-gradient(135deg, #fff 0%, #fff 100%)",
         backgroundBlendMode: "multiply, screen, normal",
@@ -89,14 +87,14 @@ export function SideNav(): React.JSX.Element {
       </Stack>
       <Divider sx={{ borderColor: "lightgray" }} />
       <Box component="nav">
-        {renderNavItems({ pathname, items: navItems, collapsed, userRole })}
+        {renderNavItems( { pathname, items: navItems, collapsed, userRole } )}
       </Box>
       <Divider sx={{ borderColor: "lightgray" }} />
     </Box>
   );
 }
 
-function renderNavItems({
+function renderNavItems ( {
   items = [],
   pathname,
   collapsed,
@@ -106,35 +104,57 @@ function renderNavItems({
   pathname: string;
   collapsed: boolean;
   userRole: string;
-}): React.JSX.Element {
-  const children = items.reduce(
-    (acc: React.ReactNode[], curr: NavItemConfig): React.ReactNode[] => {
-      const { key, ...item } = curr;
-      if (item.title === "Users" && userRole !== "admin") {
-        return acc;
-      }
+} ): React.JSX.Element {
+  // Filter nav items based on user role
+  const filteredItems = items.filter( ( item ) => {
+    // SUPERADMIN can only see Company and User
+    if ( userRole === "super admin" )
+    {
+      return item.title === "Company" || item.title === "Users" || item.title === "SuperAdminDashboard";
+    }
 
-      // If the user is an operations or credit, hide the "Loan Provider" link
-      if (item.title === "Loan Provider" && userRole !== "admin") {
-        return acc;
+    // ADMIN should NOT see Company and Admin User, but SHOULD see Users
+    if ( userRole === "admin" )
+    {
+      if ( item.title === "Company" || item.title === "Admin User" )
+      {
+        return false;
       }
-      if (item.title === "Archived" && userRole !== "admin") {
-        return acc;
-      }
+      // Admin SHOULD see Users, Loan Provider, Archived
+      return true;
+    }
 
-      acc.push(
-        <NavItem
-          key={key}
-          pathname={pathname}
-          collapsed={collapsed}
-          {...item}
-        />
-      );
+    // For non-admin roles (operations, credit, etc.)
+    if ( item.title === "Users" && userRole !== "admin" )
+    {
+      return false;
+    }
+    if ( item.title === "Company" && userRole !== "admin" )
+    {
+      return false;
+    }
 
-      return acc;
-    },
-    []
-  );
+    if ( item.title === "Loan Provider" && userRole !== "admin" )
+    {
+      return false;
+    }
+
+    if ( item.title === "Archived" && userRole !== "admin" )
+    {
+      return false;
+    }
+
+    return true;
+  } );
+
+  const children = filteredItems.map( ( item ) => (
+    <NavItem
+      key={item.key}
+      pathname={pathname}
+      collapsed={collapsed}
+      {...item}
+    />
+  ) );
 
   return (
     <Stack component="ul" spacing={1} sx={{ listStyle: "none", mt: 5, p: 0 }}>
@@ -143,12 +163,13 @@ function renderNavItems({
   );
 }
 
+// NavItem component remains the same as before
 interface NavItemProps extends Omit<NavItemConfig, "items"> {
   pathname: string;
   collapsed: boolean;
 }
 
-function NavItem({
+function NavItem ( {
   disabled,
   external,
   href,
@@ -157,28 +178,29 @@ function NavItem({
   pathname,
   title,
   collapsed,
-}: NavItemProps): React.JSX.Element {
-  const active = isNavItemActive({
+}: NavItemProps ): React.JSX.Element {
+  const active = isNavItemActive( {
     disabled,
     external,
     href,
     matcher,
     pathname,
-  });
-  const Icon = icon ? navIcons[icon] : null;
+  } );
+  const Icon = icon ? navIcons[ icon ] : null;
 
   return (
     <li>
       <Box
-        {...(href
+        {...( href
           ? {
-              component: external ? "a" : RouterLink,
-              href,
-              target: external ? "_blank" : undefined,
-              rel: external ? "noreferrer" : undefined,
-            }
-          : { role: "button" })}
+            component: external ? "a" : RouterLink,
+            href,
+            target: external ? "_blank" : undefined,
+            rel: external ? "noreferrer" : undefined,
+          }
+          : { role: "button" } )}
         sx={{
+          textDecoration: "none !important",
           alignItems: "center",
           borderRadius: "0px 20px 20px 0px",
           color: "red !important",
@@ -190,18 +212,12 @@ function NavItem({
           width: "92% !important",
           padding: "2px 0px 2px 1px",
           position: "relative",
-          // mr: "3px",
-          textDecoration: "none",
           justifyContent: collapsed ? "center" : "flex-start",
-          backgroundImage: `
-   linear-gradient(#deebff, #deebff)
-    `,
+          backgroundImage: `linear-gradient(#deebff, #deebff)`,
           backgroundBlendMode: "multiply, screen, normal",
           transition: "all 0.3s ease",
           "&:hover": {
-            backgroundImage: `
-      linear-gradient(#c8d4e6, #c8d4e6)
-    `,
+            backgroundImage: `linear-gradient(#c8d4e6, #c8d4e6)`,
             transform: "scale(1)",
           },
         }}

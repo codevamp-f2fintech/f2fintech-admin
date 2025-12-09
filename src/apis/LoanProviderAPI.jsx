@@ -13,32 +13,32 @@ export const LoanProviderAPI = {
   /**
    * Create a new loan provider
    */
-  create: async (loanProviderData, cancel = false) => {
-    return await axiosInstance.request({
+  create: async ( loanProviderData, cancel = false ) => {
+    return await axiosInstance.request( {
       url: '/create-loan-provider',
       method: 'POST',
       data: loanProviderData,
       signal: cancel
-        ? cancelApiObject[this.create.name].handleRequestCancellation().signal
+        ? cancelApiObject[ this.create.name ].handleRequestCancellation().signal
         : undefined,
-    });
+    } );
   },
 
   /**
    * Get all loan providers
    */
-  getAll: async (cancel = false) => {
-    return await axiosInstance.request({
+  getAll: async ( cancel = false ) => {
+    return await axiosInstance.request( {
       url: '/get-all-loan-providers',
       method: 'GET',
       signal: cancel
-        ? cancelApiObject[this.getAll.name].handleRequestCancellation().signal
+        ? cancelApiObject[ this.getAll.name ].handleRequestCancellation().signal
         : undefined,
-    });
+    } );
   },
 };
 
 
 
 // Defining the cancel API object for LoanProviderAPI
-const cancelApiObject = defineCancelApiObject(LoanProviderAPI);
+const cancelApiObject = defineCancelApiObject( LoanProviderAPI );

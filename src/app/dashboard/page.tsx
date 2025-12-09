@@ -40,53 +40,39 @@ import {
   Button,
 } from "@mui/material";
 import { useEffect, useState } from "react";
+import { axiosInstance } from "../../apis/config/axiosConfig";
 
 interface Ticket {
   month: string;
   count: number;
 }
 
-// Server-side function to fetch total applications count
+// Updated function to fetch total applications count using axios
 async function fetchTotalApplications (
   month?: string,
   year?: number,
-  date?: string
+  date?: string,
 ): Promise<number | null> {
   try
   {
-    let url = `${ process.env.NEXT_PUBLIC_API_URL }/application/count`;
-
-    const params = new URLSearchParams();
+    const params: any = {};
 
     // Only add month if it's provided and not empty
     if ( month && month !== "" )
     {
-      params.append( "month", month );
+      params.month = month;
       // Always include the current year when month is provided
-      params.append( "year", new Date().getFullYear().toString() );
+      params.year = new Date().getFullYear().toString();
     }
 
     // Only add date if it's provided and not empty
     if ( date && date !== "" )
     {
-      params.append( "date", date );
+      params.date = date;
     }
 
-    if ( params.toString() )
-    {
-      url += `?${ params.toString() }`;
-    }
-
-    const response = await fetch( url, {
-      cache: "no-store",
-    } );
-
-    if ( !response.ok )
-    {
-      throw new Error( `HTTP error! status: ${ response.status }` );
-    }
-    const resData = await response.json();
-    return resData.data;
+    const response = await axiosInstance.get( "/application/count", { params } );
+    return response.data.data;
   } catch ( error )
   {
     console.error( "Failed to fetch total applications:", error );
@@ -94,38 +80,25 @@ async function fetchTotalApplications (
   }
 }
 
-// Server-side function to fetch total new applications count
+// Updated function to fetch total new applications count using axios
 async function fetchTotalNewApplication (
   month?: string,
   year?: number,
-  date?: string
+  date?: string,
 ): Promise<{ count: number; amount: number } | null> {
   try
   {
-    let url = `${ process.env.NEXT_PUBLIC_API_URL }/application/new-count`;
+    const params: any = {};
 
-    // Add query parameters if month and year are provided
-    const params = new URLSearchParams();
-    if ( month ) params.append( "month", month );
-    if ( year ) params.append( "year", year.toString() );
-    if ( date ) params.append( "date", date );
-    if ( params.toString() )
-    {
-      url += `?${ params.toString() }`;
-    }
+    if ( month ) params.month = month;
+    if ( year ) params.year = year.toString();
+    if ( date ) params.date = date;
 
-    const response = await fetch( url, {
-      cache: "no-store", // To Prevent caching
-    } );
+    const response = await axiosInstance.get( "/application/new-count", { params } );
 
-    if ( !response.ok )
-    {
-      throw new Error( `HTTP error! status: ${ response.status }` );
-    }
-    const resData = await response.json();
     return {
-      count: resData.data.count || resData.data, // handles both old and new response formats
-      amount: resData.data.amount || 0, // default to 0 if amount doesn't exist
+      count: response.data.data.count || response.data.data,
+      amount: response.data.data.amount || 0,
     };
   } catch ( error )
   {
@@ -134,121 +107,118 @@ async function fetchTotalNewApplication (
   }
 }
 
+// Updated function to fetch total tickets using axios
 async function fetchTotalTickets (
   status: string | null = null,
   id: number | null = null,
   role: string,
   date?: string | null,
   month?: string,
-  year?: string
+  year?: string,
 ): Promise<number | { count: number; amount: number }> {
-  let url = `${ process.env.NEXT_PUBLIC_API_URL }/dashboard/tickets/count`;
-
-  // Build query parameters
-  const params = new URLSearchParams();
-
-  // Add userId for non-admin users
-  if ( role !== "admin" && role !== "sub admin" && id !== null )
-  {
-    params.append( "userId", id.toString() );
-  }
-
-  // Add status if provided
-  if ( status )
-  {
-    params.append( "status", status );
-  }
-
-  // Add date filters
-  if ( date )
-  {
-    params.append( "date", date );
-  }
-  if ( month )
-  {
-    params.append( "month", month );
-  }
-  if ( year )
-  {
-    params.append( "year", year );
-  }
-
-  // Add query parameters to URL if any exist
-  if ( params.toString() )
-  {
-    url += `?${ params.toString() }`;
-  }
-
-  console.log( "Fetching tickets from URL:", url );
-
   try
   {
-    const response = await fetch( url, {
-      cache: "no-store",
-    } );
+    const params: any = {};
 
-    if ( !response.ok )
+    // Add userId for non-admin users
+    if ( role !== "admin" && role !== "sub admin" && id !== null )
     {
-      console.error( `HTTP error! status: ${ response.status }` );
-      throw new Error( "Failed to fetch total Tickets" );
+      params.userId = id.toString();
     }
 
-    const resData = await response.json();
-    console.log( "API Response:", resData );
+    // Add status if provided
+    if ( status )
+    {
+      params.status = status;
+    }
+
+    // Add date filters
+    if ( date )
+    {
+      params.date = date;
+    }
+    if ( month )
+    {
+      params.month = month;
+    }
+    if ( year )
+    {
+      params.year = year;
+    }
+
+    console.log( "Fetching tickets with params:", params );
+
+    const response = await axiosInstance.get( "/dashboard/tickets/count", { params } );
+    console.log( "API Response:", response.data );
 
     if ( status === "disbursed" || status === "approved" )
     {
       return {
-        count: resData.data.count || 0,
-        amount: resData.data.amount || 0,
+        count: response.data.data.count || 0,
+        amount: response.data.data.amount || 0,
       };
     }
 
-    return resData.data || 0;
+    return response.data.data || 0;
   } catch ( error )
   {
     console.error( "Error fetching tickets:", error );
-    return 0; // Return 0 instead of throwing to prevent UI crashes
+    return 0;
   }
 }
 
+// Updated function to get total tickets by month using axios
 async function getTotalTicketsByMonth ( year: number ): Promise<Ticket[]> {
-  const response = await fetch(
-    `${ process.env.NEXT_PUBLIC_API_URL }/dashboard/tickets/counts-by-month?year=${ year }`,
-    {
-      cache: "no-store", // To Prevent Caching
-    }
-  );
-
-  if ( !response.ok )
+  try
   {
+    const params: any = { year };
+
+    const response = await axiosInstance.get( "/dashboard/tickets/counts-by-month", { params } );
+    console.log( "Monthly tickets response:", response.data );
+
+    return response.data.data.map( ( ticket: Ticket ) => ticket.count );
+  } catch ( error )
+  {
+    console.error( "Failed to fetch monthly count:", error );
     throw new Error( "Failed to fetch monthly count" );
   }
-  const resData = await response.json();
-  return resData.data.map( ( ticket: Ticket ) => ticket.count );
 }
 
+// Updated function to get done tickets by month using axios
 async function getDoneTicketsByMonth ( year: number ): Promise<Ticket[]> {
-  const response = await fetch(
-    `${ process.env.NEXT_PUBLIC_API_URL }/dashboard/tickets/done-counts-by-month?year=${ year }`,
-    {
-      cache: "no-store", // To Prevent Caching
-    }
-  );
-
-  if ( !response.ok )
+  try
   {
+    const params: any = { year };
+
+    const response = await axiosInstance.get( "/dashboard/tickets/done-counts-by-month", { params } );
+    console.log( "Monthly done tickets response:", response.data );
+
+    return response.data.data.map( ( ticket: Ticket ) => ticket.count );
+  } catch ( error )
+  {
+    console.error( "Failed to fetch monthly done count:", error );
     throw new Error( "Failed to fetch monthly done count" );
   }
-  const resData = await response.json();
-  return resData.data.map( ( ticket: Ticket ) => ticket.count );
+}
+
+// Updated function to fetch agent count using axios
+async function fetchAgentCount (): Promise<number | null> {
+  try
+  {
+    const response = await axiosInstance.get( "/dashboard/agents/count" );
+    return response.data.data;
+  } catch ( error )
+  {
+    console.error( "Failed to fetch agent count:", error );
+    return null;
+  }
 }
 
 export default function Page (): React.JSX.Element {
   const { decodedToken, getCookies } = Utility();
   const cookies = getCookies();
-  const userToken = cookies.token;
-  const { id, role } = decodedToken( userToken?.value );
+  const userToken = ( cookies as any ).token;
+  const { id, role, companyId } = decodedToken( userToken?.value );
 
   const [ date, setDate ] = useState<string | null>( null );
   const [ selectedMonth, setSelectedMonth ] = useState<string>( "" );
@@ -257,7 +227,6 @@ export default function Page (): React.JSX.Element {
   const currentYear = new Date().getFullYear();
   const [ currentDateTime, setCurrentDateTime ] = useState( new Date() );
   const currentDate = new Date().toLocaleDateString( "en-CA" );
-  // const [ showFilters, setShowFilters ] = React.useState( false );
 
   useEffect( () => {
     const timer = setInterval( () => {
@@ -271,7 +240,6 @@ export default function Page (): React.JSX.Element {
     const now = new Date();
     const currentMonth = now.toLocaleString( "default", { month: "long" } );
 
-    // setSelectedMonth( currentMonth );
     setDate( new Date().toISOString().split( "T" )[ 0 ] );
 
     console.log( "currentMonth:", currentMonth );
@@ -298,7 +266,7 @@ export default function Page (): React.JSX.Element {
     // If a month is selected, clear the date filter
     if ( newMonth && newMonth !== "" )
     {
-      setDate( "" ); // Changed from null to empty string for consistency
+      setDate( "" );
     }
     if ( newMonth === "All" )
     {
@@ -319,115 +287,110 @@ export default function Page (): React.JSX.Element {
     }
   };
 
-  async function fetchAgentCount () {
-    const response = await fetch(
-      `${ process.env.NEXT_PUBLIC_API_URL }/dashboard/agents/count`,
-      {
-        cache: "no-store", // To Prevent Caching
-      }
-    );
-
-    if ( !response.ok )
-    {
-      throw new Error( "Failed to fetch agent count" );
-    }
-    const resData = await response.json();
-    setTotalAgents( resData.data );
-  }
-
   useEffect( () => {
     getAllCounts();
-  }, [ date, selectedMonth ] ); // Added selectedMonth dependency
+  }, [ date, selectedMonth ] );
 
   useEffect( () => {
-    fetchAgentCount();
+    const loadAgentCount = async () => {
+      const count = await fetchAgentCount();
+      setTotalAgents( count );
+    };
+    loadAgentCount();
   }, [] );
 
   const getAllCounts = async () => {
-    const [
-      totalApplications,
-      totalNewApplications,
-      totalTickets,
-      totalUnderCreditReview,
-      totalOperations,
-      totalPendencyInFile,
-      totalToBeDisbursed,
-      totalDisbursed,
-      totalFileSendToBanker,
-      totalCarryForward,
-      totalToBeApproved,
-      totalApproved,
-      totalRejected,
-      totalDrop,
-      totalHold,
-      totalTicketsByMonth,
-      doneTicketsByMonth,
-    ] = await Promise.all( [
-      fetchTotalApplications(
-        selectedMonth || undefined,
-        selectedMonth ? currentYear : undefined,
-        date
-      ),
-      fetchTotalNewApplication(
-        selectedMonth || undefined,
-        selectedMonth ? currentYear : undefined,
-        date
-      ),
-      fetchTotalTickets( null, id, role, date, selectedMonth, currentYear ),
-      fetchTotalTickets( "under credit review", id, role, date, selectedMonth ),
-      fetchTotalTickets( "operations", id, role, date, selectedMonth ),
-      fetchTotalTickets( "pendency in file", id, role, date, selectedMonth ),
-      fetchTotalTickets( "to be disbursed", id, role, date, selectedMonth ),
-      fetchTotalTickets( "disbursed", id, role, date, selectedMonth ),
-      fetchTotalTickets( "file send to banker", id, role, date, selectedMonth ),
-      fetchTotalTickets( "carry forward", id, role, date, selectedMonth ),
-      fetchTotalTickets( "to be approved", id, role, date, selectedMonth ),
-      fetchTotalTickets( "approved", id, role, date, selectedMonth ),
-      fetchTotalTickets( "rejected", id, role, date, selectedMonth ),
-      fetchTotalTickets( "drop", id, role, date, selectedMonth ),
-      fetchTotalTickets( "hold", id, role, date, selectedMonth ),
-      getTotalTicketsByMonth( currentYear ),
-      getDoneTicketsByMonth( currentYear ),
-    ] );
+    try
+    {
+      const [
+        totalApplications,
+        totalNewApplications,
+        totalTickets,
+        totalUnderCreditReview,
+        totalOperations,
+        totalPendencyInFile,
+        totalToBeDisbursed,
+        totalDisbursed,
+        totalFileSendToBanker,
+        totalCarryForward,
+        totalToBeApproved,
+        totalApproved,
+        totalRejected,
+        totalDrop,
+        totalHold,
+        totalTicketsByMonth,
+        doneTicketsByMonth,
+      ] = await Promise.all( [
+        fetchTotalApplications(
+          selectedMonth || undefined,
+          selectedMonth ? currentYear : undefined,
+          date
+        ),
+        fetchTotalNewApplication(
+          selectedMonth || undefined,
+          selectedMonth ? currentYear : undefined,
+          date
+        ),
+        fetchTotalTickets( null, id, role, date, selectedMonth, currentYear.toString() ),
+        fetchTotalTickets( "under credit review", id, role, date, selectedMonth, currentYear.toString() ),
+        fetchTotalTickets( "operations", id, role, date, selectedMonth, currentYear.toString() ),
+        fetchTotalTickets( "pendency in file", id, role, date, selectedMonth, currentYear.toString() ),
+        fetchTotalTickets( "to be disbursed", id, role, date, selectedMonth, currentYear.toString() ),
+        fetchTotalTickets( "disbursed", id, role, date, selectedMonth, currentYear.toString() ),
+        fetchTotalTickets( "file send to banker", id, role, date, selectedMonth, currentYear.toString() ),
+        fetchTotalTickets( "carry forward", id, role, date, selectedMonth, currentYear.toString() ),
+        fetchTotalTickets( "to be approved", id, role, date, selectedMonth, currentYear.toString() ),
+        fetchTotalTickets( "approved", id, role, date, selectedMonth, currentYear.toString() ),
+        fetchTotalTickets( "rejected", id, role, date, selectedMonth, currentYear.toString() ),
+        fetchTotalTickets( "drop", id, role, date, selectedMonth, currentYear.toString() ),
+        fetchTotalTickets( "hold", id, role, date, selectedMonth, currentYear.toString() ),
+        getTotalTicketsByMonth( currentYear ),
+        getDoneTicketsByMonth( currentYear ),
+      ] );
 
-    // Normalize the data for `disbursed` status
-    const normalizedDisbursed =
-      typeof totalDisbursed === "object" && totalDisbursed !== null
-        ? totalDisbursed
-        : { count: totalDisbursed, amount: null };
+      // Normalize the data for `disbursed` status
+      const normalizedDisbursed =
+        typeof totalDisbursed === "object" && totalDisbursed !== null
+          ? totalDisbursed
+          : { count: totalDisbursed, amount: null };
 
-    const normalizedApproved =
-      typeof totalApproved === "object" && totalApproved !== null
-        ? totalApproved
-        : { count: totalApproved, amount: null };
+      const normalizedApproved =
+        typeof totalApproved === "object" && totalApproved !== null
+          ? totalApproved
+          : { count: totalApproved, amount: null };
 
-    const normalizedNewApplications = totalNewApplications
-      ? {
-        count: totalNewApplications.count,
-        amount: totalNewApplications.amount || null,
-      }
-      : { count: null, amount: null };
+      const normalizedNewApplications = totalNewApplications
+        ? {
+          count: totalNewApplications.count,
+          amount: totalNewApplications.amount || null,
+        }
+        : { count: null, amount: null };
 
-    setAllCounts( {
-      totalApplications,
-      totalNewApplications: normalizedNewApplications,
-      totalTickets,
-      totalUnderCreditReview,
-      totalOperations,
-      totalPendencyInFile,
-      totalToBeDisbursed,
-      totalDisbursed: normalizedDisbursed,
-      totalFileSendToBanker,
-      totalCarryForward,
-      totalToBeApproved,
-      totalApproved: normalizedApproved,
-      totalRejected,
-      totalDrop,
-      totalHold,
-      totalTicketsByMonth,
-      doneTicketsByMonth,
-    } );
+      setAllCounts( {
+        totalApplications,
+        totalNewApplications: normalizedNewApplications,
+        totalTickets,
+        totalUnderCreditReview,
+        totalOperations,
+        totalPendencyInFile,
+        totalToBeDisbursed,
+        totalDisbursed: normalizedDisbursed,
+        totalFileSendToBanker,
+        totalCarryForward,
+        totalToBeApproved,
+        totalApproved: normalizedApproved,
+        totalRejected,
+        totalDrop,
+        totalHold,
+        totalTicketsByMonth,
+        doneTicketsByMonth,
+      } );
+    } catch ( error )
+    {
+      console.error( "Error fetching all counts:", error );
+    }
   };
+
   const dashboardItems = [
     {
       icon: ArchiveIcon,
@@ -733,6 +696,7 @@ export default function Page (): React.JSX.Element {
     const day = String( date.getDate() ).padStart( 2, "0" );
     return `${ year }-${ month }-${ day }`;
   }
+
   console.log( "allCounts:", allCounts );
 
   return (

@@ -25,4 +25,10 @@ export const navItems = [
     href: "/tickets-archive",
     icon: "file-archive",
   },
+  {
+    key: 'company',
+    title: 'Company',
+    href: '/company',
+    icon: 'business'
+  },
 ] satisfies NavItemConfig[];

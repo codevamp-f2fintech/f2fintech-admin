@@ -37,7 +37,7 @@ export interface LatestUsersProps {
   sx?: SxProps;
 }
 
-export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
+export function LatestOrders ( { sx }: LatestUsersProps ): React.JSX.Element {
   const { value: users, swrLoading: usersLoading } = useGetUsers(
     {} as User,
     "get-users",
@@ -52,29 +52,29 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
 
   const router = useRouter();
   const { capitalizeFirstLetter } = Utility();
-  const isMobile = useMediaQuery("(max-width:600px)");
-  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const isMobile = useMediaQuery( "(max-width:600px)" );
+  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
 
-  const getTicketCounts = (userId: string | number) => {
-    if (!tickets?.results) return { open: 0, inProgress: 0, done: 0 };
+  const getTicketCounts = ( userId: string | number ) => {
+    if ( !tickets?.results ) return { open: 0, inProgress: 0, done: 0 };
     const userTickets = tickets.results.filter(
-      (ticket) => ticket.user_id == userId
+      ( ticket ) => ticket.user_id == userId
     );
     return {
       open: userTickets.filter(
-        (ticket) => ticket.ticketStatus.toLowerCase() === "relook"
+        ( ticket ) => ticket.ticketStatus.toLowerCase() === "relook"
       ).length,
       inProgress: userTickets.filter(
-        (ticket) => ticket.ticketStatus.toLowerCase() === "to be login"
+        ( ticket ) => ticket.ticketStatus.toLowerCase() === "to be login"
       ).length,
       done: userTickets.filter(
-        (ticket) => ticket.ticketStatus.toLowerCase() === "to be disbursed"
+        ( ticket ) => ticket.ticketStatus.toLowerCase() === "to be disbursed"
       ).length,
     };
   };
 
   const handleViewAllClick = () => {
-    router.push("/users");
+    router.push( "/users" );
   };
 
   return (
@@ -182,8 +182,8 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
                   </TableCell>
                 </TableRow>
               ) : (
-                users?.data?.results?.map((agent: UserData, index: number) => {
-                  const { open, inProgress, done } = getTicketCounts(agent.id);
+                users?.data?.results?.map( ( agent: UserData, index: number ) => {
+                  const { open, inProgress, done } = getTicketCounts( agent.id );
 
                   return (
                     <TableRow
@@ -221,7 +221,7 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
                               textOverflow: "ellipsis",
                             }}
                           >
-                            {capitalizeFirstLetter(agent.username)}
+                            {capitalizeFirstLetter( agent.username )}
                           </Typography>
                         </Box>
                       </TableCell>
@@ -310,11 +310,11 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
                           fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" },
                         }}
                       >
-                        {dayjs(agent.created_at).format("MMM D, YYYY")}
+                        {dayjs( agent.created_at ).format( "MMM D, YYYY" )}
                       </TableCell>
                     </TableRow>
                   );
-                })
+                } )
               )}
             </TableBody>
           </Table>
