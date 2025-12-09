@@ -1,6 +1,5 @@
 'use client';
 
-import axios from "axios";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Formik, Form } from "formik";
@@ -9,6 +8,7 @@ import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 import { Utility } from "@/utils";
+import { axiosInstance } from "@/apis/config/axiosConfig";
 
 interface Step3FormProps {
   handleNext: () => void;
@@ -35,6 +35,13 @@ const Step3Form: React.FC<Step3FormProps> = ( {
   const { getLocalStorage, setLocalStorage, toastAndNavigate } = Utility();
   const customerId = getLocalStorage( "customerInfo" )?.id;
   const [ isUploading, setIsUploading ] = useState( false );
+  const { getCookies } = Utility();
+  const cookieStore = getCookies() as {
+    companyId?: string;
+    token?: string;
+    [ key: string ]: any;
+  };
+  const companyId = cookieStore.companyId;
 
   const inputRef = useRef<HTMLInputElement | null>( null );
   const handleToast = ( message: string, severity: "success" | "error" ) => {
@@ -69,9 +76,14 @@ const Step3Form: React.FC<Step3FormProps> = ( {
         formData.append( "document", file );
         formData.append( "folder", `document/${ file.name }` );
 
+        if ( companyId )
+        {
+          formData.append( "companyId", companyId );
+        }
+
         try
         {
-          const uploadResponse = await axios.post(
+          const uploadResponse = await axiosInstance.post(
             `${ process.env.NEXT_PUBLIC_WEB_URL }/upload-to-s3`,
             formData,
             {
@@ -84,12 +96,13 @@ const Step3Form: React.FC<Step3FormProps> = ( {
 
           if ( attachmentUrl )
           {
-            await axios.post(
+            await axiosInstance.post(
               `${ process.env.NEXT_PUBLIC_WEB_URL }/create-document`,
               {
                 document_url: attachmentUrl,
                 customer_id: customerId,
                 type: "bank statement",
+                company_id: companyId,
               }
             )
             setAllUploadsSuccess( true );
@@ -105,7 +118,7 @@ const Step3Form: React.FC<Step3FormProps> = ( {
       }
       setIsUploading( false );
     },
-    [ customerId, setAllUploadsSuccess, setLocalStorage ]
+    [ customerId, setAllUploadsSuccess, setLocalStorage, companyId ]
   );
 
   useEffect( () => {

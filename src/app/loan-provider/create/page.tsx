@@ -27,7 +27,8 @@ import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import { AddPhotoAlternate as AddPhotoAlternateIcon } from "@mui/icons-material";
 import Image from "next/image";
-import axios from "axios";
+import { axiosInstance } from "@/apis/config/axiosConfig";
+import { getCompanyId } from "@/utils/cookies"; 
 
 const LoanFormPage = () => {
   const router = useRouter();
@@ -64,22 +65,35 @@ const LoanFormPage = () => {
   };
 
   // Handle form submission
-  const handleSubmit = async (values) => {
-    setLoading(true);
-    console.log("values", values);
+  const handleSubmit = async ( values ) => {
+    setLoading( true );
+    console.log( "values", values );
+
+    // Get companyId from cookies
+    const companyId = getCompanyId();
+
+    if ( !companyId )
+    {
+      console.error( "Company ID not found in cookies" );
+      alert( "Company ID is required. Please log in again." );
+      setLoading( false );
+      return;
+    }
 
     // If there's an image file, upload it to S3 first
-    if (values.image_file) {
-      try {
+    if ( values.image_file )
+    {
+      try
+      {
         const formDataToUpload = new FormData();
-        formDataToUpload.append("document", values.image_file);
+        formDataToUpload.append( "document", values.image_file );
         formDataToUpload.append(
           "folder",
-          `loan-provider/${values.image_file.name}`
+          `loan-provider/${ values.image_file.name }`
         );
 
-        const uploadResponse = await axios.post(
-          `${process.env.NEXT_PUBLIC_WEB_URL}/upload-to-s3`,
+        const uploadResponse = await axiosInstance.post(
+          `${ process.env.NEXT_PUBLIC_WEB_URL }/upload-to-s3`,
           formDataToUpload,
           {
             headers: {
@@ -88,23 +102,38 @@ const LoanFormPage = () => {
           }
         );
 
-        // Once uploaded, update the formData with the uploaded image URL
         const uploadedImageUrl = uploadResponse.data.data;
-        values.home_image = uploadedImageUrl; // Update the home_image with the S3 URL
+        values.home_image = uploadedImageUrl;
 
-        // Now create the loan provider
-        await createLoanProvider(values);
-        router.push("/loan-provider");
-      } catch (error) {
-        console.error("Error uploading image:", error);
+        // Add companyId to the values object
+        const dataToSend = {
+          ...values,
+          company_id: parseInt( companyId ), // Convert to number
+        };
+
+        // Remove the temporary image_file field
+        delete dataToSend.image_file;
+
+        await createLoanProvider( dataToSend );
+        router.push( "/loan-provider" );
+      } catch ( error )
+      {
+        console.error( "Error uploading image:", error );
+        alert( "Failed to upload image. Please try again." );
       }
-    } else {
+    } else
+    {
       // If no image, proceed with creating the loan provider without an image
-      await createLoanProvider(values);
-      router.push("/loan-provider");
+      const dataToSend = {
+        ...values,
+        company_id: parseInt( companyId ), // Convert to number
+      };
+
+      await createLoanProvider( dataToSend );
+      router.push( "/loan-provider" );
     }
 
-    setLoading(false);
+    setLoading( false );
   };
 
   return (

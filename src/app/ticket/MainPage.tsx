@@ -63,9 +63,12 @@ const Ticket = () => {
   const dispatch: AppDispatch = useDispatch();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { debounceScroll, decodedToken } = Utility();
+  const { debounceScroll, decodedToken, getCookies } = Utility();
   const userRole = decodedToken()?.role;
   const [ exportLoading, setExportLoading ] = useState( false );
+  const cookies = getCookies();
+  const userToken = ( cookies as any ).token;
+  const { id, role, companyId } = decodedToken( userToken?.value );
 
   const apiEndpoint = selectedUser
     ? `get-all-tickets/${ selectedUser.id }${ sortBy === "disbursed" ? "?onlyDisbursed=true" : "" }`

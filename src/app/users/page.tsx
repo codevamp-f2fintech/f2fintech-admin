@@ -1,10 +1,12 @@
+// users page.tsx
+
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 
 import UsersPage from "./UsersPage";
 import { User } from "@/types/user";
 
-const url = `${process.env.NEXT_PUBLIC_API_URL}/get-users`;
+const url = `${ process.env.NEXT_PUBLIC_API_URL }/get-users`;
 const PAGE = 1;
 const LIMIT = 500;
 
@@ -16,24 +18,37 @@ export const metadata: Metadata = {
 
 const UserList = async () => {
   const cookieStore = cookies();
-  const token = cookieStore.get("token")?.value;
-  try {
-    const response = await fetch(`${url}?page=${PAGE}&limit=${LIMIT}`, {
+  const token = cookieStore.get( "token" )?.value;
+  const companyId = cookieStore.get( "companyId" )?.value; // Get companyId from cookies
+
+  try
+  {
+    // Build URL with companyId parameter
+    let apiUrl = `${ url }?page=${ PAGE }&limit=${ LIMIT }`;
+    if ( companyId )
+    {
+      apiUrl += `&companyId=${ companyId }`;
+    }
+
+    const response = await fetch( apiUrl, {
       method: "GET",
       headers: {
         "x-access-token": token || "",
         "Content-Type": "application/json",
       },
       cache: "no-store",
-    });
-    if (!response.ok) {
-      console.log(`Failed to fetch users: ${response.statusText}`);
+    } );
+
+    if ( !response.ok )
+    {
+      console.log( `Failed to fetch users: ${ response.statusText }` );
     }
 
     const resjson = await response.json();
     const data: User = resjson;
     return <UsersPage initialData={data} />;
-  } catch (error) {
+  } catch ( error )
+  {
     return <p>Failed to load data.</p>;
   }
 };

@@ -4,6 +4,26 @@ import { creator, fetcher, modifier } from "@/apis/apiClient";
 import { LoanProvider, LoanProviderData } from "@/types/loanProvider";
 
 /**
+ * Custom fetcher that includes companyId in headers
+ */
+const fetcherWithCompanyId = async ( url: string, companyId?: number ) => {
+  const response = await fetch( `${ process.env.NEXT_PUBLIC_API_URL }/${ url }`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...( companyId && { 'Companyid': companyId.toString() } ),
+    },
+  } );
+
+  if ( !response.ok )
+  {
+    throw new Error( 'Failed to fetch loan providers' );
+  }
+
+  return response.json();
+};
+
+/**
  * Hook for fetching loan providers with SWR (stale-while-revalidate) strategy.
  *
  * @param initialData - The initial data to be used before SWR fetches fresh data.

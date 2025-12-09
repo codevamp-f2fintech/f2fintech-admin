@@ -21,16 +21,16 @@ export interface TrafficProps {
   setDate?: () => {};
 }
 
-export function Traffic({
+export function Traffic ( {
   chartSeries,
   labels,
   date,
   setDate,
-}: TrafficProps): React.JSX.Element {
-  const chartOptions = useChartOptions(labels);
+}: TrafficProps ): React.JSX.Element {
+  const chartOptions = useChartOptions( labels );
   const { capitalizeFirstLetter } = Utility();
-  const isMobile = useMediaQuery("(max-width:600px)");
-  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const isMobile = useMediaQuery( "(max-width:600px)" );
+  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
 
   return (
     <Card
@@ -95,7 +95,7 @@ export function Traffic({
               },
             }}
           >
-            {chartSeries.map((item, index) => {
+            {chartSeries.map( ( item, index ) => {
               const colors = [
                 "#009688",
                 "#827717",
@@ -108,11 +108,11 @@ export function Traffic({
                 "#64dd17",
                 "#90a4ae",
               ];
-              const color = colors[index % colors.length];
+              const color = colors[ index % colors.length ];
 
               return (
                 <Stack
-                  key={labels[index]}
+                  key={labels[ index ]}
                   sx={{
                     display: "flex",
                     alignItems: "center",
@@ -135,7 +135,7 @@ export function Traffic({
                       lineHeight: 1.2,
                     }}
                   >
-                    {capitalizeFirstLetter(labels[index])}
+                    {capitalizeFirstLetter( labels[ index ] )}
                   </Typography>
                   <Typography
                     color="text.secondary"
@@ -151,7 +151,7 @@ export function Traffic({
                   </Typography>
                 </Stack>
               );
-            })}
+            } )}
           </Stack>
         </Stack>
       </CardContent>
@@ -159,7 +159,7 @@ export function Traffic({
   );
 }
 
-function useChartOptions(labels: string[]): ApexOptions {
+function useChartOptions ( labels: string[] ): ApexOptions {
   const theme = useTheme();
 
   return {

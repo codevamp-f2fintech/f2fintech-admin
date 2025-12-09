@@ -1,6 +1,6 @@
 'use client';
 
-import axios from "axios";
+import { axiosInstance } from "@/apis/config/axiosConfig";
 import { useCallback, useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -107,7 +107,7 @@ const Step7Form: React.FC<Step7FormProps> = ( {
   const updateCustomerInfo = async ( data: any ) => {
     try
     {
-      await axios.patch(
+      await axiosInstance.patch(
         `${ process.env.NEXT_PUBLIC_WEB_URL }/customer-info-update`,
         data
       )
@@ -194,7 +194,7 @@ const Step7Form: React.FC<Step7FormProps> = ( {
 
         try
         {
-          const uploadResponse = await axios.post(
+          const uploadResponse = await axiosInstance.post(
             `${ process.env.NEXT_PUBLIC_WEB_URL }/upload-to-s3`,
             formData,
             {
@@ -209,7 +209,7 @@ const Step7Form: React.FC<Step7FormProps> = ( {
           {
             attachmentUrls.push( attachmentUrl ); // Push URL to array
 
-            await axios.post(
+            await axiosInstance.post(
               `${ process.env.NEXT_PUBLIC_WEB_URL }/create-document`,
               {
                 customer_id: storedCustomerId,
@@ -250,18 +250,18 @@ const Step7Form: React.FC<Step7FormProps> = ( {
     selectedAudioFiles,
   ] );
 
-   useEffect( () => {
-        const handleOnline = () => handleToast( "Back online", "success" );
-        const handleOffline = () => handleToast( "You are offline", "error" );
-    
-        window.addEventListener( "online", handleOnline );
-        window.addEventListener( "offline", handleOffline );
-    
-        return () => {
-          window.removeEventListener( "online", handleOnline );
-          window.removeEventListener( "offline", handleOffline );
-        };
-      }, [] );
+  useEffect( () => {
+    const handleOnline = () => handleToast( "Back online", "success" );
+    const handleOffline = () => handleToast( "You are offline", "error" );
+
+    window.addEventListener( "online", handleOnline );
+    window.addEventListener( "offline", handleOffline );
+
+    return () => {
+      window.removeEventListener( "online", handleOnline );
+      window.removeEventListener( "offline", handleOffline );
+    };
+  }, [] );
 
   return (
     <Container

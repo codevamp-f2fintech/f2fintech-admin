@@ -275,18 +275,26 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
   };
 
   useEffect( () => {
-    if ( showHistory && customerApplication.ticketId )
+    if ( showHistory && customerApplication?.ticketId )
     {
       const fetchHistoryData = async () => {
         try
         {
-          const { data } = await fetcher(
+          const response = await axiosInstance.get(
             `get-ticket-histories/${ customerApplication.ticketId }`
           );
-          setHistoryData( data );
+          const data = response.data;
+
+          if ( data.statusCode === 200 )
+          {
+            setHistoryData( data.data );
+          } else
+          {
+            console.error( "Failed to fetch history data:", data.message );
+          }
         } catch ( error )
         {
-          console.log( "Error fetching history data:", error );
+          console.error( "Error fetching history data:", error );
         }
       };
       fetchHistoryData();
@@ -294,18 +302,26 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
   }, [ showHistory, customerApplication?.ticketId ] );
 
   useEffect( () => {
-    if ( showComment && customerApplication.ticketId )
+    if ( showComment && customerApplication?.ticketId )
     {
       const fetchCommentData = async () => {
         try
         {
-          const { data } = await fetcher(
+          const response = await axiosInstance.get(
             `get-ticket-activities/${ customerApplication.ticketId }`
           );
-          setCommentData( data );
+          const data = response.data;
+
+          if ( data.statusCode === 200 )
+          {
+            setCommentData( data.data );
+          } else
+          {
+            console.error( "Failed to fetch comment data:", data.message );
+          }
         } catch ( error )
         {
-          console.log( "Error fetching history data:", error );
+          console.error( "Error fetching comment data:", error );
         }
       };
       fetchCommentData();
@@ -315,6 +331,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
   const handleCheckboxChange = async ( applicationId: number ) => {
     try
     {
+      const userInfo = decodedToken();
+
       const ticketResponse = await createTicket( {
         customer_application_id: applicationId,
         user_id: decodedToken()?.id,
@@ -447,7 +465,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
         } ) );
       }
     };
-    console.log(customerApplication, 'this is it')
+    console.log( customerApplication, 'this is it' )
     return (
       <>
         <Grid item xs={20} key={customerApplication.customerId}>
@@ -1280,7 +1298,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
               <DeleteOutline fontSize="small" />
             </IconButton>
           )}
-          <CardContent sx={{ pt: 0, pb: 3}}>
+          <CardContent sx={{ pt: 0, pb: 3 }}>
             <Box
               sx={{
                 display: "flex",
@@ -1319,7 +1337,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                p:.5,
+                p: .5,
               }}
             >
               <Typography
@@ -1398,7 +1416,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
               >
                 {userRole !== "sales" && (
                   <InfoRow
-                    icon={<MailRounded 
+                    icon={<MailRounded
                       sx={{
                         fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
                       }} />}
@@ -1412,21 +1430,21 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                 )}
 
                 <InfoRow
-                  icon={<CurrencyRupeeIcon 
+                  icon={<CurrencyRupeeIcon
                     sx={{
                       fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
                     }} />}
                   text={formatRupees( customerApplication.applicationAmount )}
                 />
                 <InfoRow
-                  icon={<AccessTimeRounded 
+                  icon={<AccessTimeRounded
                     sx={{
                       fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
                     }} />}
                   text={formatTenure( customerApplication.applicationTenure )}
                 />
                 <InfoRow
-                  icon={<AccountBalanceIcon 
+                  icon={<AccountBalanceIcon
                     sx={{
                       fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
                     }} />}
@@ -1442,7 +1460,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                 />
                 {( customerApplication.customerLocation || customerApplication.customerState ) && (
                   <InfoRow
-                    icon={<LocationOnRounded 
+                    icon={<LocationOnRounded
                       sx={{
                         fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
                       }} />}
@@ -2109,7 +2127,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                 WebkitLineClamp: 2,
                 WebkitBoxOrient: "vertical",
                 overflow: "hidden",
-                textOverflow: "ellipsis"
+                textOverflow: "ellipsis",
+                width: isTab ? "8vw" : "8vw",
               }}
             >
               {customerApplication.applicationProvider || "N/A"}

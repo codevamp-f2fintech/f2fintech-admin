@@ -1,69 +1,75 @@
 import { axiosInstance } from "./config/axiosConfig";
 
 /**
- * Fetches data from the provided URL using a GET request.
- *
- * @template T - The expected type of the response data.
- * @param {string} url - The API endpoint to fetch data from.
- * @returns {Promise<T>} - A promise that resolves to the fetched data.
- * @throws {Error} - If the response does not contain data.
+ * Utility to inject token and companyId into headers
  */
-export const fetcher = async <T>(url: string, p0: { method: string; }): Promise<T> => {
-  const res = await axiosInstance.get<T>(url);
-  if (!res.data) {
-    throw new Error("No data found");
+const getAuthHeaders = () => {
+  const token = localStorage.getItem( "token" );
+  const companyId = localStorage.getItem( "companyId" );
+
+  return {
+    "Content-Type": "application/json",
+    ...( token && { "x-access-token": token } ),
+    ...( companyId && { "x-company-id": companyId } ),
+  };
+};
+
+/**
+ * Fetches data using GET request
+ */
+export const fetcher = async <T> ( url: string ): Promise<T> => {
+  const res = await axiosInstance.get<T>( url, {
+    headers: getAuthHeaders(),
+  } );
+
+  if ( !res.data )
+  {
+    throw new Error( "No data found" );
   }
   return res.data;
 };
 
 /**
- * Creates data at the provided URL using a POST request.
- *
- * @template T - The type of the response data.
- * @template D - The type of the data to be sent in the request body.
- * @param {string} url - The API endpoint to send data to.
- * @param {D} data - The data to be sent.
- * @returns {Promise<T>} - A promise that resolves to the created data.
- * @throws {Error} - If the response does not contain data.
+ * Creates data using POST request
  */
-export const creator = async <T, D>(url: string, data: D): Promise<T> => {
-  const res = await axiosInstance.post<T>(url, data);
-  if (!res.data) {
-    throw new Error("Failed to create data");
+export const creator = async <T, D> ( url: string, data: D ): Promise<T> => {
+  const res = await axiosInstance.post<T>( url, data, {
+    headers: getAuthHeaders(),
+  } );
+
+  if ( !res.data )
+  {
+    throw new Error( "Failed to create data" );
   }
   return res.data;
 };
 
 /**
- * Modifies data at the provided URL using a PUT request.
- *
- * @template T - The type of the response data.
- * @template D - The type of the data to be sent in the request body.
- * @param {string} url - The API endpoint to send data to.
- * @param {D} data - The data to be updated.
- * @returns {Promise<T>} - A promise that resolves to the updated data.
- * @throws {Error} - If the response does not contain data.
+ * Updates data using PATCH request
  */
-export const modifier = async <T, D>(url: string, data: D): Promise<T> => {
-  const res = await axiosInstance.patch<T>(url, data);
-  if (!res.data) {
-    throw new Error("Failed to modify data");
+export const modifier = async <T, D> ( url: string, data: D ): Promise<T> => {
+  const res = await axiosInstance.patch<T>( url, data, {
+    headers: getAuthHeaders(),
+  } );
+
+  if ( !res.data )
+  {
+    throw new Error( "Failed to modify data" );
   }
   return res.data;
 };
 
 /**
- * Deletes data from the provided URL using a DELETE request.
- *
- * @template T - The type of the response data.
- * @param {string} url - The API endpoint to delete data from.
- * @returns {Promise<T>} - A promise that resolves to the deleted data.
- * @throws {Error} - If the response does not contain data.
+ * Deletes data using DELETE request
  */
-export const deleter = async <T>(url: string): Promise<T> => {
-  const res = await axiosInstance.delete<T>(url);
-  if (!res.data) {
-    throw new Error("Failed to delete data");
+export const deleter = async <T> ( url: string ): Promise<T> => {
+  const res = await axiosInstance.delete<T>( url, {
+    headers: getAuthHeaders(),
+  } );
+
+  if ( !res.data )
+  {
+    throw new Error( "Failed to delete data" );
   }
   return res.data;
 };

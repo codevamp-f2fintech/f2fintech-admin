@@ -24,52 +24,54 @@ interface OriginalEstimateProps {
   userRole: string;
 }
 
-const OriginalEstimateField: React.FC<OriginalEstimateProps> = ({
+const OriginalEstimateField: React.FC<OriginalEstimateProps> = ( {
   ticketId,
   initialEstimate,
   userRole,
-}) => {
-  const isMobile = useMediaQuery("(max-width:600px)");
+} ) => {
+  const isMobile = useMediaQuery( "(max-width:600px)" );
   const dispatch: AppDispatch = useDispatch();
-  const { toast } = useSelector((state: RootState) => state.toast);
+  const { toast } = useSelector( ( state: RootState ) => state.toast );
   const { toastAndNavigate, decodedToken } = Utility();
 
-  const { modifyTicket } = useModifyTicket("update-ticket");
+  const { modifyTicket } = useModifyTicket( "update-ticket" );
   const { createTicketHistory } = useCreateTicketHistory(
     "create-ticket-history"
   );
 
-  const [originalEstimate, setOriginalEstimate] = useState(initialEstimate);
-  const [isEditing, setIsEditing] = useState(false);
+  const [ originalEstimate, setOriginalEstimate ] = useState( initialEstimate );
+  const [ isEditing, setIsEditing ] = useState( false );
   // The "in-progress" value:
-  const [tempEstimate, setTempEstimate] = useState(initialEstimate);
+  const [ tempEstimate, setTempEstimate ] = useState( initialEstimate );
 
-  useEffect(() => {
-    setOriginalEstimate(initialEstimate);
-    setTempEstimate(initialEstimate);
-  }, [initialEstimate]);
+  useEffect( () => {
+    setOriginalEstimate( initialEstimate );
+    setTempEstimate( initialEstimate );
+  }, [ initialEstimate ] );
 
   const handleEnterEdit = () => {
-    if (userRole === "admin") {
-      setIsEditing(true);
+    if ( userRole === "admin" )
+    {
+      setIsEditing( true );
     }
   };
 
   const handleSave = async () => {
-    try {
-      await modifyTicket(+ticketId, {
+    try
+    {
+      await modifyTicket( +ticketId, {
         original_estimate: tempEstimate,
-      });
+      } );
 
       const loggedInUser = decodedToken()?.username;
-      const historyMessage = `${loggedInUser} changed estimate from ${initialEstimate} to ${tempEstimate}`;
-      await createTicketHistory({
+      const historyMessage = `${ loggedInUser } changed estimate from ${ initialEstimate } to ${ tempEstimate }`;
+      await createTicketHistory( {
         ticket_id: ticketId,
         action: historyMessage,
-      });
+      } );
 
-      setOriginalEstimate(tempEstimate);
-      setIsEditing(false);
+      setOriginalEstimate( tempEstimate );
+      setIsEditing( false );
       toastAndNavigate(
         dispatch,
         true,
@@ -79,16 +81,17 @@ const OriginalEstimateField: React.FC<OriginalEstimateProps> = ({
         null,
         true
       );
-    } catch (error) {
-      toastAndNavigate(dispatch, true, "error", "Error Updating Estimate");
-      setTempEstimate(originalEstimate);
-      setIsEditing(false);
+    } catch ( error )
+    {
+      toastAndNavigate( dispatch, true, "error", "Error Updating Estimate" );
+      setTempEstimate( originalEstimate );
+      setIsEditing( false );
     }
   };
 
   const handleCancel = () => {
-    setTempEstimate(originalEstimate);
-    setIsEditing(false);
+    setTempEstimate( originalEstimate );
+    setIsEditing( false );
   };
 
   return (
@@ -163,7 +166,7 @@ const OriginalEstimateField: React.FC<OriginalEstimateProps> = ({
             value={tempEstimate}
             variant="outlined"
             size="small"
-            onChange={(e) => setTempEstimate(e.target.value)}
+            onChange={( e ) => setTempEstimate( e.target.value )}
             sx={{
               width: "9rem",
               "& .MuiOutlinedInput-root": {

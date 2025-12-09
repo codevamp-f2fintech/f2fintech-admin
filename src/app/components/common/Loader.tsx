@@ -13,27 +13,27 @@ const translateAnimation = keyframes`
 `;
 
 // Styled component for loader
-const LoaderContainer = styled(Box)({
+const LoaderContainer = styled( Box )( {
   width: "60px",
   height: "16px",
   display: "flex",
   justifyContent: "space-between",
-  animation: `${rotateAnimation} 2s infinite alternate`,
+  animation: `${ rotateAnimation } 2s infinite alternate`,
   "&::before, &::after": {
     content: '""',
     width: "16px",
     height: "16px",
     background: "#3FB8AF",
-    animation: `${translateAnimation} 1s infinite alternate`,
+    animation: `${ translateAnimation } 1s infinite alternate`,
   },
   "&::after": {
     background: "#FF3D7F",
     "--s": "-1",
   },
-});
+} );
 
 // Styled component for the background container
-const BackgroundContainer = styled(Box)({
+const BackgroundContainer = styled( Box )( {
   background: "transparent",
   height: "100vh",
   display: "flex",
@@ -45,7 +45,7 @@ const BackgroundContainer = styled(Box)({
   transform: "translateX(-50%)",
   width: "100%",
   zIndex: 9999,
-});
+} );
 
 const Loader: React.FC = () => {
   return (

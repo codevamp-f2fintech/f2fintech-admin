@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import PdfViewer from "@/app/components/common/PdfViewer";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import axios from "axios";
+import { axiosInstance } from "@/apis/config/axiosConfig";
 import { Utility } from "@/utils";
 
 const TicketDocuments = ( {
@@ -77,7 +77,7 @@ const TicketDocuments = ( {
     try
     {
       // First upload to S3
-      const uploadResponse = await axios.post(
+      const uploadResponse = await axiosInstance.post(
         `${ process.env.NEXT_PUBLIC_WEB_URL }/upload-to-s3`,
         formData,
         {
@@ -91,7 +91,7 @@ const TicketDocuments = ( {
       if ( attachmentUrl )
       {
         // Then create document record in database
-        await axios.post( `${ process.env.NEXT_PUBLIC_WEB_URL }/create-document`, {
+        await axiosInstance.post( `${ process.env.NEXT_PUBLIC_WEB_URL }/create-document`, {
           document_url: attachmentUrl,
           customer_id: customerId,
           type: "general document", // You can change this type as needed
@@ -253,7 +253,7 @@ const TicketDocuments = ( {
                     variant="body1"
                     sx={{ color: "black", flexGrow: 1, fontSize: isIpad ? "1.4rem" : "0.85rem" }}
                   >
-                    {capitalizeFirstLetter(doc.type)}
+                    {capitalizeFirstLetter( doc.type )}
                   </Typography>
                   <Button
                     onClick={() => {
@@ -265,7 +265,7 @@ const TicketDocuments = ( {
                     variant="contained"
                     sx={{
                       textTransform: "none",
-                      fontSize:isMobile?".5rem": "0.85rem",
+                      fontSize: isMobile ? ".5rem" : "0.85rem",
                       bgcolor: "#f06292",
                       color: "white",
                       width: isTab ? "10vw" : isMobile ? "10vw" : "7vw",

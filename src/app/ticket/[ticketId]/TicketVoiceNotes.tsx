@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import axios from "axios";
+import { axiosInstance } from "@/apis/config/axiosConfig";
 import {
   Box,
   Grid,
@@ -110,7 +110,7 @@ const TicketVoiceNotes = ( { isMobile, isTab, isIpad, ticketDetailData } ) => {
       formData.append( "document", file );
       formData.append( "folder", `voice-note/${ file.name }` );
 
-      const uploadResponse = await axios.post(
+      const uploadResponse = await axiosInstance.post(
         `${ process.env.NEXT_PUBLIC_WEB_URL }/upload-to-s3`,
         formData,
         {
@@ -386,7 +386,7 @@ const TicketVoiceNotes = ( { isMobile, isTab, isIpad, ticketDetailData } ) => {
               </Button>
               <Typography
                 variant="caption"
-                sx={{ display: "block", mt: 1, opacity: 0.8, fontSize:isMobile?".6rem": isIpad ? "1rem" : "" }}
+                sx={{ display: "block", mt: 1, opacity: 0.8, fontSize: isMobile ? ".6rem" : isIpad ? "1rem" : "" }}
               >
                 Select multiple audio files (Max 20MB each)
               </Typography>

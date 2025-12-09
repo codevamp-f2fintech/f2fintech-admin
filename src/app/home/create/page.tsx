@@ -17,7 +17,7 @@ import Step4Form from "./Step4Form";
 import Step7Form from "./Step7Form";
 
 import { Utility } from "@/utils";
-import axios from "axios";
+import { axiosInstance } from "@/apis/config/axiosConfig";
 
 interface StepForm {
   label: string;
@@ -113,7 +113,7 @@ const MultiStepForm: React.FC = () => {
       {
         try
         {
-          const { data: response } = await axios.get(
+          const { data: response } = await axiosInstance.get(
             `${ process.env.NEXT_PUBLIC_WEB_URL }/customer-info/${ storedCustomerId }` );
           if ( response.status === "Success" )
           {

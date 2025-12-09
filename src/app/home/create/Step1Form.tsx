@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client';
 
-import axios from "axios";
+import { axiosInstance } from "@/apis/config/axiosConfig";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Link from "next/link";
@@ -39,6 +39,7 @@ import EmailIcon from "@mui/icons-material/Email";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { getCompanyId } from "@/utils/cookies";
 
 import step1ValidationSchema from "./step1ValidationSchema";
 import { Utility } from "@/utils";
@@ -326,12 +327,12 @@ const Step1Form: React.FC<Step1FormProps> = ( {
       {
         try
         {
-          const { data: response } = await axios.get(
+          const { data: response } = await axiosInstance.get(
             `${ process.env.NEXT_PUBLIC_WEB_URL }/get-application-by-id/${ storedCustomerId }` );
           if ( response.status === "Success" )
           {
-            setApplicationNumber( response.data.application_no );
-            const { data: resp } = await axios.get(
+            setApplicationNumber?.( response.data.application_no );
+            const { data: resp } = await axiosInstance.get(
               `${ process.env.NEXT_PUBLIC_WEB_URL }/get-loan-tracking-by-id/${ response.data.id }` );
             if ( resp.status === "Success" )
             {
@@ -355,9 +356,17 @@ const Step1Form: React.FC<Step1FormProps> = ( {
       name: `${ customer.title } ${ customer.name }`.trim() // Combine title and name
     };
 
-    const { data: res } = await axios.post(
+    const companyId = getCompanyId();
+
+    const headers: { [ key: string ]: string } = {};
+    if ( companyId )
+    {
+      headers.company_id = companyId; // Add companyId to headers
+    }
+
+    const { data: res } = await axiosInstance.post(
       `${ process.env.NEXT_PUBLIC_WEB_URL }/create-customer`,
-      customerData
+      customerData,
     );
 
     if ( res.status !== "Success" )
@@ -369,7 +378,9 @@ const Step1Form: React.FC<Step1FormProps> = ( {
 
   // Function to create customer info
   async function createCustomerInfo ( customerId, restValues ) {
-    await axios.post(
+    const companyId = getCompanyId();
+    const headers = companyId ? { companyid: companyId } : {};
+    await axiosInstance.post(
       `${ process.env.NEXT_PUBLIC_WEB_URL }/create-customer-info`,
       {
         customer_id: customerId,
@@ -385,10 +396,12 @@ const Step1Form: React.FC<Step1FormProps> = ( {
     tenure,
     provider,
     loanType,
-    loanCategory
+    loanCategory,
   ) {
+    const companyId = getCompanyId();
+    const headers = companyId ? { companyid: companyId } : {};
     const { data: applicationResponse } =
-      await axios.post(
+      await axiosInstance.post(
         `${ process.env.NEXT_PUBLIC_WEB_URL }/create-application`,
         {
           customer_id: customerId,
@@ -399,24 +412,26 @@ const Step1Form: React.FC<Step1FormProps> = ( {
           provider,
           loan_type: loanType,
           loan_category: loanCategory,
+          // company_id: companyId,
         } )
     return applicationResponse.data.applicationId;
   }
 
   // Function to create loan tracking
-  async function createLoanTracking ( applicationId ) {
-    await axios.post(
+  async function createLoanTracking ( applicationId, companyId ) {
+    await axiosInstance.post(
       `${ process.env.NEXT_PUBLIC_WEB_URL }/create-loan-tracking`,
       {
         customer_application_id: applicationId,
         status: "submitted",
+        company_id: companyId,
       } )
   }
 
   const setCustomerData = async ( customerInfo ) => {
     setGetStarted( false );
     setLocalStorage( "customerInfo", customerInfo );
-    location.reload();
+    // location.reload();
   }
 
   // Create new customer with loan application
@@ -436,6 +451,11 @@ const Step1Form: React.FC<Step1FormProps> = ( {
 
       try
       {
+        const companyId = getCompanyId();
+        if ( !companyId )
+        {
+          throw new Error( 'Company ID is required' );
+        }
         const customerId = storedCustomerId || ( await registerCustomer( customer ) );
         await createCustomerInfo( customerId, restValues );
 
@@ -450,7 +470,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
             tenure,
             providerName,
             loanType,
-            loanCategory
+            loanCategory,
           );
           await createLoanTracking( applicationId );
           return applicationNumberGenerated;

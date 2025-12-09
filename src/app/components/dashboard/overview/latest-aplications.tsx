@@ -39,34 +39,36 @@ export interface LatestApplicationsProps {
   sx?: SxProps;
 }
 
-export function LatestApplications({
+export function LatestApplications ( {
   sx,
-}: LatestApplicationsProps): React.JSX.Element {
-  const [paginationLoading, setPaginationLoading] = useState<boolean>(false);
-  const [applications, setApplications] = useState<
+}: LatestApplicationsProps ): React.JSX.Element {
+  const [ paginationLoading, setPaginationLoading ] = useState<boolean>( false );
+  const [ applications, setApplications ] = useState<
     CustomerApplicationData | []
-  >([]);
+  >( [] );
   const router = useRouter();
-  const isMobile = useMediaQuery("(max-width:600px)");
-  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const isMobile = useMediaQuery( "(max-width:600px)" );
+  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
 
   const {
     value: data,
     error: getApplicationsError,
     swrLoading,
-  } = useGetCustomerApplications(`get-customer-loan-applications`, 1, 6);
+  } = useGetCustomerApplications( `get-customer-loan-applications`, 1, 6 );
 
   // Handle API response
-  useEffect(() => {
-    if (data?.results.length > 0) {
-      setApplications(data?.results);
-    } else {
-      setApplications([]);
+  useEffect( () => {
+    if ( data?.results.length > 0 )
+    {
+      setApplications( data?.results );
+    } else
+    {
+      setApplications( [] );
     }
-  }, [data?.results, getApplicationsError]);
+  }, [ data?.results, getApplicationsError ] );
 
   const handleViewAllClick = () => {
-    router.push("/");
+    router.push( "/" );
   };
 
   return (
@@ -126,10 +128,10 @@ export function LatestApplications({
                 applications?.length <= 1
                   ? "fit-content"
                   : {
-                      xs: "60vh",
-                      sm: "34.5vh",
-                      md: "103vh",
-                    },
+                    xs: "60vh",
+                    sm: "34.5vh",
+                    md: "103vh",
+                  },
               width: "100%",
             }}
           >
@@ -173,7 +175,7 @@ export function LatestApplications({
                 </TableRow>
               ) : (
                 applications.map(
-                  (application: CustomerApplicationData, index: number) => (
+                  ( application: CustomerApplicationData, index: number ) => (
                     <TableRow
                       key={application.applicationId}
                       sx={{
@@ -244,7 +246,7 @@ export function LatestApplications({
                           fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" },
                         }}
                       >
-                        {dayjs(application.applicationDate).format(
+                        {dayjs( application.applicationDate ).format(
                           "MMM D, YYYY"
                         )}
                       </TableCell>

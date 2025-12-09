@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import axios from "axios";
+import { axiosInstance } from "@/apis/config/axiosConfig";
 import {
   Container,
   Box,
@@ -175,31 +175,32 @@ const Progress: React.FC = () => {
   } );
 
   // Format amount for display (removes unnecessary decimals)
-const formatDisplayAmount = (amount: string): string => {
-  if (!amount) return "";
-  
-  const numAmount = parseFloat(amount);
-  if (isNaN(numAmount)) return amount;
-  
-  // If it's a whole number, return without decimals
-  if (numAmount % 1 === 0) {
-    return numAmount.toString();
-  }
-  
-  // Otherwise return with 2 decimal places
-  return numAmount.toFixed(2);
-};
+  const formatDisplayAmount = ( amount: string ): string => {
+    if ( !amount ) return "";
 
-// Format amount for storage (ensures proper number format)
-const formatDecimalAmount = (amount: string): string => {
-  if (!amount) return "";
-  
-  const numAmount = parseFloat(amount);
-  if (isNaN(numAmount)) return "";
-  
-  // Always return as number, letting toFixed handle the formatting
-  return numAmount.toString();
-};
+    const numAmount = parseFloat( amount );
+    if ( isNaN( numAmount ) ) return amount;
+
+    // If it's a whole number, return without decimals
+    if ( numAmount % 1 === 0 )
+    {
+      return numAmount.toString();
+    }
+
+    // Otherwise return with 2 decimal places
+    return numAmount.toFixed( 2 );
+  };
+
+  // Format amount for storage (ensures proper number format)
+  const formatDecimalAmount = ( amount: string ): string => {
+    if ( !amount ) return "";
+
+    const numAmount = parseFloat( amount );
+    if ( isNaN( numAmount ) ) return "";
+
+    // Always return as number, letting toFixed handle the formatting
+    return numAmount.toString();
+  };
 
   const [ approvedAmount, setApprovedAmount ] = useState( () => {
     return ticketDetailData?.approved_amount
@@ -259,7 +260,6 @@ const formatDecimalAmount = (amount: string): string => {
     }
   }, [ isVisible, hasFetched ] );
 
-  // Updated useEffect for fetching ticket details
   // Updated useEffect for fetching ticket details
   useEffect( () => {
     if ( ticketId )
@@ -586,7 +586,7 @@ const formatDecimalAmount = (amount: string): string => {
 
     try
     {
-      await axios.patch(
+      await axiosInstance.patch(
         `${ process.env.NEXT_PUBLIC_WEB_URL }/update-loan-tracking`,
         {
           customer_application_id: ticketDetailData?.applicationId,
@@ -862,7 +862,7 @@ const formatDecimalAmount = (amount: string): string => {
                   borderRadius: { xs: 2, sm: 3 },
                   position: { xs: 'static', lg: 'Fixed' },
                   top: { lg: "7.5rem" },
-                  pb: { xs: "5vh", sm: "5vh", md: "5vh",lg:"10vh" },
+                  pb: { xs: "5vh", sm: "5vh", md: "5vh", lg: "10vh" },
                   height: {
                     xs: "70vh",
                     sm: "62vh",
@@ -934,7 +934,7 @@ const formatDecimalAmount = (amount: string): string => {
                   </Button>
                 </Box>
 
-               
+
 
                 {/* User Autocomplete */}
                 {newEmployeeStatus === "forwarded" && (
@@ -1511,7 +1511,6 @@ const formatDecimalAmount = (amount: string): string => {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {capitalizeFirstLetter( decodedToken()?.username )}
                       {capitalizeFirstLetter( decodedToken()?.username )}
                     </Typography>
                     <Avatar

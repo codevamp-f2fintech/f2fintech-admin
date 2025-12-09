@@ -27,32 +27,35 @@ import { AiLeadsAPI } from "../../apis/AiLeadsAPI";
 import { RootState } from "@/redux/store";
 
 const AiLeadsPage: React.FC = () => {
-  const [aiLeads, setAiLeads] = useState<any[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [ aiLeads, setAiLeads ] = useState<any[]>( [] );
+  const [ loading, setLoading ] = useState<boolean>( false );
 
-  const { toast } = useSelector((state: RootState) => state.toast);
+  const { toast } = useSelector( ( state: RootState ) => state.toast );
   const dispatch = useDispatch();
   const { capitalizeFirstLetter, toastAndNavigate } = Utility();
 
   // ✅ Fetch AI Leads
-  const getLeadsByAI = useCallback(async () => {
-    try {
-      setLoading(true);
+  const getLeadsByAI = useCallback( async () => {
+    try
+    {
+      setLoading( true );
       const response = await AiLeadsAPI.getAll();
-      setAiLeads(response.data?.data || []); // Adjust for ResponseFormatter
-    } catch (err: any) {
+      setAiLeads( response.data?.data || [] ); // Adjust for ResponseFormatter
+    } catch ( err: any )
+    {
       const errorMessage =
         err?.response?.data?.message ||
         "Error fetching AI leads. Please try again.";
-      toastAndNavigate(dispatch, true, "error", errorMessage);
-    } finally {
-      setLoading(false);
+      toastAndNavigate( dispatch, true, "error", errorMessage );
+    } finally
+    {
+      setLoading( false );
     }
-  }, []);
+  }, [] );
 
-  useEffect(() => {
+  useEffect( () => {
     getLeadsByAI();
-  }, []);
+  }, [] );
 
   return (
     <Container sx={{ py: 1 }}>
@@ -95,7 +98,7 @@ const AiLeadsPage: React.FC = () => {
         </Box>
       ) : (
         <Grid container spacing={3}>
-          {aiLeads.map((lead) => (
+          {aiLeads.map( ( lead ) => (
             <Grid item xs={12} sm={6} md={4} key={lead.id}>
               <Fade in timeout={600}>
                 <Card
@@ -132,7 +135,7 @@ const AiLeadsPage: React.FC = () => {
                           fontWeight: 600,
                         }}
                       >
-                        {lead.name?.charAt(0)?.toUpperCase()}
+                        {lead.name?.charAt( 0 )?.toUpperCase()}
                       </Avatar>
                       <Box>
                         <Typography
@@ -142,7 +145,7 @@ const AiLeadsPage: React.FC = () => {
                             color: "#1a1a1a",
                           }}
                         >
-                          {capitalizeFirstLetter(lead.name)}
+                          {capitalizeFirstLetter( lead.name )}
                         </Typography>
                         <Typography
                           sx={{
@@ -175,7 +178,7 @@ const AiLeadsPage: React.FC = () => {
                         }}
                       >
                         {lead.loan_type
-                          ? capitalizeFirstLetter(lead.loan_type)
+                          ? capitalizeFirstLetter( lead.loan_type )
                           : "N/A"}
                       </Typography>
                     </Box>
@@ -194,7 +197,7 @@ const AiLeadsPage: React.FC = () => {
                       />
                       <Typography sx={{ fontSize: "0.85rem", color: "#5f6c7b" }}>
                         {lead.application_date
-                          ? new Date(lead.application_date).toLocaleDateString()
+                          ? new Date( lead.application_date ).toLocaleDateString()
                           : "Date not available"}
                       </Typography>
                     </Box>
@@ -214,7 +217,7 @@ const AiLeadsPage: React.FC = () => {
                 </Card>
               </Fade>
             </Grid>
-          ))}
+          ) )}
         </Grid>
       )}
 

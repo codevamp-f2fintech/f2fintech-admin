@@ -8,34 +8,49 @@ import router from "next/router";
 
 // Adjust the path according to your project structure
 
-export async function middleware(request: NextRequest) {
+export async function middleware ( request: NextRequest ) {
   const cookieStore = cookies();
-  const token = cookieStore.get("token")?.value;
+  const token = cookieStore.get( "token" )?.value;
   const unauthorised = () => {
-    router.push("/unauthorised"); // Redirect to home page
+    router.push( "/unauthorised" ); // Redirect to home page
   };
 
   // Redirect to the login page if not authenticated
   // localhost:3002/img/f2Fintechlogo.png
-  const publicPaths = ["/login", "/img/f2Fintechlogo.png"];
+  const publicPaths = [ "/login", "/img/f2Fintechlogo.png" ];
 
   // Check if the request path is a public path
-  const isPublicPath = publicPaths.includes(request.nextUrl.pathname);
+  const isPublicPath = publicPaths.includes( request.nextUrl.pathname );
 
   // Check if the user is authenticated
-  if (!isPublicPath) {
-    if (token) {
-      try {
+  if ( !isPublicPath )
+  {
+    if ( token )
+    {
+      try
+      {
         // Decode token to get the role
         const jwtSecret = new TextEncoder().encode(
           process.env.JWT_SECRET || ""
         );
-        const { payload } = await jwtVerify(token, jwtSecret);
+        const { payload } = await jwtVerify( token, jwtSecret );
         const role = payload.role;
 
+        // SUPERADMIN can only access company and users pages
+        if ( role === "super admin" )
+        {
+          if ( !request.nextUrl.pathname.startsWith( "/company" ) &&
+            !request.nextUrl.pathname.startsWith( "/user" ) &&
+            request.nextUrl.pathname !== "/" )
+          {
+            return NextResponse.redirect( new URL( "/company", request.url ) );
+          }
+        }
+
         // Check if the user is trying to access /loan-provider
-        if (request.nextUrl.pathname === "/loan-provider" && role !== "admin") {
-          return NextResponse.redirect(new URL("/unauthorised", request.url));
+        if ( request.nextUrl.pathname === "/loan-provider" && role !== "admin" )
+        {
+          return NextResponse.redirect( new URL( "/unauthorised", request.url ) );
         }
 
         // Check if the user is trying to access /tickets-archive
@@ -54,25 +69,29 @@ export async function middleware(request: NextRequest) {
         }
 
         // Check if the route is restricted for operations and credit
-        if ((role === "operations" || role === "sub admin") && request.nextUrl.pathname.startsWith("/user")) {
+        if ( ( role === "operations" || role === "sub admin" ) && request.nextUrl.pathname.startsWith( "/user" ) )
+        {
           // Redirect operations and credit trying to access /user or its subroutes
-          return NextResponse.redirect(new URL("/unauthorised", request.url));
+          return NextResponse.redirect( new URL( "/unauthorised", request.url ) );
         }
 
         // Check if role is admin or operations and credit
-        if (role !== "admin" && role !== "operations" && role !== "credit" && role !== "sales" && role !== "sub admin") {
-          return NextResponse.redirect(new URL("/unauthorised", request.url));
+        if ( role !== "admin" && role !== "operations" && role !== "credit" && role !== "sales" && role !== "sub admin" && role !== "super admin" )
+        {
+          return NextResponse.redirect( new URL( "/unauthorised", request.url ) );
         }
         // if (role === "sales" && !request.nextUrl.pathname.startsWith("/home") && !request.nextUrl.pathname.startsWith("/ticket")) {
         //   return NextResponse.redirect(new URL("/home", request.url));
         // }
-      } catch (error) {
-        return NextResponse.redirect(new URL("/login", request.url));
+      } catch ( error )
+      {
+        return NextResponse.redirect( new URL( "/login", request.url ) );
       }
-    } else {
-      console.log("redirect to login");
+    } else
+    {
+      console.log( "redirect to login" );
       // Redirect to login if no token is present
-      return NextResponse.redirect(new URL("/login", request.url));
+      return NextResponse.redirect( new URL( "/login", request.url ) );
     }
   }
   // Allow the request to proceed if authenticated

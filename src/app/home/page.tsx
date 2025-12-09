@@ -34,6 +34,7 @@ import { ClearRounded, SearchRounded } from "@mui/icons-material";
 import GridViewIcon from "@mui/icons-material/GridView";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import TableViewIcon from "@mui/icons-material/TableView";
+import { axiosInstance } from "../../apis/config/axiosConfig";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -59,11 +60,14 @@ const Home: React.FC = () => {
   const { debounceScroll, decodedToken, remLocalStorage } = Utility();
   const isMobile = useMediaQuery( "(max-width:600px)" );
   const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
-  const salesUserId =
-    decodedToken()?.role === "sales" ? decodedToken()?.id : null;
 
-  const userRole = decodedToken()?.role;
+  // Get user info from token
+  const userInfo = decodedToken();
+  const salesUserId = userInfo?.role === "sales" ? userInfo?.id : null;
+  const userRole = userInfo?.role;
+  const userCompanyId = userInfo?.company_id || userInfo?.companyId; // Support both naming conventions
   const isAdmin = userRole === "admin";
+  const isSuperAdmin = userRole === "super admin";
 
   // Debounce search term
   useEffect( () => {
@@ -144,12 +148,33 @@ const Home: React.FC = () => {
     };
   }, [ dispatch ] );
 
-  // Remove client-side filtering since we're doing it on the backend now
+  // Filter applications by company ID - Only show applications with same company_id as logged-in user
   const filteredCustomers = useMemo( () => {
-    return customerApplication?.results || [];
-  }, [ customerApplication ] );
+    const allApplications = customerApplication?.results || [];
 
-  // Delete application function
+    // If user is admin or super admin, show all applications
+    if ( userRole === "admin" || userRole === "super admin" )
+    {
+      return allApplications;
+    }
+
+    // For other roles, filter by company_id (support both snake_case and camelCase)
+    return allApplications.filter( application =>
+      ( ( application as any ).company_id === userCompanyId ) ||
+      ( application.companyId === userCompanyId )
+    );
+  }, [ customerApplication, userRole, userCompanyId ] );
+
+  // Update the count display to show filtered count
+  const displayCount = useMemo( () => {
+    if ( userRole === "admin" || userRole === "super admin" )
+    {
+      return customerApplication?.count || 0;
+    }
+    return filteredCustomers.length;
+  }, [ customerApplication?.count, filteredCustomers.length, userRole ] );
+
+  // Delete application function using axios
   const handleDeleteApplication = async (
     applicationId: string,
     customerName: string,
@@ -158,23 +183,7 @@ const Home: React.FC = () => {
     setIsDeleting( true );
     try
     {
-      const token = localStorage.getItem( "token" );
-      const response = await fetch(
-        `${ process.env.NEXT_PUBLIC_API_URL }/delete-loan-application/${ applicationId }`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${ token }`,
-          },
-        }
-      );
-
-      if ( !response.ok )
-      {
-        const errorData = await response.json();
-        throw new Error( errorData.message || "Failed to delete application" );
-      }
+      await axiosInstance.delete( `/delete-loan-application/${ applicationId }` );
 
       setDeleteDialog( { open: false, applicationId: null, customerName: "" } );
       window.location.reload();
@@ -189,7 +198,7 @@ const Home: React.FC = () => {
   };
 
   const openDeleteDialog = ( applicationId: string, customerName: string ) => {
-    if ( !isAdmin )
+    if ( !isAdmin && !isSuperAdmin )
     {
       console.warn( "Only admin users can delete applications" );
       return;
@@ -243,7 +252,7 @@ const Home: React.FC = () => {
               whiteSpace: "nowrap",
             }}
           >
-            Fresh Applications: {customerApplication?.count || 0}
+            Fresh Applications: {displayCount}
           </Typography>
           {/* Search field for mobile */}
           <Box
@@ -364,8 +373,7 @@ const Home: React.FC = () => {
                 }}
                 variant="contained"
               >
-                {decodedToken()?.role === "admin" ||
-                  decodedToken()?.role === "sales"
+                {userRole === "admin" || userRole === "sales" || userRole === "super admin"
                   ? "Show Tickets"
                   : "Show My Tickets"}
               </Button>
@@ -431,7 +439,7 @@ const Home: React.FC = () => {
               </Tooltip>
             </Box>
 
-            {decodedToken()?.role === "sales" && (
+            {userRole === "sales" && (
               <Link href="/home/create" passHref>
                 <Button
                   sx={{
@@ -516,7 +524,6 @@ const Home: React.FC = () => {
                     sm: "90vw",
                     lg: "100vw",
                   },
-                  // px: 1,
                 }}
               >
                 <Table
@@ -583,9 +590,6 @@ const Home: React.FC = () => {
                           E-mail
                         </TableCell>
                       )}
-                      {/* {userRole !== "sales" && (
-                        <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Contact no</TableCell>
-                      )} */}
                       <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Amount</TableCell>
                       <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Provider</TableCell>
                       <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Loan Category</TableCell>
@@ -617,7 +621,7 @@ const Home: React.FC = () => {
                         customerApplication={customerApplication}
                         mainIndex={index + 1}
                         refetch={refetch}
-                        showDeleteButton={isAdmin}
+                        showDeleteButton={isAdmin || isSuperAdmin}
                         onDelete={openDeleteDialog}
                         isApplication={true}
                         handleDeleteApplication={handleDeleteApplication}
@@ -637,7 +641,7 @@ const Home: React.FC = () => {
                     customerApplication={customerApplication}
                     mainIndex={index + 1}
                     refetch={refetch}
-                    showDeleteButton={isAdmin}
+                    showDeleteButton={isAdmin || isSuperAdmin}
                     onDelete={openDeleteDialog}
                     isApplication={true}
                     handleDeleteApplication={handleDeleteApplication}

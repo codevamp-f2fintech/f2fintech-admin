@@ -20,17 +20,17 @@ import { ArrowBackRounded, EditRounded } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Utility } from "@/utils";
-import axios from "axios";
+import { axiosInstance } from "@/apis/config/axiosConfig";
 import Toast from "../../components/common/Toast";
 import { AppDispatch, RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import { useCreateTicketHistory } from "@/hooks/tickethistory";
 import { useGetLoanProviders } from "@/hooks/loanProvider";
 
-const TicketDetail = ({ ticketDetailData, isTab }) => {
+const TicketDetail = ( { ticketDetailData, isTab } ) => {
   const router = useRouter();
   const dispatch: AppDispatch = useDispatch();
-  const { toast } = useSelector((state: RootState) => state.toast);
+  const { toast } = useSelector( ( state: RootState ) => state.toast );
   const {
     capitalizeFirstLetter,
     formatTenure,
@@ -40,21 +40,21 @@ const TicketDetail = ({ ticketDetailData, isTab }) => {
     toastAndNavigate,
   } = Utility();
 
-  const [openEditModal, setOpenEditModal] = useState(false);
-  const [editedTicketData, setEditedTicketData] = useState(ticketDetailData);
+  const [ openEditModal, setOpenEditModal ] = useState( false );
+  const [ editedTicketData, setEditedTicketData ] = useState( ticketDetailData );
   const { createTicketHistory } = useCreateTicketHistory(
     "create-ticket-history"
   );
   const muiTheme = useTheme();
   const userRole = decodedToken()?.role;
-    const isMobile = useMediaQuery( muiTheme.breakpoints.down( 'sm' ) );
-    const isTablet = useMediaQuery( muiTheme.breakpoints.between( 'sm', 'md' ) );
-    const isIpad = useMediaQuery( muiTheme.breakpoints.between( 'md', 'lg' ) );
-    const isDesktop = useMediaQuery( muiTheme.breakpoints.up( 'lg' ) );
+  const isMobile = useMediaQuery( muiTheme.breakpoints.down( 'sm' ) );
+  const isTablet = useMediaQuery( muiTheme.breakpoints.between( 'sm', 'md' ) );
+  const isIpad = useMediaQuery( muiTheme.breakpoints.between( 'md', 'lg' ) );
+  const isDesktop = useMediaQuery( muiTheme.breakpoints.up( 'lg' ) );
 
-    // Fetch loan providers
-    const { value: providersData, swrLoading: providersLoading } =
-      useGetLoanProviders( null, "get-all-loan-providers", 1, 100 );
+  // Fetch loan providers
+  const { value: providersData, swrLoading: providersLoading } =
+    useGetLoanProviders( null, "get-all-loan-providers", 1, 100 );
 
   const PROVIDER_OPTIONS = providersLoading
     ? []
@@ -62,86 +62,91 @@ const TicketDetail = ({ ticketDetailData, isTab }) => {
 
 
   // Update editedTicketData when ticketDetailData changes
-  useEffect(() => {
-    if (ticketDetailData) {
-      console.log("details", ticketDetailData);
-      setEditedTicketData(ticketDetailData);
+  useEffect( () => {
+    if ( ticketDetailData )
+    {
+      setEditedTicketData( ticketDetailData );
     }
-  }, [ticketDetailData]);
+  }, [ ticketDetailData ] );
 
   const handleOpenEditModal = () => {
-    setOpenEditModal(true);
+    setOpenEditModal( true );
   };
 
   const handleCloseEditModal = () => {
-    setOpenEditModal(false);
+    setOpenEditModal( false );
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = ( e ) => {
     const { name, value } = e.target;
-    const updatedTicketData = { ...editedTicketData, [name]: value };
-    setEditedTicketData(updatedTicketData);
-    console.log("updatedTicketData", updatedTicketData);
+    const updatedTicketData = { ...editedTicketData, [ name ]: value };
+    setEditedTicketData( updatedTicketData );
   };
   // A helper function to compare the original and edited ticket details
-  const getChangedFields = (original, edited) => {
+  const getChangedFields = ( original, edited ) => {
     const changes: string[] = [];
-    Object.keys(original).forEach((key) => {
-      if (original[key] !== edited[key]) {
+    Object.keys( original ).forEach( ( key ) => {
+      if ( original[ key ] !== edited[ key ] )
+      {
         changes.push(
-          `${key} changed from "${original[key]}" to "${edited[key]}"`
+          `${ key } changed from "${ original[ key ] }" to "${ edited[ key ] }"`
         );
       }
-    });
+    } );
     return changes;
   };
 
   const handleSaveEdit = async () => {
-    try {
+    try
+    {
       // Call the update API on Save
-      const { data: response } = await axios.patch(
-        `${process.env.NEXT_PUBLIC_API_URL}/update-loan-application/${editedTicketData?.applicationId}`,
+      const { data: response } = await axiosInstance.patch(
+        `${ process.env.NEXT_PUBLIC_API_URL }/update-loan-application/${ editedTicketData?.applicationId }`,
         editedTicketData
       );
-      if (response?.statusCode === 200) {
+      if ( response?.statusCode === 200 )
+      {
         const loggedInUser = decodedToken()?.username;
-        const changes = getChangedFields(ticketDetailData, editedTicketData);
+        const changes = getChangedFields( ticketDetailData, editedTicketData );
 
-        const formattedChanges = changes.map((change) => {
-          const [key, rest] = change.split(" changed from ");
-          return `${key} changed from ${rest}`;
-        });
+        const formattedChanges = changes.map( ( change ) => {
+          const [ key, rest ] = change.split( " changed from " );
+          return `${ key } changed from ${ rest }`;
+        } );
 
         const historyMessage =
           changes.length > 0
-            ? `${loggedInUser} edited the following Ticket Details:
-               ${formattedChanges}`
-            : `${loggedInUser} did not change any details.`;
+            ? `${ loggedInUser } edited the following Ticket Details:
+               ${ formattedChanges }`
+            : `${ loggedInUser } did not change any details.`;
 
-        const createdHistory = await createTicketHistory({
+        const createdHistory = await createTicketHistory( {
           ticket_id: ticketDetailData?.ticketId,
           action: historyMessage,
-        });
-        if (createdHistory?.statusCode === 200) {
+        } );
+        if ( createdHistory?.statusCode === 200 )
+        {
           toastAndNavigate(
             dispatch,
             true,
             "info",
             "Ticket Details Edited Successfully"
           );
-          setOpenEditModal(false);
-        } else {
-          setOpenEditModal(false);
+          setOpenEditModal( false );
+        } else
+        {
+          setOpenEditModal( false );
         }
-      } else {
-        setOpenEditModal(false);
+      } else
+      {
+        setOpenEditModal( false );
       }
-    } catch (error) {
-      console.error("Error saving the ticket:", error);
-      setOpenEditModal(false);
+    } catch ( error )
+    {
+      console.error( "Error saving the ticket:", error );
+      setOpenEditModal( false );
     }
   };
-  console.log( "editedTicketData<<<<><<><>><>", editedTicketData )
   return (
     <>
       <Box
@@ -185,11 +190,11 @@ const TicketDetail = ({ ticketDetailData, isTab }) => {
             sx={{
               color: "black",
               textDecoration: "none",
-              fontSize:isMobile?"1rem":isIpad?"2.5rem": "1.5rem",
+              fontSize: isMobile ? "1rem" : isIpad ? "2.5rem" : "1.5rem",
               fontFamily: "monospace",
               fontStyle: "revert-layer",
               fontWeight: "bold",
-              
+
             }}
           >
             Ticket ID: F2FIN-{ticketDetailData?.ticketId}
@@ -225,7 +230,7 @@ const TicketDetail = ({ ticketDetailData, isTab }) => {
               <Typography
                 sx={{
                   color: "#172B4D",
-                  fontSize: isIpad?"1.4rem":"1rem",
+                  fontSize: isIpad ? "1.4rem" : "1rem",
                   mb: 1,
                   fontFamily: "",
                 }}
@@ -235,11 +240,11 @@ const TicketDetail = ({ ticketDetailData, isTab }) => {
                   component="span"
                   sx={{
                     color: "#5E6C84",
-                    fontSize:isIpad?"1.4rem": ".9rem",
+                    fontSize: isIpad ? "1.4rem" : ".9rem",
                     fontWeight: 500,
                   }}
                 >
-                  {capitalizeFirstLetter(editedTicketData?.customerName)}
+                  {capitalizeFirstLetter( editedTicketData?.customerName )}
                 </Box>
               </Typography>
               <Typography
@@ -304,7 +309,7 @@ const TicketDetail = ({ ticketDetailData, isTab }) => {
                     fontWeight: 500,
                   }}
                 >
-                  {capitalizeFirstLetter(editedTicketData?.customerDesignation)}
+                  {capitalizeFirstLetter( editedTicketData?.customerDesignation )}
                 </Box>
               </Typography>
             </Grid>
@@ -326,7 +331,7 @@ const TicketDetail = ({ ticketDetailData, isTab }) => {
                     fontWeight: 500,
                   }}
                 >
-                  {capitalizeFirstLetter(editedTicketData?.customerLocation)}
+                  {capitalizeFirstLetter( editedTicketData?.customerLocation )}
                 </Box>
               </Typography>
               <Typography
@@ -346,7 +351,7 @@ const TicketDetail = ({ ticketDetailData, isTab }) => {
                     fontWeight: 500,
                   }}
                 >
-                  {formatTenure(editedTicketData?.applicationTenure)}
+                  {formatTenure( editedTicketData?.applicationTenure )}
                 </Box>
               </Typography>
             </Grid>
@@ -368,7 +373,7 @@ const TicketDetail = ({ ticketDetailData, isTab }) => {
                     fontWeight: 500,
                   }}
                 >
-                  {formatAmount(editedTicketData?.applicationAmount)}{" "}
+                  {formatAmount( editedTicketData?.applicationAmount )}{" "}
                 </Box>
               </Typography>
               <Typography
@@ -388,7 +393,7 @@ const TicketDetail = ({ ticketDetailData, isTab }) => {
                     fontWeight: 500,
                   }}
                 >
-                  {formatDate(editedTicketData?.applicationDate)}
+                  {formatDate( editedTicketData?.applicationDate )}
                 </Box>
               </Typography>
             </Grid>
@@ -410,12 +415,12 @@ const TicketDetail = ({ ticketDetailData, isTab }) => {
                     fontWeight: 500,
                   }}
                 >
-                  {capitalizeFirstLetter(editedTicketData?.provider) ||
+                  {capitalizeFirstLetter( editedTicketData?.provider ) ||
                     "No provider available"}{" "}
                 </Box>
               </Typography>
             </Grid>
-              <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={6}>
               <Typography
                 sx={{
                   color: "#172B4D",
@@ -486,7 +491,7 @@ const TicketDetail = ({ ticketDetailData, isTab }) => {
                 autoComplete="off"
               />
             </Grid>
-            {(userRole === "admin" || userRole === "sub admin") && (
+            {( userRole === "admin" || userRole === "sub admin" ) && (
               <Grid item xs={12}>
                 <FormControl fullWidth sx={{ mb: 2 }}>
                   <InputLabel id="provider-select-label">
@@ -500,11 +505,11 @@ const TicketDetail = ({ ticketDetailData, isTab }) => {
                     label="Loan Provider"
                     onChange={handleInputChange}
                   >
-                    {PROVIDER_OPTIONS.map((bank) => (
+                    {PROVIDER_OPTIONS.map( ( bank ) => (
                       <MenuItem key={bank} value={bank}>
                         {bank}
                       </MenuItem>
-                    ))}
+                    ) )}
                   </Select>
                 </FormControl>
               </Grid>
