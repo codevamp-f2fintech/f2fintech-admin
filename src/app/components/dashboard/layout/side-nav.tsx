@@ -56,18 +56,13 @@ export function SideNav (): React.JSX.Element {
         position: "sticky",
         scrollbarWidth: "none",
         top: 0,
-        width: collapsed ? "5.5vw" : "15vw",
+        width: collapsed ? "5vw" : "15vw",
         zIndex: "var(--SideNav-zIndex)",
         transition: "width 0.3s",
         // iPad Pro 12.9" (1024 x 1366)
-        "@media only screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape)": {
+        "@media only screen and (min-width: 1300px) and (max-width: 1366px) and (orientation: landscape)": {
           width: collapsed ? "100px" : "220px",
         },
-        // iPad Pro 11" (834 x 1194)
-        "@media only screen and (min-width: 834px) and (max-width: 1194px) and (orientation: landscape)": {
-          width: collapsed ? "80px" : "200px",
-        },
-      
         "&::-webkit-scrollbar": { display: "none" },
       }}
     >
@@ -241,6 +236,11 @@ function NavItem ( {
             height: "5vh",
             width: "3vw",
             borderRadius: "50px",
+            // iPad Pro 12.9" (1024 x 1366)
+            "@media only screen and (min-width: 1300px) and (max-width: 1366px) and (orientation: landscape)": {
+              borderRadius: "20px",
+              width: "60px",
+            },
             "&:hover": {
               transform: "scale(1.1)",
               background:
