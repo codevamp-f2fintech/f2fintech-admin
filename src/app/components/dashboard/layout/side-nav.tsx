@@ -61,7 +61,11 @@ export function SideNav (): React.JSX.Element {
         transition: "width 0.3s",
         // iPad Pro 12.9" (1024 x 1366)
         "@media only screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape)": {
-          width: collapsed ? "100px" : "220px",
+          width: collapsed ? "80px" : "220px",
+        },
+        // iPad Pro 11" (834 x 1194)
+        "@media only screen and (min-width: 834px) and (max-width: 1194px) and (orientation: landscape)": {
+          width: collapsed ? "80px" : "200px",
         },
       
         "&::-webkit-scrollbar": { display: "none" },
@@ -236,13 +240,7 @@ function NavItem ( {
             flex: "0 0 auto",
             height: "5vh",
             width: "3vw",
-            borderRadius: "20px",
-            // iPad Pro 12.9" landscape
-            "@media only screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape)": {
-              height: "50px",
-              width: "50px",
-            },
-           
+            borderRadius: "50px",
             "&:hover": {
               transform: "scale(1.1)",
               background:
