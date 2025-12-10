@@ -40,7 +40,7 @@ const AiLeadsPage: React.FC = () => {
     {
       setLoading( true );
       const response = await AiLeadsAPI.getAll();
-      setAiLeads( response.data?.data || [] ); // Adjust for ResponseFormatter
+      setAiLeads( response.data?.data || [] );
     } catch ( err: any )
     {
       const errorMessage =
