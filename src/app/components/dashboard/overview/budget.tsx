@@ -28,11 +28,6 @@ export function Budget ( {
   const hasAmount = amount !== null && amount !== undefined;
   const isDesktop = useMediaQuery( "(min-width:900px)" );
 
-  // Additional media queries for better device targeting
-  const isSmallMobile = useMediaQuery( "(max-width: 600px)" );
-  const isTablet = useMediaQuery( "(min-width: 601px) and (max-width: 1024px)" );
-  const isLandscape = useMediaQuery( "(orientation: landscape)" );
-
   return (
     <Card
       sx={{
@@ -68,7 +63,7 @@ export function Budget ( {
 
         // 📱 iPad & Tablets - Portrait
         "@media (min-width: 601px) and (max-width: 1024px) and (orientation: portrait)": {
-          height: "20vh",
+          height: "17vh",
           minHeight: "140px",
           padding: "14px",
           gap: 1,
@@ -88,12 +83,26 @@ export function Budget ( {
 
         // 📱 iPad Pro specific
         "@media (min-width: 1024px) and (max-width: 1366px) and (orientation: portrait)": {
-          height: "22vh",
+          height: "10vh",
           minHeight: "150px",
           padding: "14px",
           gap: 1.2,
           display: "flex",
           flexDirection: "column",
+        },
+        
+        "@media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape)": {
+          height: "16vh",
+          minHeight: "140px",
+          padding: "16px",
+          gap: 1.5,
+          display: "flex",
+          flexDirection: "column",
+          // Specific adjustments for iPad Pro high-res displays
+          "@media (-webkit-min-device-pixel-ratio: 2)": {
+            height: "20vh",
+            padding: "18px",
+          }
         },
 
         // 💻 Laptop & Desktop
@@ -193,7 +202,7 @@ export function Budget ( {
                 lg: 'inherit'
               },
               bottom: {
-                xs: '-20px',
+                xs: '10px',
                 md: 'inherit',
                 lg: 'inherit'
               }
