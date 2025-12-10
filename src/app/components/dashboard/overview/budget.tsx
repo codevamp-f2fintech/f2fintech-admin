@@ -3,7 +3,6 @@ import Avatar from "@mui/material/Avatar";
 import Card from "@mui/material/Card";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
-import Divider from "@mui/material/Divider";
 import { SxProps } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
@@ -28,39 +27,79 @@ export function Budget ( {
 }: BudgetProps ): React.JSX.Element {
   const hasAmount = amount !== null && amount !== undefined;
   const isDesktop = useMediaQuery( "(min-width:900px)" );
+
+  // Additional media queries for better device targeting
+  const isSmallMobile = useMediaQuery( "(max-width: 600px)" );
+  const isTablet = useMediaQuery( "(min-width: 601px) and (max-width: 1024px)" );
+  const isLandscape = useMediaQuery( "(orientation: landscape)" );
+
   return (
     <Card
       sx={{
         borderRadius: "12px",
         boxShadow: "0 3px 10px rgba(0,0,0,0.10)",
         padding: "12px",
-        height: isDesktop ? "50vh" : "auto",
+        height: isDesktop ? "50vh" : "",
         minHeight: { xs: "120px", sm: "130px", md: "50vh" },
 
-        // 📱 Small Mobile
-        "@media (max-width: 1000px)": {
+        // 📱 Small Mobile - Portrait
+        "@media (max-width: 600px) and (orientation: portrait)": {
           padding: "10px",
-          height: "12vh",
+          height: "15vh",
+          minHeight: "130px",
           gap: 0.5,
           borderRadius: "10px",
           width: "100%",
           display: "flex",
           flexDirection: "column",
-
         },
 
-        // 📱 iPad & Tablets
-        "@media (min-width: 1024px) and (max-width: 1366px)": {
-          height: "10vh",
+        // 📱 Small Mobile - Landscape
+        "@media (max-width: 900px) and (orientation: landscape)": {
+          height: "25vh",
+          minHeight: "150px",
+          padding: "10px",
+          gap: 0.5,
+          borderRadius: "10px",
+          width: "100%",
+          display: "flex",
+          flexDirection: "column",
+        },
+
+        // 📱 iPad & Tablets - Portrait
+        "@media (min-width: 601px) and (max-width: 1024px) and (orientation: portrait)": {
+          height: "20vh",
+          minHeight: "140px",
+          padding: "14px",
+          gap: 1,
+          display: "flex",
+          flexDirection: "column",
+        },
+
+        // 📱 iPad & Tablets - Landscape
+        "@media (min-width: 601px) and (max-width: 1366px) and (orientation: landscape)": {
+          height: "28vh",
+          minHeight: "160px",
           padding: "14px",
           gap: 1.2,
           display: "flex",
           flexDirection: "column",
         },
 
-        // 💻 Laptop & Desktop — INCREASE HEIGHT HERE
+        // 📱 iPad Pro specific
+        "@media (min-width: 1024px) and (max-width: 1366px) and (orientation: portrait)": {
+          height: "22vh",
+          minHeight: "150px",
+          padding: "14px",
+          gap: 1.2,
+          display: "flex",
+          flexDirection: "column",
+        },
+
+        // 💻 Laptop & Desktop
         "@media (min-width: 1280px)": {
           height: "20vh",
+          minHeight: "140px",
           display: "flex",
           flexDirection: "column",
           p: 2,
@@ -131,6 +170,7 @@ export function Budget ( {
           sm: 'inherit',
         },
         width: "100%",
+        minHeight: "60px", // Added to prevent content from being cut
       }}>
 
         {/* Amount */}
@@ -146,13 +186,17 @@ export function Budget ( {
                 md: 'inherit',
                 lg: 'inherit',
                 sm: 'inherit',
-
-              }, right: {
+              },
+              right: {
                 xs: '0px',
-                md: 'inheirit',
+                md: 'inherit',
+                lg: 'inherit'
+              },
+              bottom: {
+                xs: '-20px',
+                md: 'inherit',
                 lg: 'inherit'
               }
-
             }}
           >
             ₹{new Intl.NumberFormat( "hi-IN" ).format( amount )}
