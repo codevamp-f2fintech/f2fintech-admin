@@ -51,8 +51,8 @@ const validationSchema = yup.object().shape( {
         .required( "This Field is Required" ),
     country: yup.string()
         .required( "This Field is Required" ),
-    home_image: yup.string()
-        .required( "Image is required" ),
+    // home_image: yup.string()
+    //     .required( "Image is required" ),
 } );
 
 export default validationSchema;
