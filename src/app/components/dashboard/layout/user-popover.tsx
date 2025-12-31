@@ -49,6 +49,7 @@ export function UserPopover ( {
       // Clear localStorage
       localStorage.removeItem( 'userId' );
       localStorage.removeItem( 'companyId' );
+      localStorage.removeItem( 'selectedCompanyId' );
       localStorage.removeItem( 'companyName' );
       localStorage.removeItem( 'userRole' );
       localStorage.removeItem( 'email' );

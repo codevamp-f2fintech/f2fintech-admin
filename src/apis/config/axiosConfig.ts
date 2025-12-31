@@ -4,46 +4,45 @@ import axios, { AxiosInstance, AxiosError, AxiosResponse } from "axios";
 /**
  * Creates a custom Axios instance with predefined configurations.
  */
-export const axiosInstance: AxiosInstance = axios.create( {
-  baseURL: `${ process.env.NEXT_PUBLIC_API_URL }`,
+export const axiosInstance: AxiosInstance = axios.create({
+  baseURL: `${process.env.NEXT_PUBLIC_API_URL}`,
   withCredentials: true,
-  validateStatus: ( status ) => ( status >= 200 && status < 300 ) || status == 404,
+  validateStatus: (status) => (status >= 200 && status < 300) || status == 404,
   timeout: 40000,
   headers: {
     Accept: "application/json, text/plain, */*",
     "Content-Type": "application/json; charset=utf-8",
   },
-} );
+});
 
 /**
  * Custom error handler for Axios.
  */
-const errorHandler = ( error: AxiosError ): Promise<never> => {
+const errorHandler = (error: AxiosError): Promise<never> => {
   const statusCode = error.response?.status;
 
-  if ( statusCode && statusCode !== 401 )
-  {
+  if (statusCode && statusCode !== 401) {
     throw error;
   }
 
-  return Promise.reject( error );
+  return Promise.reject(error);
 };
 
 // Response interceptor
 axiosInstance.interceptors.response.use(
-  ( response: AxiosResponse ) => response,
-  ( error: AxiosError ) => errorHandler( error )
+  (response: AxiosResponse) => response,
+  (error: AxiosError) => errorHandler(error)
 );
 
 // Request interceptor (Token + CompanyId)
 axiosInstance.interceptors.request.use(
-  ( config ) => {
+  (config) => {
     const { getCookies } = Utility();
     const cookieStore = getCookies() as {
       token?: string;
       companyId?: string;
       userRole?: string;
-      [ key: string ]: any;
+      [key: string]: any;
     };
 
     const token = cookieStore.token;
@@ -51,23 +50,32 @@ axiosInstance.interceptors.request.use(
     const userRole = cookieStore.userRole;
 
     // Add token to request header
-    if ( token )
-    {
-      config.headers[ "x-access-token" ] = token;
-      config.headers[ "userrole" ] = userRole;
+    if (token) {
+      config.headers["x-access-token"] = token;
+      config.headers["userrole"] = userRole;
     }
 
-    // Add companyId to every request as query param
-    if ( companyId && userRole !== "super admin" )
-    {
-      config.headers[ "CompanyId" ] = companyId;
-    } else if ( userRole === "super admin" )
-    {
-      console.log( '- companyId exists?', !!companyId );
-      console.log( '- userRole is super admin?', userRole === 'super admin' );
+    // FRONTEND-ONLY COMPANY CONTEXT OVERRIDE
+    const selectedCompanyId =
+      typeof window !== "undefined"
+        ? localStorage.getItem("selectedCompanyId")
+        : null;
+
+    // If dropdown selected → override companyId
+    if (selectedCompanyId) {
+      config.headers["CompanyId"] = selectedCompanyId;
+    }
+    // Else fallback to user's own companyId
+    else if (companyId && userRole !== "super admin") {
+      config.headers["CompanyId"] = companyId;
+    }
+
+    else if (userRole === "super admin") {
+      console.log('- companyId exists?', !!companyId);
+      console.log('- userRole is super admin?', userRole === 'super admin');
     }
 
     return config;
   },
-  ( error ) => Promise.reject( error )
+  (error) => Promise.reject(error)
 );

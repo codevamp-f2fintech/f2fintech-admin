@@ -39,8 +39,9 @@ import {
   InputLabel,
   Button,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { axiosInstance } from "../../apis/config/axiosConfig";
+import { CompanyAPI } from "@/apis/CompanyAPI";
 
 interface Ticket {
   month: string;
@@ -48,67 +49,61 @@ interface Ticket {
 }
 
 // Updated function to fetch total applications count using axios
-async function fetchTotalApplications (
+async function fetchTotalApplications(
   month?: string,
   year?: number,
   date?: string,
 ): Promise<number | null> {
-  try
-  {
+  try {
     const params: any = {};
 
     // Only add month if it's provided and not empty
-    if ( month && month !== "" )
-    {
+    if (month && month !== "") {
       params.month = month;
       // Always include the current year when month is provided
       params.year = new Date().getFullYear().toString();
     }
 
     // Only add date if it's provided and not empty
-    if ( date && date !== "" )
-    {
+    if (date && date !== "") {
       params.date = date;
     }
 
-    const response = await axiosInstance.get( "/application/count", { params } );
+    const response = await axiosInstance.get("/application/count", { params });
     return response.data.data;
-  } catch ( error )
-  {
-    console.error( "Failed to fetch total applications:", error );
+  } catch (error) {
+    console.error("Failed to fetch total applications:", error);
     return null;
   }
 }
 
 // Updated function to fetch total new applications count using axios
-async function fetchTotalNewApplication (
+async function fetchTotalNewApplication(
   month?: string,
   year?: number,
   date?: string,
 ): Promise<{ count: number; amount: number } | null> {
-  try
-  {
+  try {
     const params: any = {};
 
-    if ( month ) params.month = month;
-    if ( year ) params.year = year.toString();
-    if ( date ) params.date = date;
+    if (month) params.month = month;
+    if (year) params.year = year.toString();
+    if (date) params.date = date;
 
-    const response = await axiosInstance.get( "/application/new-count", { params } );
+    const response = await axiosInstance.get("/application/new-count", { params });
 
     return {
       count: response.data.data.count || response.data.data,
       amount: response.data.data.amount || 0,
     };
-  } catch ( error )
-  {
-    console.error( "Failed to fetch total new applications:", error );
+  } catch (error) {
+    console.error("Failed to fetch total new applications:", error);
     return null;
   }
 }
 
 // Updated function to fetch total tickets using axios
-async function fetchTotalTickets (
+async function fetchTotalTickets(
   status: string | null = null,
   id: number | null = null,
   role: string,
@@ -116,43 +111,36 @@ async function fetchTotalTickets (
   month?: string,
   year?: string,
 ): Promise<number | { count: number; amount: number }> {
-  try
-  {
+  try {
     const params: any = {};
 
     // Add userId for non-admin users
-    if ( role !== "admin" && role !== "sub admin" && id !== null )
-    {
+    if (role !== "admin" && role !== "sub admin" && id !== null) {
       params.userId = id.toString();
     }
 
     // Add status if provided
-    if ( status )
-    {
+    if (status) {
       params.status = status;
     }
 
     // Add date filters
-    if ( date )
-    {
+    if (date) {
       params.date = date;
     }
-    if ( month )
-    {
+    if (month) {
       params.month = month;
     }
-    if ( year )
-    {
+    if (year) {
       params.year = year;
     }
 
-    console.log( "Fetching tickets with params:", params );
+    console.log("Fetching tickets with params:", params);
 
-    const response = await axiosInstance.get( "/dashboard/tickets/count", { params } );
-    console.log( "API Response:", response.data );
+    const response = await axiosInstance.get("/dashboard/tickets/count", { params });
+    console.log("API Response:", response.data);
 
-    if ( status === "disbursed" || status === "approved" )
-    {
+    if (status === "disbursed" || status === "approved") {
       return {
         count: response.data.data.count || 0,
         amount: response.data.data.amount || 0,
@@ -160,95 +148,114 @@ async function fetchTotalTickets (
     }
 
     return response.data.data || 0;
-  } catch ( error )
-  {
-    console.error( "Error fetching tickets:", error );
+  } catch (error) {
+    console.error("Error fetching tickets:", error);
     return 0;
   }
 }
 
 // Updated function to get total tickets by month using axios
-async function getTotalTicketsByMonth ( year: number ): Promise<Ticket[]> {
-  try
-  {
+async function getTotalTicketsByMonth(year: number): Promise<Ticket[]> {
+  try {
     const params: any = { year };
 
-    const response = await axiosInstance.get( "/dashboard/tickets/counts-by-month", { params } );
-    console.log( "Monthly tickets response:", response.data );
+    const response = await axiosInstance.get("/dashboard/tickets/counts-by-month", { params });
+    console.log("Monthly tickets response:", response.data);
 
-    return response.data.data.map( ( ticket: Ticket ) => ticket.count );
-  } catch ( error )
-  {
-    console.error( "Failed to fetch monthly count:", error );
-    throw new Error( "Failed to fetch monthly count" );
+    return response.data.data.map((ticket: Ticket) => ticket.count);
+  } catch (error) {
+    console.error("Failed to fetch monthly count:", error);
+    throw new Error("Failed to fetch monthly count");
   }
 }
 
 // Updated function to get done tickets by month using axios
-async function getDoneTicketsByMonth ( year: number ): Promise<Ticket[]> {
-  try
-  {
+async function getDoneTicketsByMonth(year: number): Promise<Ticket[]> {
+  try {
     const params: any = { year };
 
-    const response = await axiosInstance.get( "/dashboard/tickets/done-counts-by-month", { params } );
-    console.log( "Monthly done tickets response:", response.data );
+    const response = await axiosInstance.get("/dashboard/tickets/done-counts-by-month", { params });
+    console.log("Monthly done tickets response:", response.data);
 
-    return response.data.data.map( ( ticket: Ticket ) => ticket.count );
-  } catch ( error )
-  {
-    console.error( "Failed to fetch monthly done count:", error );
-    throw new Error( "Failed to fetch monthly done count" );
+    return response.data.data.map((ticket: Ticket) => ticket.count);
+  } catch (error) {
+    console.error("Failed to fetch monthly done count:", error);
+    throw new Error("Failed to fetch monthly done count");
   }
 }
 
 // Updated function to fetch agent count using axios
-async function fetchAgentCount (): Promise<number | null> {
-  try
-  {
-    const response = await axiosInstance.get( "/dashboard/agents/count" );
+async function fetchAgentCount(): Promise<number | null> {
+  try {
+    const response = await axiosInstance.get("/dashboard/agents/count");
     return response.data.data;
-  } catch ( error )
-  {
-    console.error( "Failed to fetch agent count:", error );
+  } catch (error) {
+    console.error("Failed to fetch agent count:", error);
     return null;
   }
 }
 
-export default function Page (): React.JSX.Element {
+export default function Page(): React.JSX.Element {
   const { decodedToken, getCookies } = Utility();
   const cookies = getCookies();
-  const userToken = ( cookies as any ).token;
-  const { id, role, companyId } = decodedToken( userToken?.value );
+  const userToken = (cookies as any).token;
+  const { id, role, companyId } = decodedToken(userToken?.value);
 
-  const [ date, setDate ] = useState<string | null>( null );
-  const [ selectedMonth, setSelectedMonth ] = useState<string>( "" );
-  const [ allCounts, setAllCounts ] = useState<any>( {} );
-  const [ totalAgents, setTotalAgents ] = useState<number | null>( null );
+  const [date, setDate] = useState<string | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<string>("");
+  const [allCounts, setAllCounts] = useState<any>({});
+  const [totalAgents, setTotalAgents] = useState<number | null>(null);
   const currentYear = new Date().getFullYear();
-  const [ currentDateTime, setCurrentDateTime ] = useState( new Date() );
-  const currentDate = new Date().toLocaleDateString( "en-CA" );
+  const [currentDateTime, setCurrentDateTime] = useState(new Date());
+  const currentDate = new Date().toLocaleDateString("en-CA");
 
-  useEffect( () => {
-    const timer = setInterval( () => {
-      setCurrentDateTime( new Date() );
-    }, 1000 );
+  // apply on topbar
+  const [companies, setCompanies] = useState([]);
+  const [selectedCompany, setSelectedCompany] = useState<string>(
+    typeof window !== "undefined"
+      ? localStorage.getItem("selectedCompanyId") || ""
+      : ""
+  );
 
-    return () => clearInterval( timer );
-  }, [] );
+  const fetchCompanies = useCallback(async () => {
+    try {
+      const res = await CompanyAPI.getAll({
+        page: 1,
+        limit: 100
+      });
 
-  useEffect( () => {
+      setCompanies(res.data.results || []);
+    } catch (error) {
+      console.error("Failed to load companies", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCompanies();
+  }, [fetchCompanies]);
+
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentDateTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
     const now = new Date();
-    const currentMonth = now.toLocaleString( "default", { month: "long" } );
+    const currentMonth = now.toLocaleString("default", { month: "long" });
 
-    setDate( new Date().toISOString().split( "T" )[ 0 ] );
+    setDate(new Date().toISOString().split("T")[0]);
 
-    console.log( "currentMonth:", currentMonth );
-    console.log( "currentDateTime:", new Date().toLocaleDateString() );
-    console.log( "currentYear:", typeof currentYear );
-  }, [] );
+    console.log("currentMonth:", currentMonth);
+    console.log("currentDateTime:", new Date().toLocaleDateString());
+    console.log("currentYear:", typeof currentYear);
+  }, []);
 
-  const formatDateTime = ( date: Date ) => {
-    return date.toLocaleString( "en-US", {
+  const formatDateTime = (date: Date) => {
+    return date.toLocaleString("en-US", {
       weekday: "long",
       year: "numeric",
       month: "long",
@@ -256,52 +263,48 @@ export default function Page (): React.JSX.Element {
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
-    } );
+    });
   };
 
-  const handleMonthChange = ( e ) => {
+  const handleMonthChange = (e) => {
     let newMonth = e.target.value;
 
-    console.log( "newMonth", newMonth );
+    console.log("newMonth", newMonth);
     // If a month is selected, clear the date filter
-    if ( newMonth && newMonth !== "" )
-    {
-      setDate( "" );
+    if (newMonth && newMonth !== "") {
+      setDate("");
     }
-    if ( newMonth === "All" )
-    {
+    if (newMonth === "All") {
       newMonth = "";
     }
-    setSelectedMonth( newMonth );
+    setSelectedMonth(newMonth);
   };
 
   // Date TextField onChange handler
-  const handleDateChange = ( e ) => {
+  const handleDateChange = (e) => {
     const newDate = e.target.value;
-    setDate( newDate );
+    setDate(newDate);
 
     // If a date is selected, clear the month filter
-    if ( newDate && newDate !== "" )
-    {
-      setSelectedMonth( "" );
+    if (newDate && newDate !== "") {
+      setSelectedMonth("");
     }
   };
 
-  useEffect( () => {
+  useEffect(() => {
     getAllCounts();
-  }, [ date, selectedMonth ] );
+  }, [date, selectedMonth]);
 
-  useEffect( () => {
+  useEffect(() => {
     const loadAgentCount = async () => {
       const count = await fetchAgentCount();
-      setTotalAgents( count );
+      setTotalAgents(count);
     };
     loadAgentCount();
-  }, [] );
+  }, []);
 
   const getAllCounts = async () => {
-    try
-    {
+    try {
       const [
         totalApplications,
         totalNewApplications,
@@ -320,7 +323,7 @@ export default function Page (): React.JSX.Element {
         totalHold,
         totalTicketsByMonth,
         doneTicketsByMonth,
-      ] = await Promise.all( [
+      ] = await Promise.all([
         fetchTotalApplications(
           selectedMonth || undefined,
           selectedMonth ? currentYear : undefined,
@@ -331,22 +334,22 @@ export default function Page (): React.JSX.Element {
           selectedMonth ? currentYear : undefined,
           date
         ),
-        fetchTotalTickets( null, id, role, date, selectedMonth, currentYear.toString() ),
-        fetchTotalTickets( "under credit review", id, role, date, selectedMonth, currentYear.toString() ),
-        fetchTotalTickets( "operations", id, role, date, selectedMonth, currentYear.toString() ),
-        fetchTotalTickets( "pendency in file", id, role, date, selectedMonth, currentYear.toString() ),
-        fetchTotalTickets( "to be disbursed", id, role, date, selectedMonth, currentYear.toString() ),
-        fetchTotalTickets( "disbursed", id, role, date, selectedMonth, currentYear.toString() ),
-        fetchTotalTickets( "file send to banker", id, role, date, selectedMonth, currentYear.toString() ),
-        fetchTotalTickets( "carry forward", id, role, date, selectedMonth, currentYear.toString() ),
-        fetchTotalTickets( "to be approved", id, role, date, selectedMonth, currentYear.toString() ),
-        fetchTotalTickets( "approved", id, role, date, selectedMonth, currentYear.toString() ),
-        fetchTotalTickets( "rejected", id, role, date, selectedMonth, currentYear.toString() ),
-        fetchTotalTickets( "drop", id, role, date, selectedMonth, currentYear.toString() ),
-        fetchTotalTickets( "hold", id, role, date, selectedMonth, currentYear.toString() ),
-        getTotalTicketsByMonth( currentYear ),
-        getDoneTicketsByMonth( currentYear ),
-      ] );
+        fetchTotalTickets(null, id, role, date, selectedMonth, currentYear.toString()),
+        fetchTotalTickets("under credit review", id, role, date, selectedMonth, currentYear.toString()),
+        fetchTotalTickets("operations", id, role, date, selectedMonth, currentYear.toString()),
+        fetchTotalTickets("pendency in file", id, role, date, selectedMonth, currentYear.toString()),
+        fetchTotalTickets("to be disbursed", id, role, date, selectedMonth, currentYear.toString()),
+        fetchTotalTickets("disbursed", id, role, date, selectedMonth, currentYear.toString()),
+        fetchTotalTickets("file send to banker", id, role, date, selectedMonth, currentYear.toString()),
+        fetchTotalTickets("carry forward", id, role, date, selectedMonth, currentYear.toString()),
+        fetchTotalTickets("to be approved", id, role, date, selectedMonth, currentYear.toString()),
+        fetchTotalTickets("approved", id, role, date, selectedMonth, currentYear.toString()),
+        fetchTotalTickets("rejected", id, role, date, selectedMonth, currentYear.toString()),
+        fetchTotalTickets("drop", id, role, date, selectedMonth, currentYear.toString()),
+        fetchTotalTickets("hold", id, role, date, selectedMonth, currentYear.toString()),
+        getTotalTicketsByMonth(currentYear),
+        getDoneTicketsByMonth(currentYear),
+      ]);
 
       // Normalize the data for `disbursed` status
       const normalizedDisbursed =
@@ -366,7 +369,7 @@ export default function Page (): React.JSX.Element {
         }
         : { count: null, amount: null };
 
-      setAllCounts( {
+      setAllCounts({
         totalApplications,
         totalNewApplications: normalizedNewApplications,
         totalTickets,
@@ -384,10 +387,9 @@ export default function Page (): React.JSX.Element {
         totalHold,
         totalTicketsByMonth,
         doneTicketsByMonth,
-      } );
-    } catch ( error )
-    {
-      console.error( "Error fetching all counts:", error );
+      });
+    } catch (error) {
+      console.error("Error fetching all counts:", error);
     }
   };
 
@@ -418,12 +420,12 @@ export default function Page (): React.JSX.Element {
       color: "#f5f7fa",
       iconBgColor: "#cddc39",
       count: allCounts?.totalTickets,
-      link: `/ticket?status=all${ selectedMonth
-        ? `&month=${ encodeURIComponent(
+      link: `/ticket?status=all${selectedMonth
+        ? `&month=${encodeURIComponent(
           selectedMonth
-        ) }&startDate=${ getFirstDayOfMonth(
+        )}&startDate=${getFirstDayOfMonth(
           selectedMonth
-        ) }&endDate=${ getLastDayOfMonth( selectedMonth ) }`
+        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
         : ""
         }`,
     },
@@ -434,12 +436,12 @@ export default function Page (): React.JSX.Element {
       color: "#f5f7fa",
       iconBgColor: "#8bc34a",
       count: allCounts?.totalUnderCreditReview,
-      link: `/ticket?status=${ decodeURIComponent( "under credit review" ) }${ selectedMonth
-        ? `&month=${ encodeURIComponent(
+      link: `/ticket?status=${decodeURIComponent("under credit review")}${selectedMonth
+        ? `&month=${encodeURIComponent(
           selectedMonth
-        ) }&startDate=${ getFirstDayOfMonth(
+        )}&startDate=${getFirstDayOfMonth(
           selectedMonth
-        ) }&endDate=${ getLastDayOfMonth( selectedMonth ) }`
+        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
         : ""
         }`,
     },
@@ -450,12 +452,12 @@ export default function Page (): React.JSX.Element {
       color: "#f5f7fa",
       iconBgColor: "#ffa726",
       count: allCounts?.totalOperations,
-      link: `/ticket?status=${ decodeURIComponent( "operations" ) }${ selectedMonth
-        ? `&month=${ encodeURIComponent(
+      link: `/ticket?status=${decodeURIComponent("operations")}${selectedMonth
+        ? `&month=${encodeURIComponent(
           selectedMonth
-        ) }&startDate=${ getFirstDayOfMonth(
+        )}&startDate=${getFirstDayOfMonth(
           selectedMonth
-        ) }&endDate=${ getLastDayOfMonth( selectedMonth ) }`
+        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
         : ""
         }`,
     },
@@ -466,12 +468,12 @@ export default function Page (): React.JSX.Element {
       color: "#f5f7fa",
       iconBgColor: "#ff7043",
       count: allCounts?.totalPendencyInFile,
-      link: `/ticket?status=${ decodeURIComponent( "pendency in file" ) }${ selectedMonth
-        ? `&month=${ encodeURIComponent(
+      link: `/ticket?status=${decodeURIComponent("pendency in file")}${selectedMonth
+        ? `&month=${encodeURIComponent(
           selectedMonth
-        ) }&startDate=${ getFirstDayOfMonth(
+        )}&startDate=${getFirstDayOfMonth(
           selectedMonth
-        ) }&endDate=${ getLastDayOfMonth( selectedMonth ) }`
+        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
         : ""
         }`,
     },
@@ -482,12 +484,12 @@ export default function Page (): React.JSX.Element {
       color: "#f5f7fa",
       iconBgColor: "#827717",
       count: allCounts?.totalFileSendToBanker,
-      link: `/ticket?status=${ decodeURIComponent( "file send to banker" ) }${ selectedMonth
-        ? `&month=${ encodeURIComponent(
+      link: `/ticket?status=${decodeURIComponent("file send to banker")}${selectedMonth
+        ? `&month=${encodeURIComponent(
           selectedMonth
-        ) }&startDate=${ getFirstDayOfMonth(
+        )}&startDate=${getFirstDayOfMonth(
           selectedMonth
-        ) }&endDate=${ getLastDayOfMonth( selectedMonth ) }`
+        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
         : ""
         }`,
     },
@@ -498,12 +500,12 @@ export default function Page (): React.JSX.Element {
       color: "#f5f7fa",
       iconBgColor: "#1a237e",
       count: allCounts?.totalHold,
-      link: `/ticket?status=${ decodeURIComponent( "hold" ) }${ selectedMonth
-        ? `&month=${ encodeURIComponent(
+      link: `/ticket?status=${decodeURIComponent("hold")}${selectedMonth
+        ? `&month=${encodeURIComponent(
           selectedMonth
-        ) }&startDate=${ getFirstDayOfMonth(
+        )}&startDate=${getFirstDayOfMonth(
           selectedMonth
-        ) }&endDate=${ getLastDayOfMonth( selectedMonth ) }`
+        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
         : ""
         }`,
     },
@@ -514,12 +516,12 @@ export default function Page (): React.JSX.Element {
       color: "#f5f7fa",
       iconBgColor: "#26c6da",
       count: allCounts?.totalToBeApproved,
-      link: `/ticket?status=${ decodeURIComponent( "to be approved" ) }${ selectedMonth
-        ? `&month=${ encodeURIComponent(
+      link: `/ticket?status=${decodeURIComponent("to be approved")}${selectedMonth
+        ? `&month=${encodeURIComponent(
           selectedMonth
-        ) }&startDate=${ getFirstDayOfMonth(
+        )}&startDate=${getFirstDayOfMonth(
           selectedMonth
-        ) }&endDate=${ getLastDayOfMonth( selectedMonth ) }`
+        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
         : ""
         }`,
     },
@@ -530,12 +532,12 @@ export default function Page (): React.JSX.Element {
       color: "#f5f7fa",
       iconBgColor: "#a5d6a7",
       count: allCounts?.totalToBeDisbursed,
-      link: `/ticket?status=${ decodeURIComponent( "to be disbursed" ) }${ selectedMonth
-        ? `&month=${ encodeURIComponent(
+      link: `/ticket?status=${decodeURIComponent("to be disbursed")}${selectedMonth
+        ? `&month=${encodeURIComponent(
           selectedMonth
-        ) }&startDate=${ getFirstDayOfMonth(
+        )}&startDate=${getFirstDayOfMonth(
           selectedMonth
-        ) }&endDate=${ getLastDayOfMonth( selectedMonth ) }`
+        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
         : ""
         }`,
     },
@@ -547,12 +549,12 @@ export default function Page (): React.JSX.Element {
       iconBgColor: "#69f0ae",
       count: allCounts?.totalApproved?.count,
       amount: allCounts?.totalApproved?.amount,
-      link: `/ticket?status=${ decodeURIComponent( "approved" ) }${ selectedMonth
-        ? `&month=${ encodeURIComponent(
+      link: `/ticket?status=${decodeURIComponent("approved")}${selectedMonth
+        ? `&month=${encodeURIComponent(
           selectedMonth
-        ) }&startDate=${ getFirstDayOfMonth(
+        )}&startDate=${getFirstDayOfMonth(
           selectedMonth
-        ) }&endDate=${ getLastDayOfMonth( selectedMonth ) }`
+        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
         : ""
         }`,
     },
@@ -564,12 +566,12 @@ export default function Page (): React.JSX.Element {
       iconBgColor: "#ff9800",
       count: allCounts?.totalDisbursed?.count,
       amount: allCounts?.totalDisbursed?.amount,
-      link: `/ticket?status=${ decodeURIComponent( "disbursed" ) }${ selectedMonth
-        ? `&month=${ encodeURIComponent(
+      link: `/ticket?status=${decodeURIComponent("disbursed")}${selectedMonth
+        ? `&month=${encodeURIComponent(
           selectedMonth
-        ) }&startDate=${ getFirstDayOfMonth(
+        )}&startDate=${getFirstDayOfMonth(
           selectedMonth
-        ) }&endDate=${ getLastDayOfMonth( selectedMonth ) }`
+        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
         : ""
         }`,
     },
@@ -580,12 +582,12 @@ export default function Page (): React.JSX.Element {
       color: "#f5f7fa",
       iconBgColor: "#795548",
       count: allCounts?.totalCarryForward,
-      link: `/ticket?status=${ decodeURIComponent( "carry forward" ) }${ selectedMonth
-        ? `&month=${ encodeURIComponent(
+      link: `/ticket?status=${decodeURIComponent("carry forward")}${selectedMonth
+        ? `&month=${encodeURIComponent(
           selectedMonth
-        ) }&startDate=${ getFirstDayOfMonth(
+        )}&startDate=${getFirstDayOfMonth(
           selectedMonth
-        ) }&endDate=${ getLastDayOfMonth( selectedMonth ) }`
+        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
         : ""
         }`,
     },
@@ -596,12 +598,12 @@ export default function Page (): React.JSX.Element {
       color: "#f5f7fa",
       iconBgColor: "#dd2c00",
       count: allCounts?.totalRejected,
-      link: `/ticket?status=${ decodeURIComponent( "rejected" ) }${ selectedMonth
-        ? `&month=${ encodeURIComponent(
+      link: `/ticket?status=${decodeURIComponent("rejected")}${selectedMonth
+        ? `&month=${encodeURIComponent(
           selectedMonth
-        ) }&startDate=${ getFirstDayOfMonth(
+        )}&startDate=${getFirstDayOfMonth(
           selectedMonth
-        ) }&endDate=${ getLastDayOfMonth( selectedMonth ) }`
+        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
         : ""
         }`,
     },
@@ -612,12 +614,12 @@ export default function Page (): React.JSX.Element {
       color: "#f5f7fa",
       iconBgColor: "#ff6e40",
       count: allCounts?.totalDrop,
-      link: `/ticket?status=${ decodeURIComponent( "drop" ) }${ selectedMonth
-        ? `&month=${ encodeURIComponent(
+      link: `/ticket?status=${decodeURIComponent("drop")}${selectedMonth
+        ? `&month=${encodeURIComponent(
           selectedMonth
-        ) }&startDate=${ getFirstDayOfMonth(
+        )}&startDate=${getFirstDayOfMonth(
           selectedMonth
-        ) }&endDate=${ getLastDayOfMonth( selectedMonth ) }`
+        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
         : ""
         }`,
     },
@@ -631,7 +633,7 @@ export default function Page (): React.JSX.Element {
       link: "/ai-leads",
     },
 
-    ...( role === "admin"
+    ...(role === "admin"
       ? [
         {
           icon: SupervisorAccountIcon,
@@ -643,10 +645,10 @@ export default function Page (): React.JSX.Element {
           link: "/users",
         },
       ]
-      : [] ),
+      : []),
   ];
 
-  function getFirstDayOfMonth ( monthName: string ): string {
+  function getFirstDayOfMonth(monthName: string): string {
     const monthNames = [
       "January",
       "February",
@@ -661,14 +663,14 @@ export default function Page (): React.JSX.Element {
       "November",
       "December",
     ];
-    const monthIndex = monthNames.indexOf( monthName );
+    const monthIndex = monthNames.indexOf(monthName);
     const currentYear = new Date().getFullYear();
-    const firstDay = new Date( currentYear, monthIndex, 1 );
+    const firstDay = new Date(currentYear, monthIndex, 1);
 
-    return formatLocalDate( firstDay );
+    return formatLocalDate(firstDay);
   }
 
-  function getLastDayOfMonth ( monthName: string ): string {
+  function getLastDayOfMonth(monthName: string): string {
     const monthNames = [
       "January",
       "February",
@@ -683,21 +685,21 @@ export default function Page (): React.JSX.Element {
       "November",
       "December",
     ];
-    const monthIndex = monthNames.indexOf( monthName );
+    const monthIndex = monthNames.indexOf(monthName);
     const currentYear = new Date().getFullYear();
-    const lastDay = new Date( currentYear, monthIndex + 1, 0 );
+    const lastDay = new Date(currentYear, monthIndex + 1, 0);
 
-    return formatLocalDate( lastDay );
+    return formatLocalDate(lastDay);
   }
 
-  function formatLocalDate ( date: Date ): string {
+  function formatLocalDate(date: Date): string {
     const year = date.getFullYear();
-    const month = String( date.getMonth() + 1 ).padStart( 2, "0" );
-    const day = String( date.getDate() ).padStart( 2, "0" );
-    return `${ year }-${ month }-${ day }`;
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   }
 
-  console.log( "allCounts:", allCounts );
+  console.log("allCounts:", allCounts);
 
   return (
     <Box>
@@ -742,8 +744,8 @@ export default function Page (): React.JSX.Element {
                 wordBreak: "break-word",
               }}
             >
-              {formatDateTime( currentDateTime ).split( "," )[ 0 ]},{" "}
-              {formatDateTime( currentDateTime ).split( "," )[ 1 ]}
+              {formatDateTime(currentDateTime).split(",")[0]},{" "}
+              {formatDateTime(currentDateTime).split(",")[1]}
             </Box>
             <Box
               component="span"
@@ -752,7 +754,7 @@ export default function Page (): React.JSX.Element {
                 color: "#607d8b",
               }}
             >
-              {formatDateTime( currentDateTime ).split( "," )[ 2 ]}
+              {formatDateTime(currentDateTime).split(",")[2]}
             </Box>
           </Box>
 
@@ -767,6 +769,42 @@ export default function Page (): React.JSX.Element {
             }}
           >
             <>
+              <FormControl
+                sx={{ minWidth: { xs: "100%", sm: 220 } }}
+                size="small"
+              >
+                <InputLabel id="company-select-label">
+                  Company
+                </InputLabel>
+
+                <Select
+                  labelId="company-select-label"
+                  value={selectedCompany}
+                  label="Company"
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setSelectedCompany(value);
+
+                    if (!value) {
+                      // ALL companies
+                      localStorage.removeItem("selectedCompanyId");
+                    } else {
+                      localStorage.setItem("selectedCompanyId", value);
+                    }
+                    getAllCounts();
+                  }}
+                >
+                  {companies?.map((company) => (
+                    <MenuItem
+                      key={company.companyId}
+                      value={company.companyId.toString()}
+                    >
+                      {company.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
               <FormControl
                 sx={{ minWidth: { xs: "100%", sm: 180 } }}
                 size="small"
@@ -815,14 +853,13 @@ export default function Page (): React.JSX.Element {
                 label="Date"
                 type="date"
                 value={date || ""}
-                onChange={( e ) => {
-                  console.log( "current date change", e.target.value );
-                  setDate( e.target.value );
+                onChange={(e) => {
+                  console.log("current date change", e.target.value);
+                  setDate(e.target.value);
 
                   // If a date is selected, clear the month filter
-                  if ( e.target.value && e.target.value !== "" )
-                  {
-                    setSelectedMonth( "" );
+                  if (e.target.value && e.target.value !== "") {
+                    setSelectedMonth("");
                   }
                 }}
                 InputLabelProps={{
@@ -872,7 +909,7 @@ export default function Page (): React.JSX.Element {
             },
           }}
         >
-          {dashboardItems.map( ( item, index ) => (
+          {dashboardItems.map((item, index) => (
             <Grid
               xl={3}
               lg={3}
@@ -966,7 +1003,7 @@ export default function Page (): React.JSX.Element {
                 />
               </Link>
             </Grid>
-          ) )}
+          ))}
           <Grid
             sx={{
               display: "flex",
@@ -991,14 +1028,14 @@ export default function Page (): React.JSX.Element {
                   chartSeries={[
                     {
                       name: "Total Tickets",
-                      data: allCounts?.totalTicketsByMonth?.map( ( value ) =>
-                        Math.round( value )
+                      data: allCounts?.totalTicketsByMonth?.map((value) =>
+                        Math.round(value)
                       ),
                     },
                     {
                       name: "Disbursed Tickets",
-                      data: allCounts?.doneTicketsByMonth?.map( ( value ) =>
-                        Math.round( value )
+                      data: allCounts?.doneTicketsByMonth?.map((value) =>
+                        Math.round(value)
                       ),
                     },
                   ]}
