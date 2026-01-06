@@ -73,7 +73,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
     const role = getUserRole();
     const companyId = getCompanyId();
     setCurrentUserRole( role || "" );
-    setCurrentUserCompanyId( companyId || "" );
+    // setCurrentUserCompanyId( companyId || "" );
     setCompanyId( companyId );
   }, [] );
 
@@ -138,9 +138,9 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
       // Admin can see all users of their company except Super Admin
       if ( currentUserRole === 'admin' )
       {
-        const isSameCompany = user.companyId?.toString() === currentUserCompanyId;
+        // const isSameCompany = user.companyId?.toString() === currentUserCompanyId;
         const isNotSuperAdmin = user.role !== 'super admin';
-        return isSameCompany && isNotSuperAdmin;
+        // return isSameCompany && isNotSuperAdmin;
       }
 
       // Sub Admin can see all users of their company except Super Admin

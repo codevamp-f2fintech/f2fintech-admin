@@ -350,6 +350,21 @@ const Ticket = () => {
     }
   }, [ ticket ] );
 
+  // Add this after your other useEffect hooks in the Ticket component
+
+  // Sync with global company selection and reload page
+  useEffect( () => {
+    const handleGlobalCompanyChange = ( event: any ) => {
+      console.log( "Ticket page received companyChanged event:", event.detail );
+
+      // Reload the page when company changes
+      window.location.reload();
+    };
+
+    window.addEventListener( "companyChanged", handleGlobalCompanyChange );
+    return () => window.removeEventListener( "companyChanged", handleGlobalCompanyChange );
+  }, [] );
+
   // Load view preference from sessionStorage on component mount
   useEffect( () => {
     if ( typeof window !== "undefined" )
