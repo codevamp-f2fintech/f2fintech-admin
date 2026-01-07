@@ -121,7 +121,7 @@ const Ticket = () => {
 
   const [ userData, setUserData ] = useState( [] );
   const pathname = usePathname();
-
+ 
 
   const handleExportToExcel = async () => {
     try
@@ -370,16 +370,12 @@ const Ticket = () => {
     const handleGlobalCompanyChange = ( event: any ) => {
       console.log( "Ticket received companyChanged event:", event.detail );
       const newCompanyId = event.detail;
-      setSelectedCompany( newCompanyId );
 
-      // Save to localStorage
-      if ( typeof window !== "undefined" )
-      {
-        localStorage.setItem( "selectedCompanyId", newCompanyId );
-      }
-
-      // Reset all relevant states
+      // FIRST: Clear Redux state immediately
       dispatch( resetTickets() );
+
+      // SECOND: Reset all local states
+      setSelectedCompany( newCompanyId );
       setCurrentPage( 1 );
       setHasMoreData( true );
       setFilter( "" );
@@ -390,24 +386,24 @@ const Ticket = () => {
       setLoanProvider( "all" );
       setStartDate( null );
       setEndDate( null );
+      setDisbursedAmount( 0 ); // Add this line
+
+      // Save to localStorage
+      if ( typeof window !== "undefined" )
+      {
+        localStorage.setItem( "selectedCompanyId", newCompanyId );
+      }
 
       // Clear URL params
       const params = new URLSearchParams();
       router.push( `${ pathname }?${ params.toString() }`, { shallow: true } );
 
-      // Force SWR to refetch by changing key or calling refetcher
+      // Force SWR to refetch by changing key
       setRefreshKey( prev => prev + 1 );
-
-      // Alternatively, call refetcher if available
-      if ( refetcher )
-      {
-        refetcher();
-      }
     };
 
     window.addEventListener( "companyChanged", handleGlobalCompanyChange );
 
-    // Also listen for localStorage changes (as backup)
     const handleStorageChange = ( e: StorageEvent ) => {
       if ( e.key === "selectedCompanyId" && e.newValue )
       {
@@ -421,7 +417,7 @@ const Ticket = () => {
       window.removeEventListener( "companyChanged", handleGlobalCompanyChange );
       window.removeEventListener( "storage", handleStorageChange );
     };
-  }, [ dispatch, router, pathname, refetcher ] );
+  }, [ dispatch, router, pathname ] );
 
   // Load view preference from sessionStorage on component mount
   useEffect( () => {
