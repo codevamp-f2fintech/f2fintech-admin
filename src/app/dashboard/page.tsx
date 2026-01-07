@@ -220,7 +220,6 @@ export default function Page(): React.JSX.Element {
     const handleGlobalCompanyChange = (event: any) => {
       console.log("Dashboard received companyChanged event:", event.detail);
       setSelectedCompany(event.detail);
-      window.location.reload();
     };
 
     window.addEventListener("companyChanged", handleGlobalCompanyChange);

@@ -20,7 +20,8 @@ export const useGetTickets = (
   limit: number = 6,
   filter: string = "",
   startDate: string | null = null,
-  endDate: string | null = null
+  endDate: string | null = null,
+  companyId?: string
 ) => {
   const params = new URLSearchParams();
   if (filter) params.set("name", filter);

@@ -73,6 +73,7 @@ const Home: React.FC = () => {
   const userCompanyId = userInfo?.company_id || userInfo?.companyId; // Support both naming conventions
   const isAdmin = userRole === "admin";
   const isSuperAdmin = userRole === "super admin";
+  const [ refreshKey, setRefreshKey ] = useState<number>( 0 );
 
   const [ companies, setCompanies ] = useState( [] );
   const [ selectedCompany, setSelectedCompany ] = useState<string>(
@@ -85,13 +86,28 @@ const Home: React.FC = () => {
   useEffect( () => {
     const handleGlobalCompanyChange = ( event: any ) => {
       console.log( "Dashboard received companyChanged event:", event.detail );
-      setSelectedCompany( event.detail );
-      window.location.reload();
+      const newCompanyId = event.detail;
+      setSelectedCompany( newCompanyId );
+
+      // Reset application data
+      dispatch( resetCustomerApplications() );
+      setCurrentPage( 1 );
+      setHasMoreData( true );
+
+      // Clear search term if any
+      if ( searchTerm )
+      {
+        setSearchTerm( "" );
+        setDebouncedSearchTerm( "" );
+      }
+
+      // Increment refresh key to force SWR to refetch
+      setRefreshKey( prev => prev + 1 );
     };
 
     window.addEventListener( "companyChanged", handleGlobalCompanyChange );
     return () => window.removeEventListener( "companyChanged", handleGlobalCompanyChange );
-  }, [] );
+  }, [ dispatch, searchTerm ] );
 
   const fetchCompanies = useCallback( async () => {
     try
@@ -142,7 +158,9 @@ const Home: React.FC = () => {
     currentPage,
     ITEMS_PER_PAGE,
     salesUserId,
-    debouncedSearchTerm
+    debouncedSearchTerm,
+    selectedCompany,
+    refreshKey
   );
 
   // Fetch and update state with new data

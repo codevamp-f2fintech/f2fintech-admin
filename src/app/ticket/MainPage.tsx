@@ -42,6 +42,7 @@ import {
 import { useDeleteCustomerApplication } from "@/hooks/customerApplication";
 import GridViewIcon from "@mui/icons-material/GridView";
 import ViewListIcon from "@mui/icons-material/ViewList";
+import { resetCustomerApplications } from "@/redux/features/customerApplicationSlice";
 
 const Ticket = () => {
   const [ filter, setFilter ] = useState<string>( "" );
@@ -69,31 +70,39 @@ const Ticket = () => {
   const cookies = getCookies();
   const userToken = ( cookies as any ).token;
   const { id, role, companyId } = decodedToken( userToken?.value );
+  const [ refreshKey, setRefreshKey ] = useState<number>( 0 );
+  const [ searchTerm, setSearchTerm ] = useState<string>( "" );
+  const [ debouncedSearchTerm, setDebouncedSearchTerm ] = useState<string>( "" );
+  const [ selectedCompany, setSelectedCompany ] = useState<string>(
+    typeof window !== "undefined"
+      ? localStorage.getItem( "selectedCompanyId" ) || ""
+      : ""
+  );
 
   const apiEndpoint = selectedUser
-    ? `get-all-tickets/${ selectedUser.id }${ sortBy === "disbursed" ? "?onlyDisbursed=true" : "" }`
+    ? `get-all-tickets/${ selectedUser.id }${ sortBy === "disbursed" ? "?onlyDisbursed=true" : "" }${ selectedCompany ? `&companyId=${ selectedCompany }` : '' }`
     : userRole === "admin" || userRole === "sub admin"
       ? sortBy === "all" && loanProvider === "all"
-        ? `get-all-tickets`
+        ? `get-all-tickets${ selectedCompany ? `?companyId=${ selectedCompany }` : '' }`
         : `get-all-tickets?status=${ sortBy == "forwarded to me" || sortBy == "forwarded by me"
           ? sortBy.replace( /\s+/g, "" )
           : sortBy
-        }&provider=${ loanProvider }${ sortBy === "disbursed" ? "&onlyDisbursed=true" : "" }`
+        }&provider=${ loanProvider }${ sortBy === "disbursed" ? "&onlyDisbursed=true" : "" }${ selectedCompany ? `&companyId=${ selectedCompany }` : '' }`
       : userRole === "operations" || userRole === "credit"
         ? sortBy === "all" && loanProvider === "all"
-          ? `get-all-tickets/${ decodedToken()?.id }`
+          ? `get-all-tickets/${ decodedToken()?.id }${ selectedCompany ? `?companyId=${ selectedCompany }` : '' }`
           : `get-all-tickets/${ decodedToken()?.id }?status=${ sortBy == "forwarded to me" || sortBy == "forwarded by me"
             ? sortBy.replace( /\s+/g, "" )
             : sortBy
-          }&provider=${ loanProvider }${ sortBy === "disbursed" ? "&onlyDisbursed=true" : "" }`
+          }&provider=${ loanProvider }${ sortBy === "disbursed" ? "&onlyDisbursed=true" : "" }${ selectedCompany ? `&companyId=${ selectedCompany }` : '' }`
         : userRole === "sales"
           ? sortBy === "all" && loanProvider === "all"
-            ? `get-all-tickets/${ decodedToken()?.id }?appliedBy=sales`
+            ? `get-all-tickets/${ decodedToken()?.id }?appliedBy=sales${ selectedCompany ? `&companyId=${ selectedCompany }` : '' }`
             : `get-all-tickets/${ decodedToken()?.id }?appliedBy=sales&status=${ sortBy == "forwarded to me" || sortBy == "forwarded by me"
               ? sortBy.replace( /\s+/g, "" )
               : sortBy
-            }&provider=${ loanProvider }${ sortBy === "disbursed" ? "&onlyDisbursed=true" : "" }`
-          : `get-all-tickets${ sortBy === "disbursed" ? "?onlyDisbursed=true" : "" }`;
+            }&provider=${ loanProvider }${ sortBy === "disbursed" ? "&onlyDisbursed=true" : "" }${ selectedCompany ? `&companyId=${ selectedCompany }` : '' }`
+          : `get-all-tickets${ sortBy === "disbursed" ? "?onlyDisbursed=true" : "" }${ selectedCompany ? `${ sortBy === "disbursed" ? '&' : '?' }companyId=${ selectedCompany }` : '' }`;
 
   const {
     value: ticketData,
@@ -106,11 +115,13 @@ const Ticket = () => {
     ITEMS_PER_PAGE,
     filter,
     startDate,
-    endDate
+    endDate,
+    selectedCompany
   );
 
   const [ userData, setUserData ] = useState( [] );
   const pathname = usePathname();
+
 
   const handleExportToExcel = async () => {
     try
@@ -155,6 +166,10 @@ const Ticket = () => {
       exportParams.set( "page", "1" );
       exportParams.set( "limit", "10000" ); // Adjust based on your needs
 
+      if ( selectedCompany )
+      {
+        exportParams.set( "companyId", selectedCompany );
+      }
       // Add date filters if present
       if ( startDate )
       {
@@ -350,20 +365,63 @@ const Ticket = () => {
     }
   }, [ ticket ] );
 
-  // Add this after your other useEffect hooks in the Ticket component
-
-  // Sync with global company selection and reload page
+  // Company change handler - improved version
   useEffect( () => {
     const handleGlobalCompanyChange = ( event: any ) => {
-      console.log( "Ticket page received companyChanged event:", event.detail );
+      console.log( "Ticket received companyChanged event:", event.detail );
+      const newCompanyId = event.detail;
+      setSelectedCompany( newCompanyId );
 
-      // Reload the page when company changes
-      window.location.reload();
+      // Save to localStorage
+      if ( typeof window !== "undefined" )
+      {
+        localStorage.setItem( "selectedCompanyId", newCompanyId );
+      }
+
+      // Reset all relevant states
+      dispatch( resetTickets() );
+      setCurrentPage( 1 );
+      setHasMoreData( true );
+      setFilter( "" );
+      setSearchTerm( "" );
+      setDebouncedSearchTerm( "" );
+      setSelectedUser( null );
+      setSortBy( "all" );
+      setLoanProvider( "all" );
+      setStartDate( null );
+      setEndDate( null );
+
+      // Clear URL params
+      const params = new URLSearchParams();
+      router.push( `${ pathname }?${ params.toString() }`, { shallow: true } );
+
+      // Force SWR to refetch by changing key or calling refetcher
+      setRefreshKey( prev => prev + 1 );
+
+      // Alternatively, call refetcher if available
+      if ( refetcher )
+      {
+        refetcher();
+      }
     };
 
     window.addEventListener( "companyChanged", handleGlobalCompanyChange );
-    return () => window.removeEventListener( "companyChanged", handleGlobalCompanyChange );
-  }, [] );
+
+    // Also listen for localStorage changes (as backup)
+    const handleStorageChange = ( e: StorageEvent ) => {
+      if ( e.key === "selectedCompanyId" && e.newValue )
+      {
+        handleGlobalCompanyChange( { detail: e.newValue } );
+      }
+    };
+
+    window.addEventListener( "storage", handleStorageChange );
+
+    return () => {
+      window.removeEventListener( "companyChanged", handleGlobalCompanyChange );
+      window.removeEventListener( "storage", handleStorageChange );
+    };
+  }, [ dispatch, router, pathname, refetcher ] );
 
   // Load view preference from sessionStorage on component mount
   useEffect( () => {
