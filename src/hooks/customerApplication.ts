@@ -19,7 +19,7 @@ export const useGetCustomerApplications = (
   salesUserId?: number | string | null,
   searchTerm?: string,
   formattedStartDate?: string | null,
-  formattedEndDate?: string | null
+  formattedEndDate?: string | null,
 ) => {
   let url = `${ pathKey }?page=${ page }&limit=${ limit }`;
 
