@@ -358,11 +358,11 @@ const Step1Form: React.FC<Step1FormProps> = ( {
 
     const companyId = getCompanyId();
 
-    const headers: { [ key: string ]: string } = {};
-    if ( companyId )
-    {
-      headers.company_id = companyId; // Add companyId to headers
-    }
+    // const headers: { [ key: string ]: string } = {};
+    // if ( companyId )
+    // {
+    //   headers.company_id = companyId; // Add companyId to headers
+    // }
 
     const { data: res } = await axiosInstance.post(
       `${ process.env.NEXT_PUBLIC_WEB_URL }/create-customer`,
@@ -379,7 +379,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
   // Function to create customer info
   async function createCustomerInfo ( customerId, restValues ) {
     const companyId = getCompanyId();
-    const headers = companyId ? { companyid: companyId } : {};
+    // const headers = companyId ? { companyid: companyId } : {};
     await axiosInstance.post(
       `${ process.env.NEXT_PUBLIC_WEB_URL }/create-customer-info`,
       {
@@ -399,7 +399,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
     loanCategory,
   ) {
     const companyId = getCompanyId();
-    const headers = companyId ? { companyid: companyId } : {};
+    // const headers = companyId ? { companyid: companyId } : {};
     const { data: applicationResponse } =
       await axiosInstance.post(
         `${ process.env.NEXT_PUBLIC_WEB_URL }/create-application`,
@@ -418,13 +418,13 @@ const Step1Form: React.FC<Step1FormProps> = ( {
   }
 
   // Function to create loan tracking
-  async function createLoanTracking ( applicationId, companyId ) {
+  async function createLoanTracking ( applicationId ) {
     await axiosInstance.post(
       `${ process.env.NEXT_PUBLIC_WEB_URL }/create-loan-tracking`,
       {
         customer_application_id: applicationId,
         status: "submitted",
-        company_id: companyId,
+        // company_id: companyId,
       } )
   }
 
@@ -451,11 +451,11 @@ const Step1Form: React.FC<Step1FormProps> = ( {
 
       try
       {
-        const companyId = getCompanyId();
-        if ( !companyId )
-        {
-          throw new Error( 'Company ID is required' );
-        }
+        // const companyId = getCompanyId();
+        // if ( !companyId )
+        // {
+        //   throw new Error( 'Company ID is required' );
+        // }
         const customerId = storedCustomerId || ( await registerCustomer( customer ) );
         await createCustomerInfo( customerId, restValues );
 

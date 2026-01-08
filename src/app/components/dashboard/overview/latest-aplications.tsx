@@ -46,21 +46,79 @@ export function LatestApplications ( {
   const [ applications, setApplications ] = useState<
     CustomerApplicationData | []
   >( [] );
+  const [ selectedCompany, setSelectedCompany ] = useState<string>( "" );
+  const [ apiEndpoint, setApiEndpoint ] = useState<string>( "get-customer-loan-applications" );
   const router = useRouter();
   const isMobile = useMediaQuery( "(max-width:600px)" );
   const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
 
+  // Initialize company from localStorage
+  useEffect( () => {
+    if ( typeof window !== "undefined" )
+    {
+      const savedCompanyId = localStorage.getItem( "selectedCompanyId" );
+      if ( savedCompanyId )
+      {
+        setSelectedCompany( savedCompanyId );
+        setApiEndpoint( `get-customer-loan-applications?companyId=${ savedCompanyId }` );
+      }
+    }
+  }, [] );
+
+  // Listen for company change events
+  useEffect( () => {
+    const handleCompanyChange = ( event: any ) => {
+      console.log( "LatestApplications received companyChanged event:", event.detail );
+      const newCompanyId = event.detail;
+      setSelectedCompany( newCompanyId );
+
+      // Save to localStorage
+      if ( typeof window !== "undefined" )
+      {
+        localStorage.setItem( "selectedCompanyId", newCompanyId );
+      }
+
+      // Update endpoint with company parameter
+      const newEndpoint = `get-customer-loan-applications?companyId=${ newCompanyId }`;
+      setApiEndpoint( newEndpoint );
+
+      // Reset applications to trigger re-fetch
+      setApplications( [] );
+    };
+
+    window.addEventListener( "companyChanged", handleCompanyChange );
+
+    // Also listen for localStorage changes
+    const handleStorageChange = ( e: StorageEvent ) => {
+      if ( e.key === "selectedCompanyId" )
+      {
+        const newCompanyId = e.newValue || "";
+        setSelectedCompany( newCompanyId );
+        setApiEndpoint( `get-customer-loan-applications?companyId=${ newCompanyId }` );
+        setApplications( [] );
+      }
+    };
+
+    window.addEventListener( "storage", handleStorageChange );
+
+    return () => {
+      window.removeEventListener( "companyChanged", handleCompanyChange );
+      window.removeEventListener( "storage", handleStorageChange );
+    };
+  }, [] );
+
+  // Use the dynamic endpoint
   const {
     value: data,
     error: getApplicationsError,
     swrLoading,
-  } = useGetCustomerApplications( `get-customer-loan-applications`, 1, 6 );
+  } = useGetCustomerApplications( apiEndpoint, 1, 6 );
 
   // Handle API response
   useEffect( () => {
-    if ( data?.results.length > 0 )
+    if ( data?.results && data.results.length > 0 )
     {
-      setApplications( data?.results );
+      setApplications( data.results );
     } else
     {
       setApplications( [] );
@@ -75,23 +133,24 @@ export function LatestApplications ( {
     <Paper
       elevation={3}
       sx={{
-        width: { xs: "100%", sm: "100%", md: "100%" }, // Responsive width
-        maxHeight: { xs: "85vh", sm: "100vh", md: "130vh" }, // Responsive max-height
+        width: { xs: "100%", sm: "100%", md: "100%" },
+        maxHeight: { xs: "85vh", sm: "100vh", md: "130vh" },
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        mx: "auto", // Center on mobile
+        mx: "auto",
+        ...sx,
       }}
     >
-      {/* Header */}
+      {/* Header with company indicator */}
       <Box
         sx={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "flex-start",
-          mb: { md: 3 }, // Desktop margin
-          height: { xs: "8vh", sm: "5vh", md: "9vh" }, // Responsive height
-          mt: { sm: "1vh", md: "4vh" }, // Responsive top margin
+          justifyContent: "space-between",
+          mb: { md: 3 },
+          height: { xs: "8vh", sm: "5vh", md: "9vh" },
+          mt: { sm: "1vh", md: "4vh" },
         }}
       >
         <Typography
@@ -103,7 +162,7 @@ export function LatestApplications ( {
             textTransform: "uppercase",
             letterSpacing: "0.5px",
             ml: "1vw",
-            fontSize: { xs: "1.2rem", sm: "1.3rem", md: "1.5rem" }, // Responsive font
+            fontSize: { xs: "1.2rem", sm: "1.3rem", md: "1.5rem" },
           }}
         >
           New Applications
@@ -115,9 +174,9 @@ export function LatestApplications ( {
       {/* Table Container */}
       <Box
         sx={{
-          height: { xs: "60vh", sm: "34.5vh", md: "103vh" }, // Responsive height
+          height: { xs: "60vh", sm: "34.5vh", md: "103vh" },
           width: "100%",
-          overflow: "auto", // Scroll for small screens
+          overflow: "auto",
         }}
       >
         <TableContainer sx={{ width: "100%" }}>
@@ -138,7 +197,7 @@ export function LatestApplications ( {
             {/* Table Header */}
             <TableHead
               sx={{
-                height: { xs: "8vh", sm: "5vh", md: "12vh" }, // Responsive height
+                height: { xs: "8vh", sm: "5vh", md: "12vh" },
                 position: "sticky",
                 top: 0,
                 bgcolor: "background.paper",
@@ -179,7 +238,7 @@ export function LatestApplications ( {
                     <TableRow
                       key={application.applicationId}
                       sx={{
-                        height: { xs: "10vh", sm: "7vh", md: "15vh" }, // Responsive row height
+                        height: { xs: "10vh", sm: "7vh", md: "15vh" },
                         "&:hover": { bgcolor: "primary.50" },
                         transition: "background-color 0.2s",
                       }}
@@ -191,7 +250,7 @@ export function LatestApplications ( {
                             display: "flex",
                             alignItems: "center",
                             gap: 1,
-                            justifyContent: { xs: "flex-start", sm: "center" }, // Mobile left-align
+                            justifyContent: { xs: "flex-start", sm: "center" },
                           }}
                         >
                           <Person
@@ -264,7 +323,7 @@ export function LatestApplications ( {
         sx={{
           height: { xs: "8vh", sm: "5vh", md: "9vh" },
           mb: { xs: "1vh", sm: 0 },
-          mt: "auto", // Push to bottom
+          mt: "auto",
         }}
       >
         <CardActions sx={{ justifyContent: "flex-end", p: { xs: 1, sm: 2 } }}>
@@ -275,7 +334,7 @@ export function LatestApplications ( {
             variant="text"
             onClick={handleViewAllClick}
             sx={{
-              width: { xs: "120px", sm: "15vw", md: "8vw" }, // Responsive width
+              width: { xs: "120px", sm: "15vw", md: "8vw" },
               fontSize: { xs: "0.8rem", sm: "0.9rem" },
               mr: ".6vw",
               bgcolor: "#0c66e4",

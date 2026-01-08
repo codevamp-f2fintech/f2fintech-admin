@@ -40,6 +40,7 @@ import ViewListIcon from "@mui/icons-material/ViewList";
 import TableViewIcon from "@mui/icons-material/TableView";
 import { axiosInstance } from "../../apis/config/axiosConfig";
 import { CompanyAPI } from "@/apis/CompanyAPI";
+import Toast from "../components/common/Toast";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -61,8 +62,9 @@ const Home: React.FC = () => {
   const { customerApplication } = useSelector(
     (state: RootState) => state.customerApplications
   );
+  const { toast } = useSelector((state: RootState) => state.toast);
   const dispatch: AppDispatch = useDispatch();
-  const { debounceScroll, decodedToken, remLocalStorage } = Utility();
+  const { debounceScroll, decodedToken, remLocalStorage, toastAndNavigate } = Utility();
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
@@ -73,6 +75,7 @@ const Home: React.FC = () => {
   const userCompanyId = userInfo?.company_id || userInfo?.companyId; // Support both naming conventions
   const isAdmin = userRole === "admin";
   const isSuperAdmin = userRole === "super admin";
+  const [refreshKey, setRefreshKey] = useState<number>(0);
 
   const [companies, setCompanies] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState<string>(
@@ -80,6 +83,32 @@ const Home: React.FC = () => {
       ? localStorage.getItem("selectedCompanyId") || ""
       : ""
   );
+
+  // Sync with global company selection
+  useEffect(() => {
+    const handleGlobalCompanyChange = (event: any) => {
+      console.log("Dashboard received companyChanged event:", event.detail);
+      const newCompanyId = event.detail;
+      setSelectedCompany(newCompanyId);
+
+      // Reset application data
+      dispatch(resetCustomerApplications());
+      setCurrentPage(1);
+      setHasMoreData(true);
+
+      // Clear search term if any
+      if (searchTerm) {
+        setSearchTerm("");
+        setDebouncedSearchTerm("");
+      }
+
+      // Increment refresh key to force SWR to refetch
+      setRefreshKey(prev => prev + 1);
+    };
+
+    window.addEventListener("companyChanged", handleGlobalCompanyChange);
+    return () => window.removeEventListener("companyChanged", handleGlobalCompanyChange);
+  }, [dispatch, searchTerm]);
 
   const fetchCompanies = useCallback(async () => {
     try {
@@ -128,7 +157,9 @@ const Home: React.FC = () => {
     currentPage,
     ITEMS_PER_PAGE,
     salesUserId,
-    debouncedSearchTerm
+    debouncedSearchTerm,
+    selectedCompany,
+    refreshKey
   );
 
   // Fetch and update state with new data
@@ -201,6 +232,23 @@ const Home: React.FC = () => {
     }
     return filteredCustomers.length;
   }, [customerApplication?.count, filteredCustomers.length, userRole]);
+
+  /**
+   * Validates if a company/aggregator is selected before allowing navigation
+   * @returns {boolean} - Returns true if company is selected, false otherwise
+   */
+  const validateCompanySelection = (): boolean => {
+    // Check if we're in browser environment
+    if (typeof window === "undefined") return false;
+    const selectedCompanyId = localStorage.getItem("selectedCompanyId");
+
+    if (!selectedCompanyId || selectedCompanyId === "") {
+      toastAndNavigate(dispatch, true, "error", "Please select an Aggregator from the dropdown before proceeding →");
+      return false; // Validation failed
+    }
+
+    return true; // Validation passed
+  };
 
   // Delete application function using axios
   const handleDeleteApplication = async (
@@ -385,7 +433,7 @@ const Home: React.FC = () => {
               gap: 2,
             }}
           >
-            <FormControl
+            {/* <FormControl
               sx={{ minWidth: { xs: "100%", sm: 220 } }}
               size="small"
             >
@@ -397,29 +445,31 @@ const Home: React.FC = () => {
                 labelId="company-select-label"
                 value={selectedCompany}
                 label="Company"
-                onChange={(e) => {
+                onChange={( e ) => {
                   const value = e.target.value;
-                  setSelectedCompany(value);
+                  setSelectedCompany( value );
 
-                  if (!value) {
+                  if ( !value )
+                  {
                     // ALL companies
-                    localStorage.removeItem("selectedCompanyId");
-                  } else {
-                    localStorage.setItem("selectedCompanyId", value);
+                    localStorage.removeItem( "selectedCompanyId" );
+                  } else
+                  {
+                    localStorage.setItem( "selectedCompanyId", value );
                     refetch();
                   }
                 }}
               >
-                {companies?.map((company) => (
+                {companies?.map( ( company: any, index: number ) => (
                   <MenuItem
-                    key={company.companyId}
-                    value={company.companyId.toString()}
+                    key={company.id || `company-${ index }`}
+                    value={company.companyId ? company.companyId.toString() : ""}
                   >
                     {company.name}
                   </MenuItem>
-                ))}
+                ) )}
               </Select>
-            </FormControl>
+            </FormControl> */}
 
             <Link href="/ticket" passHref>
               <Button
@@ -432,8 +482,14 @@ const Home: React.FC = () => {
                   whiteSpace: "nowrap",
                 }}
                 variant="contained"
+                onClick={(e) => {
+                  // Prevent navigation if validation fails
+                  if (!validateCompanySelection()) {
+                    e.preventDefault();
+                  }
+                }}
               >
-                {userRole === "admin" || userRole === "sales" || userRole === "super admin"
+                {userRole === "admin" || userRole === "sales" || userRole === "sub admin"
                   ? "Show Tickets"
                   : "Show My Tickets"}
               </Button>
@@ -510,8 +566,15 @@ const Home: React.FC = () => {
                     "&:hover": { bgcolor: "#0c66e4" },
                     whiteSpace: "nowrap",
                   }}
-                  onClick={() => remLocalStorage("customerInfo")}
                   variant="contained"
+                  onClick={(e) => {
+                    // Validate company selection first & stop navigation
+                    if (!validateCompanySelection()) {
+                      e.preventDefault();
+                    } else {
+                      remLocalStorage("customerInfo");
+                    }
+                  }}
                 >
                   Create Application
                 </Button>
@@ -728,6 +791,11 @@ const Home: React.FC = () => {
         )}
       </Box>
       {(swrLoading || isDeleting) && <Loader />}
+      <Toast
+        alerting={toast.toastAlert}
+        message={toast.toastMessage}
+        severity={toast.toastSeverity}
+      />
     </Box>
   );
 };

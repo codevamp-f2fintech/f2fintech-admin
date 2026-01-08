@@ -41,7 +41,7 @@ import {
 } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import { axiosInstance } from "../../apis/config/axiosConfig";
-import { CompanyAPI } from "@/apis/CompanyAPI";
+
 
 interface Ticket {
   month: string;
@@ -209,31 +209,22 @@ export default function Page(): React.JSX.Element {
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const currentDate = new Date().toLocaleDateString("en-CA");
 
-  // apply on topbar
-  const [companies, setCompanies] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState<string>(
     typeof window !== "undefined"
       ? localStorage.getItem("selectedCompanyId") || ""
       : ""
   );
 
-  const fetchCompanies = useCallback(async () => {
-    try {
-      const res = await CompanyAPI.getAll({
-        page: 1,
-        limit: 100
-      });
-
-      setCompanies(res.data.results || []);
-    } catch (error) {
-      console.error("Failed to load companies", error);
-    }
-  }, []);
-
+  // Sync with global company selection
   useEffect(() => {
-    fetchCompanies();
-  }, [fetchCompanies]);
+    const handleGlobalCompanyChange = (event: any) => {
+      console.log("Dashboard received companyChanged event:", event.detail);
+      setSelectedCompany(event.detail);
+    };
 
+    window.addEventListener("companyChanged", handleGlobalCompanyChange);
+    return () => window.removeEventListener("companyChanged", handleGlobalCompanyChange);
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -293,7 +284,7 @@ export default function Page(): React.JSX.Element {
 
   useEffect(() => {
     getAllCounts();
-  }, [date, selectedMonth]);
+  }, [date, selectedMonth, selectedCompany]);
 
   useEffect(() => {
     const loadAgentCount = async () => {
@@ -769,42 +760,6 @@ export default function Page(): React.JSX.Element {
             }}
           >
             <>
-              <FormControl
-                sx={{ minWidth: { xs: "100%", sm: 220 } }}
-                size="small"
-              >
-                <InputLabel id="company-select-label">
-                  Company
-                </InputLabel>
-
-                <Select
-                  labelId="company-select-label"
-                  value={selectedCompany}
-                  label="Company"
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setSelectedCompany(value);
-
-                    if (!value) {
-                      // ALL companies
-                      localStorage.removeItem("selectedCompanyId");
-                    } else {
-                      localStorage.setItem("selectedCompanyId", value);
-                    }
-                    getAllCounts();
-                  }}
-                >
-                  {companies?.map((company) => (
-                    <MenuItem
-                      key={company.companyId}
-                      value={company.companyId.toString()}
-                    >
-                      {company.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
               <FormControl
                 sx={{ minWidth: { xs: "100%", sm: 180 } }}
                 size="small"

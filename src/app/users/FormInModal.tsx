@@ -46,14 +46,14 @@ interface UserFormValues {
   gender: string;
   role: string;
   id?: string | number;
-  companyId?: string;
+  // companyId?: string;
 }
 
 interface Company {
   id: number;
   name: string;
   email: string;
-  companyId: string;
+  // companyId: string;
 }
 
 interface FormComponentProps {
@@ -72,7 +72,7 @@ const initialValues: UserFormValues = {
   password: "",
   gender: "",
   role: "",
-  companyId: "",
+  // companyId: "",
 };
 
 const UserForm: React.FC<FormComponentProps> = ( {
@@ -183,16 +183,16 @@ const UserForm: React.FC<FormComponentProps> = ( {
       let companyIdToUse: string;
 
       if ( currentUserRole === 'super admin' )
-      {
-        // Super admin selects company from dropdown
-        if ( !values.companyId )
-        {
-          toastAndNavigate( dispatch, true, "error", "Please select a company" );
-          setLoading( false );
-          return;
-        }
-        companyIdToUse = values.companyId;
-      } else
+      // {
+      //   // Super admin selects company from dropdown
+      //   if ( !values.companyId )
+      //   {
+      //     toastAndNavigate( dispatch, true, "error", "Please select a company" );
+      //     setLoading( false );
+      //     return;
+      //   }
+      //   companyIdToUse = values.companyId;
+      // } else
       {
         // Other admins/users use their own company
         const companyId = getCompanyId();
@@ -207,8 +207,12 @@ const UserForm: React.FC<FormComponentProps> = ( {
 
       // Include companyId in the payload
       const payload = {
-        ...values,
-        companyId: companyIdToUse
+        username: values.username,
+        email: values.email,
+        password: values.password,
+        gender: values.gender,
+        role: values.role,
+        // companyId is NOT included here
       };
 
       await UserAPI.create( payload );
@@ -500,7 +504,7 @@ const UserForm: React.FC<FormComponentProps> = ( {
 
 
                 {/* Company selection - only shown for super admin when creating new user */}
-                {currentUserRole === 'super admin' && !userId && (
+                {/* {currentUserRole === 'super admin' && !userId && (
                   <Field
                     as={TextField}
                     select
@@ -535,7 +539,7 @@ const UserForm: React.FC<FormComponentProps> = ( {
                       ) )
                     )}
                   </Field>
-                )}
+                )} */}
               </Box>
               <Box display="flex" justifyContent="center" p="20px" gap={2}>
                 <Button
