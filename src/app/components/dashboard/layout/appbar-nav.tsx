@@ -163,7 +163,7 @@ export function AppBarNav(): React.JSX.Element {
                   {companies?.map((company: any, index: number) => (
                     <MenuItem
                       key={company.id || `company-${index}`}
-                      value={company.id ? company.id.toString() : ""}
+                      value={company.companyId ? company.companyId.toString() : ""}
                     >
                       {company.name}
                     </MenuItem>
