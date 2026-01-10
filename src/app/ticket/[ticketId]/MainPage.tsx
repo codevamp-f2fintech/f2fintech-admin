@@ -93,6 +93,7 @@ export interface TicketDetail {
   approved_amount?: number | string;
   disbursed_at?: string | Date;
   disbursed_amount?: number | string;
+  cashback_amount?: number | string;
 }
 
 interface TicketDetailResponse {
@@ -121,6 +122,7 @@ interface TicketDetailResponse {
     customerLocation: string;
     loanStatus: string;
     loanCategory: string;
+    cashback_amount?: number | string;
   };
 }
 
@@ -172,6 +174,16 @@ const Progress: React.FC = () => {
 
   const [ isApprovedDateSaved, setIsApprovedDateSaved ] = useState( () => {
     return !!ticketDetailData?.approved_at;
+  } );
+
+  const [ cashbackAmount, setCashbackAmount ] = useState( () => {
+    return ticketDetailData?.cashback_amount
+      ? ticketDetailData.cashback_amount.toString()
+      : "";
+  } );
+
+  const [ isCashbackAmountSaved, setIsCashbackAmountSaved ] = useState( () => {
+    return !!ticketDetailData?.cashback_amount;
   } );
 
   // Format amount for display (removes unnecessary decimals)
@@ -319,6 +331,13 @@ const Progress: React.FC = () => {
             {
               setApprovedAmount( response.data.applicationAmount?.toString() || "" );
               setIsApprovedAmountSaved( false );
+            }
+
+            // Set cashback amount if ticket has it
+            if ( response.data.cashback_amount )
+            {
+              setCashbackAmount( response.data.cashback_amount.toString() );
+              setIsCashbackAmountSaved( true );
             }
 
             setLoading( false );
@@ -514,11 +533,23 @@ const Progress: React.FC = () => {
         disbursed_at: disbursedDate,
         disbursed_amount: parseFloat( disbursedAmount )
       };
+      // Add cashback amount to payload if provided
+      if ( cashbackAmount && parseFloat( cashbackAmount ) >= 0 )
+      {
+        updatePayload.cashback_amount = parseFloat( cashbackAmount );
+      }
 
       await modifyTicket( +ticketId, updatePayload );
 
       const loggedInUser = decodedToken()?.username;
-      const historyMessage = `${ loggedInUser } set disbursement details - Date: ${ disbursedDate }, Amount: ${ disbursedAmount }`;
+      // Build history message dynamically
+      let historyMessage = `${ loggedInUser } set disbursement details - Date: ${ disbursedDate }, Amount: ${ disbursedAmount }`;
+
+      // Add cashback to history message if provided
+      if ( cashbackAmount && parseFloat( cashbackAmount ) >= 0 )
+      {
+        historyMessage += `, Cashback: ${ cashbackAmount }`;
+      }
 
       await createTicketHistory( {
         ticket_id: ticketId,
@@ -527,8 +558,13 @@ const Progress: React.FC = () => {
 
       setIsDisbursedDateSaved( true );
       setIsDisbursedAmountSaved( true );
+      // Set cashback as saved if provided
+      if ( cashbackAmount && parseFloat( cashbackAmount ) >= 0 )
+      {
+        setIsCashbackAmountSaved( true );
+      }
 
-      toastAndNavigate( dispatch, true, "info", "Disbursement details saved successfully" );
+      toastAndNavigate( dispatch, true, "info", cashbackAmount ? "Disbursement details saved successfully" : "Disbursement details saved successfully" );
       await refetch();
     } catch ( error )
     {
@@ -1332,6 +1368,45 @@ const Progress: React.FC = () => {
                             },
                           }}
                         />
+                        {/* Add Cashback Field Here */}
+                        <TextField
+                          fullWidth
+                          type="number"
+                          label="Cashback Amount"
+                          placeholder="Enter cashback amount"
+                          value={cashbackAmount}
+                          onChange={( e ) => setCashbackAmount( e.target.value )}
+                          variant="filled"
+                          InputLabelProps={{ shrink: true }}
+                          sx={{
+                            bgcolor: 'white',
+                            borderRadius: { xs: 1.5, sm: 2 },
+                            '& .MuiFilledInput-root': {
+                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                              minHeight: { xs: '48px', sm: '56px' },
+                              paddingTop: { xs: '24px', sm: '.4rem' },
+                            },
+                            '& .MuiInputLabel-root': {
+                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                              transform: 'translate(12px, 10px) scale(1)',
+                            },
+                            '& .MuiInputLabel-shrink': {
+                              transform: 'translate(12px, 4px) scale(0.75)',
+                              top: 0,
+                            },
+                            '& .MuiFilledInput-input': {
+                              paddingTop: { xs: '8px', sm: '12px' },
+                              paddingBottom: { xs: '8px', sm: '12px' },
+                            },
+                            '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
+                              borderBottom: 'none',
+                            },
+                            '& .MuiFilledInput-underline:hover:before': {
+                              borderBottom: 'none !important',
+                            },
+                          }}
+                        />
+
 
                         {/* Save Button */}
                         <Box display="flex" justifyContent="center" mt={1}>
@@ -1461,6 +1536,8 @@ const Progress: React.FC = () => {
                     </Select>
                   </FormControl>
                 </Box>
+
+
 
                 {/* Assignee */}
                 <Box

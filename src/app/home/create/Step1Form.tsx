@@ -92,16 +92,20 @@ const Step1Form: React.FC<Step1FormProps> = ( {
   const [ loanCategory, setLoanCategory ] = useState( "" );
   const [ provider, setProvider ] = useState<string>( "" );
   const [ loading, setLoading ] = useState<boolean>( false );
+  const [ leadType, setLeadType ] = useState<string>( "" );
+  const [ leadTypeError, setLeadTypeError ] = useState<string>( "" );
   const [ errors, setErrors ] = useState<{
     amount: string;
     tenure: string;
     provider: string;
     loanType: string;
+    leadType: string;
   }>( {
     amount: "",
     tenure: "",
     provider: "",
     loanType: "",
+    leadType: "",
   } );
   const [ loanStatus, setLoanStatus ] = useState<string | null>( null );
   const toastInfo = useSelector( ( state: any ) => state.toast );
@@ -127,6 +131,16 @@ const Step1Form: React.FC<Step1FormProps> = ( {
     ]
   };
 
+  const leadTypes = [
+    { value: "notion", label: "Notion" },
+    { value: "Dialler", label: "Dialler" },
+    { value: "field visit", label: "Field visit" },
+    { value: "sourcer", label: "Sourcer" },
+    { value: "channel partner", label: "Channel partner" },
+    { value: "ref from customer", label: "Ref from customer" },
+    { value: "left employee follow up", label: "Left employee follow up" }
+  ];
+
   // Define tenure options based on loan category
   const tenureOptions = {
     secured: [
@@ -148,6 +162,15 @@ const Step1Form: React.FC<Step1FormProps> = ( {
       "7 Years",
       "8 Years"
     ]
+  };
+
+  const validateLeadType = ( value: string ): void => {
+    let error = "";
+    if ( !value )
+    {
+      error = "Lead type is required";
+    }
+    setLeadTypeError( error );
   };
 
   // Function to determine loan category based on loan type
@@ -397,6 +420,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
     provider,
     loanType,
     loanCategory,
+    leadType,
   ) {
     const companyId = getCompanyId();
     // const headers = companyId ? { companyid: companyId } : {};
@@ -412,6 +436,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
           provider,
           loan_type: loanType,
           loan_category: loanCategory,
+          lead_type: leadType,
           // company_id: companyId,
         } )
     return applicationResponse.data.applicationId;
@@ -457,7 +482,11 @@ const Step1Form: React.FC<Step1FormProps> = ( {
         //   throw new Error( 'Company ID is required' );
         // }
         const customerId = storedCustomerId || ( await registerCustomer( customer ) );
-        await createCustomerInfo( customerId, restValues );
+        const customerInfoWithLeadType = {
+          ...restValues,
+          lead_type: leadType, // Use the state variable, not values.lead_type
+        };
+        await createCustomerInfo( customerId, customerInfoWithLeadType );
 
         // Create applications for each selected provider with their specific amounts
         const applicationPromises = providers.map( async ( providerName ) => {
@@ -471,6 +500,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
             providerName,
             loanType,
             loanCategory,
+            leadType,
           );
           await createLoanTracking( applicationId );
           return applicationNumberGenerated;
@@ -509,7 +539,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
         setLoading( false );
       }
     },
-    [ amount, tenure, providers, providerAmounts, loanType, loanCategory ] // Updated dependency
+    [ amount, tenure, providers, providerAmounts, loanType, loanCategory, leadType ] // Updated dependency
   );
 
   const PROVIDER_OPTIONS = providersLoading
@@ -828,6 +858,106 @@ const Step1Form: React.FC<Step1FormProps> = ( {
             </Typography>
           )}
         </FormControl>
+
+        <FormControl
+          autoComplete="off"
+          variant="filled"
+          error={!!leadTypeError}
+          sx={{
+            width: { xs: "90%", sm: "60%", md: "45%" },
+            mb: 3,
+            "& .MuiFilledInput-root": {
+              backgroundColor: "rgba(255, 255, 255, 0.08)",
+              borderRadius: "12px",
+              color: "white",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+              transition: "all 0.3s ease",
+              "&:before, &:after": {
+                borderBottom: "none !important",
+              },
+              "&:hover": {
+                backgroundColor: "rgba(255,255,255,0.12)",
+              },
+              "&.Mui-focused": {
+                backgroundColor: "rgba(255,255,255,0.15)",
+                boxShadow: "0 0 0 2px rgba(144,202,249,0.4)",
+              },
+            },
+            "& .MuiInputLabel-root": {
+              color: "rgba(255,255,255,0.7)",
+              fontSize: "14px",
+            },
+            "& .Mui-focused": {
+              color: "#90caf9 !important",
+            },
+            "& .MuiSelect-icon": {
+              color: "white",
+            },
+          }}
+        >
+          <InputLabel>Lead Type*</InputLabel>
+          <Select
+            variant="filled"
+            name="leadType"
+            value={leadType}
+            onChange={( e ) => {
+              setLeadType( e.target.value );
+              validateLeadType( e.target.value );
+            }}
+            onBlur={() => validateLeadType( leadType )}
+            startAdornment={
+              <InputAdornment position="start" sx={{ color: "white !important" }}>
+                <AccountBalanceIcon />
+              </InputAdornment>
+            }
+            MenuProps={{
+              PaperProps: {
+                sx: {
+                  bgcolor: "#1e1e1e",
+                  borderRadius: "10px",
+                  "& .MuiMenuItem-root": {
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "#333",
+                    },
+                    "&.Mui-selected": {
+                      backgroundColor: "#90caf9 !important",
+                      color: "#fff",
+                    },
+                  },
+                },
+              },
+            }}
+          >
+            {leadTypes.map( ( lead ) => (
+              <MenuItem
+                key={lead.value}
+                value={lead.value}
+                sx={{
+                  padding: "10px 16px",
+                  fontSize: "14px",
+                  borderRadius: "6px",
+                }}
+              >
+                {lead.label}
+              </MenuItem>
+            ) )}
+          </Select>
+          {leadTypeError && (
+            <Typography
+              color="error"
+              sx={{
+                mt: 0.5,
+                ml: 1,
+                fontSize: "11px",
+                fontFamily: "Verdana, sans-serif",
+              }}
+            >
+              {leadTypeError}
+            </Typography>
+          )}
+        </FormControl>
+
 
         {/* Tenure Field */}
         <FormControl
@@ -1190,11 +1320,13 @@ const Step1Form: React.FC<Step1FormProps> = ( {
             !!errors.tenure ||
             !!errors.provider ||
             !!errors.loanType ||
+            !!errors.leadType ||
             !amount ||
             !tenure ||
             !providers ||
             providers.length === 0 ||
             !loanType ||
+            !leadType ||
             !validateAllProviderAmounts()
           }
           variant="contained"
