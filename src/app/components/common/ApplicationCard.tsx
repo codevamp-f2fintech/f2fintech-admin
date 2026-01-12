@@ -40,6 +40,7 @@ import {
   DeleteOutlined,
 } from "@mui/icons-material";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import BusinessIcon from '@mui/icons-material/Business';
 import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
 import { useCreateTicket } from "@/hooks/ticket";
 import { Utility } from "@/utils";
@@ -63,6 +64,7 @@ interface ApplicationCardProps {
     state?: string;
     applicationAmount: string;
     loanCategory: string;
+    leadType?: string;
     applicationTenure: number;
     applicationDate: string;
     applicationId: number;
@@ -583,6 +585,11 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                     <InfoChip
                       icon={<AccountBalanceIcon />}
                       text={customerApplication?.loanCategory}
+                      color="#0c66e4"
+                    />
+                    <InfoChip
+                      icon={<BusinessIcon />}
+                      text={customerApplication?.leadType}
                       color="#0c66e4"
                     />
                     <InfoChip
@@ -1458,6 +1465,17 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                     }`
                   }
                 />
+                <InfoRow
+                  icon={<BusinessIcon 
+                    sx={{
+                      fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
+                    }} />}
+                  text={
+                    customerApplication.leadType
+                      ? capitalizeFirstLetter( customerApplication.leadType )
+                      : "No lead type available"
+                  }
+                />
                 {( customerApplication.customerLocation || customerApplication.customerState ) && (
                   <InfoRow
                     icon={<LocationOnRounded
@@ -2139,6 +2157,20 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
           <TableCell>
             <Typography variant="body2">
               {capitalizeFirstLetter( customerApplication.loanCategory )}
+            </Typography>
+          </TableCell>
+
+          {/* Lead Type */}
+          <TableCell>
+            <Typography
+              variant="body2"
+              sx={{
+                wordWrap: 'break-word',
+                whiteSpace: 'normal',
+                maxWidth: '10vw',
+              }}
+            >
+              {capitalizeFirstLetter( customerApplication.leadType )}
             </Typography>
           </TableCell>
 

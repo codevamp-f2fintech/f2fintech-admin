@@ -135,10 +135,7 @@ async function fetchTotalTickets(
       params.year = year;
     }
 
-    console.log("Fetching tickets with params:", params);
-
     const response = await axiosInstance.get("/dashboard/tickets/count", { params });
-    console.log("API Response:", response.data);
 
     if (status === "disbursed" || status === "approved") {
       return {
@@ -689,8 +686,6 @@ export default function Page(): React.JSX.Element {
     const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   }
-
-  console.log("allCounts:", allCounts);
 
   return (
     <Box>
