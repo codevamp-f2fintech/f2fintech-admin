@@ -45,28 +45,28 @@ import Toast from "../components/common/Toast";
 const ITEMS_PER_PAGE = 6;
 
 const Home: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [hasMoreData, setHasMoreData] = useState<boolean>(true);
-  const [isSearching, setIsSearching] = useState<boolean>(false);
-  const [deleteDialog, setDeleteDialog] = useState({
+  const [ searchTerm, setSearchTerm ] = useState<string>( "" );
+  const [ debouncedSearchTerm, setDebouncedSearchTerm ] = useState<string>( "" );
+  const [ currentPage, setCurrentPage ] = useState<number>( 1 );
+  const [ hasMoreData, setHasMoreData ] = useState<boolean>( true );
+  const [ isSearching, setIsSearching ] = useState<boolean>( false );
+  const [ deleteDialog, setDeleteDialog ] = useState( {
     open: false,
     applicationId: null,
     customerName: "",
-  });
-  const [isDeleting, setIsDeleting] = useState<boolean>(false);
-  const [toggleListView, setToggleListView] = useState("table");
-  const [prevSearchTerm, setPrevSearchTerm] = useState<string>("");
+  } );
+  const [ isDeleting, setIsDeleting ] = useState<boolean>( false );
+  const [ toggleListView, setToggleListView ] = useState( "table" );
+  const [ prevSearchTerm, setPrevSearchTerm ] = useState<string>( "" );
 
   const { customerApplication } = useSelector(
-    (state: RootState) => state.customerApplications
+    ( state: RootState ) => state.customerApplications
   );
-  const { toast } = useSelector((state: RootState) => state.toast);
+  const { toast } = useSelector( ( state: RootState ) => state.toast );
   const dispatch: AppDispatch = useDispatch();
   const { debounceScroll, decodedToken, remLocalStorage, toastAndNavigate } = Utility();
-  const isMobile = useMediaQuery("(max-width:600px)");
-  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const isMobile = useMediaQuery( "(max-width:600px)" );
+  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
 
   // Get user info from token
   const userInfo = decodedToken();
@@ -75,57 +75,60 @@ const Home: React.FC = () => {
   const userCompanyId = userInfo?.company_id || userInfo?.companyId; // Support both naming conventions
   const isAdmin = userRole === "admin";
   const isSuperAdmin = userRole === "super admin";
-  const [refreshKey, setRefreshKey] = useState<number>(0);
+  const [ refreshKey, setRefreshKey ] = useState<number>( 0 );
 
-  const [companies, setCompanies] = useState([]);
-  const [selectedCompany, setSelectedCompany] = useState<string>(
+  const [ companies, setCompanies ] = useState( [] );
+  const [ selectedCompany, setSelectedCompany ] = useState<string>(
     typeof window !== "undefined"
-      ? localStorage.getItem("selectedCompanyId") || ""
+      ? localStorage.getItem( "selectedCompanyId" ) || ""
       : ""
   );
 
   // Sync with global company selection
-  useEffect(() => {
-    const handleGlobalCompanyChange = (event: any) => {
-      console.log("Dashboard received companyChanged event:", event.detail);
+  useEffect( () => {
+    const handleGlobalCompanyChange = ( event: any ) => {
+      console.log( "Dashboard received companyChanged event:", event.detail );
       const newCompanyId = event.detail;
-      setSelectedCompany(newCompanyId);
+      setSelectedCompany( newCompanyId );
 
       // Reset application data
-      dispatch(resetCustomerApplications());
-      setCurrentPage(1);
-      setHasMoreData(true);
+      dispatch( resetCustomerApplications() );
+      setCurrentPage( 1 );
+      setHasMoreData( true );
 
       // Clear search term if any
-      if (searchTerm) {
-        setSearchTerm("");
-        setDebouncedSearchTerm("");
+      if ( searchTerm )
+      {
+        setSearchTerm( "" );
+        setDebouncedSearchTerm( "" );
       }
 
       // Increment refresh key to force SWR to refetch
-      setRefreshKey(prev => prev + 1);
+      setRefreshKey( prev => prev + 1 );
     };
 
-    window.addEventListener("companyChanged", handleGlobalCompanyChange);
-    return () => window.removeEventListener("companyChanged", handleGlobalCompanyChange);
-  }, [dispatch, searchTerm]);
+    window.addEventListener( "companyChanged", handleGlobalCompanyChange );
+    return () => window.removeEventListener( "companyChanged", handleGlobalCompanyChange );
+  }, [ dispatch, searchTerm ] );
 
-  const fetchCompanies = useCallback(async () => {
-    try {
-      const res = await CompanyAPI.getAll({
+  const fetchCompanies = useCallback( async () => {
+    try
+    {
+      const res = await CompanyAPI.getAll( {
         page: 1,
         limit: 100
-      });
+      } );
 
-      setCompanies(res.data.results || []);
-    } catch (error) {
-      console.error("Failed to load companies", error);
+      setCompanies( res.data.results || [] );
+    } catch ( error )
+    {
+      console.error( "Failed to load companies", error );
     }
-  }, []);
+  }, [] );
 
-  useEffect(() => {
+  useEffect( () => {
     fetchCompanies();
-  }, [fetchCompanies]);
+  }, [ fetchCompanies ] );
 
   // useEffect(() => {
   //   dispatch(resetCustomerApplications());
@@ -134,18 +137,18 @@ const Home: React.FC = () => {
   // }, [selectedCompany]);
 
   // Debounce search term
-  useEffect(() => {
-    setIsSearching(true);
-    const handler = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-      setCurrentPage(1);
-      setIsSearching(false);
-    }, 500);
+  useEffect( () => {
+    setIsSearching( true );
+    const handler = setTimeout( () => {
+      setDebouncedSearchTerm( searchTerm );
+      setCurrentPage( 1 );
+      setIsSearching( false );
+    }, 500 );
 
     return () => {
-      clearTimeout(handler);
+      clearTimeout( handler );
     };
-  }, [searchTerm]);
+  }, [ searchTerm ] );
 
   const {
     value: data,
@@ -163,75 +166,82 @@ const Home: React.FC = () => {
   );
 
   // Fetch and update state with new data
-  useEffect(() => {
-    if (!data || !data.results) return;
+  useEffect( () => {
+    if ( !data || !data.results ) return;
 
     // Check if search term changed (new search)
     const isNewSearch = debouncedSearchTerm !== prevSearchTerm;
 
-    if (isNewSearch) {
+    if ( isNewSearch )
+    {
       // Reset data for new search
-      dispatch(resetCustomerApplications());
-      setPrevSearchTerm(debouncedSearchTerm);
+      dispatch( resetCustomerApplications() );
+      setPrevSearchTerm( debouncedSearchTerm );
     }
 
-    if (data.results.length > 0) {
-      dispatch(setCustomerApplications({ ...data, currentPage }));
-      setHasMoreData(data.results.length === ITEMS_PER_PAGE);
-    } else {
-      if (currentPage === 1 || isNewSearch) {
-        dispatch(resetCustomerApplications());
+    if ( data.results.length > 0 )
+    {
+      dispatch( setCustomerApplications( { ...data, currentPage } ) );
+      setHasMoreData( data.results.length === ITEMS_PER_PAGE );
+    } else
+    {
+      if ( currentPage === 1 || isNewSearch )
+      {
+        dispatch( resetCustomerApplications() );
       }
-      setHasMoreData(false);
+      setHasMoreData( false );
     }
-  }, [data?.results?.length, currentPage, debouncedSearchTerm, selectedCompany]);
+  }, [ data?.results?.length, currentPage, debouncedSearchTerm, selectedCompany ] );
 
   // Handle infinite scrolling
   const handleScroll = useCallback(
-    debounceScroll(() => {
+    debounceScroll( () => {
       const nearBottom =
         window.innerHeight + window.scrollY >= document.body.offsetHeight - 400;
-      if (nearBottom && !swrLoading && hasMoreData && !debouncedSearchTerm) {
-        setCurrentPage((prevPage) => prevPage + 1);
+      if ( nearBottom && !swrLoading && hasMoreData && !debouncedSearchTerm )
+      {
+        setCurrentPage( ( prevPage ) => prevPage + 1 );
       }
-    }, 500),
-    [swrLoading, hasMoreData, debouncedSearchTerm]
+    }, 500 ),
+    [ swrLoading, hasMoreData, debouncedSearchTerm ]
   );
 
-  useEffect(() => {
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
+  useEffect( () => {
+    window.addEventListener( "scroll", handleScroll );
+    return () => window.removeEventListener( "scroll", handleScroll );
+  }, [ handleScroll ] );
 
-  useEffect(() => {
+  useEffect( () => {
     return () => {
-      dispatch(resetCustomerApplications()) as unknown as void;
+      dispatch( resetCustomerApplications() ) as unknown as void;
     };
-  }, [dispatch]);
+  }, [ dispatch ] );
 
   // Filter applications by company ID - Only show applications with same company_id as logged-in user
-  const filteredCustomers = useMemo(() => {
+  const filteredCustomers = useMemo( () => {
     const allApplications = customerApplication?.results || [];
 
     // If user is admin or super admin, show all applications
-    if (userRole === "admin" || userRole === "super admin") {
+    if ( userRole === "admin" || userRole === "super admin" )
+    {
       return allApplications;
     }
 
     // For other roles, filter by company_id (support both snake_case and camelCase)
-    return allApplications.filter(application =>
-      ((application as any).company_id === userCompanyId) ||
-      (application.companyId === userCompanyId)
+    return allApplications.filter( application =>
+      ( ( application as any ).company_id === userCompanyId ) ||
+      ( application.companyId === userCompanyId )
     );
-  }, [customerApplication, userRole, userCompanyId]);
+  }, [ customerApplication, userRole, userCompanyId ] );
 
   // Update the count display to show filtered count
-  const displayCount = useMemo(() => {
-    if (userRole === "admin" || userRole === "super admin") {
+  const displayCount = useMemo( () => {
+    if ( userRole === "admin" || userRole === "super admin" )
+    {
       return customerApplication?.count || 0;
     }
     return filteredCustomers.length;
-  }, [customerApplication?.count, filteredCustomers.length, userRole]);
+  }, [ customerApplication?.count, filteredCustomers.length, userRole ] );
 
   /**
    * Validates if a company/aggregator is selected before allowing navigation
@@ -239,11 +249,12 @@ const Home: React.FC = () => {
    */
   const validateCompanySelection = (): boolean => {
     // Check if we're in browser environment
-    if (typeof window === "undefined") return false;
-    const selectedCompanyId = localStorage.getItem("selectedCompanyId");
+    if ( typeof window === "undefined" ) return false;
+    const selectedCompanyId = localStorage.getItem( "selectedCompanyId" );
 
-    if (!selectedCompanyId || selectedCompanyId === "") {
-      toastAndNavigate(dispatch, true, "error", "Please select an Aggregator from the dropdown before proceeding →");
+    if ( !selectedCompanyId || selectedCompanyId === "" )
+    {
+      toastAndNavigate( dispatch, true, "error", "Please select an Aggregator from the dropdown before proceeding →" );
       return false; // Validation failed
     }
 
@@ -256,31 +267,35 @@ const Home: React.FC = () => {
     customerName: string,
     reason: string
   ) => {
-    setIsDeleting(true);
-    try {
-      await axiosInstance.delete(`/delete-loan-application/${applicationId}`);
+    setIsDeleting( true );
+    try
+    {
+      await axiosInstance.delete( `/delete-loan-application/${ applicationId }` );
 
-      setDeleteDialog({ open: false, applicationId: null, customerName: "" });
+      setDeleteDialog( { open: false, applicationId: null, customerName: "" } );
       window.location.reload();
-    } catch (error) {
-      console.error("Error deleting application:", error);
-    } finally {
-      setIsDeleting(false);
-      setDeleteDialog({ open: false, applicationId: null, customerName: "" });
+    } catch ( error )
+    {
+      console.error( "Error deleting application:", error );
+    } finally
+    {
+      setIsDeleting( false );
+      setDeleteDialog( { open: false, applicationId: null, customerName: "" } );
     }
   };
 
-  const openDeleteDialog = (applicationId: string, customerName: string) => {
-    if (!isAdmin && !isSuperAdmin) {
-      console.warn("Only admin users can delete applications");
+  const openDeleteDialog = ( applicationId: string, customerName: string ) => {
+    if ( !isAdmin && !isSuperAdmin )
+    {
+      console.warn( "Only admin users can delete applications" );
       return;
     }
 
-    setDeleteDialog({
+    setDeleteDialog( {
       open: true,
       applicationId,
       customerName,
-    });
+    } );
   };
 
   return (
@@ -342,7 +357,7 @@ const Home: React.FC = () => {
               label="Search by name, number or PAN..."
               size="small"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={( e ) => setSearchTerm( e.target.value )}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -351,7 +366,7 @@ const Home: React.FC = () => {
                 ),
                 endAdornment: searchTerm && (
                   <InputAdornment position="end">
-                    <IconButton size="small" onClick={() => setSearchTerm("")}>
+                    <IconButton size="small" onClick={() => setSearchTerm( "" )}>
                       <ClearRounded sx={{ fontSize: 16 }} />
                     </IconButton>
                   </InputAdornment>
@@ -399,7 +414,7 @@ const Home: React.FC = () => {
               label="Search by name, number or PAN..."
               size="small"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={( e ) => setSearchTerm( e.target.value )}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -408,7 +423,7 @@ const Home: React.FC = () => {
                 ),
                 endAdornment: searchTerm && (
                   <InputAdornment position="end">
-                    <IconButton size="small" onClick={() => setSearchTerm("")}>
+                    <IconButton size="small" onClick={() => setSearchTerm( "" )}>
                       <ClearRounded sx={{ fontSize: 16 }} />
                     </IconButton>
                   </InputAdornment>
@@ -482,9 +497,10 @@ const Home: React.FC = () => {
                   whiteSpace: "nowrap",
                 }}
                 variant="contained"
-                onClick={(e) => {
+                onClick={( e ) => {
                   // Prevent navigation if validation fails
-                  if (!validateCompanySelection()) {
+                  if ( !validateCompanySelection() )
+                  {
                     e.preventDefault();
                   }
                 }}
@@ -511,7 +527,7 @@ const Home: React.FC = () => {
             >
               <Tooltip title="Grid View">
                 <IconButton
-                  onClick={() => setToggleListView("grid")}
+                  onClick={() => setToggleListView( "grid" )}
                   sx={{
                     color: toggleListView === "grid" ? "#1d86ff" : "#9e9e9e",
                     backgroundColor:
@@ -526,7 +542,7 @@ const Home: React.FC = () => {
 
               <Tooltip title="List View">
                 <IconButton
-                  onClick={() => setToggleListView("list")}
+                  onClick={() => setToggleListView( "list" )}
                   sx={{
                     color: toggleListView === "list" ? "#1d86ff" : "#9e9e9e",
                     backgroundColor:
@@ -541,7 +557,7 @@ const Home: React.FC = () => {
 
               <Tooltip title="Table View">
                 <IconButton
-                  onClick={() => setToggleListView("table")}
+                  onClick={() => setToggleListView( "table" )}
                   sx={{
                     color: toggleListView === "table" ? "#1d86ff" : "#9e9e9e",
                     backgroundColor:
@@ -567,12 +583,14 @@ const Home: React.FC = () => {
                     whiteSpace: "nowrap",
                   }}
                   variant="contained"
-                  onClick={(e) => {
+                  onClick={( e ) => {
                     // Validate company selection first & stop navigation
-                    if (!validateCompanySelection()) {
+                    if ( !validateCompanySelection() )
+                    {
                       e.preventDefault();
-                    } else {
-                      remLocalStorage("customerInfo");
+                    } else
+                    {
+                      remLocalStorage( "customerInfo" );
                     }
                   }}
                 >
@@ -716,6 +734,7 @@ const Home: React.FC = () => {
                       <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Amount</TableCell>
                       <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Provider</TableCell>
                       <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Loan Category</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Lead Type</TableCell>
                       <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Tenure</TableCell>
                       <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Location</TableCell>
                       <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Application Date</TableCell>
@@ -738,7 +757,7 @@ const Home: React.FC = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {filteredCustomers.map((customerApplication, index) => (
+                    {filteredCustomers.map( ( customerApplication, index ) => (
                       <ApplicationCard
                         key={customerApplication.applicationId}
                         customerApplication={customerApplication}
@@ -751,14 +770,14 @@ const Home: React.FC = () => {
                         toggleListView={toggleListView}
                         userRole={userRole}
                       />
-                    ))}
+                    ) )}
                   </TableBody>
                 </Table>
               </TableContainer>
             ) : (
               // List View - You can implement a different list component here
               <Grid container spacing={2}>
-                {filteredCustomers.map((customerApplication, index) => (
+                {filteredCustomers.map( ( customerApplication, index ) => (
                   <ApplicationCard
                     key={customerApplication.applicationId}
                     customerApplication={customerApplication}
@@ -771,7 +790,7 @@ const Home: React.FC = () => {
                     toggleListView={toggleListView}
                     userRole={userRole}
                   />
-                ))}
+                ) )}
               </Grid>
             )}
 
@@ -790,7 +809,7 @@ const Home: React.FC = () => {
           </>
         )}
       </Box>
-      {(swrLoading || isDeleting) && <Loader />}
+      {( swrLoading || isDeleting ) && <Loader />}
       <Toast
         alerting={toast.toastAlert}
         message={toast.toastMessage}
