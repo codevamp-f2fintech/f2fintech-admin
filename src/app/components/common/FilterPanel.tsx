@@ -364,15 +364,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
   const handleForwardedMenuClose = () => {
     setForwardedAnchorEl( null );
   };
-  console.log(
-    "set fsdsfdsfd",
-    tempInputValue,
-    startDate,
-    selectedUser,
-    selectedBank,
-    sortBy,
-    loanProvider
-  );
+
   return (
     <Paper
       elevation={2}

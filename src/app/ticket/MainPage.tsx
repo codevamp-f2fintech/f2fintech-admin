@@ -1115,6 +1115,7 @@ const Ticket = () => {
                             }
                             handleDeleteTicket={handleDeleteTicket}
                             toggleListView={toggleListView}
+                            validateCompanyForCheckbox={undefined}
                           />
                         ) )}
                       </TableBody>
@@ -1133,6 +1134,7 @@ const Ticket = () => {
                       }
                       handleDeleteTicket={handleDeleteTicket}
                       toggleListView={toggleListView}
+                      validateCompanyForCheckbox={undefined}
                     />
                   ) )}
                 </Grid>

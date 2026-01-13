@@ -81,12 +81,14 @@ interface ApplicationCardProps {
     onDelete: ( applicationId: string, customerName: string ) => void;
   };
   handleStartClick?: ( ticketId: number ) => void;
+  showDeleteButton?: boolean;
   refetch?: () => Promise<void>;
   userRole?: string;
   handleDeleteTicket?: ( ticketId: number ) => void;
   isApplication?: boolean;
   toggleListView?: string;
   mainIndex?: number;
+  validateCompanyForCheckbox?: () => boolean;
 }
 
 function InfoRow ( {
@@ -169,6 +171,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
   isApplication = false,
   toggleListView,
   mainIndex,
+  validateCompanyForCheckbox
 } ) => {
   const [ showHistory, setShowHistory ] = useState<boolean>( false );
   const [ showComment, setShowComment ] = useState<boolean>( false );
@@ -330,43 +333,46 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
     }
   }, [ showComment, customerApplication?.ticketId ] );
 
-  const handleCheckboxChange = async ( applicationId: number ) => {
-    try
-    {
-      const userInfo = decodedToken();
+const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent) => {
+  // Validate company selection
+  if (validateCompanyForCheckbox && !validateCompanyForCheckbox()) {
+    e?.preventDefault();
+    e?.stopPropagation();
+    return;
+  }
 
-      const ticketResponse = await createTicket( {
-        customer_application_id: applicationId,
-        user_id: decodedToken()?.id,
-        status: "operations",
-      } );
-      if ( ticketResponse?.statusCode === 409 )
-      {
-        toastAndNavigate(
-          dispatch,
-          true,
-          "error",
-          "This Application Is Already Picked By Another User.Please Pick Another Application.",
-          null,
-          null,
-          false,
-          true
-        );
+  try {
+    const userInfo = decodedToken();
 
-        dispatch( resetCustomerApplications( applicationId ) );
-      } else
-      {
-        dispatch( resetTickets() );
-        await modifyiedCustomerApplication( applicationId, {
-          is_picked: 1,
-        } );
-        dispatch( resetCustomerApplications( applicationId ) );
-      }
-    } catch ( error )
-    {
-      console.log( "Error in checkbox change:", error );
+    const ticketResponse = await createTicket({
+      customer_application_id: applicationId,
+      user_id: decodedToken()?.id,
+      status: "operations",
+    });
+    if (ticketResponse?.statusCode === 409) {
+      toastAndNavigate(
+        dispatch,
+        true,
+        "error",
+        "This Application Is Already Picked By Another User. Please Pick Another Application.",
+        null,
+        null,
+        false,
+        true
+      );
+
+      dispatch(resetCustomerApplications(applicationId));
+    } else {
+      dispatch(resetTickets());
+      await modifyiedCustomerApplication(applicationId, {
+        is_picked: 1,
+      });
+      dispatch(resetCustomerApplications(applicationId));
     }
-  };
+  } catch (error) {
+    console.log("Error in checkbox change:", error);
+  }
+};
 
   useEffect( () => {
     // Collapse when it's an application
@@ -738,12 +744,13 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                       Pick
                     </Typography>
                     <Checkbox
-                      onChange={() =>
-                        handleCheckboxChange( customerApplication.applicationId )
-                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCheckboxChange(customerApplication.applicationId, e);
+                      }}
                       size="small"
                       sx={{
-                        color: "white",
+                        color: toggleListView === "table" ? "#666" : toggleListView === "list" ? "white" : "black",
                         "&.Mui-checked": {
                           color: "#FFD93D",
                         },
@@ -1954,12 +1961,13 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                       Pick
                     </Typography>
                     <Checkbox
-                      onChange={() =>
-                        handleCheckboxChange( customerApplication.applicationId )
-                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCheckboxChange(customerApplication.applicationId, e);
+                      }}
                       size="small"
                       sx={{
-                        color: "black",
+                        color: toggleListView === "table" ? "#666" : toggleListView === "list" ? "white" : "black",
                         "&.Mui-checked": {
                           color: "#FFD93D",
                         },
@@ -2331,14 +2339,15 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
                     Pick
                   </Typography>
                   <Checkbox
-                    onChange={() =>
-                      handleCheckboxChange( customerApplication.applicationId )
-                    }
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCheckboxChange(customerApplication.applicationId, e);
+                    }}
                     size="small"
                     sx={{
-                      color: "#666",
-                      "&.Mui-checked": {
-                        color: "#FFD93D",
+                    color: toggleListView === "table" ? "#666" : toggleListView === "list" ? "white" : "black",
+                    "&.Mui-checked": {
+                      color: "#FFD93D",
                       },
                     }}
                   />
