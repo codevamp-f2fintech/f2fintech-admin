@@ -28,6 +28,8 @@ import {
   DialogActions,
   IconButton,
   Stack,
+  FormHelperText,
+  OutlinedInput,
 } from "@mui/material";
 import { CurrencyRupee as CurrencyRupeeIcon, AccessTime, Close, Edit } from "@mui/icons-material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
@@ -67,9 +69,9 @@ const initialValues = {
 
 interface Step1FormProps {
   applicationNumber?: number | string | null;
-  setApplicationNumber?: ( num: number | string | null ) => void;
+  setApplicationNumber?: (num: number | string | null) => void;
   getStarted?: boolean;
-  setGetStarted?: ( value: boolean ) => void;
+  setGetStarted?: (value: boolean) => void;
   salary?: any;
 }
 
@@ -78,41 +80,49 @@ interface ProviderAmount {
   amount: string;
 }
 
-const Step1Form: React.FC<Step1FormProps> = ( {
+const Step1Form: React.FC<Step1FormProps> = ({
   applicationNumber,
   setApplicationNumber,
   getStarted,
   setGetStarted,
   salary,
-} ) => {
-  const [ amount, setAmount ] = useState<string>( "" );
-  const [ providerAmounts, setProviderAmounts ] = useState<ProviderAmount[]>( [] );
-  const [ tenure, setTenure ] = useState<string>( "" );
-  const [ loanType, setLoanType ] = useState( "" );
-  const [ loanCategory, setLoanCategory ] = useState( "" );
-  const [ provider, setProvider ] = useState<string>( "" );
-  const [ loading, setLoading ] = useState<boolean>( false );
-  const [ leadType, setLeadType ] = useState<string>( "" );
-  const [ leadTypeError, setLeadTypeError ] = useState<string>( "" );
-  const [ errors, setErrors ] = useState<{
+}) => {
+  const [amount, setAmount] = useState<string>("");
+  const [providerAmounts, setProviderAmounts] = useState<ProviderAmount[]>([]);
+  const [tenure, setTenure] = useState<string>("");
+  const [loanType, setLoanType] = useState("");
+  const [loanCategory, setLoanCategory] = useState("");
+  const [provider, setProvider] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [leadType, setLeadType] = useState<string>("");
+  const [leadTypeError, setLeadTypeError] = useState<string>("");
+
+  // New State for Running Customer Loans
+  const [hasRunningLoans, setHasRunningLoans] = useState("");
+  const [hasRunningLoansError, setHasRunningLoansError] = useState("");
+  const [whichLoan, setWhichLoan] = useState("");
+  const [whichLoanError, setWhichLoanError] = useState("");
+  const [runningLoanAmount, setRunningLoanAmount] = useState("");
+  const [runningLoanAmountError, setRunningLoanAmountError] = useState("");
+  const [errors, setErrors] = useState<{
     amount: string;
     tenure: string;
     provider: string;
     loanType: string;
     leadType: string;
-  }>( {
+  }>({
     amount: "",
     tenure: "",
     provider: "",
     loanType: "",
     leadType: "",
-  } );
-  const [ loanStatus, setLoanStatus ] = useState<string | null>( null );
-  const toastInfo = useSelector( ( state: any ) => state.toast );
+  });
+  const [loanStatus, setLoanStatus] = useState<string | null>(null);
+  const toastInfo = useSelector((state: any) => state.toast);
   const dispatch = useDispatch();
-  const [ providers, setProviders ] = useState<string[]>( [] );
-  const [ amountDialogOpen, setAmountDialogOpen ] = useState( false );
-  const [ editingProvider, setEditingProvider ] = useState<string | null>( null );
+  const [providers, setProviders] = useState<string[]>([]);
+  const [amountDialogOpen, setAmountDialogOpen] = useState(false);
+  const [editingProvider, setEditingProvider] = useState<string | null>(null);
 
   // Define loan types with categories
   const loanTypes = {
@@ -164,156 +174,178 @@ const Step1Form: React.FC<Step1FormProps> = ( {
     ]
   };
 
-  const validateLeadType = ( value: string ): void => {
+  const validateLeadType = (value: string): void => {
     let error = "";
-    if ( !value )
-    {
+    if (!value) {
       error = "Lead type is required";
     }
-    setLeadTypeError( error );
+    setLeadTypeError(error);
+  };
+
+  const validateHasRunningLoans = (value: string) => {
+    if (!value) {
+      setHasRunningLoansError("This field is required");
+      return false;
+    }
+    setHasRunningLoansError("");
+    return true;
+  };
+
+  const validateWhichLoan = (value: string) => {
+    if (hasRunningLoans === "yes" && !value) {
+      setWhichLoanError("Please select a loan type");
+      return false;
+    }
+    setWhichLoanError("");
+    return true;
+  };
+
+  const validateRunningLoanAmount = (value: string) => {
+    if (hasRunningLoans === "yes") {
+      if (!value) {
+        setRunningLoanAmountError("Amount is required");
+        return false;
+      }
+      if (isNaN(Number(value)) || Number(value) <= 0) {
+        setRunningLoanAmountError("Please enter a valid amount");
+        return false;
+      }
+    }
+    setRunningLoanAmountError("");
+    return true;
   };
 
   // Function to determine loan category based on loan type
-  const getLoanCategory = ( loanType: string ): string => {
-    const securedLoanTypes = [ "home loan", "lap", "auto loan", "machinery loan" ];
-    const unsecuredLoanTypes = [ "personal loan", "business loan", "professional loan", "education loan", "just inquiry" ];
+  const getLoanCategory = (loanType: string): string => {
+    const securedLoanTypes = ["home loan", "lap", "auto loan", "machinery loan"];
+    const unsecuredLoanTypes = ["personal loan", "business loan", "professional loan", "education loan", "just inquiry"];
 
-    if ( securedLoanTypes.includes( loanType ) )
-    {
+    if (securedLoanTypes.includes(loanType)) {
       return "secured";
-    } else if ( unsecuredLoanTypes.includes( loanType ) )
-    {
+    } else if (unsecuredLoanTypes.includes(loanType)) {
       return "unsecured";
     }
     return "";
   };
 
   // Handle loan type change
-  const handleLoanTypeChange = ( value: string ) => {
-    console.log( "Selected Loan Type:", value );
-    setLoanType( value );
+  const handleLoanTypeChange = (value: string) => {
+    console.log("Selected Loan Type:", value);
+    setLoanType(value);
 
-    const category = getLoanCategory( value );
-    console.log( "Determined Loan Category:", category );
+    const category = getLoanCategory(value);
+    console.log("Determined Loan Category:", category);
 
-    setLoanCategory( category );
+    setLoanCategory(category);
 
     // Reset tenure when loan type changes
-    setTenure( "" );
+    setTenure("");
 
-    validateLoanType( value );
+    validateLoanType(value);
   };
 
-  const validateProviders = ( values: string[] ): void => {
+  const validateProviders = (values: string[]): void => {
     let error = "";
-    if ( !values || values.length === 0 )
-    {
+    if (!values || values.length === 0) {
       error = "Please select at least one provider";
     }
-    setErrors( ( prev ) => ( { ...prev, provider: error } ) );
+    setErrors((prev) => ({ ...prev, provider: error }));
   };
 
-  const validateLoanType = ( value: string ): void => {
+  const validateLoanType = (value: string): void => {
     let error = "";
-    if ( !value )
-    {
+    if (!value) {
       error = "This Field is required";
     }
-    setErrors( ( prev ) => ( { ...prev, loanType: error } ) );
+    setErrors((prev) => ({ ...prev, loanType: error }));
   };
 
   // Fetch loan providers
   const { value: providersData, swrLoading: providersLoading } =
-    useGetLoanProviders( null, "get-all-loan-providers", 1, 100 );
+    useGetLoanProviders(null, "get-all-loan-providers", 1, 100);
 
   const { decodedToken, getLocalStorage, remLocalStorage, setLocalStorage, toastAndNavigate
   } = Utility();
-  const storedCustomerId = getLocalStorage( "customerInfo" )?.id;
+  const storedCustomerId = getLocalStorage("customerInfo")?.id;
 
   // Generate random application number
   const randomNumberGenerator = (): number =>
-    Math.floor( 10000000 + Math.random() * 90000000 );
+    Math.floor(10000000 + Math.random() * 90000000);
 
-  const randomFourDigitNumber = Math.floor( 1000 + Math.random() * 9000 );
+  const randomFourDigitNumber = Math.floor(1000 + Math.random() * 9000);
 
   // Get the current date and calculate 20 years ago
-  const minDate = dayjs( "1900-01-01" );
-  const maxDate = dayjs().subtract( 20, "year" );
+  const minDate = dayjs("1900-01-01");
+  const maxDate = dayjs().subtract(20, "year");
 
   // Validation function for the amount
-  const validateAmount = ( value: string ): void => {
+  const validateAmount = (value: string): void => {
     let error = "";
-    if ( !value )
-    {
+    if (!value) {
       error = "This Field is required";
-    } else if ( isNaN( Number( value ) ) )
-    {
+    } else if (isNaN(Number(value))) {
       error = "Amount must be a number";
-    } else if ( Number( value ) < 50000 || Number( value ) > 100000000 )
-    {
+    } else if (Number(value) < 50000 || Number(value) > 100000000) {
       error = "Amount must be within 50 thousand and 10 crore";
-    } else if ( Number( value ) % 5 !== 0 )
-    {
+    } else if (Number(value) % 5 !== 0) {
       error = "Amount must be divisible by 5";
     }
-    setErrors( ( prev ) => ( { ...prev, amount: error } ) );
+    setErrors((prev) => ({ ...prev, amount: error }));
   };
 
-  const validateTenure = ( value: string ): void => {
+  const validateTenure = (value: string): void => {
     let error = "";
-    if ( !value )
-    {
+    if (!value) {
       error = "This Field is required";
     }
-    setErrors( ( prev ) => ( { ...prev, tenure: error } ) );
+    setErrors((prev) => ({ ...prev, tenure: error }));
   };
 
   // Handle provider selection
-  const handleProviderChange = ( selectedProviders: string[] ) => {
-    setProviders( selectedProviders );
-    validateProviders( selectedProviders );
+  const handleProviderChange = (selectedProviders: string[]) => {
+    setProviders(selectedProviders);
+    validateProviders(selectedProviders);
 
     // Initialize amounts for newly selected providers
-    const updatedAmounts = [ ...providerAmounts ];
-    selectedProviders.forEach( providerName => {
-      if ( !updatedAmounts.find( pa => pa.provider === providerName ) )
-      {
-        updatedAmounts.push( {
+    const updatedAmounts = [...providerAmounts];
+    selectedProviders.forEach(providerName => {
+      if (!updatedAmounts.find(pa => pa.provider === providerName)) {
+        updatedAmounts.push({
           provider: providerName,
           amount: amount || "" // Use the main amount if available, otherwise empty
-        } );
+        });
       }
-    } );
+    });
 
     // Remove amounts for deselected providers
-    const filteredAmounts = updatedAmounts.filter( pa =>
-      selectedProviders.includes( pa.provider )
+    const filteredAmounts = updatedAmounts.filter(pa =>
+      selectedProviders.includes(pa.provider)
     );
-    setProviderAmounts( filteredAmounts );
+    setProviderAmounts(filteredAmounts);
   };
 
   // Handle provider removal
-  const handleProviderRemove = ( providerToRemove: string ) => {
-    const newProviders = providers.filter( p => p !== providerToRemove );
-    setProviders( newProviders );
-    validateProviders( newProviders );
+  const handleProviderRemove = (providerToRemove: string) => {
+    const newProviders = providers.filter(p => p !== providerToRemove);
+    setProviders(newProviders);
+    validateProviders(newProviders);
 
     // Remove from provider amounts
-    setProviderAmounts( prev =>
-      prev.filter( pa => pa.provider !== providerToRemove )
+    setProviderAmounts(prev =>
+      prev.filter(pa => pa.provider !== providerToRemove)
     );
   };
 
   // Open amount dialog for a specific provider
-  const openAmountDialog = ( providerName: string ) => {
-    setEditingProvider( providerName );
-    setAmountDialogOpen( true );
+  const openAmountDialog = (providerName: string) => {
+    setEditingProvider(providerName);
+    setAmountDialogOpen(true);
   };
 
   // Update amount for a specific provider
-  const updateProviderAmount = ( providerName: string, newAmount: string ) => {
-    setProviderAmounts( prev =>
-      prev.map( pa =>
+  const updateProviderAmount = (providerName: string, newAmount: string) => {
+    setProviderAmounts(prev =>
+      prev.map(pa =>
         pa.provider === providerName ? { ...pa, amount: newAmount } : pa
       )
     );
@@ -321,22 +353,17 @@ const Step1Form: React.FC<Step1FormProps> = ( {
 
   // Validate all provider amounts
   const validateAllProviderAmounts = (): boolean => {
-    for ( const pa of providerAmounts )
-    {
-      if ( !pa.amount )
-      {
+    for (const pa of providerAmounts) {
+      if (!pa.amount) {
         return false;
       }
-      if ( isNaN( Number( pa.amount ) ) )
-      {
+      if (isNaN(Number(pa.amount))) {
         return false;
       }
-      if ( Number( pa.amount ) < 50000 || Number( pa.amount ) > 100000000 )
-      {
+      if (Number(pa.amount) < 50000 || Number(pa.amount) > 100000000) {
         return false;
       }
-      if ( Number( pa.amount ) % 5 !== 0 )
-      {
+      if (Number(pa.amount) % 5 !== 0) {
         return false;
       }
     }
@@ -344,39 +371,34 @@ const Step1Form: React.FC<Step1FormProps> = ( {
   };
 
   // Fetch application number and loan status using stored customer ID
-  useEffect( () => {
+  useEffect(() => {
     const fetchCustomerData = async () => {
-      if ( storedCustomerId )
-      {
-        try
-        {
+      if (storedCustomerId) {
+        try {
           const { data: response } = await axiosInstance.get(
-            `${ process.env.NEXT_PUBLIC_WEB_URL }/get-application-by-id/${ storedCustomerId }` );
-          if ( response.status === "Success" )
-          {
-            setApplicationNumber?.( response.data.application_no );
+            `${process.env.NEXT_PUBLIC_WEB_URL}/get-application-by-id/${storedCustomerId}`);
+          if (response.status === "Success") {
+            setApplicationNumber?.(response.data.application_no);
             const { data: resp } = await axiosInstance.get(
-              `${ process.env.NEXT_PUBLIC_WEB_URL }/get-loan-tracking-by-id/${ response.data.id }` );
-            if ( resp.status === "Success" )
-            {
-              setLoanStatus( resp.data.status );
+              `${process.env.NEXT_PUBLIC_WEB_URL}/get-loan-tracking-by-id/${response.data.id}`);
+            if (resp.status === "Success") {
+              setLoanStatus(resp.data.status);
             }
           }
-        } catch ( err )
-        {
-          console.log( "Error fetching customer data:", err );
+        } catch (err) {
+          console.log("Error fetching customer data:", err);
         }
       }
     };
     fetchCustomerData();
-  }, [ storedCustomerId ] );
+  }, [storedCustomerId]);
 
   // Function to register the customer
-  async function registerCustomer ( customer ) {
+  async function registerCustomer(customer) {
     // Combine title and name before sending
     const customerData = {
       ...customer,
-      name: `${ customer.title } ${ customer.name }`.trim() // Combine title and name
+      name: `${customer.title} ${customer.name}`.trim() // Combine title and name
     };
 
     const companyId = getCompanyId();
@@ -388,31 +410,30 @@ const Step1Form: React.FC<Step1FormProps> = ( {
     // }
 
     const { data: res } = await axiosInstance.post(
-      `${ process.env.NEXT_PUBLIC_WEB_URL }/create-customer`,
+      `${process.env.NEXT_PUBLIC_WEB_URL}/create-customer`,
       customerData,
     );
 
-    if ( res.status !== "Success" )
-    {
-      throw new Error( `Registration failed: ${ res.message }` );
+    if (res.status !== "Success") {
+      throw new Error(`Registration failed: ${res.message}`);
     }
     return res.data.id;
   }
 
   // Function to create customer info
-  async function createCustomerInfo ( customerId, restValues ) {
+  async function createCustomerInfo(customerId, restValues) {
     const companyId = getCompanyId();
     // const headers = companyId ? { companyid: companyId } : {};
     await axiosInstance.post(
-      `${ process.env.NEXT_PUBLIC_WEB_URL }/create-customer-info`,
+      `${process.env.NEXT_PUBLIC_WEB_URL}/create-customer-info`,
       {
         customer_id: customerId,
         ...restValues,
-      } )
+      })
   }
 
   // Function to create the customer application
-  async function createCustomerApplication (
+  async function createCustomerApplication(
     customerId,
     applicationNumber,
     amount,
@@ -421,12 +442,15 @@ const Step1Form: React.FC<Step1FormProps> = ( {
     loanType,
     loanCategory,
     leadType,
+    hasRunningLoans,
+    whichLoan,
+    runningLoanAmount,
   ) {
     const companyId = getCompanyId();
     // const headers = companyId ? { companyid: companyId } : {};
     const { data: applicationResponse } =
       await axiosInstance.post(
-        `${ process.env.NEXT_PUBLIC_WEB_URL }/create-application`,
+        `${process.env.NEXT_PUBLIC_WEB_URL}/create-application`,
         {
           customer_id: customerId,
           applied_by: decodedToken()?.id,
@@ -437,32 +461,35 @@ const Step1Form: React.FC<Step1FormProps> = ( {
           loan_type: loanType,
           loan_category: loanCategory,
           lead_type: leadType,
+          has_running_loans: hasRunningLoans,
+          which_loan: whichLoan,
+          running_loan_amount: runningLoanAmount,
           // company_id: companyId,
-        } )
+        })
     return applicationResponse.data.applicationId;
   }
 
   // Function to create loan tracking
-  async function createLoanTracking ( applicationId ) {
+  async function createLoanTracking(applicationId) {
     await axiosInstance.post(
-      `${ process.env.NEXT_PUBLIC_WEB_URL }/create-loan-tracking`,
+      `${process.env.NEXT_PUBLIC_WEB_URL}/create-loan-tracking`,
       {
         customer_application_id: applicationId,
         status: "submitted",
         // company_id: companyId,
-      } )
+      })
   }
 
-  const setCustomerData = async ( customerInfo ) => {
-    setGetStarted( false );
-    setLocalStorage( "customerInfo", customerInfo );
+  const setCustomerData = async (customerInfo) => {
+    setGetStarted(false);
+    setLocalStorage("customerInfo", customerInfo);
     // location.reload();
   }
 
   // Create new customer with loan application
   const create = useCallback(
-    async ( values: typeof initialValues ) => {
-      setLoading( true );
+    async (values: typeof initialValues) => {
+      setLoading(true);
       const { contact, email, name, status, dob, ...restValues } = values;
       const customer = {
         contact,
@@ -470,27 +497,27 @@ const Step1Form: React.FC<Step1FormProps> = ( {
         email,
         title: values.title,
         name: values.name,
-        password: `${ name.replace( /\s/g, "" ) }@${ randomFourDigitNumber }`,
+        password: `${name.replace(/\s/g, "")}@${randomFourDigitNumber}`,
         status,
       };
 
-      try
-      {
+      try {
         // const companyId = getCompanyId();
         // if ( !companyId )
         // {
         //   throw new Error( 'Company ID is required' );
         // }
-        const customerId = storedCustomerId || ( await registerCustomer( customer ) );
+        const customerId = storedCustomerId || (await registerCustomer(customer));
         const customerInfoWithLeadType = {
           ...restValues,
           lead_type: leadType, // Use the state variable, not values.lead_type
+
         };
-        await createCustomerInfo( customerId, customerInfoWithLeadType );
+        await createCustomerInfo(customerId, customerInfoWithLeadType);
 
         // Create applications for each selected provider with their specific amounts
-        const applicationPromises = providers.map( async ( providerName ) => {
-          const providerAmount = providerAmounts.find( pa => pa.provider === providerName )?.amount || amount;
+        const applicationPromises = providers.map(async (providerName) => {
+          const providerAmount = providerAmounts.find(pa => pa.provider === providerName)?.amount || amount;
           const applicationNumberGenerated = randomNumberGenerator();
           const applicationId = await createCustomerApplication(
             customerId,
@@ -501,56 +528,56 @@ const Step1Form: React.FC<Step1FormProps> = ( {
             loanType,
             loanCategory,
             leadType,
+            hasRunningLoans === "yes",
+            hasRunningLoans === "yes" ? whichLoan : null,
+            hasRunningLoans === "yes" ? Number(runningLoanAmount) : null,
           );
-          await createLoanTracking( applicationId );
+          await createLoanTracking(applicationId);
           return applicationNumberGenerated;
-        } );
+        });
 
-        const applicationNumbers = await Promise.all( applicationPromises );
+        const applicationNumbers = await Promise.all(applicationPromises);
 
         // Store the first application number or all of them as needed
-        setApplicationNumber( applicationNumbers[ 0 ] );
+        setApplicationNumber(applicationNumbers[0]);
 
         !storedCustomerId
-          ? await setCustomerData( {
+          ? await setCustomerData({
             id: customerId,
             name: customer.name,
             applicationNumbers: applicationNumbers, // Store all application numbers
-          } )
+          })
           : location.reload();
 
-        setLoading( false );
+        setLoading(false);
         console.log(
-          `Created ${ providers.length } applications successfully:`,
+          `Created ${providers.length} applications successfully:`,
           applicationNumbers
         );
-      } catch ( err )
-      {
+      } catch (err) {
         toastAndNavigate(
           dispatch,
           true,
           "error",
           err?.response?.data?.msg || "Error Occurred. Please Try Again"
         );
-        setLoading( false );
-        console.log( "Error during customer creation:", err?.response?.data?.msg );
-      } finally
-      {
-        setLoading( false );
+        setLoading(false);
+        console.log("Error during customer creation:", err?.response?.data?.msg);
+      } finally {
+        setLoading(false);
       }
     },
-    [ amount, tenure, providers, providerAmounts, loanType, loanCategory, leadType ] // Updated dependency
+    [amount, tenure, providers, providerAmounts, loanType, loanCategory, leadType, hasRunningLoans, whichLoan, runningLoanAmount] // Updated dependency
   );
 
   const PROVIDER_OPTIONS = providersLoading
     ? []
-    : providersData?.data?.results?.map( provider => provider.title ) || [];
+    : providersData?.data?.results?.map(provider => provider.title) || [];
 
   // If application number and loan status exists, display success message without making user to fill the form again
-  if ( applicationNumber )
-  {
-    const storedCustomerInfo = getLocalStorage( "customerInfo" );
-    const allApplicationNumbers = storedCustomerInfo?.applicationNumbers || [ applicationNumber ];
+  if (applicationNumber) {
+    const storedCustomerInfo = getLocalStorage("customerInfo");
+    const allApplicationNumbers = storedCustomerInfo?.applicationNumbers || [applicationNumber];
 
     return (
       <Box
@@ -588,11 +615,11 @@ const Step1Form: React.FC<Step1FormProps> = ( {
             <Typography sx={{ fontSize: "1rem", color: "#333", mb: 1 }}>
               Your Application Numbers are:
             </Typography>
-            {allApplicationNumbers.map( ( appNum, index ) => (
+            {allApplicationNumbers.map((appNum, index) => (
               <Typography key={index} sx={{ fontSize: "0.9rem", color: "#333", textAlign: "center" }}>
                 <strong>{appNum}</strong>
               </Typography>
-            ) )}
+            ))}
           </Box>
         ) : (
           <Typography sx={{ fontSize: "1rem", color: "#333", mb: 2 }}>
@@ -627,7 +654,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
               },
             }}
             onClick={() => {
-              remLocalStorage( "customerInfo" );
+              remLocalStorage("customerInfo");
               location.reload();
             }}
           >
@@ -639,8 +666,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
   }
 
   // Initial form view with amount and tenure selection
-  if ( !getStarted )
-  {
+  if (!getStarted) {
     return (
       <Box
         sx={{
@@ -686,11 +712,11 @@ const Step1Form: React.FC<Step1FormProps> = ( {
             label="Enter Net Amount*"
             placeholder="Base Loan Amount (Can customize per provider)"
             value={amount}
-            onChange={( e ) => {
-              setAmount( e.target.value );
-              validateAmount( e.target.value );
+            onChange={(e) => {
+              setAmount(e.target.value);
+              validateAmount(e.target.value);
             }}
-            onBlur={() => validateAmount( amount )}
+            onBlur={() => validateAmount(amount)}
             error={!!errors.amount}
             helperText={errors.amount}
             InputProps={{
@@ -782,8 +808,8 @@ const Step1Form: React.FC<Step1FormProps> = ( {
             variant="filled"
             name="loanType"
             value={loanType}
-            onChange={( e ) => handleLoanTypeChange( e.target.value )}
-            onBlur={() => validateLoanType( loanType )}
+            onChange={(e) => handleLoanTypeChange(e.target.value)}
+            onBlur={() => validateLoanType(loanType)}
             startAdornment={
               <InputAdornment position="start" sx={{ color: "white !important" }}>
                 <AccountBalanceIcon />
@@ -812,7 +838,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
             <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#333", color: "#90caf9" }}>
               Secured Loans
             </MenuItem>
-            {loanTypes.secured.map( ( loan ) => (
+            {loanTypes.secured.map((loan) => (
               <MenuItem
                 key={loan.value}
                 value={loan.value}
@@ -824,13 +850,13 @@ const Step1Form: React.FC<Step1FormProps> = ( {
               >
                 {loan.label}
               </MenuItem>
-            ) )}
+            ))}
 
             {/* Unsecured Loans Group */}
             <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#333", color: "#90caf9", mt: 1 }}>
               Unsecured Loans
             </MenuItem>
-            {loanTypes.unsecured.map( ( loan ) => (
+            {loanTypes.unsecured.map((loan) => (
               <MenuItem
                 key={loan.value}
                 value={loan.value}
@@ -842,7 +868,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
               >
                 {loan.label}
               </MenuItem>
-            ) )}
+            ))}
           </Select>
           {errors.loanType && (
             <Typography
@@ -900,11 +926,11 @@ const Step1Form: React.FC<Step1FormProps> = ( {
             variant="filled"
             name="leadType"
             value={leadType}
-            onChange={( e ) => {
-              setLeadType( e.target.value );
-              validateLeadType( e.target.value );
+            onChange={(e) => {
+              setLeadType(e.target.value);
+              validateLeadType(e.target.value);
             }}
-            onBlur={() => validateLeadType( leadType )}
+            onBlur={() => validateLeadType(leadType)}
             startAdornment={
               <InputAdornment position="start" sx={{ color: "white !important" }}>
                 <AccountBalanceIcon />
@@ -929,7 +955,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
               },
             }}
           >
-            {leadTypes.map( ( lead ) => (
+            {leadTypes.map((lead) => (
               <MenuItem
                 key={lead.value}
                 value={lead.value}
@@ -941,7 +967,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
               >
                 {lead.label}
               </MenuItem>
-            ) )}
+            ))}
           </Select>
           {leadTypeError && (
             <Typography
@@ -957,6 +983,242 @@ const Step1Form: React.FC<Step1FormProps> = ( {
             </Typography>
           )}
         </FormControl>
+
+        {/* Running Customer Loans Field */}
+        <FormControl
+          fullWidth
+          variant="outlined"
+          sx={{
+            mb: 2,
+            width: { xs: "90%", sm: "60%", md: "45%" },
+          }}
+        >
+          <InputLabel
+            id="running-loans-label"
+            sx={{
+              color: hasRunningLoansError ? "error.main" : "rgba(255,255,255,0.7)",
+              "&.Mui-focused": { color: "#90caf9" },
+            }}
+          >
+            Running Customer Loans*
+          </InputLabel>
+
+          <Select
+            labelId="running-loans-label"
+            name="hasRunningLoans"
+            value={hasRunningLoans}
+            onChange={(e) => {
+              setHasRunningLoans(e.target.value);
+              validateHasRunningLoans(e.target.value);
+              // Clear conditional fields when switching to "no"
+              if (e.target.value === "no") {
+                setWhichLoan("");
+                setRunningLoanAmount("");
+                setWhichLoanError("");
+                setRunningLoanAmountError("");
+              }
+            }}
+            onBlur={() => validateHasRunningLoans(hasRunningLoans)}
+            error={!!hasRunningLoansError}
+            input={<OutlinedInput label="Running Customer Loans*" />}
+            startAdornment={
+              <InputAdornment position="start">
+                <AccountBalanceIcon sx={{ color: "white", mr: 1 }} />
+              </InputAdornment>
+            }
+            sx={{
+              borderRadius: "12px",
+              backgroundColor: "rgba(255, 255, 255, 0.08)",
+              color: "white",
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderColor: hasRunningLoansError ? "red" : "rgba(255, 255, 255, 0.1)",
+                borderWidth: "1px",
+              },
+              "&:hover .MuiOutlinedInput-notchedOutline": {
+                borderColor: "rgba(255, 255, 255, 0.2)",
+                borderWidth: "1px",
+              },
+              "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                borderColor: "#90caf9",
+                borderWidth: "2px",
+              },
+              "& .MuiSelect-icon": {
+                color: "white",
+              },
+              // Removing default border for variants if needed, but here we use OutlinedInput
+            }}
+            MenuProps={{
+              PaperProps: {
+                sx: {
+                  bgcolor: "#1e1e1e",
+                  borderRadius: "10px",
+                  "& .MuiMenuItem-root": {
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "#333",
+                    },
+                    "&.Mui-selected": {
+                      backgroundColor: "#90caf9 !important",
+                      color: "#fff",
+                    },
+                  },
+                },
+              },
+            }}
+          >
+            <MenuItem value="yes">Yes</MenuItem>
+            <MenuItem value="no">No</MenuItem>
+          </Select>
+
+          {hasRunningLoansError && (
+            <FormHelperText error>{hasRunningLoansError}</FormHelperText>
+          )}
+        </FormControl>
+
+        {/* Conditional Fields - Which Loan and Loan Amount */}
+        {hasRunningLoans === "yes" && (
+          <>
+            {/* Which Loan Field - now a dropdown */}
+            <FormControl
+              fullWidth
+              variant="outlined"
+              sx={{ mb: 2, width: { xs: "90%", sm: "60%", md: "45%" } }}
+              error={!!whichLoanError}
+            >
+              <InputLabel
+                id="which-loan-label"
+                sx={{
+                  color: whichLoanError ? "error.main" : "rgba(255,255,255,0.7)",
+                  "&.Mui-focused": { color: "#90caf9" },
+                }}
+              >
+                Which Loan*
+              </InputLabel>
+              <Select
+                labelId="which-loan-label"
+                name="whichLoan"
+                value={whichLoan}
+                onChange={(e) => {
+                  setWhichLoan(e.target.value);
+                  validateWhichLoan(e.target.value);
+                }}
+                onBlur={() => validateWhichLoan(whichLoan)}
+                input={<OutlinedInput label="Which Loan*" />}
+                startAdornment={
+                  <InputAdornment position="start">
+                    <AccountBalanceIcon sx={{ color: "white", mr: 1 }} />
+                  </InputAdornment>
+                }
+                sx={{
+                  borderRadius: "12px",
+                  backgroundColor: "rgba(255, 255, 255, 0.08)",
+                  color: "white",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: whichLoanError ? "red" : "rgba(255, 255, 255, 0.1)",
+                  },
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(255, 255, 255, 0.2)",
+                  },
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#90caf9",
+                    borderWidth: "2px",
+                  },
+                  "& .MuiSelect-icon": {
+                    color: "white",
+                  },
+                }}
+                MenuProps={{
+                  PaperProps: {
+                    sx: {
+                      bgcolor: "#1e1e1e",
+                      borderRadius: "10px",
+                      "& .MuiMenuItem-root": {
+                        color: "white",
+                        "&:hover": {
+                          backgroundColor: "#333",
+                        },
+                        "&.Mui-selected": {
+                          backgroundColor: "#90caf9 !important",
+                          color: "#fff",
+                        },
+                      },
+                    },
+                  },
+                }}
+              >
+                <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#333", color: "#90caf9" }}>
+                  Secured Loans
+                </MenuItem>
+                {loanTypes.secured.map((loan) => (
+                  <MenuItem key={loan.value} value={loan.value} sx={{ color: "white" }}>
+                    {loan.label}
+                  </MenuItem>
+                ))}
+
+                <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#333", color: "#90caf9", mt: 1 }}>
+                  Unsecured Loans
+                </MenuItem>
+                {loanTypes.unsecured.map((loan) => (
+                  <MenuItem key={loan.value} value={loan.value} sx={{ color: "white" }}>
+                    {loan.label}
+                  </MenuItem>
+                ))}
+              </Select>
+              {whichLoanError && (
+                <FormHelperText error>{whichLoanError}</FormHelperText>
+              )}
+            </FormControl>
+
+            {/* Loan Amount Field */}
+            <TextField
+              fullWidth
+              variant="outlined"
+              label="Loan Amount*"
+              name="runningLoanAmount"
+              value={runningLoanAmount}
+              onChange={(e) => {
+                setRunningLoanAmount(e.target.value);
+                validateRunningLoanAmount(e.target.value);
+              }}
+              onBlur={() => validateRunningLoanAmount(runningLoanAmount)}
+              error={!!runningLoanAmountError}
+              helperText={runningLoanAmountError}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <CurrencyRupeeIcon sx={{ color: "white", mr: 1 }} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                mb: 2,
+                width: { xs: "90%", sm: "60%", md: "45%" },
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "12px",
+                  backgroundColor: "rgba(255, 255, 255, 0.08)",
+                  color: "white",
+                  "& fieldset": {
+                    borderColor: runningLoanAmountError ? "red" : "rgba(255, 255, 255, 0.1)",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "rgba(255, 255, 255, 0.2)",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#90caf9",
+                    borderWidth: "2px",
+                  },
+                },
+                "& .MuiInputLabel-root": {
+                  color: runningLoanAmountError ? "error.main" : "rgba(255,255,255,0.7)",
+                  "&.Mui-focused": { color: "#90caf9" },
+                },
+                "& .MuiFormHelperText-root": {
+                  color: "error.main"
+                }
+              }}
+            />
+          </>
+        )}
 
 
         {/* Tenure Field */}
@@ -999,17 +1261,17 @@ const Step1Form: React.FC<Step1FormProps> = ( {
           }}
         >
           <InputLabel>
-            {loanCategory ? `Select Tenure (${ loanCategory === 'secured' ? 'Long Term' : 'Short Term' })` : "Select A Comfortable Tenure"}
+            {loanCategory ? `Select Tenure (${loanCategory === 'secured' ? 'Long Term' : 'Short Term'})` : "Select A Comfortable Tenure"}
           </InputLabel>
           <Select
             variant="filled"
             name="tenure"
             value={tenure}
-            onChange={( e ) => {
-              setTenure( e.target.value );
-              validateTenure( e.target.value );
+            onChange={(e) => {
+              setTenure(e.target.value);
+              validateTenure(e.target.value);
             }}
-            onBlur={() => validateTenure( tenure )}
+            onBlur={() => validateTenure(tenure)}
             disabled={!loanCategory}
             startAdornment={
               <InputAdornment position="start" sx={{ color: "white !important" }}>
@@ -1035,7 +1297,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
               },
             }}
           >
-            {( loanCategory ? tenureOptions[ loanCategory ] : [] ).map( ( label ) => (
+            {(loanCategory ? tenureOptions[loanCategory] : []).map((label) => (
               <MenuItem
                 key={label}
                 value={label}
@@ -1047,7 +1309,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
               >
                 {label}
               </MenuItem>
-            ) )}
+            ))}
           </Select>
 
           {errors.tenure && (
@@ -1060,7 +1322,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                 fontFamily: "Verdana, sans-serif",
               }}
             >
-              {errors.tenure || ( loanCategory ? "" : "Please select a loan type first" )}
+              {errors.tenure || (loanCategory ? "" : "Please select a loan type first")}
             </Typography>
           )}
         </FormControl>
@@ -1108,19 +1370,19 @@ const Step1Form: React.FC<Step1FormProps> = ( {
             name="providers"
             multiple
             value={providers}
-            onChange={( e ) => {
-              const value = typeof e.target.value === 'string' ? e.target.value.split( ',' ) : e.target.value;
-              handleProviderChange( value );
+            onChange={(e) => {
+              const value = typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value;
+              handleProviderChange(value);
             }}
-            onBlur={() => validateProviders( providers )}
+            onBlur={() => validateProviders(providers)}
             startAdornment={
               <InputAdornment position="start" sx={{ color: "white !important" }}>
                 <AccountBalanceIcon />
               </InputAdornment>
             }
-            renderValue={( selected ) => (
+            renderValue={(selected) => (
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {selected.map( ( value ) => (
+                {selected.map((value) => (
                   <Chip
                     key={value}
                     label={value}
@@ -1133,13 +1395,13 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                       },
                     }}
                     onDelete={() => {
-                      handleProviderRemove( value );
+                      handleProviderRemove(value);
                     }}
-                    onMouseDown={( event ) => {
+                    onMouseDown={(event) => {
                       event.stopPropagation();
                     }}
                   />
-                ) )}
+                ))}
               </Box>
             )}
             MenuProps={{
@@ -1181,7 +1443,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
               }}
             >
               <Checkbox
-                checked={providers.indexOf( "Let F2 Fintech decide your lender" ) > -1}
+                checked={providers.indexOf("Let F2 Fintech decide your lender") > -1}
                 sx={{
                   color: "rgba(255,255,255,0.7)",
                   '&.Mui-checked': {
@@ -1197,7 +1459,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
               </Typography>
             </MenuItem>
 
-            {PROVIDER_OPTIONS.map( ( providerName ) => (
+            {PROVIDER_OPTIONS.map((providerName) => (
               <MenuItem
                 key={providerName}
                 value={providerName}
@@ -1208,7 +1470,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                 }}
               >
                 <Checkbox
-                  checked={providers.indexOf( providerName ) > -1}
+                  checked={providers.indexOf(providerName) > -1}
                   sx={{
                     color: 'white',
                     '&.Mui-checked': {
@@ -1221,7 +1483,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                   sx={{ color: 'white' }}
                 />
               </MenuItem>
-            ) )}
+            ))}
           </Select>
           {errors.provider && (
             <Typography
@@ -1261,8 +1523,8 @@ const Step1Form: React.FC<Step1FormProps> = ( {
               Customize Amounts per Provider:
             </Typography>
             <Stack spacing={1}>
-              {providers.map( ( providerName ) => {
-                const providerAmount = providerAmounts.find( pa => pa.provider === providerName )?.amount || amount;
+              {providers.map((providerName) => {
+                const providerAmount = providerAmounts.find(pa => pa.provider === providerName)?.amount || amount;
                 return (
                   <Box
                     key={providerName}
@@ -1296,7 +1558,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                       </Typography>
                       <IconButton
                         size="small"
-                        onClick={() => openAmountDialog( providerName )}
+                        onClick={() => openAmountDialog(providerName)}
                         sx={{
                           color: "#90caf9",
                           '&:hover': {
@@ -1309,7 +1571,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     </Box>
                   </Box>
                 );
-              } )}
+              })}
             </Stack>
           </Box>
         )}
@@ -1327,12 +1589,14 @@ const Step1Form: React.FC<Step1FormProps> = ( {
             providers.length === 0 ||
             !loanType ||
             !leadType ||
+            !hasRunningLoans ||
+            (hasRunningLoans === "yes" && (!whichLoan || !runningLoanAmount)) ||
             !validateAllProviderAmounts()
           }
           variant="contained"
           endIcon={<ArrowForwardIcon />}
           onClick={() => {
-            setGetStarted( true );
+            setGetStarted(true);
           }}
           sx={{
             fontWeight: "500",
@@ -1356,7 +1620,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
         {/* Provider Amount Dialog */}
         <Dialog
           open={amountDialogOpen}
-          onClose={() => setAmountDialogOpen( false )}
+          onClose={() => setAmountDialogOpen(false)}
           PaperProps={{
             sx: {
               backgroundColor: "rgba(26, 26, 46, 0.95)",
@@ -1369,7 +1633,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
           <DialogTitle sx={{ color: "white", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
             Set Amount for {editingProvider}
             <IconButton
-              onClick={() => setAmountDialogOpen( false )}
+              onClick={() => setAmountDialogOpen(false)}
               sx={{
                 position: "absolute",
                 right: 8,
@@ -1387,11 +1651,10 @@ const Step1Form: React.FC<Step1FormProps> = ( {
               variant="filled"
               label="Loan Amount"
               placeholder="Enter amount for this provider"
-              value={providerAmounts.find( pa => pa.provider === editingProvider )?.amount || amount}
-              onChange={( e ) => {
-                if ( editingProvider )
-                {
-                  updateProviderAmount( editingProvider, e.target.value );
+              value={providerAmounts.find(pa => pa.provider === editingProvider)?.amount || amount}
+              onChange={(e) => {
+                if (editingProvider) {
+                  updateProviderAmount(editingProvider, e.target.value);
                 }
               }}
               InputProps={{
@@ -1424,7 +1687,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
           </DialogContent>
           <DialogActions>
             <Button
-              onClick={() => setAmountDialogOpen( false )}
+              onClick={() => setAmountDialogOpen(false)}
               sx={{ color: "#90caf9" }}
             >
               Done
@@ -1451,9 +1714,9 @@ const Step1Form: React.FC<Step1FormProps> = ( {
         enableReinitialize
         initialValues={initialValues}
         validationSchema={step1ValidationSchema}
-        onSubmit={( values ) => create( values )}
+        onSubmit={(values) => create(values)}
       >
-        {( {
+        {({
           dirty,
           errors,
           touched,
@@ -1463,7 +1726,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
           handleChange,
           handleBlur,
           handleSubmit,
-        } ) => (
+        }) => (
           <Form onSubmit={handleSubmit}>
             <Container
               maxWidth="md"
@@ -1688,7 +1951,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                   { name: 'current_address', label: 'Current Address*', type: 'text' },
                   { name: 'city', label: 'City*', type: 'text' },
                   { name: 'state', label: 'State*', type: 'text' },
-                ].map( ( field ) => (
+                ].map((field) => (
                   <TextField
                     key={field.name}
                     autoComplete="off"
@@ -1696,16 +1959,16 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                     type={field.type}
                     name={field.name}
                     label={field.label}
-                    value={values[ field.name ]}
+                    value={values[field.name]}
                     onChange={field.special === 'pan' ?
-                      ( event ) => {
+                      (event) => {
                         const uppercaseValue = event.target.value.toUpperCase();
-                        setFieldValue( "pan", uppercaseValue );
+                        setFieldValue("pan", uppercaseValue);
                       } : handleChange
                     }
                     onBlur={handleBlur}
-                    error={!!touched[ field.name ] && !!errors[ field.name ]}
-                    helperText={touched[ field.name ] && errors[ field.name ]}
+                    error={!!touched[field.name] && !!errors[field.name]}
+                    helperText={touched[field.name] && errors[field.name]}
                     inputProps={field.special === 'pan' ? {
                       maxLength: 10,
                       style: { textTransform: "uppercase" },
@@ -1742,7 +2005,7 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                       },
                     }}
                   />
-                ) )}
+                ))}
 
                 {/* Employment Type Dropdown */}
                 <FormControl
@@ -1824,15 +2087,15 @@ const Step1Form: React.FC<Step1FormProps> = ( {
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <DatePicker
                       format="DD MMMM YYYY"
-                      views={[ "year", "month", "day" ]}
+                      views={["year", "month", "day"]}
                       label="Select Date Of Birth*"
                       name="dob"
                       minDate={minDate}
                       maxDate={maxDate}
                       value={values.dob}
-                      onBlur={() => setFieldTouched( "dob", true )}
-                      onChange={( newValue ) => setFieldValue( "dob", newValue )}
-                      renderInput={( params ) => (
+                      onBlur={() => setFieldTouched("dob", true)}
+                      onChange={(newValue) => setFieldValue("dob", newValue)}
+                      renderInput={(params) => (
                         <TextField
                           {...params}
                           fullWidth
