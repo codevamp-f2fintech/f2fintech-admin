@@ -94,157 +94,135 @@ export interface TicketDetail {
   disbursed_at?: string | Date;
   disbursed_amount?: number | string;
   cashback_amount?: number | string;
+  case_type?: string;
 }
 
 interface TicketDetailResponse {
   statusCode: string | number;
-  message: string | "Ticket with Details retrieved successfully";
-  data: {
-    ticketId: number | string;
-    userId: number | string;
-    employeeStatus: string;
-    voiceNoteUrl: string;
-    forwardedTo: number | string;
-    forwardedBy: number | string;
-    isForwarded: number | null;
-    originalEstimate: string;
-    provider: string;
-    applicationAmount: string | number;
-    applicationTenure: number | string;
-    applicationDate: Date | string;
-    applicationId: number | string;
-    customerId: number | string;
-    customerName: string;
-    customerEmail: string;
-    customerContact: string;
-    customerDocuments: string[];
-    customerDesignation: string;
-    customerLocation: string;
-    loanStatus: string;
-    loanCategory: string;
-    cashback_amount?: number | string;
-  };
+  message: string;
+  data: TicketDetail;
 }
 
-const Progress: React.FC = () => {
-  const [ ticketDetailData, setTicketDetailData ] = useState<TicketDetail>();
-  const [ loading, setLoading ] = useState<boolean>( false );
-  const [ openDialog, setOpenDialog ] = useState<boolean>( false );
-  const [ activeSection, setActiveSection ] = useState<string>( "Comments" );
-  const [ selectedUser, setSelectedUser ] = useState<User>();
-  const [ theme, colorMode ] = useMode();
+const MainPage = () => {
+  const [ticketDetailData, setTicketDetailData] = useState<TicketDetail>();
+  const [loading, setLoading] = useState<boolean>(false);
+  const [openDialog, setOpenDialog] = useState<boolean>(false);
+  const [activeSection, setActiveSection] = useState<string>("Comments");
+  const [selectedUser, setSelectedUser] = useState<User>();
+  const [theme, colorMode] = useMode();
   const getTodayLocalDate = () => {
     const today = new Date();
     const year = today.getFullYear();
-    const month = String( today.getMonth() + 1 ).padStart( 2, '0' );
-    const day = String( today.getDate() ).padStart( 2, '0' );
-    return `${ year }-${ month }-${ day }`;
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
-  const [ disbursedDate, setDisbursedDate ] = useState( () => {
+  const [disbursedDate, setDisbursedDate] = useState(() => {
     // Only set saved date if ticket already has disbursed_at date
     return ticketDetailData?.disbursed_at
-      ? new Date( ticketDetailData.disbursed_at ).toISOString().split( 'T' )[ 0 ]
+      ? new Date(ticketDetailData.disbursed_at).toISOString().split('T')[0]
       : "";
-  } );
+  });
 
-  const [ isDisbursedDateSaved, setIsDisbursedDateSaved ] = useState( () => {
+  const [isDisbursedDateSaved, setIsDisbursedDateSaved] = useState(() => {
     // If ticket already has disbursed_at date, consider it as saved
     return !!ticketDetailData?.disbursed_at;
-  } );
+  });
 
   // Disbursed Amount States
-  const [ disbursedAmount, setDisbursedAmount ] = useState( () => {
+  const [disbursedAmount, setDisbursedAmount] = useState(() => {
     return ticketDetailData?.disbursed_amount
       ? ticketDetailData.disbursed_amount.toString()
       : "";
-  } );
+  });
 
-  const [ isDisbursedAmountSaved, setIsDisbursedAmountSaved ] = useState( () => {
+  const [isDisbursedAmountSaved, setIsDisbursedAmountSaved] = useState(() => {
     return !!ticketDetailData?.disbursed_amount;
-  } );
+  });
 
 
   // Add these state variables near your existing disbursed states
-  const [ approvedDate, setApprovedDate ] = useState( () => {
+  const [approvedDate, setApprovedDate] = useState(() => {
     return ticketDetailData?.approved_at
-      ? new Date( ticketDetailData.approved_at ).toISOString().split( 'T' )[ 0 ]
+      ? new Date(ticketDetailData.approved_at).toISOString().split('T')[0]
       : "";
-  } );
+  });
 
-  const [ isApprovedDateSaved, setIsApprovedDateSaved ] = useState( () => {
+  const [isApprovedDateSaved, setIsApprovedDateSaved] = useState(() => {
     return !!ticketDetailData?.approved_at;
-  } );
+  });
 
-  const [ cashbackAmount, setCashbackAmount ] = useState( () => {
+  const [cashbackAmount, setCashbackAmount] = useState(() => {
     return ticketDetailData?.cashback_amount
       ? ticketDetailData.cashback_amount.toString()
       : "";
-  } );
+  });
 
-  const [ isCashbackAmountSaved, setIsCashbackAmountSaved ] = useState( () => {
+  const [isCashbackAmountSaved, setIsCashbackAmountSaved] = useState(() => {
     return !!ticketDetailData?.cashback_amount;
-  } );
+  });
+
+  const [caseType, setCaseType] = useState<string>("");
 
   // Format amount for display (removes unnecessary decimals)
-  const formatDisplayAmount = ( amount: string ): string => {
-    if ( !amount ) return "";
+  const formatDisplayAmount = (amount: string): string => {
+    if (!amount) return "";
 
-    const numAmount = parseFloat( amount );
-    if ( isNaN( numAmount ) ) return amount;
+    const numAmount = parseFloat(amount);
+    if (isNaN(numAmount)) return amount;
 
     // If it's a whole number, return without decimals
-    if ( numAmount % 1 === 0 )
-    {
+    if (numAmount % 1 === 0) {
       return numAmount.toString();
     }
 
     // Otherwise return with 2 decimal places
-    return numAmount.toFixed( 2 );
+    return numAmount.toFixed(2);
   };
 
   // Format amount for storage (ensures proper number format)
-  const formatDecimalAmount = ( amount: string ): string => {
-    if ( !amount ) return "";
+  const formatDecimalAmount = (amount: string): string => {
+    if (!amount) return "";
 
-    const numAmount = parseFloat( amount );
-    if ( isNaN( numAmount ) ) return "";
+    const numAmount = parseFloat(amount);
+    if (isNaN(numAmount)) return "";
 
     // Always return as number, letting toFixed handle the formatting
     return numAmount.toString();
   };
 
-  const [ approvedAmount, setApprovedAmount ] = useState( () => {
+  const [approvedAmount, setApprovedAmount] = useState(() => {
     return ticketDetailData?.approved_amount
       ? ticketDetailData.approved_amount.toString()
       : "";
-  } );
-  console.log( "approvedAmount>>>>>>>>>>>>>", approvedAmount )
-  const [ isApprovedAmountSaved, setIsApprovedAmountSaved ] = useState( () => {
+  });
+  console.log("approvedAmount>>>>>>>>>>>>>", approvedAmount)
+  const [isApprovedAmountSaved, setIsApprovedAmountSaved] = useState(() => {
     return !!ticketDetailData?.approved_amount;
-  } );
+  });
 
-  const [ progress, setProgress ] = useState( 0 );
-  const [ overage, setOverage ] = useState( 0 );
-  const [ newLoanStatus, setNewLoanStatus ] = useState( "" );
-  const [ newEmployeeStatus, setNewEmployeeStatus ] = useState( "" );
-  const [ timeLoggingEstimate, setTimeLoggingEstimate ] = useState( {
+  const [progress, setProgress] = useState(0);
+  const [overage, setOverage] = useState(0);
+  const [newLoanStatus, setNewLoanStatus] = useState("");
+  const [newEmployeeStatus, setNewEmployeeStatus] = useState("");
+  const [timeLoggingEstimate, setTimeLoggingEstimate] = useState({
     originalEstimate: "",
     timeSpent: "0",
-  } );
-  const { toast } = useSelector( ( state: RootState ) => state.toast );
-  const [ hasFetched, setHasFetched ] = useState( false );
-  const workLogRef = useRef( null );
-  const isVisible = useIntersectionObserver( workLogRef );
+  });
+  const { toast } = useSelector((state: RootState) => state.toast);
+  const [hasFetched, setHasFetched] = useState(false);
+  const workLogRef = useRef(null);
+  const isVisible = useIntersectionObserver(workLogRef);
   const muiTheme = useTheme();
 
   const dispatch: AppDispatch = useDispatch();
   const params = useParams();
-  const isMobile = useMediaQuery( muiTheme.breakpoints.down( 'sm' ) ); // 0-599px
-  const isTablet = useMediaQuery( muiTheme.breakpoints.between( 'sm', 'md' ) ); // 600-899px
-  const isTab = useMediaQuery( muiTheme.breakpoints.between( 'sm', 'md' ) ); // 600-899px
-  const isIpad = useMediaQuery( muiTheme.breakpoints.between( 'md', 'lg' ) ); // 900-1199px
-  const isDesktop = useMediaQuery( muiTheme.breakpoints.up( 'lg' ) ); // 1200px+
+  const isMobile = useMediaQuery(muiTheme.breakpoints.down('sm')); // 0-599px
+  const isTablet = useMediaQuery(muiTheme.breakpoints.between('sm', 'md')); // 600-899px
+  const isTab = useMediaQuery(muiTheme.breakpoints.between('sm', 'md')); // 600-899px
+  const isIpad = useMediaQuery(muiTheme.breakpoints.between('md', 'lg')); // 900-1199px
+  const isDesktop = useMediaQuery(muiTheme.breakpoints.up('lg')); // 1200px+
   const ticketId = params?.ticketId;
   const {
     capitalizeFirstLetter,
@@ -257,398 +235,399 @@ const Progress: React.FC = () => {
   const { createTicketHistory } = useCreateTicketHistory(
     "create-ticket-history"
   );
-  const { modifyTicket } = useModifyTicket( "update-ticket" );
-  const { value: userData } = useGetUsers( {} as User, "get-users", 1, 200 );
+  const { modifyTicket } = useModifyTicket("update-ticket");
+  const { value: userData } = useGetUsers({} as User, "get-users", 1, 200);
   const { value: workLog, refetch } = useGetTicketLogs(
     {} as TicketLogs,
-    hasFetched ? `get-ticket-logs/${ ticketId }` : ""
+    hasFetched ? `get-ticket-logs/${ticketId}` : ""
   );
 
-  useEffect( () => {
-    if ( isVisible && !hasFetched )
-    {
+  useEffect(() => {
+    if (isVisible && !hasFetched) {
       refetch();
-      setHasFetched( true );
+      setHasFetched(true);
     }
-  }, [ isVisible, hasFetched ] );
+  }, [isVisible, hasFetched]);
 
-  // Updated useEffect for fetching ticket details
-  useEffect( () => {
-    if ( ticketId )
-    {
-      setLoading( true );
-      const fetchTicketDetails = async () => {
-        try
-        {
-          const response = await fetcher( `get-ticket-with-detail/${ ticketId }` );
-          if ( response.statusCode === 200 )
-          {
-            setTicketDetailData( response.data );
-            setTimeLoggingEstimate( {
-              ...timeLoggingEstimate,
-              originalEstimate: response.data.originalEstimate,
-            } );
-            setNewLoanStatus( response.data.loanStatus );
-            setNewEmployeeStatus( response.data.employeeStatus );
+  const fetchTicketDetails = async () => {
+    if (ticketId) {
+      setLoading(true);
+      try {
+        const response = (await fetcher(
+          `get-ticket-with-detail/${ticketId}`
+        )) as TicketDetailResponse;
+        if (response.statusCode === 200) {
+          const data = response.data;
+          setTicketDetailData(data);
+          setTimeLoggingEstimate((prev) => ({
+            ...prev,
+            originalEstimate: data.originalEstimate,
+          }));
+          setNewLoanStatus(data.loanStatus);
+          setNewEmployeeStatus(data.employeeStatus);
 
-            // Set disbursed date/amount if ticket has them
-            if ( response.data.disbursed_at )
-            {
-              setDisbursedDate( new Date( response.data.disbursed_at ).toISOString().split( 'T' )[ 0 ] );
-              setIsDisbursedDateSaved( true );
-            } else if ( response.data.employeeStatus === "disbursed" )
-            {
-              setDisbursedDate( getTodayLocalDate() );
-              setIsDisbursedDateSaved( false );
-            }
-
-            if ( response.data.disbursed_amount )
-            {
-              setDisbursedAmount( response.data.disbursed_amount.toString() );
-              setIsDisbursedAmountSaved( true );
-            } else if ( response.data.employeeStatus === "disbursed" )
-            {
-              setDisbursedAmount( response.data.applicationAmount?.toString() || "" );
-              setIsDisbursedAmountSaved( false );
-            }
-
-            // Set approved date/amount if ticket has them
-            if ( response.data.approved_at )
-            {
-              setApprovedDate( new Date( response.data.approved_at ).toISOString().split( 'T' )[ 0 ] );
-              setIsApprovedDateSaved( true );
-            } else if ( response.data.employeeStatus === "approved" )
-            {
-              setApprovedDate( getTodayLocalDate() );
-              setIsApprovedDateSaved( false );
-            }
-
-            if ( response.data.approved_amount )
-            {
-              setApprovedAmount( response.data.approved_amount.toString() );
-              setIsApprovedAmountSaved( true );
-            } else if ( response.data.employeeStatus === "approved" )
-            {
-              setApprovedAmount( response.data.applicationAmount?.toString() || "" );
-              setIsApprovedAmountSaved( false );
-            }
-
-            // Set cashback amount if ticket has it
-            if ( response.data.cashback_amount )
-            {
-              setCashbackAmount( response.data.cashback_amount.toString() );
-              setIsCashbackAmountSaved( true );
-            }
-
-            setLoading( false );
+          // Set disbursed date/amount if ticket has them
+          if (data.disbursed_at) {
+            setDisbursedDate(
+              new Date(data.disbursed_at).toISOString().split("T")[0]
+            );
+            setIsDisbursedDateSaved(true);
+          } else if (data.employeeStatus === "disbursed") {
+            setDisbursedDate(getTodayLocalDate());
+            setIsDisbursedDateSaved(false);
           }
-        } catch ( error )
-        {
-          setLoading( false );
-          console.log( "Error fetching users:", error );
+
+          if (data.disbursed_amount) {
+            setDisbursedAmount(data.disbursed_amount.toString());
+            setIsDisbursedAmountSaved(true);
+          } else if (data.employeeStatus === "disbursed") {
+            setDisbursedAmount(data.applicationAmount?.toString() || "");
+            setIsDisbursedAmountSaved(false);
+          }
+
+          // Set approved date/amount if ticket has them
+          if (data.approved_at) {
+            setApprovedDate(
+              new Date(data.approved_at).toISOString().split("T")[0]
+            );
+            setIsApprovedDateSaved(true);
+          } else if (data.employeeStatus === "approved") {
+            setApprovedDate(getTodayLocalDate());
+            setIsApprovedDateSaved(false);
+          }
+
+          if (data.approved_amount) {
+            setApprovedAmount(data.approved_amount.toString());
+            setIsApprovedAmountSaved(true);
+          } else if (data.employeeStatus === "approved") {
+            setApprovedAmount(data.applicationAmount?.toString() || "");
+            setIsApprovedAmountSaved(false);
+          }
+
+          // Set cashback amount if ticket has it
+          if (data.cashback_amount) {
+            setCashbackAmount(data.cashback_amount.toString());
+            setIsCashbackAmountSaved(true);
+          }
+
+          if (data.case_type) {
+            const normalized = data.case_type.toLowerCase().trim();
+            if (normalized === "fresh") setCaseType("fresh");
+            else if (normalized === "top_up" || normalized === "top up") setCaseType("top_up");
+            else setCaseType(data.case_type);
+          } else {
+            setCaseType("");
+          }
+
+          setLoading(false);
         }
-      };
-      fetchTicketDetails();
+      } catch (error) {
+        setLoading(false);
+        console.log("Error fetching ticket details:", error);
+      }
     }
-  }, [ ticketId ] );
+  };
+
+  useEffect(() => {
+    fetchTicketDetails();
+  }, [ticketId]);
+
+  useEffect(() => {
+    if (ticketDetailData?.case_type) {
+      const normalized = ticketDetailData.case_type.toLowerCase().trim();
+      if (normalized === "fresh") setCaseType("fresh");
+      else if (normalized === "top_up" || normalized === "top up") setCaseType("top_up");
+      else setCaseType(ticketDetailData.case_type);
+    } else {
+      setCaseType("");
+    }
+  }, [ticketDetailData]);
 
 
-  useEffect( () => {
-    if ( workLog?.data )
-    {
-      const totalHours = workLog?.data?.reduce( ( acc: number, ticket: any ) => {
-        return acc + parseTimeSpent( ticket.time_spent ?? 0 );
-      }, 0 );
+  useEffect(() => {
+    const logs = workLog as any;
+    if (logs?.data) {
+      const totalHours = logs.data.reduce((acc: number, ticket: any) => {
+        return acc + parseTimeSpent(ticket.time_spent ?? 0);
+      }, 0);
 
-      const finalTime = convertHoursToDaysAndHours( totalHours );
-      setTimeLoggingEstimate( {
+      const finalTime = convertHoursToDaysAndHours(totalHours);
+      setTimeLoggingEstimate({
         ...timeLoggingEstimate,
         timeSpent: finalTime,
-      } );
+      });
       // } );
       const originalEstimate = parseTimeSpent(
         timeLoggingEstimate.originalEstimate
       );
 
-      if ( originalEstimate > 0 )
-      {
+      if (originalEstimate > 0) {
         const calculatedProgress = Math.min(
-          ( totalHours / originalEstimate ) * 100,
+          (totalHours / originalEstimate) * 100,
           100
         );
         const calculatedOverage =
           totalHours > originalEstimate
-            ? ( ( totalHours - originalEstimate ) / originalEstimate ) * 100
+            ? ((totalHours - originalEstimate) / originalEstimate) * 100
             : 0;
 
-        setProgress( calculatedProgress );
-        setOverage( calculatedOverage );
+        setProgress(calculatedProgress);
+        setOverage(calculatedOverage);
       }
     }
-  }, [ workLog?.data, timeLoggingEstimate.originalEstimate ] );
+  }, [workLog?.data, timeLoggingEstimate.originalEstimate]);
 
-  useEffect( () => {
-    if ( ticketDetailData?.disbursed_amount )
-    {
+  useEffect(() => {
+    if (ticketDetailData?.disbursed_amount) {
       setDisbursedAmount(
-        Number( ticketDetailData.disbursed_amount ) % 1 === 0
-          ? parseInt( ticketDetailData.disbursed_amount, 10 ).toString()
+        Number(ticketDetailData.disbursed_amount) % 1 === 0
+          ? parseInt(ticketDetailData.disbursed_amount, 10).toString()
           : ticketDetailData.disbursed_amount.toString()
       );
-    } else if ( ticketDetailData?.applicationAmount )
-    {
+    } else if (ticketDetailData?.applicationAmount) {
       setDisbursedAmount(
-        Number( ticketDetailData.applicationAmount ) % 1 === 0
-          ? parseInt( ticketDetailData.applicationAmount, 10 ).toString()
+        Number(ticketDetailData.applicationAmount) % 1 === 0
+          ? parseInt(ticketDetailData.applicationAmount, 10).toString()
           : ticketDetailData.applicationAmount.toString()
       );
     }
-  }, [ ticketDetailData ] );
+  }, [ticketDetailData]);
 
-  const handleChangeEmployeeStatus = async ( event: any ) => {
+  const handleChangeEmployeeStatus = async (event: any) => {
     const oldStatus = newEmployeeStatus;
     const newStatus = event.target.value;
-    setNewEmployeeStatus( newStatus );
+    setNewEmployeeStatus(newStatus);
 
     // Set dates and amounts for both approved and disbursed statuses
-    if ( newStatus === "disbursed" )
-    {
-      if ( !disbursedDate )
-      {
-        setDisbursedDate( getTodayLocalDate() );
+    if (newStatus === "disbursed") {
+      if (!disbursedDate) {
+        setDisbursedDate(getTodayLocalDate());
       }
-      if ( !disbursedAmount && ticketDetailData?.applicationAmount )
-      {
-        setDisbursedAmount( ticketDetailData.applicationAmount.toString() );
+      if (!disbursedAmount && ticketDetailData?.applicationAmount) {
+        setDisbursedAmount(ticketDetailData.applicationAmount.toString());
       }
     }
 
-    if ( newStatus === "approved" )
-    {
-      if ( !approvedDate )
-      {
-        setApprovedDate( getTodayLocalDate() );
+    if (newStatus === "approved") {
+      if (!approvedDate) {
+        setApprovedDate(getTodayLocalDate());
       }
       // Set default approved amount from application amount
-      if ( !approvedAmount && ticketDetailData?.applicationAmount )
-      {
-        setApprovedAmount( ticketDetailData.applicationAmount.toString() );
+      if (!approvedAmount && ticketDetailData?.applicationAmount) {
+        setApprovedAmount(ticketDetailData.applicationAmount.toString());
       }
     }
 
     // Clear dates when switching from these statuses
-    if ( newStatus !== "disbursed" )
-    {
-      setDisbursedDate( "" );
-      setDisbursedAmount( "" );
+    if (newStatus !== "disbursed") {
+      setDisbursedDate("");
+      setDisbursedAmount("");
     }
-    if ( newStatus !== "approved" )
-    {
-      setApprovedDate( "" );
-      setApprovedAmount( "" );
+    if (newStatus !== "approved") {
+      setApprovedDate("");
+      setApprovedAmount("");
     }
 
-    try
-    {
-      let updatePayload = { status: newStatus };
+    try {
+      let updatePayload: any = { status: newStatus };
 
       // If disbursed status is selected and date/amount are provided, include them
-      if ( newStatus === "disbursed" && disbursedDate && disbursedAmount )
-      {
+      if (newStatus === "disbursed" && disbursedDate && disbursedAmount) {
         updatePayload.disbursed_at = disbursedDate;
-        updatePayload.disbursed_amount = parseFloat( disbursedAmount );
-        await modifyTicket( +ticketId, updatePayload );
+        updatePayload.disbursed_amount = parseFloat(disbursedAmount);
+        if (caseType) updatePayload.case_type = caseType;
+        await modifyTicket(+ticketId, updatePayload);
       }
 
       // If approved status is selected and date/amount are provided, include them
-      if ( newStatus === "approved" && approvedDate && approvedAmount )
-      {
+      if (newStatus === "approved" && approvedDate && approvedAmount) {
         updatePayload.approved_at = approvedDate;
-        updatePayload.approved_amount = parseFloat( approvedAmount );
-        await modifyTicket( +ticketId, updatePayload );
+        updatePayload.approved_amount = parseFloat(approvedAmount);
+        if (caseType) updatePayload.case_type = caseType;
+        await modifyTicket(+ticketId, updatePayload);
       }
 
       // If no special handling needed, just update status
-      if ( newStatus !== "disbursed" && newStatus !== "approved" )
-      {
-        await modifyTicket( +ticketId, updatePayload );
+      if (newStatus !== "disbursed" && newStatus !== "approved") {
+        if (caseType) updatePayload.case_type = caseType;
+        await modifyTicket(+ticketId, updatePayload);
       }
 
       const loggedInUser = decodedToken()?.username;
-      let historyMessage = `${ loggedInUser } changed File Status from ${ oldStatus } to ${ newStatus }`;
+      let historyMessage = `${loggedInUser} changed File Status from ${oldStatus} to ${newStatus}`;
 
       // Add date/amount info to history message
-      if ( newStatus === "disbursed" && disbursedDate && disbursedAmount )
-      {
-        historyMessage += ` with disbursement date: ${ disbursedDate } and amount: ${ disbursedAmount }`;
+      if (newStatus === "disbursed" && disbursedDate && disbursedAmount) {
+        historyMessage += ` with disbursement date: ${disbursedDate} and amount: ${disbursedAmount}`;
       }
-      if ( newStatus === "approved" && approvedDate && approvedAmount )
-      {
-        historyMessage += ` with approval date: ${ approvedDate } and amount: ${ approvedAmount }`;
+      if (newStatus === "approved" && approvedDate && approvedAmount) {
+        historyMessage += ` with approval date: ${approvedDate} and amount: ${approvedAmount}`;
       }
 
-      await createTicketHistory( {
+      await createTicketHistory({
         ticket_id: ticketId,
         action: historyMessage,
-      } );
+      });
 
       // Show appropriate success messages
-      if ( ( newStatus === "disbursed" && disbursedDate && disbursedAmount ) ||
-        ( newStatus === "approved" && approvedDate && approvedAmount ) )
-      {
-        toastAndNavigate( dispatch, true, "info", "Status Changed Successfully" );
-      } else if ( newStatus === "disbursed" || newStatus === "approved" )
-      {
-        toastAndNavigate( dispatch, true, "info", "Status Changed. Please save the details." );
-      } else
-      {
-        toastAndNavigate( dispatch, true, "info", "Status Changed Successfully" );
+      if ((newStatus === "disbursed" && disbursedDate && disbursedAmount) ||
+        (newStatus === "approved" && approvedDate && approvedAmount)) {
+        toastAndNavigate(dispatch, true, "info", "Status Changed Successfully");
+      } else if (newStatus === "disbursed" || newStatus === "approved") {
+        toastAndNavigate(dispatch, true, "info", "Status Changed. Please save the details.");
+      } else {
+        toastAndNavigate(dispatch, true, "info", "Status Changed Successfully");
       }
 
       await refetch();
-    } catch ( error )
-    {
-      toastAndNavigate( dispatch, true, "error", "Error Changing Status" );
+    } catch (error) {
+      toastAndNavigate(dispatch, true, "error", "Error Changing Status");
     }
   };
 
   // Combined handler for disbursed date and amount
   const handleCombinedDisbursementSubmit = async () => {
-    if ( !disbursedDate )
-    {
-      toastAndNavigate( dispatch, true, "error", "Please enter disbursement date" );
+    if (!disbursedDate) {
+      toastAndNavigate(dispatch, true, "error", "Please enter disbursement date");
       return;
     }
 
-    if ( !disbursedAmount || parseInt( disbursedAmount, 10 ) <= 0 )
-    {
-      toastAndNavigate( dispatch, true, "error", "Please enter a valid disbursement amount" );
+    if (!disbursedAmount || parseInt(disbursedAmount, 10) <= 0) {
+      toastAndNavigate(dispatch, true, "error", "Please enter a valid disbursement amount");
       return;
     }
 
-    try
-    {
-      const updatePayload = {
+    try {
+      const updatePayload: any = {
         status: "disbursed",
         disbursed_at: disbursedDate,
-        disbursed_amount: parseFloat( disbursedAmount )
+        disbursed_amount: parseFloat(disbursedAmount)
       };
       // Add cashback amount to payload if provided
-      if ( cashbackAmount && parseFloat( cashbackAmount ) >= 0 )
-      {
-        updatePayload.cashback_amount = parseFloat( cashbackAmount );
+      if (cashbackAmount && parseFloat(cashbackAmount) >= 0) {
+        updatePayload.cashback_amount = parseFloat(cashbackAmount);
       }
 
-      await modifyTicket( +ticketId, updatePayload );
+      // Add case type to payload if provided
+      if (caseType) {
+        updatePayload.case_type = caseType;
+      }
+
+      await modifyTicket(+ticketId, updatePayload);
 
       const loggedInUser = decodedToken()?.username;
       // Build history message dynamically
-      let historyMessage = `${ loggedInUser } set disbursement details - Date: ${ disbursedDate }, Amount: ${ disbursedAmount }`;
+      let historyMessage = `${loggedInUser} set disbursement details - Date: ${disbursedDate}, Amount: ${disbursedAmount}`;
 
       // Add cashback to history message if provided
-      if ( cashbackAmount && parseFloat( cashbackAmount ) >= 0 )
-      {
-        historyMessage += `, Cashback: ${ cashbackAmount }`;
+      if (cashbackAmount && parseFloat(cashbackAmount) >= 0) {
+        historyMessage += `, Cashback: ${cashbackAmount}`;
       }
 
-      await createTicketHistory( {
+      // Add case type to history message if provided
+      if (caseType) {
+        historyMessage += `, Case Type: ${caseType}`;
+      }
+
+      await createTicketHistory({
         ticket_id: ticketId,
         action: historyMessage,
-      } );
+      });
 
-      setIsDisbursedDateSaved( true );
-      setIsDisbursedAmountSaved( true );
+      setIsDisbursedDateSaved(true);
+      setIsDisbursedAmountSaved(true);
       // Set cashback as saved if provided
-      if ( cashbackAmount && parseFloat( cashbackAmount ) >= 0 )
-      {
-        setIsCashbackAmountSaved( true );
+      if (cashbackAmount && parseFloat(cashbackAmount) >= 0) {
+        setIsCashbackAmountSaved(true);
       }
 
-      toastAndNavigate( dispatch, true, "info", cashbackAmount ? "Disbursement details saved successfully" : "Disbursement details saved successfully" );
+      toastAndNavigate(dispatch, true, "info", cashbackAmount ? "Disbursement details saved successfully" : "Disbursement details saved successfully");
       await refetch();
-    } catch ( error )
-    {
-      toastAndNavigate( dispatch, true, "error", "Error saving disbursement details" );
+      await fetchTicketDetails();
+    } catch (error) {
+      toastAndNavigate(dispatch, true, "error", "Error saving disbursement details");
     }
   };
 
   // Handler for approved date and amount
   const handleCombinedApprovalSubmit = async () => {
-    if ( !approvedDate )
-    {
-      toastAndNavigate( dispatch, true, "error", "Please enter approval date" );
+    if (!approvedDate) {
+      toastAndNavigate(dispatch, true, "error", "Please enter approval date");
       return;
     }
 
-    if ( !approvedAmount || parseInt( approvedAmount, 10 ) <= 0 )
-    {
-      toastAndNavigate( dispatch, true, "error", "Please enter a valid approval amount" );
+    if (!approvedAmount || parseInt(approvedAmount, 10) <= 0) {
+      toastAndNavigate(dispatch, true, "error", "Please enter a valid approval amount");
       return;
     }
 
-    try
-    {
-      const updatePayload = {
+    try {
+      const updatePayload: any = {
         status: "approved",
         approved_at: approvedDate,
-        approved_amount: parseFloat( approvedAmount )
+        approved_amount: parseFloat(approvedAmount)
       };
 
-      await modifyTicket( +ticketId, updatePayload );
+      if (caseType) {
+        updatePayload.case_type = caseType;
+      }
+
+      await modifyTicket(+ticketId, updatePayload);
 
       const loggedInUser = decodedToken()?.username;
-      const historyMessage = `${ loggedInUser } set approval details - Date: ${ approvedDate }, Amount: ${ approvedAmount }`;
+      let historyMessage = `${loggedInUser} set approval details - Date: ${approvedDate}, Amount: ${approvedAmount}`;
 
-      await createTicketHistory( {
+      if (caseType) {
+        historyMessage += `, Case Type: ${caseType}`;
+      }
+
+      await createTicketHistory({
         ticket_id: ticketId,
         action: historyMessage,
-      } );
+      });
 
-      setIsApprovedDateSaved( true );
-      setIsApprovedAmountSaved( true );
+      setIsApprovedDateSaved(true);
+      setIsApprovedAmountSaved(true);
 
-      toastAndNavigate( dispatch, true, "info", "Approval details saved successfully" );
+      toastAndNavigate(dispatch, true, "info", "Approval details saved successfully");
       await refetch();
-    } catch ( error )
-    {
-      toastAndNavigate( dispatch, true, "error", "Error saving approval details" );
+      await fetchTicketDetails();
+    } catch (error) {
+      toastAndNavigate(dispatch, true, "error", "Error saving approval details");
     }
   };
 
-  const handleChangeLoanStatus = async ( event: any ) => {
+  const handleChangeLoanStatus = async (event: any) => {
     const oldStatus = newLoanStatus;
     const newStatus = event.target.value;
-    setNewLoanStatus( newStatus );
+    setNewLoanStatus(newStatus);
 
-    try
-    {
+    try {
       await axiosInstance.patch(
-        `${ process.env.NEXT_PUBLIC_WEB_URL }/update-loan-tracking`,
+        `${process.env.NEXT_PUBLIC_WEB_URL}/update-loan-tracking`,
         {
           customer_application_id: ticketDetailData?.applicationId,
           status: newStatus,
         }
       );
       const loggedInUser = decodedToken()?.username;
-      const historyMessage = `${ loggedInUser } changed Loan Status from ${ oldStatus } to ${ newStatus }`;
+      const historyMessage = `${loggedInUser} changed Loan Status from ${oldStatus} to ${newStatus}`;
 
-      await createTicketHistory( {
+      await createTicketHistory({
         ticket_id: ticketId,
         action: historyMessage,
-      } );
+      });
 
-      toastAndNavigate( dispatch, true, "info", "Status Changed Successfully" );
+      toastAndNavigate(dispatch, true, "info", "Status Changed Successfully");
       await refetch();
-    } catch ( error )
-    {
-      toastAndNavigate( dispatch, true, "error", "Error Changing Status" );
+    } catch (error) {
+      toastAndNavigate(dispatch, true, "error", "Error Changing Status");
     }
   };
 
-  const handleForwardAutocomplete = async ( value: any ) => {
-    setSelectedUser( value );
-    try
-    {
+  const handleForwardAutocomplete = async (value: any) => {
+    setSelectedUser(value);
+    try {
       const employeeRole = decodedToken()?.role;
       const loggedInUser = decodedToken()?.username;
       const userId = decodedToken()?.id;
@@ -659,33 +638,30 @@ const Progress: React.FC = () => {
         is_forwarded: 1,
       };
 
-      let historyMessage = `${ loggedInUser } forwarded the ticket to ${ value.username }`;
+      let historyMessage = `${loggedInUser} forwarded the ticket to ${value.username}`;
 
-      if ( employeeRole === "credit" )
-      {
+      if (employeeRole === "credit") {
         updatePayload.status = "operations";
         historyMessage += " and status is set to operations";
-      } else if ( employeeRole === "operations" )
-      {
+      } else if (employeeRole === "operations") {
         updatePayload.status = "under credit review";
       }
-      await modifyTicket( +ticketId, updatePayload );
+      await modifyTicket(+ticketId, updatePayload);
 
-      await createTicketHistory( {
+      await createTicketHistory({
         ticket_id: ticketId,
         action: historyMessage,
-      } );
-      toastAndNavigate( dispatch, true, "info", "File Forwarded Successfully" );
+      });
+      toastAndNavigate(dispatch, true, "info", "File Forwarded Successfully");
       await refetch();
-    } catch ( error )
-    {
-      toastAndNavigate( dispatch, true, "error", "Error Forwarding File" );
+    } catch (error) {
+      toastAndNavigate(dispatch, true, "error", "Error Forwarding File");
     }
   };
 
-  const showComments = () => setActiveSection( "Comments" );
-  const showHistory = () => setActiveSection( "History" );
-  const showWorkLog = () => setActiveSection( "WorkLog" );
+  const showComments = () => setActiveSection("Comments");
+  const showHistory = () => setActiveSection("History");
+  const showWorkLog = () => setActiveSection("WorkLog");
 
   return (
     <ThemeProvider theme={theme}>
@@ -877,7 +853,7 @@ const Progress: React.FC = () => {
                 )}
 
                 {activeSection === "WorkLog" && (
-                  <WorkLogList userData={userData} workLog={workLog?.data} />
+                  <WorkLogList userData={userData} workLog={(workLog as any)?.data} />
                 )}
               </Paper>
             </Grid>
@@ -948,7 +924,7 @@ const Progress: React.FC = () => {
                     size={isMobile ? "small" : "medium"}
                     variant="contained"
                     // onClick={() => setNewEmployeeStatus( "forwarded" )}
-                    onClick={() => setNewEmployeeStatus( "forwarded" )}
+                    onClick={() => setNewEmployeeStatus("forwarded")}
                     sx={{
                       bgcolor: '#155fcc',
                       textTransform: 'uppercase',
@@ -1096,11 +1072,11 @@ const Progress: React.FC = () => {
                               }
                             }}
                           >
-                            {employeeStatusObj.map( ( status ) => (
+                            {employeeStatusObj.map((status) => (
                               <MenuItem key={status.value} value={status.value}>
                                 {status.label}
                               </MenuItem>
-                            ) )}
+                            ))}
                           </Select>
                         </FormControl>
                       </Box>
@@ -1147,7 +1123,7 @@ const Progress: React.FC = () => {
                           type="date"
                           label="Date"
                           value={approvedDate}
-                          onChange={( e ) => setApprovedDate( e.target.value )}
+                          onChange={(e) => setApprovedDate(e.target.value)}
                           variant="filled"
                           InputLabelProps={{ shrink: true }}
                           sx={{
@@ -1184,19 +1160,18 @@ const Progress: React.FC = () => {
                           fullWidth
                           type="number"
                           label="Amount"
-                          value={formatDisplayAmount( approvedAmount )}
+                          value={formatDisplayAmount(approvedAmount)}
                           placeholder="Enter amount"
-                          onChange={( e ) => {
+                          onChange={(e) => {
                             // Store the raw value but display formatted
                             const rawValue = e.target.value;
-                            setApprovedAmount( rawValue );
+                            setApprovedAmount(rawValue);
                           }}
-                          onBlur={( e ) => {
+                          onBlur={(e) => {
                             // Format the amount when field loses focus
-                            if ( e.target.value )
-                            {
-                              const formatted = formatDecimalAmount( e.target.value );
-                              setApprovedAmount( formatted );
+                            if (e.target.value) {
+                              const formatted = formatDecimalAmount(e.target.value);
+                              setApprovedAmount(formatted);
                             }
                           }}
                           variant="filled"
@@ -1230,6 +1205,47 @@ const Progress: React.FC = () => {
                           }}
                         />
 
+                        {/* Case Type Field */}
+                        <TextField
+                          select
+                          fullWidth
+                          label="Case Type"
+                          value={caseType}
+                          onChange={(e) => setCaseType(e.target.value)}
+                          variant="filled"
+                          InputLabelProps={{ shrink: true }}
+                          sx={{
+                            bgcolor: 'white',
+                            borderRadius: { xs: 1.5, sm: 2 },
+                            '& .MuiFilledInput-root': {
+                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                              minHeight: { xs: '48px', sm: '56px' },
+                              paddingTop: { xs: '24px', sm: '.4rem' },
+                            },
+                            '& .MuiInputLabel-root': {
+                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                              transform: 'translate(12px, 10px) scale(1)',
+                            },
+                            '& .MuiInputLabel-shrink': {
+                              transform: 'translate(12px, 4px) scale(0.75)',
+                              top: 0,
+                            },
+                            '& .MuiFilledInput-input': {
+                              paddingTop: { xs: '8px', sm: '12px' },
+                              paddingBottom: { xs: '8px', sm: '12px' },
+                            },
+                            '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
+                              borderBottom: 'none',
+                            },
+                            '& .MuiFilledInput-underline:hover:before': {
+                              borderBottom: 'none !important',
+                            },
+                          }}
+                        >
+                          <MenuItem value="fresh">Fresh</MenuItem>
+                          <MenuItem value="top_up">Top up</MenuItem>
+                        </TextField>
+
                         {/* Save Button */}
                         <Box display="flex" justifyContent="center" mt={1}>
                           <Button
@@ -1238,8 +1254,8 @@ const Progress: React.FC = () => {
                             onClick={handleCombinedApprovalSubmit}
                             disabled={
                               !approvedDate ||
-                              !( approvedAmount || ticketDetailData?.applicationAmount ) ||
-                              parseFloat( approvedAmount || ticketDetailData?.applicationAmount || 0 ) <= 0
+                              !(approvedAmount || ticketDetailData?.applicationAmount) ||
+                              parseFloat(approvedAmount || ticketDetailData?.applicationAmount || 0) <= 0
                             }
                             sx={{
                               bgcolor: "#2e7d32",
@@ -1298,7 +1314,7 @@ const Progress: React.FC = () => {
                           type="date"
                           label="Date"
                           value={disbursedDate}
-                          onChange={( e ) => setDisbursedDate( e.target.value )}
+                          onChange={(e) => setDisbursedDate(e.target.value)}
                           variant="filled"
                           InputLabelProps={{ shrink: true }}
                           sx={{
@@ -1337,7 +1353,7 @@ const Progress: React.FC = () => {
                           label="Amount"
                           placeholder="Enter amount"
                           value={disbursedAmount}
-                          onChange={( e ) => setDisbursedAmount( e.target.value )}
+                          onChange={(e) => setDisbursedAmount(e.target.value)}
                           variant="filled"
                           InputLabelProps={{ shrink: true }}
                           sx={{
@@ -1375,7 +1391,7 @@ const Progress: React.FC = () => {
                           label="Cashback Amount"
                           placeholder="Enter cashback amount"
                           value={cashbackAmount}
-                          onChange={( e ) => setCashbackAmount( e.target.value )}
+                          onChange={(e) => setCashbackAmount(e.target.value)}
                           variant="filled"
                           InputLabelProps={{ shrink: true }}
                           sx={{
@@ -1407,6 +1423,48 @@ const Progress: React.FC = () => {
                           }}
                         />
 
+                        {/* Case Type Field */}
+                        <TextField
+                          select
+                          fullWidth
+                          label="Case Type"
+                          placeholder="Case type"
+                          value={caseType}
+                          onChange={(e) => setCaseType(e.target.value)}
+                          variant="filled"
+                          InputLabelProps={{ shrink: true }}
+                          sx={{
+                            bgcolor: 'white',
+                            borderRadius: { xs: 1.5, sm: 2 },
+                            '& .MuiFilledInput-root': {
+                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                              minHeight: { xs: '48px', sm: '56px' },
+                              paddingTop: { xs: '24px', sm: '.4rem' },
+                            },
+                            '& .MuiInputLabel-root': {
+                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                              transform: 'translate(12px, 10px) scale(1)',
+                            },
+                            '& .MuiInputLabel-shrink': {
+                              transform: 'translate(12px, 4px) scale(0.75)',
+                              top: 0,
+                            },
+                            '& .MuiFilledInput-input': {
+                              paddingTop: { xs: '8px', sm: '12px' },
+                              paddingBottom: { xs: '8px', sm: '12px' },
+                            },
+                            '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
+                              borderBottom: 'none',
+                            },
+                            '& .MuiFilledInput-underline:hover:before': {
+                              borderBottom: 'none !important',
+                            },
+                          }}
+                        >
+                          <MenuItem value="fresh">Fresh</MenuItem>
+                          <MenuItem value="top_up">Top up</MenuItem>
+                        </TextField>
+
 
                         {/* Save Button */}
                         <Box display="flex" justifyContent="center" mt={1}>
@@ -1416,8 +1474,8 @@ const Progress: React.FC = () => {
                             onClick={handleCombinedDisbursementSubmit}
                             disabled={
                               !disbursedDate ||
-                              !( disbursedAmount || ticketDetailData?.applicationAmount ) ||
-                              parseFloat( disbursedAmount || ticketDetailData?.applicationAmount || 0 ) <= 0
+                              !(disbursedAmount || ticketDetailData?.applicationAmount) ||
+                              parseFloat(disbursedAmount || ticketDetailData?.applicationAmount || 0) <= 0
                             }
                             sx={{
                               bgcolor: "#2e7d32",
@@ -1588,7 +1646,7 @@ const Progress: React.FC = () => {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {capitalizeFirstLetter( decodedToken()?.username )}
+                      {capitalizeFirstLetter(decodedToken()?.username)}
                     </Typography>
                     <Avatar
                       sx={{
@@ -1598,8 +1656,8 @@ const Progress: React.FC = () => {
                         // height: { xs: 28, sm: 32, md: 40 },
                         fontSize: { xs: '0.7rem', sm: '0.8rem', md: '1rem' },
                       }}
-                      alt={capitalizeFirstLetter( decodedToken()?.username )}
-                      src={capitalizeFirstLetter( decodedToken()?.username )}
+                      alt={capitalizeFirstLetter(decodedToken()?.username)}
+                      src={capitalizeFirstLetter(decodedToken()?.username)}
                     // alt={capitalizeFirstLetter( decodedToken()?.username )}
                     // src={capitalizeFirstLetter( decodedToken()?.username )}
                     />
@@ -1677,5 +1735,4 @@ const Progress: React.FC = () => {
   );
 };
 
-export default React.memo( Progress );
-// export default React.memo( Progress );
+export default React.memo(MainPage);

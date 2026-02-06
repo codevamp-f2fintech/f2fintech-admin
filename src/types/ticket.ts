@@ -23,6 +23,12 @@ export interface JoinedTicketData {
   customerState: string;
   loanStatus: string;
   loanCategory: string;
+  case_type?: string;
+  cashback_amount?: number;
+  approved_at?: string | Date;
+  approved_amount?: number;
+  disbursed_at?: string | Date;
+  disbursed_amount?: number;
 }
 
 export interface Ticket {

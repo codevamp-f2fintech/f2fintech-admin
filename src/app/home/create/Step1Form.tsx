@@ -96,6 +96,8 @@ const Step1Form: React.FC<Step1FormProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [leadType, setLeadType] = useState<string>("");
   const [leadTypeError, setLeadTypeError] = useState<string>("");
+  const [caseType, setCaseType] = useState<string>("");
+  const [caseTypeError, setCaseTypeError] = useState<string>("");
 
   // New State for Running Customer Loans
   const [hasRunningLoans, setHasRunningLoans] = useState("");
@@ -110,12 +112,14 @@ const Step1Form: React.FC<Step1FormProps> = ({
     provider: string;
     loanType: string;
     leadType: string;
+    caseType: string;
   }>({
     amount: "",
     tenure: "",
     provider: "",
     loanType: "",
     leadType: "",
+    caseType: "",
   });
   const [loanStatus, setLoanStatus] = useState<string | null>(null);
   const toastInfo = useSelector((state: any) => state.toast);
@@ -180,6 +184,14 @@ const Step1Form: React.FC<Step1FormProps> = ({
       error = "Lead type is required";
     }
     setLeadTypeError(error);
+  };
+
+  const validateCaseType = (value: string): void => {
+    let error = "";
+    if (!value) {
+      error = "Case type is required";
+    }
+    setCaseTypeError(error);
   };
 
   const validateHasRunningLoans = (value: string) => {
@@ -445,6 +457,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
     hasRunningLoans,
     whichLoan,
     runningLoanAmount,
+    caseType,
   ) {
     const companyId = getCompanyId();
     // const headers = companyId ? { companyid: companyId } : {};
@@ -464,6 +477,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
           has_running_loans: hasRunningLoans,
           which_loan: whichLoan,
           running_loan_amount: runningLoanAmount,
+          case_type: caseType,
           // company_id: companyId,
         })
     return applicationResponse.data.applicationId;
@@ -531,6 +545,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
             hasRunningLoans === "yes",
             hasRunningLoans === "yes" ? whichLoan : null,
             hasRunningLoans === "yes" ? Number(runningLoanAmount) : null,
+            caseType,
           );
           await createLoanTracking(applicationId);
           return applicationNumberGenerated;
@@ -1327,6 +1342,116 @@ const Step1Form: React.FC<Step1FormProps> = ({
           )}
         </FormControl>
 
+        {/* Case Type Field */}
+        <FormControl
+          autoComplete="off"
+          variant="filled"
+          error={!!caseTypeError}
+          sx={{
+            width: { xs: "90%", sm: "60%", md: "45%" },
+            mb: 3,
+            "& .MuiFilledInput-root": {
+              backgroundColor: "rgba(255, 255, 255, 0.08)",
+              borderRadius: "12px",
+              color: "white",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+              transition: "all 0.3s ease",
+
+              "&:before, &:after": {
+                borderBottom: "none !important",
+              },
+
+              "&:hover": {
+                backgroundColor: "rgba(255,255,255,0.12)",
+              },
+              "&.Mui-focused": {
+                backgroundColor: "rgba(255,255,255,0.15)",
+                boxShadow: "0 0 0 2px rgba(144,202,249,0.4)",
+              },
+            },
+            "& .MuiInputLabel-root": {
+              color: caseTypeError ? "error.main" : "rgba(255,255,255,0.7)",
+              fontSize: "14px",
+            },
+            "& .Mui-focused": {
+              color: "#90caf9 !important",
+            },
+            "& .MuiSelect-icon": {
+              color: "white",
+            },
+          }}
+        >
+          <InputLabel>Case Type*</InputLabel>
+          <Select
+            variant="filled"
+            name="caseType"
+            value={caseType}
+            onChange={(e) => {
+              setCaseType(e.target.value);
+              validateCaseType(e.target.value);
+            }}
+            onBlur={() => validateCaseType(caseType)}
+            startAdornment={
+              <InputAdornment position="start" sx={{ color: "white !important" }}>
+                <AccountBalanceIcon />
+              </InputAdornment>
+            }
+            MenuProps={{
+              PaperProps: {
+                sx: {
+                  bgcolor: "#1e1e1e",
+                  borderRadius: "10px",
+                  "& .MuiMenuItem-root": {
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "#333",
+                    },
+                    "&.Mui-selected": {
+                      backgroundColor: "#90caf9 !important",
+                      color: "#fff",
+                    },
+                  },
+                },
+              },
+            }}
+          >
+            <MenuItem
+              value="top_up"
+              sx={{
+                padding: "10px 16px",
+                fontSize: "14px",
+                borderRadius: "6px",
+              }}
+            >
+              Top Up
+            </MenuItem>
+            <MenuItem
+              value="fresh"
+              sx={{
+                padding: "10px 16px",
+                fontSize: "14px",
+                borderRadius: "6px",
+              }}
+            >
+              Fresh
+            </MenuItem>
+          </Select>
+
+          {caseTypeError && (
+            <Typography
+              color="error"
+              sx={{
+                mt: 0.5,
+                ml: 1,
+                fontSize: "11px",
+                fontFamily: "Verdana, sans-serif",
+              }}
+            >
+              {caseTypeError}
+            </Typography>
+          )}
+        </FormControl>
+
         {/* Providers Field */}
         <FormControl
           autoComplete="off"
@@ -1583,12 +1708,14 @@ const Step1Form: React.FC<Step1FormProps> = ({
             !!errors.provider ||
             !!errors.loanType ||
             !!errors.leadType ||
+            !!caseTypeError ||
             !amount ||
             !tenure ||
             !providers ||
             providers.length === 0 ||
             !loanType ||
             !leadType ||
+            !caseType ||
             !hasRunningLoans ||
             (hasRunningLoans === "yes" && (!whichLoan || !runningLoanAmount)) ||
             !validateAllProviderAmounts()
