@@ -95,6 +95,7 @@ export interface TicketDetail {
   disbursed_amount?: number | string;
   cashback_amount?: number | string;
   case_type?: string;
+  fixed_commission_percentage?: number | string;
 }
 
 interface TicketDetailResponse {
@@ -164,6 +165,16 @@ const MainPage = () => {
   });
 
   const [caseType, setCaseType] = useState<string>("");
+
+  const [fixedCommissionPercentage, setFixedCommissionPercentage] = useState(() => {
+    return ticketDetailData?.fixed_commission_percentage
+      ? ticketDetailData.fixed_commission_percentage.toString()
+      : "";
+  });
+
+  const [isFixedCommissionPercentageSaved, setIsFixedCommissionPercentageSaved] = useState(() => {
+    return !!ticketDetailData?.fixed_commission_percentage;
+  });
 
   // Format amount for display (removes unnecessary decimals)
   const formatDisplayAmount = (amount: string): string => {
@@ -308,6 +319,12 @@ const MainPage = () => {
           if (data.cashback_amount) {
             setCashbackAmount(data.cashback_amount.toString());
             setIsCashbackAmountSaved(true);
+          }
+
+          // Set fixed commission percentage if ticket has it
+          if (data.fixed_commission_percentage) {
+            setFixedCommissionPercentage(data.fixed_commission_percentage.toString());
+            setIsFixedCommissionPercentageSaved(true);
           }
 
           if (data.case_type) {
@@ -513,6 +530,11 @@ const MainPage = () => {
         updatePayload.case_type = caseType;
       }
 
+      // Add fixed commission percentage to payload if provided
+      if (fixedCommissionPercentage && parseFloat(fixedCommissionPercentage) >= 0) {
+        updatePayload.fixed_commission_percentage = parseFloat(fixedCommissionPercentage);
+      }
+
       await modifyTicket(+ticketId, updatePayload);
 
       const loggedInUser = decodedToken()?.username;
@@ -529,6 +551,11 @@ const MainPage = () => {
         historyMessage += `, Case Type: ${caseType}`;
       }
 
+      // Add fixed commission percentage to history message if provided
+      if (fixedCommissionPercentage && parseFloat(fixedCommissionPercentage) >= 0) {
+        historyMessage += `, Fixed Commission: ${fixedCommissionPercentage}%`;
+      }
+
       await createTicketHistory({
         ticket_id: ticketId,
         action: historyMessage,
@@ -539,6 +566,10 @@ const MainPage = () => {
       // Set cashback as saved if provided
       if (cashbackAmount && parseFloat(cashbackAmount) >= 0) {
         setIsCashbackAmountSaved(true);
+      }
+      // Set fixed commission percentage as saved if provided
+      if (fixedCommissionPercentage && parseFloat(fixedCommissionPercentage) >= 0) {
+        setIsFixedCommissionPercentageSaved(true);
       }
 
       toastAndNavigate(dispatch, true, "info", cashbackAmount ? "Disbursement details saved successfully" : "Disbursement details saved successfully");
@@ -572,6 +603,11 @@ const MainPage = () => {
         updatePayload.case_type = caseType;
       }
 
+      // Add fixed commission percentage to payload if provided
+      if (fixedCommissionPercentage && parseFloat(fixedCommissionPercentage) >= 0) {
+        updatePayload.fixed_commission_percentage = parseFloat(fixedCommissionPercentage);
+      }
+
       await modifyTicket(+ticketId, updatePayload);
 
       const loggedInUser = decodedToken()?.username;
@@ -579,6 +615,10 @@ const MainPage = () => {
 
       if (caseType) {
         historyMessage += `, Case Type: ${caseType}`;
+      }
+
+      if (fixedCommissionPercentage && parseFloat(fixedCommissionPercentage) >= 0) {
+        historyMessage += `, Fixed Commission: ${fixedCommissionPercentage}%`;
       }
 
       await createTicketHistory({
@@ -1246,6 +1286,45 @@ const MainPage = () => {
                           <MenuItem value="top_up">Top up</MenuItem>
                         </TextField>
 
+                        {/* Fixed Commission Percentage Field */}
+                        <TextField
+                          fullWidth
+                          type="number"
+                          label="Fixed Commission Percentage"
+                          placeholder="Enter fixed commission percentage"
+                          value={fixedCommissionPercentage}
+                          onChange={(e) => setFixedCommissionPercentage(e.target.value)}
+                          variant="filled"
+                          InputLabelProps={{ shrink: true }}
+                          sx={{
+                            bgcolor: 'white',
+                            borderRadius: { xs: 1.5, sm: 2 },
+                            '& .MuiFilledInput-root': {
+                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                              minHeight: { xs: '48px', sm: '56px' },
+                              paddingTop: { xs: '24px', sm: '.4rem' },
+                            },
+                            '& .MuiInputLabel-root': {
+                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                              transform: 'translate(12px, 10px) scale(1)',
+                            },
+                            '& .MuiInputLabel-shrink': {
+                              transform: 'translate(12px, 4px) scale(0.75)',
+                              top: 0,
+                            },
+                            '& .MuiFilledInput-input': {
+                              paddingTop: { xs: '8px', sm: '12px' },
+                              paddingBottom: { xs: '8px', sm: '12px' },
+                            },
+                            '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
+                              borderBottom: 'none',
+                            },
+                            '& .MuiFilledInput-underline:hover:before': {
+                              borderBottom: 'none !important',
+                            },
+                          }}
+                        />
+
                         {/* Save Button */}
                         <Box display="flex" justifyContent="center" mt={1}>
                           <Button
@@ -1464,6 +1543,45 @@ const MainPage = () => {
                           <MenuItem value="fresh">Fresh</MenuItem>
                           <MenuItem value="top_up">Top up</MenuItem>
                         </TextField>
+
+                        {/* Fixed Commission Percentage Field */}
+                        <TextField
+                          fullWidth
+                          type="number"
+                          label="Fixed Commission Percentage ( % )"
+                          placeholder="Enter fixed commission percentage"
+                          value={fixedCommissionPercentage}
+                          onChange={(e) => setFixedCommissionPercentage(e.target.value)}
+                          variant="filled"
+                          InputLabelProps={{ shrink: true }}
+                          sx={{
+                            bgcolor: 'white',
+                            borderRadius: { xs: 1.5, sm: 2 },
+                            '& .MuiFilledInput-root': {
+                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                              minHeight: { xs: '48px', sm: '56px' },
+                              paddingTop: { xs: '24px', sm: '.4rem' },
+                            },
+                            '& .MuiInputLabel-root': {
+                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                              transform: 'translate(12px, 10px) scale(1)',
+                            },
+                            '& .MuiInputLabel-shrink': {
+                              transform: 'translate(12px, 4px) scale(0.75)',
+                              top: 0,
+                            },
+                            '& .MuiFilledInput-input': {
+                              paddingTop: { xs: '8px', sm: '12px' },
+                              paddingBottom: { xs: '8px', sm: '12px' },
+                            },
+                            '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
+                              borderBottom: 'none',
+                            },
+                            '& .MuiFilledInput-underline:hover:before': {
+                              borderBottom: 'none !important',
+                            },
+                          }}
+                        />
 
 
                         {/* Save Button */}

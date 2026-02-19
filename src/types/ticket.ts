@@ -25,6 +25,7 @@ export interface JoinedTicketData {
   loanCategory: string;
   case_type?: string;
   cashback_amount?: number;
+  fixed_commission_percentage?: number;
   approved_at?: string | Date;
   approved_amount?: number;
   disbursed_at?: string | Date;
