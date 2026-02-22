@@ -537,6 +537,16 @@ const MainPage = () => {
 
       await modifyTicket(+ticketId, updatePayload);
 
+      // Trigger commission processing AFTER all details are saved
+      try {
+        const commissionResponse = await axiosInstance.post(
+          `${process.env.NEXT_PUBLIC_API_URL}/trigger-commission/${ticketId}`
+        );
+        console.log("[COMMISSION] Triggered after save details:", commissionResponse.data);
+      } catch (commErr) {
+        console.error("[COMMISSION] Failed to trigger commission:", commErr);
+      }
+
       const loggedInUser = decodedToken()?.username;
       // Build history message dynamically
       let historyMessage = `${loggedInUser} set disbursement details - Date: ${disbursedDate}, Amount: ${disbursedAmount}`;
