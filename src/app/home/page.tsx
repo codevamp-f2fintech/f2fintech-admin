@@ -186,6 +186,7 @@ const Home: React.FC = () => {
     }
   }, [data?.results?.length, currentPage, debouncedSearchTerm, selectedCompany]);
 
+
   // Handle infinite scrolling
   const handleScroll = useCallback(
     debounceScroll(() => {
@@ -211,18 +212,17 @@ const Home: React.FC = () => {
 
   // Filter applications by company ID - Only show applications with same company_id as logged-in user
   const filteredCustomers = useMemo(() => {
-    const allApplications = customerApplication?.results || [];
+    let applications = customerApplication?.results || [];
 
-    // If user is admin or super admin, show all applications
-    if (userRole === "admin" || userRole === "super admin") {
-      return allApplications;
+    // Filter by company for non-admins
+    if (userRole !== "admin" && userRole !== "super admin") {
+      applications = applications.filter(application =>
+        ((application as any).company_id === userCompanyId) ||
+        (application.companyId === userCompanyId)
+      );
     }
 
-    // For other roles, filter by company_id (support both snake_case and camelCase)
-    return allApplications.filter(application =>
-      ((application as any).company_id === userCompanyId) ||
-      (application.companyId === userCompanyId)
-    );
+    return applications;
   }, [customerApplication, userRole, userCompanyId]);
 
   // Update the count display to show filtered count

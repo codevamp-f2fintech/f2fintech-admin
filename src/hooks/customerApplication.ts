@@ -20,24 +20,25 @@ export const useGetCustomerApplications = (
   searchTerm?: string,
   formattedStartDate?: string | null,
   formattedEndDate?: string | null,
+  refreshKey?: number,
+  source?: string | null,
 ) => {
-  let url = `${ pathKey }?page=${ page }&limit=${ limit }`;
+  let url = `${pathKey}?page=${page}&limit=${limit}`;
 
-  if ( salesUserId )
-  {
-    url += `&appliedBy=${ salesUserId }`;
+  if (salesUserId) {
+    url += `&appliedBy=${salesUserId}`;
   }
-  if ( searchTerm && searchTerm.trim() !== '' )
-  {
-    url += `&search=${ encodeURIComponent( searchTerm ) }`;
+  if (searchTerm && searchTerm.trim() !== '') {
+    url += `&search=${encodeURIComponent(searchTerm)}`;
   }
-  if ( formattedStartDate )
-  {
-    url += `&startDate=${ formattedStartDate }`;
+  if (formattedStartDate) {
+    url += `&startDate=${formattedStartDate}`;
   }
-  if ( formattedEndDate )
-  {
-    url += `&endDate=${ formattedEndDate }`;
+  if (formattedEndDate) {
+    url += `&endDate=${formattedEndDate}`;
+  }
+  if (source && source !== 'all') {
+    url += `&source=${source}`;
   }
 
   const {
@@ -59,7 +60,7 @@ export const useGetCustomerApplications = (
   );
 
   const refetch = async () => {
-    await mutate( url );
+    await mutate(url);
   };
 
   return {
@@ -80,27 +81,24 @@ export const useGetCustomerApplications = (
  * @param pathKey - The API path key used to create a new customer.
  * @returns An object containing the created customer, loading state, error state, and the createCustomer function.
  */
-export const useCreateCustomerApplication = ( pathKey: string ) => {
-  const [ loading, setLoading ] = useState( false );
-  const [ error, setError ] = useState<Error | null>( null );
+export const useCreateCustomerApplication = (pathKey: string) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  const createCustomerApplication = async ( ticketData: {
+  const createCustomerApplication = async (ticketData: {
     applicationId: number;
     userId: number;
     status: string;
-  } ) => {
-    setLoading( true );
-    setError( null );
-    try
-    {
-      const response = await creator( pathKey, ticketData );
+  }) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await creator(pathKey, ticketData);
       return response;
-    } catch ( err )
-    {
-      setError( err as Error );
-    } finally
-    {
-      setLoading( false );
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -114,26 +112,23 @@ export const useCreateCustomerApplication = ( pathKey: string ) => {
  * @returns An object containing the loading state, error state, and the deleteCustomerApplication function.
  */
 export const useDeleteCustomerApplication = () => {
-  const [ loading, setLoading ] = useState( false );
-  const [ error, setError ] = useState<Error | null>( null );
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  const deleteCustomerApplication = async ( pathKey: string, id: number ) => {
-    setLoading( true );
-    setError( null );
-    try
-    {
-      const apiPath = `${ pathKey }/${ id }`;
+  const deleteCustomerApplication = async (pathKey: string, id: number) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const apiPath = `${pathKey}/${id}`;
 
       // Assuming you have a deleter function in your apiClient
       // If not, you can use fetcher with DELETE method or create a deleter function
-      const response = await deleter( apiPath);
+      const response = await deleter(apiPath);
       return response;
-    } catch ( err )
-    {
-      setError( err as Error );
-    } finally
-    {
-      setLoading( false );
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -146,31 +141,28 @@ export const useDeleteCustomerApplication = () => {
  * @param pathKey - The API path key used to modify a customer.
  * @returns An object containing the updated customer, loading state, error state, and the modifyCustomer function.
  */
-export const useModifyCustomerApplication = ( pathKey: string ) => {
-  const [ loading, setLoading ] = useState( false );
-  const [ error, setError ] = useState<Error | null>( null );
+export const useModifyCustomerApplication = (pathKey: string) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   const modifyCustomerApplication = async (
     id: number,
     updatedCustomerApplicationData: Partial<CustomerApplicationData>
   ) => {
-    setLoading( true );
-    setError( null );
-    try
-    {
-      const apiPath = `${ pathKey }/${ id }`;
+    setLoading(true);
+    setError(null);
+    try {
+      const apiPath = `${pathKey}/${id}`;
 
       const customerApplication = await modifier<CustomerApplicationData, Partial<CustomerApplicationData>>(
         apiPath,
         updatedCustomerApplicationData
       );
       return customerApplication;
-    } catch ( err )
-    {
-      setError( err as Error );
-    } finally
-    {
-      setLoading( false );
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
     }
   };
   return { loading, error, modifyCustomerApplication };

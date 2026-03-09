@@ -78,26 +78,28 @@ interface ApplicationCardProps {
     disbursed_Amount?: number;
     approved_At?: string;
     approved_Amount?: number;
-    onDelete: ( applicationId: string, customerName: string ) => void;
+    source?: string;
+    applicationSource?: string;
+    onDelete: (applicationId: string, customerName: string) => void;
   };
-  handleStartClick?: ( ticketId: number ) => void;
+  handleStartClick?: (ticketId: number) => void;
   showDeleteButton?: boolean;
   refetch?: () => Promise<void>;
   userRole?: string;
-  handleDeleteTicket?: ( ticketId: number ) => void;
+  handleDeleteTicket?: (ticketId: number) => void;
   isApplication?: boolean;
   toggleListView?: string;
   mainIndex?: number;
   validateCompanyForCheckbox?: () => boolean;
 }
 
-function InfoRow ( {
+function InfoRow({
   icon,
   text,
 }: {
   icon: React.ReactNode;
   text: string | undefined;
-} ) {
+}) {
   return (
     <Box
       sx={{
@@ -117,9 +119,9 @@ function InfoRow ( {
           padding: "8px",
         }}
       >
-        {React.cloneElement( icon as React.ReactElement, {
+        {React.cloneElement(icon as React.ReactElement, {
           fontSize: "small",
-        } )}
+        })}
       </Box>
       <Typography variant="body2" sx={{ color: "#333", fontWeight: "medium" }}>
         {text}
@@ -128,7 +130,7 @@ function InfoRow ( {
   );
 }
 
-function InfoChip ( {
+function InfoChip({
   icon,
   text,
   color = "#6E44FF",
@@ -136,20 +138,20 @@ function InfoChip ( {
   icon: React.ReactNode;
   text: string | undefined;
   color?: string;
-} ) {
+}) {
   return (
     <Chip
-      icon={React.cloneElement( icon as React.ReactElement, {
+      icon={React.cloneElement(icon as React.ReactElement, {
         fontSize: "small",
         sx: { color: color },
-      } )}
+      })}
       label={text}
       variant="outlined"
       size="small"
       sx={{
         borderColor: color,
         color: color,
-        backgroundColor: `${ color }10`,
+        backgroundColor: `${color}10`,
         fontWeight: "medium",
         "& .MuiChip-icon": {
           color: color,
@@ -159,7 +161,31 @@ function InfoChip ( {
   );
 }
 
-const ApplicationCard: React.FC<ApplicationCardProps> = ( {
+const DirectBadge: React.FC = () => (
+  <Box
+    component="span"
+    sx={{
+      display: "inline-flex",
+      alignItems: "center",
+      backgroundColor: "#3f50b5",
+      color: "white",
+      fontSize: "0.65rem",
+      fontWeight: "bold",
+      px: 0.8,
+      py: 0.2,
+      borderRadius: "4px",
+      textTransform: "uppercase",
+      letterSpacing: "0.05em",
+      boxShadow: "0 2px 4px rgba(63, 80, 181, 0.3)",
+      verticalAlign: "middle",
+      lineHeight: 1,
+    }}
+  >
+    Direct
+  </Box>
+);
+
+const ApplicationCard: React.FC<ApplicationCardProps> = ({
   customerApplication,
   handleStartClick = null,
   showDeleteButton = false,
@@ -172,15 +198,15 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
   toggleListView,
   mainIndex,
   validateCompanyForCheckbox
-} ) => {
-  const [ showHistory, setShowHistory ] = useState<boolean>( false );
-  const [ showComment, setShowComment ] = useState<boolean>( false );
-  const [ historyData, setHistoryData ] = useState<any[]>( [] );
-  const [ commentData, setCommentData ] = useState<any[]>( [] );
-  const [ openDeleteDialog, setOpenDeleteDialog ] = useState<boolean>( false );
-  const [ expanded, setExpanded ] = useState<boolean>( false );
+}) => {
+  const [showHistory, setShowHistory] = useState<boolean>(false);
+  const [showComment, setShowComment] = useState<boolean>(false);
+  const [historyData, setHistoryData] = useState<any[]>([]);
+  const [commentData, setCommentData] = useState<any[]>([]);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false);
+  const [expanded, setExpanded] = useState<boolean>(false);
   const dispatch: AppDispatch = useDispatch();
-  const { toast } = useSelector( ( state: RootState ) => state.toast );
+  const { toast } = useSelector((state: RootState) => state.toast);
   const { toastAndNavigate } = Utility();
   const {
     calculateDaysAgo,
@@ -189,14 +215,14 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
     formatTenure,
   } = Utility();
 
-  const [ showOtpComponent, setShowOtpComponent ] = useState<boolean>( false );
-  const isMobile = useMediaQuery( "(max-width:600px)" );
-  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
-  const isIpad = useMediaQuery( "(min-width:1000px) and (max-width:1300px)" );
-  const [ deleteReason, setDeleteReason ] = useState<string>( "" );
+  const [showOtpComponent, setShowOtpComponent] = useState<boolean>(false);
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const isIpad = useMediaQuery("(min-width:1000px) and (max-width:1300px)");
+  const [deleteReason, setDeleteReason] = useState<string>("");
 
 
-  const handleDeleteClick = ( e: React.MouseEvent ) => {
+  const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onDelete(
       customerApplication.applicationId,
@@ -204,34 +230,33 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
     );
   };
 
-  const { createTicket } = useCreateTicket( "create-ticket" );
+  const { createTicket } = useCreateTicket("create-ticket");
   const { modifyCustomerApplication: modifyiedCustomerApplication } =
-    useModifyCustomerApplication( "update-loan-application" );
+    useModifyCustomerApplication("update-loan-application");
 
-  const toggleHistory = () => setShowHistory( ( prev ) => !prev );
-  const toggleExpanded = () => setExpanded( ( prev ) => !prev );
-  const toggleComment = () => setShowComment( ( prev ) => !prev );
+  const toggleHistory = () => setShowHistory((prev) => !prev);
+  const toggleExpanded = () => setExpanded((prev) => !prev);
+  const toggleComment = () => setShowComment((prev) => !prev);
 
   const formattedCreatedAt = customerApplication?.applicationDate
-    ? `Application At: ${ new Date( customerApplication.applicationDate ).toLocaleDateString( 'en-IN', {
+    ? `Application At: ${new Date(customerApplication.applicationDate).toLocaleDateString('en-IN', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
-    } ) }`
+    })}`
     : "Created At: N/A";
 
-  const openConfirmDialog = ( e ) => {
+  const openConfirmDialog = (e) => {
     e.stopPropagation();
-    setOpenDeleteDialog( true );
+    setOpenDeleteDialog(true);
   };
 
   const closeConfirmDialog = () => {
-    setOpenDeleteDialog( false );
+    setOpenDeleteDialog(false);
   };
 
   const confirmDelete = async () => {
-    if ( !deleteReason.trim() )
-    {
+    if (!deleteReason.trim()) {
       toastAndNavigate(
         dispatch,
         true,
@@ -244,11 +269,9 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
       return;
     }
 
-    if ( handleDeleteTicket && !isApplication )
-    {
-      try
-      {
-        await handleDeleteTicket( customerApplication.ticketId, deleteReason );
+    if (handleDeleteTicket && !isApplication) {
+      try {
+        await handleDeleteTicket(customerApplication.ticketId, deleteReason);
         toastAndNavigate(
           dispatch,
           true,
@@ -259,9 +282,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
           false
         );
         closeConfirmDialog();
-      } catch ( error )
-      {
-        console.log( "Error deleting ticket:", error );
+      } catch (error) {
+        console.log("Error deleting ticket:", error);
         toastAndNavigate(
           dispatch,
           true,
@@ -273,153 +295,139 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ( {
         );
       }
     }
-    if ( isApplication && handleDeleteApplication )
-    {
-      handleDeleteApplication( customerApplication.applicationId );
+    if (isApplication && handleDeleteApplication) {
+      handleDeleteApplication(customerApplication.applicationId);
     }
   };
 
-  useEffect( () => {
-    if ( showHistory && customerApplication?.ticketId )
-    {
+  useEffect(() => {
+    if (showHistory && customerApplication?.ticketId) {
       const fetchHistoryData = async () => {
-        try
-        {
+        try {
           const response = await axiosInstance.get(
-            `get-ticket-histories/${ customerApplication.ticketId }`
+            `get-ticket-histories/${customerApplication.ticketId}`
           );
           const data = response.data;
 
-          if ( data.statusCode === 200 )
-          {
-            setHistoryData( data.data );
-          } else
-          {
-            console.error( "Failed to fetch history data:", data.message );
+          if (data.statusCode === 200) {
+            setHistoryData(data.data);
+          } else {
+            console.error("Failed to fetch history data:", data.message);
           }
-        } catch ( error )
-        {
-          console.error( "Error fetching history data:", error );
+        } catch (error) {
+          console.error("Error fetching history data:", error);
         }
       };
       fetchHistoryData();
     }
-  }, [ showHistory, customerApplication?.ticketId ] );
+  }, [showHistory, customerApplication?.ticketId]);
 
-  useEffect( () => {
-    if ( showComment && customerApplication?.ticketId )
-    {
+  useEffect(() => {
+    if (showComment && customerApplication?.ticketId) {
       const fetchCommentData = async () => {
-        try
-        {
+        try {
           const response = await axiosInstance.get(
-            `get-ticket-activities/${ customerApplication.ticketId }`
+            `get-ticket-activities/${customerApplication.ticketId}`
           );
           const data = response.data;
 
-          if ( data.statusCode === 200 )
-          {
-            setCommentData( data.data );
-          } else
-          {
-            console.error( "Failed to fetch comment data:", data.message );
+          if (data.statusCode === 200) {
+            setCommentData(data.data);
+          } else {
+            console.error("Failed to fetch comment data:", data.message);
           }
-        } catch ( error )
-        {
-          console.error( "Error fetching comment data:", error );
+        } catch (error) {
+          console.error("Error fetching comment data:", error);
         }
       };
       fetchCommentData();
     }
-  }, [ showComment, customerApplication?.ticketId ] );
+  }, [showComment, customerApplication?.ticketId]);
 
-const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent) => {
-  // Validate company selection
-  if (validateCompanyForCheckbox && !validateCompanyForCheckbox()) {
-    e?.preventDefault();
-    e?.stopPropagation();
-    return;
-  }
+  const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent) => {
+    // Validate company selection
+    if (validateCompanyForCheckbox && !validateCompanyForCheckbox()) {
+      e?.preventDefault();
+      e?.stopPropagation();
+      return;
+    }
 
-  try {
-    const userInfo = decodedToken();
+    try {
+      const userInfo = decodedToken();
 
-    const ticketResponse = await createTicket({
-      customer_application_id: applicationId,
-      user_id: decodedToken()?.id,
-      status: "operations",
-    });
-    if (ticketResponse?.statusCode === 409) {
-      toastAndNavigate(
-        dispatch,
-        true,
-        "error",
-        "This Application Is Already Picked By Another User. Please Pick Another Application.",
-        null,
-        null,
-        false,
-        true
-      );
-
-      dispatch(resetCustomerApplications(applicationId));
-    } else {
-      dispatch(resetTickets());
-      await modifyiedCustomerApplication(applicationId, {
-        is_picked: 1,
+      const ticketResponse = await createTicket({
+        customer_application_id: applicationId,
+        user_id: decodedToken()?.id,
+        status: "operations",
       });
-      dispatch(resetCustomerApplications(applicationId));
-    }
-  } catch (error) {
-    console.log("Error in checkbox change:", error);
-  }
-};
+      if (ticketResponse?.statusCode === 409) {
+        toastAndNavigate(
+          dispatch,
+          true,
+          "error",
+          "This Application Is Already Picked By Another User. Please Pick Another Application.",
+          null,
+          null,
+          false,
+          true
+        );
 
-  useEffect( () => {
+        dispatch(resetCustomerApplications(applicationId));
+      } else {
+        dispatch(resetTickets());
+        await modifyiedCustomerApplication(applicationId, {
+          is_picked: 1,
+        });
+        dispatch(resetCustomerApplications(applicationId));
+      }
+    } catch (error) {
+      console.log("Error in checkbox change:", error);
+    }
+  };
+
+  useEffect(() => {
     // Collapse when it's an application
-    if ( isApplication )
-    {
-      setExpanded( false );
+    if (isApplication) {
+      setExpanded(false);
     }
-  }, [ isApplication ] );
+  }, [isApplication]);
 
-  const formatRupees = ( value: number ) => {
-    return new Intl.NumberFormat( "en-IN", {
+  const formatRupees = (value: number) => {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    } ).format( value );
+    }).format(value);
   };
 
   const ListView = () => {
-    const [ showAttachment, setShowAttachment ] = useState( {} );
+    const [showAttachment, setShowAttachment] = useState({});
 
-    const getFileExtensionFromUrl = ( url ) => {
-      try
-      {
-        const urlParts = url.split( "/" );
-        const filename = urlParts[ urlParts.length - 1 ];
-        const extension = filename.split( "." ).pop()?.toLowerCase();
+    const getFileExtensionFromUrl = (url: string) => {
+      try {
+        const urlParts = url.split("/");
+        const filename = urlParts[urlParts.length - 1];
+        const extension = filename.split(".").pop()?.toLowerCase();
         return extension || "";
-      } catch ( error )
-      {
+      } catch (error) {
         return "";
       }
     };
 
-    const isPdfAttachment = ( attachmentUrl ) => {
-      const extension = getFileExtensionFromUrl( attachmentUrl );
+    const isPdfAttachment = (attachmentUrl: string) => {
+      const extension = getFileExtensionFromUrl(attachmentUrl);
       return extension === "pdf";
     };
 
-    const isExcelAttachment = ( attachmentUrl ) => {
-      const extension = getFileExtensionFromUrl( attachmentUrl );
-      const excelExtensions = [ "xlsx", "xls", "csv", "xlsm", "xlsb" ];
-      return excelExtensions.includes( extension );
+    const isExcelAttachment = (attachmentUrl: string) => {
+      const extension = getFileExtensionFromUrl(attachmentUrl);
+      const excelExtensions = ["xlsx", "xls", "csv", "xlsm", "xlsb"];
+      return excelExtensions.includes(extension);
     };
 
-    const isImageAttachment = ( attachmentUrl ) => {
-      const extension = getFileExtensionFromUrl( attachmentUrl );
+    const isImageAttachment = (attachmentUrl: string) => {
+      const extension = getFileExtensionFromUrl(attachmentUrl);
       const imageExtensions = [
         "jpg",
         "jpeg",
@@ -429,51 +437,46 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
         "webp",
         "svg",
       ];
-      return imageExtensions.includes( extension );
+      return imageExtensions.includes(extension);
     };
 
-    const toggleAttachment = ( commentId, attachmentUrl ) => {
-      if ( isExcelAttachment( attachmentUrl ) )
-      {
-        const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${ encodeURIComponent(
+    const toggleAttachment = (commentId: number | string, attachmentUrl: string) => {
+      if (isExcelAttachment(attachmentUrl)) {
+        const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
           attachmentUrl
-        ) }`;
+        )}`;
 
-        const newWindow = window.open( officeViewerUrl, "_blank" );
+        const newWindow = window.open(officeViewerUrl, "_blank");
 
         if (
           !newWindow ||
           newWindow.closed ||
           typeof newWindow.closed === "undefined"
-        )
-        {
+        ) {
           const shouldDownload = window.confirm(
             "Unable to open file in viewer. Would you like to download it instead?"
           );
 
-          if ( shouldDownload )
-          {
-            const link = document.createElement( "a" );
+          if (shouldDownload) {
+            const link = document.createElement("a");
             link.href = attachmentUrl;
             link.download = "";
             link.target = "_blank";
-            document.body.appendChild( link );
+            document.body.appendChild(link);
             link.click();
-            document.body.removeChild( link );
+            document.body.removeChild(link);
           }
         }
-      } else if ( isPdfAttachment( attachmentUrl ) )
-      {
-        window.open( attachmentUrl, "_blank" );
-      } else
-      {
-        setShowAttachment( ( prev ) => ( {
+      } else if (isPdfAttachment(attachmentUrl)) {
+        window.open(attachmentUrl, "_blank");
+      } else {
+        setShowAttachment((prev) => ({
           ...prev,
-          [ commentId ]: !prev[ commentId ],
-        } ) );
+          [commentId]: !prev[commentId],
+        }));
       }
     };
-    console.log( customerApplication, 'this is it' )
+    console.log(customerApplication, 'this is it')
     return (
       <>
         <Grid item xs={20} key={customerApplication.customerId}>
@@ -519,11 +522,11 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
               <ListItemAvatar sx={{ minWidth: isMobile ? "auto" : 60 }}>
                 <Avatar
                   alt={capitalizeFirstLetter(
-                    customerApplication.customerName.split( "." )[ 1 ]?.trim() ||
+                    customerApplication.customerName.split(".")[1]?.trim() ||
                     customerApplication.customerName
-                      .split( " " )
-                      .slice( 1 )
-                      .join( " " )
+                      .split(" ")
+                      .slice(1)
+                      .join(" ")
                   )}
                   src={customerApplication.customerProfileImage}
                   sx={{
@@ -561,9 +564,14 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                       },
                       color: "#000",
                       mb: 0.25,
+                      display: "flex",
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                      gap: 1,
                     }}
                   >
                     {customerApplication.customerName?.toUpperCase()}
+                    {(customerApplication.source === "website" || customerApplication.applicationSource === "website") && <DirectBadge />}
                   </Typography>
                 }
                 secondary={
@@ -578,7 +586,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                   >
                     <InfoChip
                       icon={<CurrencyRupeeIcon />}
-                      text={formatRupees( customerApplication.applicationAmount )}
+                      text={formatRupees(customerApplication.applicationAmount)}
                       color="#0c66e4"
                     />
                     {customerApplication.applicationProvider && (
@@ -600,7 +608,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                     />
                     <InfoChip
                       icon={<AccessTimeRounded />}
-                      text={formatTenure( customerApplication.applicationTenure )}
+                      text={formatTenure(customerApplication.applicationTenure)}
                       color="#0c66e4"
                     />
                     {/* <InfoChip
@@ -649,11 +657,11 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                       icon={<AccessTimeRounded />}
                       text={
                         customerApplication?.disbursedAt
-                          ? `Disbursed: ${ new Date( customerApplication.disbursedAt ).toLocaleDateString( 'en-IN', {
+                          ? `Disbursed: ${new Date(customerApplication.disbursedAt).toLocaleDateString('en-IN', {
                             day: '2-digit',
                             month: 'short',
                             year: 'numeric',
-                          } ) }`
+                          })}`
                           : "Not Disbursed"
                       }
                       color="#33415c"
@@ -662,11 +670,11 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                       icon={<AccessTimeRounded />}
                       text={
                         customerApplication?.approved_At
-                          ? `Disbursed: ${ new Date( customerApplication.approved_At ).toLocaleDateString( 'en-IN', {
+                          ? `Disbursed: ${new Date(customerApplication.approved_At).toLocaleDateString('en-IN', {
                             day: '2-digit',
                             month: 'short',
                             year: 'numeric',
-                          } ) }`
+                          })}`
                           : "Not Approved"
                       }
                       color="#33415c"
@@ -695,8 +703,8 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                 }}
               >
                 {/* Delete Button */}
-                {( showDeleteButton ||
-                  ( userRole === "admin" && handleDeleteTicket ) ) && (
+                {(showDeleteButton ||
+                  (userRole === "admin" && handleDeleteTicket)) && (
                     <IconButton
                       onClick={openConfirmDialog}
                       sx={{
@@ -798,7 +806,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                       }}
                     >
                       {historyData.length > 0 ? (
-                        historyData.map( ( history, index ) => (
+                        historyData.map((history, index) => (
                           <Box
                             key={index}
                             sx={{
@@ -820,18 +828,18 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                             >
                               <strong>
                                 {capitalizeFirstLetter(
-                                  history.action.split( " " )[ 0 ]
+                                  history.action.split(" ")[0]
                                 )}
                               </strong>
-                              {` ${ history.action.substring(
-                                history.action.indexOf( " " ) + 1
-                              ) }`}
+                              {` ${history.action.substring(
+                                history.action.indexOf(" ") + 1
+                              )}`}
                             </Typography>
                             <Typography
                               variant="caption"
                               sx={{ color: "#1976d2" }}
                             >
-                              {new Date( history.created_at ).toLocaleDateString(
+                              {new Date(history.created_at).toLocaleDateString(
                                 "en-IN",
                                 {
                                   day: "2-digit",
@@ -839,10 +847,10 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                                   year: "numeric",
                                 }
                               )}{" "}
-                              ({calculateDaysAgo( history.created_at )} days ago)
+                              ({calculateDaysAgo(history.created_at)} days ago)
                             </Typography>
                           </Box>
-                        ) )
+                        ))
                       ) : (
                         <Typography variant="body2" sx={{ color: "#666" }}>
                           No history data available.
@@ -877,7 +885,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                       }}
                     >
                       {commentData?.length > 0 ? (
-                        commentData.map( ( comment, idx ) => (
+                        commentData.map((comment, idx) => (
                           <Box
                             key={idx}
                             sx={{
@@ -912,7 +920,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                                 mb: 0.5,
                               }}
                             >
-                              {capitalizeFirstLetter( comment.comment )}
+                              {capitalizeFirstLetter(comment.comment)}
                             </Typography>
 
                             {/* Attachment Section */}
@@ -939,11 +947,11 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                                     },
                                   }}
                                 >
-                                  {isExcelAttachment( comment.attachment )
+                                  {isExcelAttachment(comment.attachment)
                                     ? "Open Excel File"
-                                    : isPdfAttachment( comment.attachment )
+                                    : isPdfAttachment(comment.attachment)
                                       ? "Open PDF"
-                                      : showAttachment[ comment.id ]
+                                      : showAttachment[comment.id]
                                         ? "Hide Attachment"
                                         : "View Attachment"}
                                 </Button>
@@ -955,7 +963,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                               variant="caption"
                               sx={{ color: "#1976d2" }}
                             >
-                              {new Date( comment.created_at ).toLocaleDateString(
+                              {new Date(comment.created_at).toLocaleDateString(
                                 "en-IN",
                                 {
                                   day: "2-digit",
@@ -963,10 +971,10 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                                   year: "numeric",
                                 }
                               )}{" "}
-                              ({calculateDaysAgo( comment.created_at )} days ago)
+                              ({calculateDaysAgo(comment.created_at)} days ago)
                             </Typography>
                           </Box>
-                        ) )
+                        ))
                       ) : (
                         <Typography variant="body2" sx={{ color: "#666" }}>
                           No comments available.
@@ -1037,16 +1045,16 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
           </Paper>
         </Grid>
 
-        {Object.keys( showAttachment ).some( ( key ) => showAttachment[ key ] ) &&
-          ( () => {
-            const activeCommentId = Object.keys( showAttachment ).find(
-              ( key ) => showAttachment[ key ]
+        {Object.keys(showAttachment).some((key) => showAttachment[key]) &&
+          (() => {
+            const activeCommentId = Object.keys(showAttachment).find(
+              (key) => showAttachment[key]
             );
             const activeComment = commentData.find(
-              ( comment ) => comment.id.toString() === activeCommentId
+              (comment) => comment.id.toString() === activeCommentId
             );
 
-            if ( !activeComment || !activeComment.attachment ) return null;
+            if (!activeComment || !activeComment.attachment) return null;
 
             return (
               <>
@@ -1061,7 +1069,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                     zIndex: 999,
                   }}
                   onClick={() =>
-                    toggleAttachment( activeComment.id, activeComment.attachment )
+                    toggleAttachment(activeComment.id, activeComment.attachment)
                   }
                 />
 
@@ -1143,7 +1151,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                         objectFit: "contain",
                         borderRadius: "4px",
                       }}
-                      onError={( e ) => {
+                      onError={(e) => {
                         e.target.style.display = "none";
                         e.target.nextSibling.style.display = "block";
                       }}
@@ -1172,7 +1180,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                 </Box>
               </>
             );
-          } )()}
+          })()}
       </>
     );
   };
@@ -1180,35 +1188,33 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
   const GridView = () => {
     const isSalesUser =
       userRole === "sales" || decodedToken()?.role === "sales";
-    const [ showAttachment, setShowAttachment ] = useState( {} );
+    const [showAttachment, setShowAttachment] = useState({});
 
     // Helper functions for file handling
-    const getFileExtensionFromUrl = ( url ) => {
-      try
-      {
-        const urlParts = url.split( "/" );
-        const filename = urlParts[ urlParts.length - 1 ];
-        const extension = filename.split( "." ).pop()?.toLowerCase();
+    const getFileExtensionFromUrl = (url: string) => {
+      try {
+        const urlParts = url.split("/");
+        const filename = urlParts[urlParts.length - 1];
+        const extension = filename.split(".").pop()?.toLowerCase();
         return extension || "";
-      } catch ( error )
-      {
+      } catch (error) {
         return "";
       }
     };
 
-    const isPdfAttachment = ( attachmentUrl ) => {
-      const extension = getFileExtensionFromUrl( attachmentUrl );
+    const isPdfAttachment = (attachmentUrl: string) => {
+      const extension = getFileExtensionFromUrl(attachmentUrl);
       return extension === "pdf";
     };
 
-    const isExcelAttachment = ( attachmentUrl ) => {
-      const extension = getFileExtensionFromUrl( attachmentUrl );
-      const excelExtensions = [ "xlsx", "xls", "csv", "xlsm", "xlsb" ];
-      return excelExtensions.includes( extension );
+    const isExcelAttachment = (attachmentUrl: string) => {
+      const extension = getFileExtensionFromUrl(attachmentUrl);
+      const excelExtensions = ["xlsx", "xls", "csv", "xlsm", "xlsb"];
+      return excelExtensions.includes(extension);
     };
 
-    const isImageAttachment = ( attachmentUrl ) => {
-      const extension = getFileExtensionFromUrl( attachmentUrl );
+    const isImageAttachment = (attachmentUrl: string) => {
+      const extension = getFileExtensionFromUrl(attachmentUrl);
       const imageExtensions = [
         "jpg",
         "jpeg",
@@ -1218,49 +1224,44 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
         "webp",
         "svg",
       ];
-      return imageExtensions.includes( extension );
+      return imageExtensions.includes(extension);
     };
 
-    const toggleAttachment = ( commentId, attachmentUrl ) => {
-      if ( isExcelAttachment( attachmentUrl ) )
-      {
-        const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${ encodeURIComponent(
+    const toggleAttachment = (commentId: number | string, attachmentUrl: string) => {
+      if (isExcelAttachment(attachmentUrl)) {
+        const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
           attachmentUrl
-        ) }`;
+        )}`;
 
-        const newWindow = window.open( officeViewerUrl, "_blank" );
+        const newWindow = window.open(officeViewerUrl, "_blank");
 
         if (
           !newWindow ||
           newWindow.closed ||
           typeof newWindow.closed === "undefined"
-        )
-        {
+        ) {
           const shouldDownload = window.confirm(
             "Unable to open file in viewer. Would you like to download it instead?"
           );
 
-          if ( shouldDownload )
-          {
-            const link = document.createElement( "a" );
+          if (shouldDownload) {
+            const link = document.createElement("a");
             link.href = attachmentUrl;
             link.download = "";
             link.target = "_blank";
-            document.body.appendChild( link );
+            document.body.appendChild(link);
             link.click();
-            document.body.removeChild( link );
+            document.body.removeChild(link);
           }
         }
-      } else if ( isPdfAttachment( attachmentUrl ) )
-      {
-        window.open( attachmentUrl, "_blank" );
-      } else
-      {
+      } else if (isPdfAttachment(attachmentUrl)) {
+        window.open(attachmentUrl, "_blank");
+      } else {
         // For images and other files, use modal behavior
-        setShowAttachment( ( prev ) => ( {
+        setShowAttachment((prev) => ({
           ...prev,
-          [ commentId ]: !prev[ commentId ],
-        } ) );
+          [commentId]: !prev[commentId],
+        }));
       }
     };
 
@@ -1323,11 +1324,11 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
             >
               <Avatar
                 alt={capitalizeFirstLetter(
-                  customerApplication.customerName.split( "." )[ 1 ]?.trim() ||
+                  customerApplication.customerName.split(".")[1]?.trim() ||
                   customerApplication.customerName
-                    .split( " " )
-                    .slice( 1 )
-                    .join( " " )
+                    .split(" ")
+                    .slice(1)
+                    .join(" ")
                 )}
                 src={customerApplication.customerProfileImage}
                 sx={{
@@ -1372,9 +1373,12 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  flexWrap: "wrap",
+                  gap: 1,
                 }}
               >
                 {customerApplication.customerName?.toUpperCase()}
+                {(customerApplication.source === "website" || customerApplication.applicationSource === "website") && <DirectBadge />}
               </Typography>
               {/* Delete button for admin only */}
               {userRole === "admin" && handleDeleteTicket && (
@@ -1448,14 +1452,14 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                     sx={{
                       fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
                     }} />}
-                  text={formatRupees( customerApplication.applicationAmount )}
+                  text={formatRupees(customerApplication.applicationAmount)}
                 />
                 <InfoRow
                   icon={<AccessTimeRounded
                     sx={{
                       fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
                     }} />}
-                  text={formatTenure( customerApplication.applicationTenure )}
+                  text={formatTenure(customerApplication.applicationTenure)}
                 />
                 <InfoRow
                   icon={<AccountBalanceIcon
@@ -1463,34 +1467,34 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                       fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
                     }} />}
                   text={
-                    `${ customerApplication.applicationProvider
-                      ? capitalizeFirstLetter( customerApplication.applicationProvider )
+                    `${customerApplication.applicationProvider
+                      ? capitalizeFirstLetter(customerApplication.applicationProvider)
                       : "No provider available"
-                    }${ customerApplication.loanCategory ?
-                      `, ${ capitalizeFirstLetter( customerApplication.loanCategory ) }`
+                    }${customerApplication.loanCategory ?
+                      `, ${capitalizeFirstLetter(customerApplication.loanCategory)}`
                       : ""
                     }`
                   }
                 />
                 <InfoRow
-                  icon={<BusinessIcon 
+                  icon={<BusinessIcon
                     sx={{
                       fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
                     }} />}
                   text={
                     customerApplication.leadType
-                      ? capitalizeFirstLetter( customerApplication.leadType )
+                      ? capitalizeFirstLetter(customerApplication.leadType)
                       : "No lead type available"
                   }
                 />
-                {( customerApplication.customerLocation || customerApplication.customerState ) && (
+                {(customerApplication.customerLocation || customerApplication.customerState) && (
                   <InfoRow
                     icon={<LocationOnRounded
                       sx={{
                         fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
                       }} />}
-                    text={`${ capitalizeFirstLetter( customerApplication.customerLocation || "" ) }${ customerApplication.customerLocation && customerApplication.customerState ? ", " : ""
-                      }${ capitalizeFirstLetter( customerApplication.customerState || "" ) }`}
+                    text={`${capitalizeFirstLetter(customerApplication.customerLocation || "")}${customerApplication.customerLocation && customerApplication.customerState ? ", " : ""
+                      }${capitalizeFirstLetter(customerApplication.customerState || "")}`}
                   />
                 )}
 
@@ -1500,11 +1504,11 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                   }} />}
                   text={
                     customerApplication.disbursedAt
-                      ? `Disbursed At: ${ new Date( customerApplication.disbursedAt ).toLocaleDateString( 'en-IN', {
+                      ? `Disbursed At: ${new Date(customerApplication.disbursedAt).toLocaleDateString('en-IN', {
                         day: '2-digit',
                         month: 'short',
                         year: 'numeric',
-                      } ) }`
+                      })}`
                       : "Not Disbursed"
                   }
                 />
@@ -1514,11 +1518,11 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                   }} />}
                   text={
                     customerApplication.approved_At
-                      ? `Disbursed At: ${ new Date( customerApplication.approved_At ).toLocaleDateString( 'en-IN', {
+                      ? `Disbursed At: ${new Date(customerApplication.approved_At).toLocaleDateString('en-IN', {
                         day: '2-digit',
                         month: 'short',
                         year: 'numeric',
-                      } ) }`
+                      })}`
                       : "Not Approved"
                   }
                 />
@@ -1552,7 +1556,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                 }}
               >
                 {historyData.length > 0 ? (
-                  historyData.map( ( history, index ) => (
+                  historyData.map((history, index) => (
                     <Box
                       key={index}
                       sx={{ display: "flex", flexDirection: "column", mb: 2 }}
@@ -1562,15 +1566,15 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                         sx={{ color: "black", fontStyle: "normal", mb: 1 }}
                       >
                         <strong>
-                          {capitalizeFirstLetter( history.action.split( " " )[ 0 ] )}
+                          {capitalizeFirstLetter(history.action.split(" ")[0])}
                         </strong>
-                        {` ${ history.action.substring(
-                          history.action.indexOf( " " ) + 1
-                        ) }`}
+                        {` ${history.action.substring(
+                          history.action.indexOf(" ") + 1
+                        )}`}
                       </Typography>
                       <Typography variant="caption" sx={{ color: "blue" }}>
                         Created At:{" "}
-                        {new Date( history.created_at ).toLocaleDateString(
+                        {new Date(history.created_at).toLocaleDateString(
                           "en-IN",
                           {
                             day: "2-digit",
@@ -1578,10 +1582,10 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                             year: "numeric",
                           }
                         )}{" "}
-                        ({calculateDaysAgo( history.created_at )} days ago)
+                        ({calculateDaysAgo(history.created_at)} days ago)
                       </Typography>
                     </Box>
-                  ) )
+                  ))
                 ) : (
                   <Typography variant="body2" sx={{ color: "#333" }}>
                     No history data available.
@@ -1604,7 +1608,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                 }}
               >
                 {commentData?.length > 0 ? (
-                  commentData.map( ( comment, idx ) => (
+                  commentData.map((comment, idx) => (
                     <Box
                       key={idx}
                       sx={{ display: "flex", flexDirection: "column", mb: 2 }}
@@ -1624,7 +1628,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                         variant="body2"
                         sx={{ color: "black", fontStyle: "normal", mb: 1 }}
                       >
-                        {capitalizeFirstLetter( comment.comment )}
+                        {capitalizeFirstLetter(comment.comment)}
                       </Typography>
 
                       {/* Attachment Section */}
@@ -1632,7 +1636,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                         <Box sx={{ mb: 1 }}>
                           <Button
                             onClick={() =>
-                              toggleAttachment( comment.id, comment.attachment )
+                              toggleAttachment(comment.id, comment.attachment)
                             }
                             variant="contained"
                             size="small"
@@ -1648,19 +1652,19 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                               },
                             }}
                           >
-                            {isExcelAttachment( comment.attachment )
+                            {isExcelAttachment(comment.attachment)
                               ? "Open Excel File"
-                              : isPdfAttachment( comment.attachment )
+                              : isPdfAttachment(comment.attachment)
                                 ? "Open PDF"
-                                : showAttachment[ comment.id ]
+                                : showAttachment[comment.id]
                                   ? "Hide Attachment"
                                   : "View Attachment"}
                           </Button>
 
                           {/* Image/PDF Preview Modal */}
-                          {!isExcelAttachment( comment.attachment ) &&
-                            !isPdfAttachment( comment.attachment ) &&
-                            showAttachment[ comment.id ] && (
+                          {!isExcelAttachment(comment.attachment) &&
+                            !isPdfAttachment(comment.attachment) &&
+                            showAttachment[comment.id] && (
                               <>
                                 {/* Backdrop */}
                                 <Box
@@ -1771,7 +1775,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                                         objectFit: "contain",
                                         borderRadius: "4px",
                                       }}
-                                      onError={( e ) => {
+                                      onError={(e) => {
                                         e.target.style.display = "none";
                                         e.target.nextSibling.style.display =
                                           "block";
@@ -1808,7 +1812,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
 
                       {/* Meta Info */}
                       <Typography variant="caption" sx={{ color: "blue" }}>
-                        {new Date( comment.created_at ).toLocaleDateString(
+                        {new Date(comment.created_at).toLocaleDateString(
                           "en-IN",
                           {
                             day: "2-digit",
@@ -1816,10 +1820,10 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                             year: "numeric",
                           }
                         )}{" "}
-                        ({calculateDaysAgo( comment.created_at )} days ago)
+                        ({calculateDaysAgo(comment.created_at)} days ago)
                       </Typography>
                     </Box>
-                  ) )
+                  ))
                 ) : (
                   <Typography variant="body2" sx={{ color: "#333" }}>
                     No comments available.
@@ -1982,38 +1986,36 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
       </Grid>
     );
   };
-  const TableView = ( { index }: { index: any } ) => {
-    console.log( "index", index );
-    const [ showAttachment, setShowAttachment ] = useState( {} );
-    const [ currentAttachment, setCurrentAttachment ] = useState( null );
+  const TableView = ({ index }: { index: any }) => {
+    console.log("index", index);
+    const [showAttachment, setShowAttachment] = useState({});
+    const [currentAttachment, setCurrentAttachment] = useState(null);
 
     // Helper functions for file handling
-    const getFileExtensionFromUrl = ( url ) => {
-      try
-      {
-        const urlParts = url.split( "/" );
-        const filename = urlParts[ urlParts.length - 1 ];
-        const extension = filename.split( "." ).pop()?.toLowerCase();
+    const getFileExtensionFromUrl = (url: string) => {
+      try {
+        const urlParts = url.split("/");
+        const filename = urlParts[urlParts.length - 1];
+        const extension = filename.split(".").pop()?.toLowerCase();
         return extension || "";
-      } catch ( error )
-      {
+      } catch (error) {
         return "";
       }
     };
 
-    const isPdfAttachment = ( attachmentUrl ) => {
-      const extension = getFileExtensionFromUrl( attachmentUrl );
+    const isPdfAttachment = (attachmentUrl: string) => {
+      const extension = getFileExtensionFromUrl(attachmentUrl);
       return extension === "pdf";
     };
 
-    const isExcelAttachment = ( attachmentUrl ) => {
-      const extension = getFileExtensionFromUrl( attachmentUrl );
-      const excelExtensions = [ "xlsx", "xls", "csv", "xlsm", "xlsb" ];
-      return excelExtensions.includes( extension );
+    const isExcelAttachment = (attachmentUrl: string) => {
+      const extension = getFileExtensionFromUrl(attachmentUrl);
+      const excelExtensions = ["xlsx", "xls", "csv", "xlsm", "xlsb"];
+      return excelExtensions.includes(extension);
     };
 
-    const isImageAttachment = ( attachmentUrl ) => {
-      const extension = getFileExtensionFromUrl( attachmentUrl );
+    const isImageAttachment = (attachmentUrl: string) => {
+      const extension = getFileExtensionFromUrl(attachmentUrl);
       const imageExtensions = [
         "jpg",
         "jpeg",
@@ -2023,60 +2025,54 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
         "webp",
         "svg",
       ];
-      return imageExtensions.includes( extension );
+      return imageExtensions.includes(extension);
     };
 
-    const handleOpenAttachment = ( commentId, attachmentUrl ) => {
-      if ( isExcelAttachment( attachmentUrl ) )
-      {
-        const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${ encodeURIComponent(
+    const handleOpenAttachment = (commentId: number | string, attachmentUrl: string) => {
+      if (isExcelAttachment(attachmentUrl)) {
+        const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
           attachmentUrl
-        ) }`;
+        )}`;
 
-        const newWindow = window.open( officeViewerUrl, "_blank" );
+        const newWindow = window.open(officeViewerUrl, "_blank");
 
         if (
           !newWindow ||
           newWindow.closed ||
           typeof newWindow.closed === "undefined"
-        )
-        {
+        ) {
           const shouldDownload = window.confirm(
             "Unable to open file in viewer. Would you like to download it instead?"
           );
 
-          if ( shouldDownload )
-          {
-            const link = document.createElement( "a" );
+          if (shouldDownload) {
+            const link = document.createElement("a");
             link.href = attachmentUrl;
             link.download = "";
             link.target = "_blank";
-            document.body.appendChild( link );
+            document.body.appendChild(link);
             link.click();
-            document.body.removeChild( link );
+            document.body.removeChild(link);
           }
         }
-      } else if ( isPdfAttachment( attachmentUrl ) )
-      {
-        window.open( attachmentUrl, "_blank" );
-      } else
-      {
-        setCurrentAttachment( { commentId, url: attachmentUrl } );
-        setShowAttachment( ( prev ) => ( { ...prev, [ commentId ]: true } ) );
+      } else if (isPdfAttachment(attachmentUrl)) {
+        window.open(attachmentUrl, "_blank");
+      } else {
+        setCurrentAttachment({ commentId, url: attachmentUrl });
+        setShowAttachment((prev) => ({ ...prev, [commentId]: true }));
       }
     };
 
     const handleCloseAttachment = () => {
-      if ( currentAttachment )
-      {
-        setShowAttachment( ( prev ) => ( {
+      if (currentAttachment) {
+        setShowAttachment((prev) => ({
           ...prev,
-          [ currentAttachment.commentId ]: false,
-        } ) );
-        setCurrentAttachment( null );
+          [currentAttachment.commentId]: false,
+        }));
+        setCurrentAttachment(null);
       }
     };
-    console.log( "customerApplication", customerApplication )
+    console.log("customerApplication", customerApplication)
     return (
       <>
         <TableRow
@@ -2094,9 +2090,10 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
 
           {/* Name */}
           <TableCell>
-            <Typography variant="body2" sx={{ fontWeight: "bold", whiteSpace: isTab ? "normal" : "normal", minWidth: isTab ? "15vw" : "", }}>
+            <Typography variant="body2" sx={{ fontWeight: "bold", whiteSpace: isTab ? "normal" : "normal", minWidth: isTab ? "15vw" : "", display: "flex", alignItems: "center", flexWrap: "wrap", gap: 1 }}>
 
               {customerApplication.customerName?.toUpperCase()}
+              {(customerApplication.source === "website" || customerApplication.applicationSource === "website") && <DirectBadge />}
             </Typography>
           </TableCell>
 
@@ -2135,7 +2132,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
               }}
               className="amount-link"
             >
-              {formatRupees( customerApplication.applicationAmount )}
+              {formatRupees(customerApplication.applicationAmount)}
             </Typography>
           </TableCell>
 
@@ -2164,7 +2161,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
           {/* Loan Category */}
           <TableCell>
             <Typography variant="body2">
-              {capitalizeFirstLetter( customerApplication.loanCategory )}
+              {capitalizeFirstLetter(customerApplication.loanCategory)}
             </Typography>
           </TableCell>
 
@@ -2178,14 +2175,14 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                 maxWidth: '10vw',
               }}
             >
-              {capitalizeFirstLetter( customerApplication.leadType )}
+              {capitalizeFirstLetter(customerApplication.leadType)}
             </Typography>
           </TableCell>
 
           {/* Tenure */}
           <TableCell>
             <Typography variant="body2">
-              {formatTenure( customerApplication.applicationTenure )}
+              {formatTenure(customerApplication.applicationTenure)}
             </Typography>
           </TableCell>
 
@@ -2193,11 +2190,11 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
           <TableCell>
             <Typography variant="body2">
               {customerApplication.customerLocation
-                ? capitalizeFirstLetter( customerApplication.customerLocation )
+                ? capitalizeFirstLetter(customerApplication.customerLocation)
                 : "N/A"}
               ,<br></br>
               {customerApplication.customerState
-                ? capitalizeFirstLetter( customerApplication.customerState )
+                ? capitalizeFirstLetter(customerApplication.customerState)
                 : "N/A"}
             </Typography>
           </TableCell>
@@ -2206,11 +2203,11 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
           {!isApplication && <TableCell >
             <Typography variant="body2">
               {customerApplication?.applicationDate
-                ? new Date( customerApplication.applicationDate ).toLocaleDateString( 'en-IN', {
+                ? new Date(customerApplication.applicationDate).toLocaleDateString('en-IN', {
                   day: '2-digit',
                   month: 'short',
                   year: 'numeric',
-                } )
+                })
                 : "N/A"}
             </Typography>
           </TableCell>}
@@ -2219,11 +2216,11 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
           <TableCell>
             <Typography variant="body2">
               {customerApplication?.createdAt || customerApplication?.applicationDate
-                ? new Date( customerApplication.createdAt || customerApplication.applicationDate ).toLocaleDateString( 'en-IN', {
+                ? new Date(customerApplication.createdAt || customerApplication.applicationDate).toLocaleDateString('en-IN', {
                   day: '2-digit',
                   month: 'short',
                   year: 'numeric',
-                } )
+                })
                 : "N/A"}
             </Typography>
           </TableCell>
@@ -2232,11 +2229,11 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
             <TableCell>
               <Typography variant="body2">
                 {customerApplication?.disbursedAt
-                  ? new Date( customerApplication.disbursedAt ).toLocaleDateString( 'en-IN', {
+                  ? new Date(customerApplication.disbursedAt).toLocaleDateString('en-IN', {
                     day: '2-digit',
                     month: 'short',
                     year: 'numeric',
-                  } )
+                  })
                   : "Not Disbursed"}
               </Typography>
             </TableCell>
@@ -2247,11 +2244,11 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
             <TableCell>
               <Typography variant="body2">
                 {customerApplication?.approvedAt
-                  ? new Date( customerApplication.approvedAt ).toLocaleDateString( 'en-IN', {
+                  ? new Date(customerApplication.approvedAt).toLocaleDateString('en-IN', {
                     day: '2-digit',
                     month: 'short',
                     year: 'numeric',
-                  } )
+                  })
                   : "Not Approved"}
               </Typography>
             </TableCell>
@@ -2268,8 +2265,8 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
               }}
             >
               {/* Delete Button */}
-              {( showDeleteButton ||
-                ( userRole === "admin" && handleDeleteTicket ) ) && (
+              {(showDeleteButton ||
+                (userRole === "admin" && handleDeleteTicket)) && (
                   <IconButton
                     onClick={openConfirmDialog}
                     sx={{
@@ -2345,9 +2342,9 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                     }}
                     size="small"
                     sx={{
-                    color: toggleListView === "table" ? "#666" : toggleListView === "list" ? "white" : "black",
-                    "&.Mui-checked": {
-                      color: "#FFD93D",
+                      color: toggleListView === "table" ? "#666" : toggleListView === "list" ? "white" : "black",
+                      "&.Mui-checked": {
+                        color: "#FFD93D",
                       },
                     }}
                   />
@@ -2362,7 +2359,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                     variant="contained"
                     size="small"
                     onClick={() =>
-                      handleStartClick( customerApplication.ticketId )
+                      handleStartClick(customerApplication.ticketId)
                     }
                     sx={{
                       bgcolor: "#1976D2",
@@ -2391,7 +2388,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                 </Typography>
                 <Box sx={{ maxHeight: "200px", overflowY: "auto" }}>
                   {historyData.length > 0 ? (
-                    historyData.map( ( history, index ) => (
+                    historyData.map((history, index) => (
                       <Box
                         key={index}
                         sx={{
@@ -2413,14 +2410,14 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                           }}
                         >
                           <strong>
-                            {capitalizeFirstLetter( history.action.split( " " )[ 0 ] )}
+                            {capitalizeFirstLetter(history.action.split(" ")[0])}
                           </strong>
-                          {` ${ history.action.substring(
-                            history.action.indexOf( " " ) + 1
-                          ) }`}
+                          {` ${history.action.substring(
+                            history.action.indexOf(" ") + 1
+                          )}`}
                         </Typography>
                         <Typography variant="caption" sx={{ color: "#1976d2" }}>
-                          {new Date( history.created_at ).toLocaleDateString(
+                          {new Date(history.created_at).toLocaleDateString(
                             "en-IN",
                             {
                               day: "2-digit",
@@ -2428,10 +2425,10 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                               year: "numeric",
                             }
                           )}{" "}
-                          ({calculateDaysAgo( history.created_at )} days ago)
+                          ({calculateDaysAgo(history.created_at)} days ago)
                         </Typography>
                       </Box>
-                    ) )
+                    ))
                   ) : (
                     <Typography
                       variant="body2"
@@ -2459,7 +2456,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                 </Typography>
                 <Box sx={{ maxHeight: "200px", overflowY: "auto" }}>
                   {commentData?.length > 0 ? (
-                    commentData.map( ( comment, idx ) => (
+                    commentData.map((comment, idx) => (
                       <Box
                         key={idx}
                         sx={{
@@ -2487,7 +2484,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                           variant="body2"
                           sx={{ color: "black", fontStyle: "normal", mb: 0.5 }}
                         >
-                          {capitalizeFirstLetter( comment.comment )}
+                          {capitalizeFirstLetter(comment.comment)}
                         </Typography>
 
                         {/* Attachment Section */}
@@ -2514,9 +2511,9 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                                 },
                               }}
                             >
-                              {isExcelAttachment( comment.attachment )
+                              {isExcelAttachment(comment.attachment)
                                 ? "Open Excel"
-                                : isPdfAttachment( comment.attachment )
+                                : isPdfAttachment(comment.attachment)
                                   ? "Open PDF"
                                   : "View Attachment"}
                             </Button>
@@ -2525,7 +2522,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
 
                         {/* Meta Info */}
                         <Typography variant="caption" sx={{ color: "#1976d2" }}>
-                          {new Date( comment.created_at ).toLocaleDateString(
+                          {new Date(comment.created_at).toLocaleDateString(
                             "en-IN",
                             {
                               day: "2-digit",
@@ -2533,10 +2530,10 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                               year: "numeric",
                             }
                           )}{" "}
-                          ({calculateDaysAgo( comment.created_at )} days ago)
+                          ({calculateDaysAgo(comment.created_at)} days ago)
                         </Typography>
                       </Box>
-                    ) )
+                    ))
                   ) : (
                     <Typography
                       variant="body2"
@@ -2553,9 +2550,9 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
 
         {/* Image Preview Modal */}
         {
-          currentAttachment && showAttachment[ currentAttachment.commentId ] && (
+          currentAttachment && showAttachment[currentAttachment.commentId] && (
             <Modal
-              open={showAttachment[ currentAttachment.commentId ]}
+              open={showAttachment[currentAttachment.commentId]}
               onClose={handleCloseAttachment}
               sx={{
                 display: "flex",
@@ -2607,7 +2604,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                     overflow: "hidden",
                   }}
                 >
-                  {isImageAttachment( currentAttachment.url ) ? (
+                  {isImageAttachment(currentAttachment.url) ? (
                     <img
                       src={currentAttachment.url}
                       alt="Attachment Preview"
@@ -2616,7 +2613,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
                         maxWidth: "100%",
                         objectFit: "contain",
                       }}
-                      onError={( e ) => {
+                      onError={(e) => {
                         e.target.style.display = "none";
                       }}
                     />
@@ -2723,7 +2720,7 @@ const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent)
             variant="outlined"
             label="Reason for deletion"
             value={deleteReason}
-            onChange={( e ) => setDeleteReason( e.target.value )}
+            onChange={(e) => setDeleteReason(e.target.value)}
             sx={{
               mt: 2,
               "& .MuiOutlinedInput-root": {
