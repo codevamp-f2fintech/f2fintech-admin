@@ -26,21 +26,21 @@ import { UserAPI } from "@/apis/UserAPI";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { Utility } from "@/utils";
 
-const LoginSchema = Yup.object().shape( {
-  email: Yup.string().email( "Invalid email" ).required( "Required" ),
-  password: Yup.string().min( 8, "Password too short" ).required( "Required" ),
-} );
+const LoginSchema = Yup.object().shape({
+  email: Yup.string().email("Invalid email").required("Required"),
+  password: Yup.string().min(8, "Password too short").required("Required"),
+});
 
 const Login = (): JSX.Element => {
-  const [ showPassword, setShowPassword ] = useState<boolean>( false );
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const theme: Theme = useTheme();
   const router = useRouter();
   const dispatch: AppDispatch = useDispatch();
-  const { toast } = useSelector( ( state: RootState ) => state.toast );
+  const { toast } = useSelector((state: RootState) => state.toast);
   const { decodedToken, toastAndNavigate } = Utility();
 
   const handleClickShowPassword = (): void => {
-    setShowPassword( ( prev ) => !prev );
+    setShowPassword((prev) => !prev);
   };
 
   const handleMouseDownPassword = (
@@ -50,51 +50,46 @@ const Login = (): JSX.Element => {
   };
 
   // In your login component, after successful login:
-  const handleLogin = async ( values: { email: string; password: string } ) => {
-    try
-    {
-      const { data: response } = await UserAPI.login( values );
-      if ( response.statusCode === 200 )
-      {
+  const handleLogin = async (values: { email: string; password: string }) => {
+    try {
+      const { data: response } = await UserAPI.login(values);
+      if (response.statusCode === 200) {
         const { userId, companyId, companyName, role, access_token } = response.data;
+        console.log("this is console", userId, companyId, companyName, role, access_token);
 
         // Store token in cookie
-        document.cookie = `token=${ access_token }; path=/; max-age=${ 1 * 24 * 60 * 60 }; secure; samesite=strict`;
+        document.cookie = `token=${access_token}; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
 
         // Store all data in localStorage
-        localStorage.setItem( 'userId', userId.toString() );
-        localStorage.setItem( 'userRole', role );
+        localStorage.setItem('userId', userId.toString());
+        localStorage.setItem('userRole', role);
 
-        if ( companyId )
-        {
-          localStorage.setItem( 'companyId', companyId.toString() );
+        if (companyId) {
+          localStorage.setItem('companyId', companyId.toString());
         }
-        if ( companyName )
-        {
-          localStorage.setItem( 'companyName', companyName );
+        if (companyName) {
+          localStorage.setItem('companyName', companyName);
         }
 
         // Store all data in cookies as well
-        document.cookie = `userId=${ userId.toString() }; path=/; max-age=${ 1 * 24 * 60 * 60 }; secure; samesite=strict`;
-        document.cookie = `userRole=${ role }; path=/; max-age=${ 1 * 24 * 60 * 60 }; secure; samesite=strict`;
+        document.cookie = `userId=${userId.toString()}; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
+        document.cookie = `userRole=${role}; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
 
-        if ( companyId )
-        {
-          document.cookie = `companyId=${ companyId.toString() }; path=/; max-age=${ 1 * 24 * 60 * 60 }; secure; samesite=strict`;
+        if (companyId) {
+          document.cookie = `companyId=${companyId.toString()}; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
         }
-        if ( companyName )
-        {
-          document.cookie = `companyName=${ companyName }; path=/; max-age=${ 1 * 24 * 60 * 60 }; secure; samesite=strict`;
+        if (companyName) {
+          document.cookie = `companyName=${companyName}; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
         }
 
         // Also decode token to verify
-        const decoded = decodedToken( access_token );
-        console.log( 'Stored data:', {
-          userId: localStorage.getItem( 'userId' ),
-          companyId: localStorage.getItem( 'companyId' ),
-          companyName: localStorage.getItem( 'companyName' ),
-          userRole: localStorage.getItem( 'userRole' )
-        } );
+        const decoded = decodedToken(access_token);
+        console.log('Stored data:', {
+          userId: localStorage.getItem('userId'),
+          companyId: localStorage.getItem('companyId'),
+          companyName: localStorage.getItem('companyName'),
+          userRole: localStorage.getItem('userRole')
+        });
 
         toastAndNavigate(
           dispatch,
@@ -104,20 +99,16 @@ const Login = (): JSX.Element => {
         );
 
         // Redirect based on role
-        if ( role === "super admin" )
-        {
-          router.push( "/super-admin-dashboard" );
-        } else if ( role === "admin" || role === "sub admin" )
-        {
-          router.push( "/dashboard" );
-        } else if ( role === "operations" || role === "credit" || role === "sales" )
-        {
-          router.push( "/home" );
+        if (role === "super admin") {
+          router.push("/super-admin-dashboard");
+        } else if (role === "admin" || role === "sub admin") {
+          router.push("/dashboard");
+        } else if (role === "operations" || role === "credit" || role === "sales") {
+          router.push("/home");
         }
       }
-    } catch ( error: any )
-    {
-      console.error( 'Login error:', error );
+    } catch (error: any) {
+      console.error('Login error:', error);
       toastAndNavigate(
         dispatch,
         true,
@@ -220,14 +211,14 @@ const Login = (): JSX.Element => {
             <Formik
               initialValues={{ email: "", password: "" }}
               validationSchema={LoginSchema}
-              onSubmit={async ( values, { setSubmitting, resetForm } ) => {
-                setSubmitting( true );
-                await handleLogin( values );
-                setSubmitting( false );
+              onSubmit={async (values, { setSubmitting, resetForm }) => {
+                setSubmitting(true);
+                await handleLogin(values);
+                setSubmitting(false);
                 resetForm();
               }}
             >
-              {( { errors, touched, isSubmitting, dirty } ) => (
+              {({ errors, touched, isSubmitting, dirty }) => (
                 <Form>
                   <Field
                     as={TextField}
@@ -259,7 +250,7 @@ const Login = (): JSX.Element => {
                       sx: { color: "black" }, // 🟢 helper/error text color
                     }}
 
-                    error={touched.email && Boolean( errors.email )}
+                    error={touched.email && Boolean(errors.email)}
                     helperText={touched.email && errors.email}
                   />
                   <Field
@@ -295,7 +286,7 @@ const Login = (): JSX.Element => {
                     InputLabelProps={{
                       style: { color: "black" },
                     }}
-                    error={touched.password && Boolean( errors.password )}
+                    error={touched.password && Boolean(errors.password)}
                     helperText={touched.password && errors.password}
                     sx={{
                       "& .MuiFormHelperText-root": {
