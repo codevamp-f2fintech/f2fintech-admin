@@ -864,8 +864,8 @@ const Step1Form: React.FC<Step1FormProps> = ({
               fullWidth
               variant="filled"
               name="amount"
-              label="Enter Net Amount*"
-              placeholder="Base Loan Amount"
+              label="Loan Amount Required*"
+              placeholder="Loan Amount Required"
               value={amount}
               onChange={(e) => {
                 setAmount(e.target.value);
