@@ -13,6 +13,7 @@ export interface CustomerApplicationData {
   customerLocation: string;
   customerState: string;
   is_picked: number;
+  existingLoans: string;
 }
 
 export interface CustomerApplication {

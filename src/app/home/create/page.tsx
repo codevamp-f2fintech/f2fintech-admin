@@ -101,10 +101,8 @@ const MultiStepForm: React.FC = () => {
   };
 
   useEffect( () => {
-    setTimeout( () => {
-      window.scrollTo( 0, 0 );
-    }, 200 );
-  }, [] );
+    window.scrollTo( 0, 0 );
+  }, [ activeStep, getStarted ] );
 
   // Fetch application number and loan status using stored customer ID
   useEffect( () => {

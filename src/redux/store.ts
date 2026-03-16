@@ -5,6 +5,8 @@ import ticketReducer from "./features/ticketSlice";
 import toastReducer from "./features/toastSlice";
 import userReducer from "./features/userSlice";
 import loanProviderReducer from "./features/loanProviderSlice";
+import leadsReducer from "./features/leadsSlice";
+import queriesReducer from "./features/queriesSlice";
 
 export const store = configureStore( {
   reducer: {
@@ -13,6 +15,8 @@ export const store = configureStore( {
     tickets: ticketReducer,
     toast: toastReducer,
     user: userReducer,
+    leads: leadsReducer,
+    queries: queriesReducer,
   },
 } );
 

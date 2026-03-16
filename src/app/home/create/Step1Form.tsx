@@ -99,13 +99,24 @@ const Step1Form: React.FC<Step1FormProps> = ({
   const [caseType, setCaseType] = useState<string>("");
   const [caseTypeError, setCaseTypeError] = useState<string>("");
 
-  // New State for Running Customer Loans
-  const [hasRunningLoans, setHasRunningLoans] = useState("");
-  const [hasRunningLoansError, setHasRunningLoansError] = useState("");
-  const [whichLoan, setWhichLoan] = useState("");
-  const [whichLoanError, setWhichLoanError] = useState("");
-  const [runningLoanAmount, setRunningLoanAmount] = useState("");
-  const [runningLoanAmountError, setRunningLoanAmountError] = useState("");
+  // Multiple Existing Loans State
+  const [existingLoans, setExistingLoans] = useState([
+    {
+      has_running_loans: "",
+      which_loan: "",
+      loan_amount: "",
+      running_emi: "",
+    }
+  ]);
+  const [existingLoansErrors, setExistingLoansErrors] = useState([
+    {
+      has_running_loans: "",
+      which_loan: "",
+      loan_amount: "",
+      running_emi: "",
+    }
+  ]);
+
   const [errors, setErrors] = useState<{
     amount: string;
     tenure: string;
@@ -130,18 +141,18 @@ const Step1Form: React.FC<Step1FormProps> = ({
 
   // Define loan types with categories
   const loanTypes = {
-    secured: [
-      { value: "home loan", label: "Home Loan" },
-      { value: "lap", label: "LAP (Loan Against Property)" },
-      { value: "auto loan", label: "Auto Loan" },
-      { value: "machinery loan", label: "Machinery Loan" }
-    ],
     unsecured: [
       { value: "personal loan", label: "Personal Loan" },
       { value: "business loan", label: "Business Loan" },
       { value: "professional loan", label: "Professional Loan" },
       { value: "education loan", label: "Education Loan" },
       { value: "just inquiry", label: "Just Inquiry" }
+    ],
+    secured: [
+      { value: "home loan", label: "Home Loan" },
+      { value: "lap", label: "LAP (Loan Against Property)" },
+      { value: "auto loan", label: "Auto Loan" },
+      { value: "machinery loan", label: "Machinery Loan" }
     ]
   };
 
@@ -194,37 +205,70 @@ const Step1Form: React.FC<Step1FormProps> = ({
     setCaseTypeError(error);
   };
 
-  const validateHasRunningLoans = (value: string) => {
-    if (!value) {
-      setHasRunningLoansError("This field is required");
-      return false;
-    }
-    setHasRunningLoansError("");
-    return true;
+  const validateExistingLoans = (loans: any[], errors: any[] = []) => {
+    let hasIssues = false;
+    const newErrors = loans.map((loan) => {
+      const err = { has_running_loans: "", which_loan: "", loan_amount: "", running_emi: "" };
+      if (!loan.has_running_loans) {
+        err.has_running_loans = "This Field is required";
+        hasIssues = true;
+      }
+      if (loan.has_running_loans === "yes") {
+        if (!loan.which_loan) {
+          err.which_loan = "This Field is required";
+          hasIssues = true;
+        }
+        if (!loan.loan_amount) {
+          err.loan_amount = "This Field is required";
+          hasIssues = true;
+        } else if (isNaN(loan.loan_amount)) {
+          err.loan_amount = "Amount must be a number";
+          hasIssues = true;
+        } else if (loan.loan_amount <= 0) {
+          err.loan_amount = "Amount must be greater than 0";
+          hasIssues = true;
+        }
+        if (loan.running_emi) {
+          if (isNaN(loan.running_emi)) {
+            err.running_emi = "EMI must be a number";
+            hasIssues = true;
+          } else if (loan.running_emi < 0) {
+            err.running_emi = "EMI cannot be negative";
+            hasIssues = true;
+          }
+        }
+      }
+      return err;
+    });
+    setExistingLoansErrors(newErrors);
+    return !hasIssues;
   };
 
-  const validateWhichLoan = (value: string) => {
-    if (hasRunningLoans === "yes" && !value) {
-      setWhichLoanError("Please select a loan type");
-      return false;
+  const handleExistingLoanChange = (index: number, field: string, value: string) => {
+    const updatedLoans = [...existingLoans];
+    (updatedLoans[index] as any)[field] = value;
+
+    if (field === "has_running_loans" && value === "no") {
+      updatedLoans[index].which_loan = "";
+      updatedLoans[index].loan_amount = "";
+      updatedLoans[index].running_emi = "";
     }
-    setWhichLoanError("");
-    return true;
+
+    setExistingLoans(updatedLoans);
+    validateExistingLoans(updatedLoans, existingLoansErrors);
   };
 
-  const validateRunningLoanAmount = (value: string) => {
-    if (hasRunningLoans === "yes") {
-      if (!value) {
-        setRunningLoanAmountError("Amount is required");
-        return false;
-      }
-      if (isNaN(Number(value)) || Number(value) <= 0) {
-        setRunningLoanAmountError("Please enter a valid amount");
-        return false;
-      }
-    }
-    setRunningLoanAmountError("");
-    return true;
+  const handleAddLoan = () => {
+    setExistingLoans([...existingLoans, { has_running_loans: "yes", which_loan: "", loan_amount: "", running_emi: "" }]);
+    setExistingLoansErrors([...existingLoansErrors, { has_running_loans: "", which_loan: "", loan_amount: "", running_emi: "" }]);
+  };
+
+  const handleRemoveLoan = (indexToRemove: number) => {
+    const updatedLoans = existingLoans.filter((_, index) => index !== indexToRemove);
+    const updatedErrors = existingLoansErrors.filter((_, index) => index !== indexToRemove);
+    setExistingLoans(updatedLoans);
+    setExistingLoansErrors(updatedErrors);
+    validateExistingLoans(updatedLoans, updatedErrors);
   };
 
   // Function to determine loan category based on loan type
@@ -433,7 +477,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
   }
 
   // Function to create customer info
-  async function createCustomerInfo(customerId, restValues) {
+  async function createCustomerInfo(customerId: number, restValues: any) {
     const companyId = getCompanyId();
     // const headers = companyId ? { companyid: companyId } : {};
     await axiosInstance.post(
@@ -446,18 +490,16 @@ const Step1Form: React.FC<Step1FormProps> = ({
 
   // Function to create the customer application
   async function createCustomerApplication(
-    customerId,
-    applicationNumber,
-    amount,
-    tenure,
-    provider,
-    loanType,
-    loanCategory,
-    leadType,
-    hasRunningLoans,
-    whichLoan,
-    runningLoanAmount,
-    caseType,
+    customerId: number,
+    applicationNumber: number,
+    amount: number,
+    tenure: number,
+    provider: string,
+    loanType: string,
+    loanCategory: string,
+    leadType: string,
+    existingLoans: any[],
+    caseType: string,
   ) {
     const companyId = getCompanyId();
     // const headers = companyId ? { companyid: companyId } : {};
@@ -474,17 +516,21 @@ const Step1Form: React.FC<Step1FormProps> = ({
           loan_type: loanType,
           loan_category: loanCategory,
           lead_type: leadType,
-          has_running_loans: hasRunningLoans,
-          which_loan: whichLoan,
-          running_loan_amount: runningLoanAmount,
+          existing_loans: JSON.stringify(existingLoans.map((l: any) => ({
+            has_running_loans: l.has_running_loans === "yes" ? 1 : 0,
+            which_loan: l.which_loan,
+            loan_amount: l.loan_amount ? Number(l.loan_amount) : null,
+            running_emi: l.running_emi ? Number(l.running_emi) : null
+          }))),
           case_type: caseType,
+          source: "admin_portal",
           // company_id: companyId,
         })
     return applicationResponse.data.applicationId;
   }
 
   // Function to create loan tracking
-  async function createLoanTracking(applicationId) {
+  async function createLoanTracking(applicationId: number) {
     await axiosInstance.post(
       `${process.env.NEXT_PUBLIC_WEB_URL}/create-loan-tracking`,
       {
@@ -542,9 +588,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
             loanType,
             loanCategory,
             leadType,
-            hasRunningLoans === "yes",
-            hasRunningLoans === "yes" ? whichLoan : null,
-            hasRunningLoans === "yes" ? Number(runningLoanAmount) : null,
+            existingLoans,
             caseType,
           );
           await createLoanTracking(applicationId);
@@ -582,8 +626,103 @@ const Step1Form: React.FC<Step1FormProps> = ({
         setLoading(false);
       }
     },
-    [amount, tenure, providers, providerAmounts, loanType, loanCategory, leadType, hasRunningLoans, whichLoan, runningLoanAmount] // Updated dependency
+    [amount, tenure, providers, providerAmounts, loanType, loanCategory, leadType, existingLoans, caseType] // Updated dependency
   );
+
+  const commonFormControlStyles = {
+    "& .MuiFilledInput-root": {
+      backgroundColor: "rgba(255, 255, 255, 0.08)",
+      borderRadius: "12px",
+      color: "white",
+      boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+      transition: "all 0.3s ease",
+      "& .MuiSelect-filled": {
+        color: "white !important",
+      },
+      "&:before, &:after": {
+        borderBottom: "none !important",
+      },
+      "&:hover": {
+        backgroundColor: "rgba(255,255,255,0.12)",
+      },
+      "&.Mui-focused": {
+        backgroundColor: "rgba(255,255,255,0.15)",
+        boxShadow: "0 0 0 2px rgba(144,202,249,0.4)",
+      },
+      "&.Mui-disabled": {
+        backgroundColor: "rgba(255, 255, 255, 0.08) !important",
+        color: "rgba(255,255,255,0.5) !important",
+        WebkitTextFillColor: "rgba(255,255,255,0.5) !important",
+      },
+    },
+    "& .MuiInputLabel-root": {
+      color: "rgba(255,255,255,0.7)",
+      fontSize: "14px",
+      "&.Mui-disabled": {
+        color: "rgba(255,255,255,0.5) !important",
+      },
+    },
+    "& .Mui-focused": {
+      color: "#ffffff !important",
+    },
+    "& .MuiSelect-icon": {
+      color: "white",
+    },
+  };
+
+  const commonTextFieldStyles = {
+    "& .MuiFilledInput-root": {
+      backgroundColor: "rgba(255, 255, 255, 0.08)",
+      borderRadius: "12px",
+      color: "white",
+      boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+      transition: "all 0.3s ease",
+      "&:before, &:after": {
+        borderBottom: "none !important",
+      },
+      "&:hover": {
+        backgroundColor: "rgba(255,255,255,0.12)",
+      },
+      "&.Mui-focused": {
+        backgroundColor: "rgba(255,255,255,0.15)",
+        boxShadow: "0 0 0 2px rgba(144,202,249,0.4)",
+      },
+      "&.Mui-disabled": {
+        backgroundColor: "rgba(255, 255, 255, 0.08) !important",
+        color: "rgba(255,255,255,0.5) !important",
+        WebkitTextFillColor: "rgba(255,255,255,0.5) !important",
+      },
+    },
+    "& .MuiInputLabel-root": {
+      color: "rgba(255,255,255,0.7)",
+      fontSize: "14px",
+      "&.Mui-disabled": {
+        color: "rgba(255,255,255,0.5) !important",
+      },
+    },
+    "& .Mui-focused": {
+      color: "#ffffff !important",
+    },
+  };
+
+  const commonMenuProps = {
+    PaperProps: {
+      sx: {
+        bgcolor: "#1e1e1e",
+        borderRadius: "10px",
+        "& .MuiMenuItem-root": {
+          color: "white",
+          "&:hover": {
+            backgroundColor: "#333",
+          },
+          "&.Mui-selected": {
+            backgroundColor: "#90caf9 !important",
+            color: "#fff",
+          },
+        },
+      },
+    },
+  };
 
   const PROVIDER_OPTIONS = providersLoading
     ? []
@@ -708,440 +847,137 @@ const Step1Form: React.FC<Step1FormProps> = ({
           Get the loan best suited for your wish
         </Typography>
 
-        {/* Amount Field */}
+        {/* Main Fields Grid */}
         <Box
           sx={{
-            width: {
-              xs: "80%",
-              md: "45%",
-              sm: "45%",
-            },
-            marginBottom: 3,
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+            gap: 3,
+            width: { xs: "90%", sm: "95%", md: "90%" },
+            mb: 4
           }}
         >
-          <TextField
-            autoComplete="off"
-            fullWidth
-            variant="filled"
-            name="amount"
-            label="Enter Net Amount*"
-            placeholder="Base Loan Amount (Can customize per provider)"
-            value={amount}
-            onChange={(e) => {
-              setAmount(e.target.value);
-              validateAmount(e.target.value);
-            }}
-            onBlur={() => validateAmount(amount)}
-            error={!!errors.amount}
-            helperText={errors.amount}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <CurrencyRupeeIcon />
-                </InputAdornment>
-              ),
-              style: {
-                color: "white",
-              },
-            }}
-            sx={{
-              fontSize: "13px",
-              borderRadius: "10px",
-              overflow: "hidden",
-              marginBottom: 1,
-              "& .MuiInputBase-root": {
-                backgroundColor: "transparent !important",
-              },
-              "& .MuiFormLabel-root": {
-                color: "white !important",
-              },
-              "& .MuiFormLabel-root.Mui-focused": {
-                color: "white !important",
-              },
-              "& input::placeholder": {
-                fontSize: "0.8rem",
-                color: "#ffffff",
-              },
-              "& .MuiFilledInput-underline:before": {
-                borderBottomColor: "rgba(255, 255, 255, 0.5)",
-              },
-              "& .MuiFilledInput-underline:hover:before": {
-                borderBottomColor: "#ffffff",
-              },
-              "& .MuiFilledInput-underline:after": {
-                borderBottomColor: "#039be5",
-              },
-            }}
-          />
-        </Box>
-
-        {/* Loan Type Field */}
-        <FormControl
-          autoComplete="off"
-          variant="filled"
-          error={!!errors.loanType}
-          sx={{
-            width: { xs: "90%", sm: "60%", md: "45%" },
-            mb: 3,
-            "& .MuiFilledInput-root": {
-              backgroundColor: "rgba(255, 255, 255, 0.08)",
-              borderRadius: "12px",
-              color: "white",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-              transition: "all 0.3s ease",
-
-              "& .MuiSelect-filled": {
-                color: "white !important",
-              },
-
-              "&:before, &:after": {
-                borderBottom: "none !important",
-              },
-
-              "&:hover": {
-                backgroundColor: "rgba(255,255,255,0.12)",
-              },
-              "&.Mui-focused": {
-                backgroundColor: "rgba(255,255,255,0.15)",
-                boxShadow: "0 0 0 2px rgba(144,202,249,0.4)",
-              },
-            },
-            "& .MuiInputLabel-root": {
-              color: "rgba(255,255,255,0.7)",
-              fontSize: "14px",
-            },
-            "& .Mui-focused": {
-              color: "#90caf9 !important",
-            },
-            "& .MuiSelect-icon": {
-              color: "white",
-            },
-          }}
-        >
-          <InputLabel>Loan Type*</InputLabel>
-          <Select
-            variant="filled"
-            name="loanType"
-            value={loanType}
-            onChange={(e) => handleLoanTypeChange(e.target.value)}
-            onBlur={() => validateLoanType(loanType)}
-            startAdornment={
-              <InputAdornment position="start" sx={{ color: "white !important" }}>
-                <AccountBalanceIcon />
-              </InputAdornment>
-            }
-            MenuProps={{
-              PaperProps: {
-                sx: {
-                  bgcolor: "#1e1e1e",
-                  borderRadius: "10px",
-                  "& .MuiMenuItem-root": {
-                    color: "white",
-                    "&:hover": {
-                      backgroundColor: "#333",
-                    },
-                    "&.Mui-selected": {
-                      backgroundColor: "#90caf9 !important",
-                      color: "#fff",
-                    },
-                  },
-                },
-              },
-            }}
-          >
-            {/* Secured Loans Group */}
-            <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#333", color: "#90caf9" }}>
-              Secured Loans
-            </MenuItem>
-            {loanTypes.secured.map((loan) => (
-              <MenuItem
-                key={loan.value}
-                value={loan.value}
-                sx={{
-                  padding: "10px 16px",
-                  fontSize: "14px",
-                  borderRadius: "6px",
-                }}
-              >
-                {loan.label}
-              </MenuItem>
-            ))}
-
-            {/* Unsecured Loans Group */}
-            <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#333", color: "#90caf9", mt: 1 }}>
-              Unsecured Loans
-            </MenuItem>
-            {loanTypes.unsecured.map((loan) => (
-              <MenuItem
-                key={loan.value}
-                value={loan.value}
-                sx={{
-                  padding: "10px 16px",
-                  fontSize: "14px",
-                  borderRadius: "6px",
-                }}
-              >
-                {loan.label}
-              </MenuItem>
-            ))}
-          </Select>
-          {errors.loanType && (
-            <Typography
-              color="error"
-              sx={{
-                mt: 0.5,
-                ml: 1,
-                fontSize: "11px",
-                fontFamily: "Verdana, sans-serif",
-              }}
-            >
-              {errors.loanType}
-            </Typography>
-          )}
-        </FormControl>
-
-        <FormControl
-          autoComplete="off"
-          variant="filled"
-          error={!!leadTypeError}
-          sx={{
-            width: { xs: "90%", sm: "60%", md: "45%" },
-            mb: 3,
-            "& .MuiFilledInput-root": {
-              backgroundColor: "rgba(255, 255, 255, 0.08)",
-              borderRadius: "12px",
-              color: "white",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-              transition: "all 0.3s ease",
-              "&:before, &:after": {
-                borderBottom: "none !important",
-              },
-              "&:hover": {
-                backgroundColor: "rgba(255,255,255,0.12)",
-              },
-              "&.Mui-focused": {
-                backgroundColor: "rgba(255,255,255,0.15)",
-                boxShadow: "0 0 0 2px rgba(144,202,249,0.4)",
-              },
-            },
-            "& .MuiInputLabel-root": {
-              color: "rgba(255,255,255,0.7)",
-              fontSize: "14px",
-            },
-            "& .Mui-focused": {
-              color: "#90caf9 !important",
-            },
-            "& .MuiSelect-icon": {
-              color: "white",
-            },
-          }}
-        >
-          <InputLabel>Lead Type*</InputLabel>
-          <Select
-            variant="filled"
-            name="leadType"
-            value={leadType}
-            onChange={(e) => {
-              setLeadType(e.target.value);
-              validateLeadType(e.target.value);
-            }}
-            onBlur={() => validateLeadType(leadType)}
-            startAdornment={
-              <InputAdornment position="start" sx={{ color: "white !important" }}>
-                <AccountBalanceIcon />
-              </InputAdornment>
-            }
-            MenuProps={{
-              PaperProps: {
-                sx: {
-                  bgcolor: "#1e1e1e",
-                  borderRadius: "10px",
-                  "& .MuiMenuItem-root": {
-                    color: "white",
-                    "&:hover": {
-                      backgroundColor: "#333",
-                    },
-                    "&.Mui-selected": {
-                      backgroundColor: "#90caf9 !important",
-                      color: "#fff",
-                    },
-                  },
-                },
-              },
-            }}
-          >
-            {leadTypes.map((lead) => (
-              <MenuItem
-                key={lead.value}
-                value={lead.value}
-                sx={{
-                  padding: "10px 16px",
-                  fontSize: "14px",
-                  borderRadius: "6px",
-                }}
-              >
-                {lead.label}
-              </MenuItem>
-            ))}
-          </Select>
-          {leadTypeError && (
-            <Typography
-              color="error"
-              sx={{
-                mt: 0.5,
-                ml: 1,
-                fontSize: "11px",
-                fontFamily: "Verdana, sans-serif",
-              }}
-            >
-              {leadTypeError}
-            </Typography>
-          )}
-        </FormControl>
-
-        {/* Running Customer Loans Field */}
-        <FormControl
-          fullWidth
-          variant="outlined"
-          sx={{
-            mb: 2,
-            width: { xs: "90%", sm: "60%", md: "45%" },
-          }}
-        >
-          <InputLabel
-            id="running-loans-label"
-            sx={{
-              color: hasRunningLoansError ? "error.main" : "rgba(255,255,255,0.7)",
-              "&.Mui-focused": { color: "#90caf9" },
-            }}
-          >
-            Running Customer Loans*
-          </InputLabel>
-
-          <Select
-            labelId="running-loans-label"
-            name="hasRunningLoans"
-            value={hasRunningLoans}
-            onChange={(e) => {
-              setHasRunningLoans(e.target.value);
-              validateHasRunningLoans(e.target.value);
-              // Clear conditional fields when switching to "no"
-              if (e.target.value === "no") {
-                setWhichLoan("");
-                setRunningLoanAmount("");
-                setWhichLoanError("");
-                setRunningLoanAmountError("");
-              }
-            }}
-            onBlur={() => validateHasRunningLoans(hasRunningLoans)}
-            error={!!hasRunningLoansError}
-            input={<OutlinedInput label="Running Customer Loans*" />}
-            startAdornment={
-              <InputAdornment position="start">
-                <AccountBalanceIcon sx={{ color: "white", mr: 1 }} />
-              </InputAdornment>
-            }
-            sx={{
-              borderRadius: "12px",
-              backgroundColor: "rgba(255, 255, 255, 0.08)",
-              color: "white",
-              "& .MuiOutlinedInput-notchedOutline": {
-                borderColor: hasRunningLoansError ? "red" : "rgba(255, 255, 255, 0.1)",
-                borderWidth: "1px",
-              },
-              "&:hover .MuiOutlinedInput-notchedOutline": {
-                borderColor: "rgba(255, 255, 255, 0.2)",
-                borderWidth: "1px",
-              },
-              "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                borderColor: "#90caf9",
-                borderWidth: "2px",
-              },
-              "& .MuiSelect-icon": {
-                color: "white",
-              },
-              // Removing default border for variants if needed, but here we use OutlinedInput
-            }}
-            MenuProps={{
-              PaperProps: {
-                sx: {
-                  bgcolor: "#1e1e1e",
-                  borderRadius: "10px",
-                  "& .MuiMenuItem-root": {
-                    color: "white",
-                    "&:hover": {
-                      backgroundColor: "#333",
-                    },
-                    "&.Mui-selected": {
-                      backgroundColor: "#90caf9 !important",
-                      color: "#fff",
-                    },
-                  },
-                },
-              },
-            }}
-          >
-            <MenuItem value="yes">Yes</MenuItem>
-            <MenuItem value="no">No</MenuItem>
-          </Select>
-
-          {hasRunningLoansError && (
-            <FormHelperText error>{hasRunningLoansError}</FormHelperText>
-          )}
-        </FormControl>
-
-        {/* Conditional Fields - Which Loan and Loan Amount */}
-        {hasRunningLoans === "yes" && (
-          <>
-            {/* Which Loan Field - now a dropdown */}
-            <FormControl
+          {/* Amount Field */}
+          <Box>
+            <TextField
+              autoComplete="off"
               fullWidth
-              variant="outlined"
-              sx={{ mb: 2, width: { xs: "90%", sm: "60%", md: "45%" } }}
-              error={!!whichLoanError}
-            >
-              <InputLabel
-                id="which-loan-label"
-                sx={{
-                  color: whichLoanError ? "error.main" : "rgba(255,255,255,0.7)",
-                  "&.Mui-focused": { color: "#90caf9" },
-                }}
-              >
-                Which Loan*
-              </InputLabel>
+              variant="filled"
+              name="amount"
+              label="Enter Net Amount*"
+              placeholder="Base Loan Amount"
+              value={amount}
+              onChange={(e) => {
+                setAmount(e.target.value);
+                validateAmount(e.target.value);
+              }}
+              onBlur={() => validateAmount(amount)}
+              error={!!errors.amount}
+              helperText={errors.amount}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start" sx={{ color: "white !important" }}>
+                    <CurrencyRupeeIcon />
+                  </InputAdornment>
+                ),
+              }}
+              sx={commonTextFieldStyles}
+            />
+          </Box>
+
+          {/* Loan Type Field */}
+          <Box>
+            <FormControl fullWidth variant="filled" error={!!errors.loanType} sx={commonFormControlStyles}>
+              <InputLabel>Loan Type*</InputLabel>
               <Select
-                labelId="which-loan-label"
-                name="whichLoan"
-                value={whichLoan}
-                onChange={(e) => {
-                  setWhichLoan(e.target.value);
-                  validateWhichLoan(e.target.value);
-                }}
-                onBlur={() => validateWhichLoan(whichLoan)}
-                input={<OutlinedInput label="Which Loan*" />}
+                name="loanType"
+                value={loanType}
+                onChange={(e) => handleLoanTypeChange(e.target.value)}
+                onBlur={() => validateLoanType(loanType)}
                 startAdornment={
-                  <InputAdornment position="start">
-                    <AccountBalanceIcon sx={{ color: "white", mr: 1 }} />
+                  <InputAdornment position="start" sx={{ color: "white !important" }}>
+                    <AccountBalanceIcon />
                   </InputAdornment>
                 }
-                sx={{
-                  borderRadius: "12px",
-                  backgroundColor: "rgba(255, 255, 255, 0.08)",
-                  color: "white",
-                  "& .MuiOutlinedInput-notchedOutline": {
-                    borderColor: whichLoanError ? "red" : "rgba(255, 255, 255, 0.1)",
-                  },
-                  "&:hover .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "rgba(255, 255, 255, 0.2)",
-                  },
-                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "#90caf9",
-                    borderWidth: "2px",
-                  },
-                  "& .MuiSelect-icon": {
-                    color: "white",
-                  },
+                MenuProps={commonMenuProps}
+              >
+                <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#333", color: "#90caf9" }}>Unsecured Loans</MenuItem>
+                {loanTypes.unsecured.map((loan) => (
+                  <MenuItem key={loan.value} value={loan.value} sx={{ padding: "10px 16px", fontSize: "14px", borderRadius: "6px" }}>{loan.label}</MenuItem>
+                ))}
+                <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#333", color: "#90caf9", mt: 1 }}>Secured Loans</MenuItem>
+                {loanTypes.secured.map((loan) => (
+                  <MenuItem key={loan.value} value={loan.value} sx={{ padding: "10px 16px", fontSize: "14px", borderRadius: "6px" }}>{loan.label}</MenuItem>
+                ))}
+              </Select>
+              {errors.loanType && <Typography color="error" sx={{ mt: 0.5, ml: 1, fontSize: "11px", fontFamily: "Verdana, sans-serif" }}>{errors.loanType}</Typography>}
+            </FormControl>
+          </Box>
+
+          {/* Tenure Field */}
+          <Box>
+            <FormControl fullWidth variant="filled" error={!!errors.tenure} sx={commonFormControlStyles}>
+              <InputLabel>{loanCategory ? `Select Tenure (${loanCategory === 'secured' ? 'Long Term' : 'Short Term'})` : "Select A Comfortable Tenure"}</InputLabel>
+              <Select
+                name="tenure"
+                value={tenure}
+                onChange={(e) => {
+                  setTenure(e.target.value);
+                  validateTenure(e.target.value);
                 }}
+                onBlur={() => validateTenure(tenure)}
+                disabled={!loanCategory}
+                startAdornment={
+                  <InputAdornment position="start" sx={{ color: "white !important" }}>
+                    <AccessTime />
+                  </InputAdornment>
+                }
+                MenuProps={commonMenuProps}
+              >
+                {(loanCategory ? tenureOptions[loanCategory] : []).map((label) => (
+                  <MenuItem key={label} value={label} sx={{ padding: "10px 16px", fontSize: "14px", borderRadius: "6px" }}>{label}</MenuItem>
+                ))}
+              </Select>
+              {errors.tenure && <Typography color="error" sx={{ mt: 0.5, ml: 1, fontSize: "11px", fontFamily: "Verdana, sans-serif" }}>{errors.tenure || (loanCategory ? "" : "Please select a loan type first")}</Typography>}
+            </FormControl>
+          </Box>
+
+          {/* Providers Field */}
+          <Box>
+            <FormControl fullWidth variant="filled" error={!!errors.provider} sx={commonFormControlStyles}>
+              <InputLabel>Provider Names* (Select Multiple)</InputLabel>
+              <Select
+                name="providers"
+                multiple
+                value={providers}
+                onChange={(e) => {
+                  const value = typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value;
+                  handleProviderChange(value);
+                }}
+                onBlur={() => validateProviders(providers)}
+                startAdornment={
+                  <InputAdornment position="start" sx={{ color: "white !important" }}>
+                    <AccountBalanceIcon />
+                  </InputAdornment>
+                }
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((value) => (
+                      <Chip
+                        key={value}
+                        label={value}
+                        size="small"
+                        sx={{
+                          backgroundColor: 'rgba(144,202,249,0.3)',
+                          color: 'white',
+                          '& .MuiChip-deleteIcon': { color: 'white' },
+                        }}
+                        onDelete={() => handleProviderRemove(value)}
+                        onMouseDown={(event) => event.stopPropagation()}
+                      />
+                    ))}
+                  </Box>
+                )}
                 MenuProps={{
                   PaperProps: {
                     sx: {
@@ -1149,487 +985,101 @@ const Step1Form: React.FC<Step1FormProps> = ({
                       borderRadius: "10px",
                       "& .MuiMenuItem-root": {
                         color: "white",
-                        "&:hover": {
-                          backgroundColor: "#333",
-                        },
-                        "&.Mui-selected": {
-                          backgroundColor: "#90caf9 !important",
-                          color: "#fff",
-                        },
+                        "&:hover": { backgroundColor: "#333" },
+                        "&.Mui-selected": { color: "#fff" },
                       },
+                      overflow: "auto",
+                      scrollbarWidth: "none",
+                      "&::-webkit-scrollbar": { display: "none" },
                     },
                   },
                 }}
               >
-                <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#333", color: "#90caf9" }}>
-                  Secured Loans
+                <MenuItem
+                  value="Let F2 Fintech decide your lender"
+                  sx={{
+                    backgroundColor: "rgba(50, 68, 230, 0.1)",
+                    borderBottom: "1px solid rgba(255,255,255,0.1)",
+                    "&:hover": { backgroundColor: "rgba(50, 68, 230, 0.2)" },
+                    "&.Mui-selected": { backgroundColor: "rgba(50, 68, 230, 0.4) !important" },
+                  }}
+                >
+                  <Checkbox
+                    checked={providers.indexOf("Let F2 Fintech decide your lender") > -1}
+                    sx={{ color: "rgba(255,255,255,0.7)", '&.Mui-checked': { color: "#3244e6" } }}
+                  />
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: "#90caf9" }}>Let F2 Fintech decide your lender</Typography>
                 </MenuItem>
-                {loanTypes.secured.map((loan) => (
-                  <MenuItem key={loan.value} value={loan.value} sx={{ color: "white" }}>
-                    {loan.label}
-                  </MenuItem>
-                ))}
-
-                <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#333", color: "#90caf9", mt: 1 }}>
-                  Unsecured Loans
-                </MenuItem>
-                {loanTypes.unsecured.map((loan) => (
-                  <MenuItem key={loan.value} value={loan.value} sx={{ color: "white" }}>
-                    {loan.label}
+                {PROVIDER_OPTIONS.map((providerName) => (
+                  <MenuItem key={providerName} value={providerName} sx={{ padding: "10px 16px", fontSize: "14px", borderRadius: "6px" }}>
+                    <Checkbox checked={providers.indexOf(providerName) > -1} sx={{ color: 'white', '&.Mui-checked': { color: '#90caf9' } }} />
+                    <ListItemText primary={providerName} sx={{ color: 'white' }} />
                   </MenuItem>
                 ))}
               </Select>
-              {whichLoanError && (
-                <FormHelperText error>{whichLoanError}</FormHelperText>
-              )}
+              {errors.provider && <Typography color="error" sx={{ mt: 0.5, ml: 1, fontSize: "11px", fontFamily: "Verdana, sans-serif" }}>{errors.provider}</Typography>}
             </FormControl>
+          </Box>
 
-            {/* Loan Amount Field */}
-            <TextField
-              fullWidth
-              variant="outlined"
-              label="Loan Amount*"
-              name="runningLoanAmount"
-              value={runningLoanAmount}
-              onChange={(e) => {
-                setRunningLoanAmount(e.target.value);
-                validateRunningLoanAmount(e.target.value);
-              }}
-              onBlur={() => validateRunningLoanAmount(runningLoanAmount)}
-              error={!!runningLoanAmountError}
-              helperText={runningLoanAmountError}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <CurrencyRupeeIcon sx={{ color: "white", mr: 1 }} />
+          {/* Lead Type Field */}
+          <Box>
+            <FormControl fullWidth variant="filled" error={!!leadTypeError} sx={commonFormControlStyles}>
+              <InputLabel>Lead Type*</InputLabel>
+              <Select
+                name="leadType"
+                value={leadType}
+                onChange={(e) => {
+                  setLeadType(e.target.value);
+                  validateLeadType(e.target.value);
+                }}
+                onBlur={() => validateLeadType(leadType)}
+                startAdornment={
+                  <InputAdornment position="start" sx={{ color: "white !important" }}>
+                    <AccountBalanceIcon />
                   </InputAdornment>
-                ),
-              }}
-              sx={{
-                mb: 2,
-                width: { xs: "90%", sm: "60%", md: "45%" },
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: "12px",
-                  backgroundColor: "rgba(255, 255, 255, 0.08)",
-                  color: "white",
-                  "& fieldset": {
-                    borderColor: runningLoanAmountError ? "red" : "rgba(255, 255, 255, 0.1)",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "rgba(255, 255, 255, 0.2)",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#90caf9",
-                    borderWidth: "2px",
-                  },
-                },
-                "& .MuiInputLabel-root": {
-                  color: runningLoanAmountError ? "error.main" : "rgba(255,255,255,0.7)",
-                  "&.Mui-focused": { color: "#90caf9" },
-                },
-                "& .MuiFormHelperText-root": {
-                  color: "error.main"
                 }
-              }}
-            />
-          </>
-        )}
-
-
-        {/* Tenure Field */}
-        <FormControl
-          autoComplete="off"
-          variant="filled"
-          error={!!errors.tenure}
-          sx={{
-            width: { xs: "90%", sm: "60%", md: "45%" },
-            mb: 3,
-            "& .MuiFilledInput-root": {
-              backgroundColor: "rgba(255, 255, 255, 0.08)",
-              borderRadius: "12px",
-              color: "white",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-              transition: "all 0.3s ease",
-
-              "&:before, &:after": {
-                borderBottom: "none !important",
-              },
-
-              "&:hover": {
-                backgroundColor: "rgba(255,255,255,0.12)",
-              },
-              "&.Mui-focused": {
-                backgroundColor: "rgba(255,255,255,0.15)",
-                boxShadow: "0 0 0 2px rgba(144,202,249,0.4)",
-              },
-            },
-            "& .MuiInputLabel-root": {
-              color: "rgba(255,255,255,0.7)",
-              fontSize: "14px",
-            },
-            "& .Mui-focused": {
-              color: "#90caf9 !important",
-            },
-            "& .MuiSelect-icon": {
-              color: "white",
-            },
-          }}
-        >
-          <InputLabel>
-            {loanCategory ? `Select Tenure (${loanCategory === 'secured' ? 'Long Term' : 'Short Term'})` : "Select A Comfortable Tenure"}
-          </InputLabel>
-          <Select
-            variant="filled"
-            name="tenure"
-            value={tenure}
-            onChange={(e) => {
-              setTenure(e.target.value);
-              validateTenure(e.target.value);
-            }}
-            onBlur={() => validateTenure(tenure)}
-            disabled={!loanCategory}
-            startAdornment={
-              <InputAdornment position="start" sx={{ color: "white !important" }}>
-                <AccessTime />
-              </InputAdornment>
-            }
-            MenuProps={{
-              PaperProps: {
-                sx: {
-                  bgcolor: "#1e1e1e",
-                  borderRadius: "10px",
-                  "& .MuiMenuItem-root": {
-                    color: "white",
-                    "&:hover": {
-                      backgroundColor: "#333",
-                    },
-                    "&.Mui-selected": {
-                      backgroundColor: "#90caf9 !important",
-                      color: "#fff",
-                    },
-                  },
-                },
-              },
-            }}
-          >
-            {(loanCategory ? tenureOptions[loanCategory] : []).map((label) => (
-              <MenuItem
-                key={label}
-                value={label}
-                sx={{
-                  padding: "10px 16px",
-                  fontSize: "14px",
-                  borderRadius: "6px",
-                }}
+                MenuProps={commonMenuProps}
               >
-                {label}
-              </MenuItem>
-            ))}
-          </Select>
-
-          {errors.tenure && (
-            <Typography
-              color="error"
-              sx={{
-                mt: 0.5,
-                ml: 1,
-                fontSize: "11px",
-                fontFamily: "Verdana, sans-serif",
-              }}
-            >
-              {errors.tenure || (loanCategory ? "" : "Please select a loan type first")}
-            </Typography>
-          )}
-        </FormControl>
-
-        {/* Case Type Field */}
-        <FormControl
-          autoComplete="off"
-          variant="filled"
-          error={!!caseTypeError}
-          sx={{
-            width: { xs: "90%", sm: "60%", md: "45%" },
-            mb: 3,
-            "& .MuiFilledInput-root": {
-              backgroundColor: "rgba(255, 255, 255, 0.08)",
-              borderRadius: "12px",
-              color: "white",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-              transition: "all 0.3s ease",
-
-              "&:before, &:after": {
-                borderBottom: "none !important",
-              },
-
-              "&:hover": {
-                backgroundColor: "rgba(255,255,255,0.12)",
-              },
-              "&.Mui-focused": {
-                backgroundColor: "rgba(255,255,255,0.15)",
-                boxShadow: "0 0 0 2px rgba(144,202,249,0.4)",
-              },
-            },
-            "& .MuiInputLabel-root": {
-              color: caseTypeError ? "error.main" : "rgba(255,255,255,0.7)",
-              fontSize: "14px",
-            },
-            "& .Mui-focused": {
-              color: "#90caf9 !important",
-            },
-            "& .MuiSelect-icon": {
-              color: "white",
-            },
-          }}
-        >
-          <InputLabel>Case Type*</InputLabel>
-          <Select
-            variant="filled"
-            name="caseType"
-            value={caseType}
-            onChange={(e) => {
-              setCaseType(e.target.value);
-              validateCaseType(e.target.value);
-            }}
-            onBlur={() => validateCaseType(caseType)}
-            startAdornment={
-              <InputAdornment position="start" sx={{ color: "white !important" }}>
-                <AccountBalanceIcon />
-              </InputAdornment>
-            }
-            MenuProps={{
-              PaperProps: {
-                sx: {
-                  bgcolor: "#1e1e1e",
-                  borderRadius: "10px",
-                  "& .MuiMenuItem-root": {
-                    color: "white",
-                    "&:hover": {
-                      backgroundColor: "#333",
-                    },
-                    "&.Mui-selected": {
-                      backgroundColor: "#90caf9 !important",
-                      color: "#fff",
-                    },
-                  },
-                },
-              },
-            }}
-          >
-            <MenuItem
-              value="top_up"
-              sx={{
-                padding: "10px 16px",
-                fontSize: "14px",
-                borderRadius: "6px",
-              }}
-            >
-              Top Up
-            </MenuItem>
-            <MenuItem
-              value="fresh"
-              sx={{
-                padding: "10px 16px",
-                fontSize: "14px",
-                borderRadius: "6px",
-              }}
-            >
-              Fresh
-            </MenuItem>
-          </Select>
-
-          {caseTypeError && (
-            <Typography
-              color="error"
-              sx={{
-                mt: 0.5,
-                ml: 1,
-                fontSize: "11px",
-                fontFamily: "Verdana, sans-serif",
-              }}
-            >
-              {caseTypeError}
-            </Typography>
-          )}
-        </FormControl>
-
-        {/* Providers Field */}
-        <FormControl
-          autoComplete="off"
-          variant="filled"
-          error={!!errors.provider}
-          sx={{
-            width: { xs: "90%", sm: "60%", md: "45%" },
-            mb: 3,
-            "& .MuiFilledInput-root": {
-              backgroundColor: "rgba(255, 255, 255, 0.08)",
-              borderRadius: "12px",
-              color: "white",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-              transition: "all 0.3s ease",
-              "&:before, &:after": {
-                borderBottom: "none !important",
-              },
-              "&:hover": {
-                backgroundColor: "rgba(255,255,255,0.12)",
-              },
-              "&.Mui-focused": {
-                backgroundColor: "rgba(255,255,255,0.15)",
-                boxShadow: "0 0 0 2px rgba(144,202,249,0.4)",
-              },
-            },
-            "& .MuiInputLabel-root": {
-              color: "rgba(255,255,255,0.7)",
-              fontSize: "14px",
-            },
-            "& .Mui-focused": {
-              color: "#90caf9 !important",
-            },
-            "& .MuiSelect-icon": {
-              color: "white",
-            },
-          }}
-        >
-          <InputLabel>Provider Names* (Select Multiple)</InputLabel>
-          <Select
-            variant="filled"
-            name="providers"
-            multiple
-            value={providers}
-            onChange={(e) => {
-              const value = typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value;
-              handleProviderChange(value);
-            }}
-            onBlur={() => validateProviders(providers)}
-            startAdornment={
-              <InputAdornment position="start" sx={{ color: "white !important" }}>
-                <AccountBalanceIcon />
-              </InputAdornment>
-            }
-            renderValue={(selected) => (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {selected.map((value) => (
-                  <Chip
-                    key={value}
-                    label={value}
-                    size="small"
-                    sx={{
-                      backgroundColor: 'rgba(144,202,249,0.3)',
-                      color: 'white',
-                      '& .MuiChip-deleteIcon': {
-                        color: 'white',
-                      },
-                    }}
-                    onDelete={() => {
-                      handleProviderRemove(value);
-                    }}
-                    onMouseDown={(event) => {
-                      event.stopPropagation();
-                    }}
-                  />
+                {leadTypes.map((lead) => (
+                  <MenuItem key={lead.value} value={lead.value} sx={{ padding: "10px 16px", fontSize: "14px", borderRadius: "6px" }}>{lead.label}</MenuItem>
                 ))}
-              </Box>
-            )}
-            MenuProps={{
-              PaperProps: {
-                sx: {
-                  bgcolor: "#1e1e1e",
-                  borderRadius: "10px",
-                  "& .MuiMenuItem-root": {
-                    color: "white",
-                    "&:hover": {
-                      backgroundColor: "#333",
-                    },
-                    "&.Mui-selected": {
-                      color: "#fff",
-                    },
-                  },
-                  overflow: "auto",
-                  scrollbarWidth: "none",
-                  "&::-webkit-scrollbar": {
-                    display: "none",
-                  },
-                  msOverflowStyle: "none",
-                },
-              },
-            }}
-          >
-            {/* Special Option - Added at the top */}
-            <MenuItem
-              value="Let F2 Fintech decide your lender"
-              sx={{
-                backgroundColor: "rgba(50, 68, 230, 0.1)",
-                borderBottom: "1px solid rgba(255,255,255,0.1)",
-                "&:hover": {
-                  backgroundColor: "rgba(50, 68, 230, 0.2)",
-                },
-                "&.Mui-selected": {
-                  backgroundColor: "rgba(50, 68, 230, 0.4) !important",
-                },
-              }}
-            >
-              <Checkbox
-                checked={providers.indexOf("Let F2 Fintech decide your lender") > -1}
-                sx={{
-                  color: "rgba(255,255,255,0.7)",
-                  '&.Mui-checked': {
-                    color: "#3244e6",
-                  },
-                }}
-              />
-              <Typography
-                variant="body2"
-                sx={{ fontWeight: 600, color: "#90caf9" }}
-              >
-                Let F2 Fintech decide your lender
-              </Typography>
-            </MenuItem>
+              </Select>
+              {leadTypeError && <Typography color="error" sx={{ mt: 0.5, ml: 1, fontSize: "11px", fontFamily: "Verdana, sans-serif" }}>{leadTypeError}</Typography>}
+            </FormControl>
+          </Box>
 
-            {PROVIDER_OPTIONS.map((providerName) => (
-              <MenuItem
-                key={providerName}
-                value={providerName}
-                sx={{
-                  padding: "10px 16px",
-                  fontSize: "14px",
-                  borderRadius: "6px",
+          {/* Case Type Field */}
+          <Box>
+            <FormControl fullWidth variant="filled" error={!!caseTypeError} sx={commonFormControlStyles}>
+              <InputLabel>Case Type*</InputLabel>
+              <Select
+                name="caseType"
+                value={caseType}
+                onChange={(e) => {
+                  setCaseType(e.target.value);
+                  validateCaseType(e.target.value);
                 }}
+                onBlur={() => validateCaseType(caseType)}
+                startAdornment={
+                  <InputAdornment position="start" sx={{ color: "white !important" }}>
+                    <AccountBalanceIcon />
+                  </InputAdornment>
+                }
+                MenuProps={commonMenuProps}
               >
-                <Checkbox
-                  checked={providers.indexOf(providerName) > -1}
-                  sx={{
-                    color: 'white',
-                    '&.Mui-checked': {
-                      color: '#90caf9',
-                    },
-                  }}
-                />
-                <ListItemText
-                  primary={providerName}
-                  sx={{ color: 'white' }}
-                />
-              </MenuItem>
-            ))}
-          </Select>
-          {errors.provider && (
-            <Typography
-              color="error"
-              sx={{
-                mt: 0.5,
-                ml: 1,
-                fontSize: "11px",
-                fontFamily: "Verdana, sans-serif",
-              }}
-            >
-              {errors.provider}
-            </Typography>
-          )}
-        </FormControl>
+                <MenuItem value="top_up" sx={{ padding: "10px 16px", fontSize: "14px", borderRadius: "6px" }}>Top Up</MenuItem>
+                <MenuItem value="fresh" sx={{ padding: "10px 16px", fontSize: "14px", borderRadius: "6px" }}>Fresh</MenuItem>
+              </Select>
+              {caseTypeError && <Typography color="error" sx={{ mt: 0.5, ml: 1, fontSize: "11px", fontFamily: "Verdana, sans-serif" }}>{caseTypeError}</Typography>}
+            </FormControl>
+          </Box>
+        </Box>
 
         {/* Provider Amounts Summary */}
         {providers.length > 0 && (
           <Box
             sx={{
-              width: { xs: "90%", sm: "60%", md: "45%" },
+              width: { xs: "90%", sm: "95%", md: "90%" },
               mb: 3,
               p: 2,
               backgroundColor: "rgba(255, 255, 255, 0.08)",
@@ -1701,6 +1151,181 @@ const Step1Form: React.FC<Step1FormProps> = ({
           </Box>
         )}
 
+        {/* Existing Loans Loop - Relocated with Premium Styling */}
+        <Box sx={{ width: { xs: "90%", sm: "95%", md: "90%" }, mb: 4, mt: 2 }}>
+          <Typography
+            sx={{
+              color: "#90caf9",
+              fontWeight: 600,
+              fontSize: "1.1rem",
+              fontFamily: "Poppins",
+              mb: 2.5,
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+              letterSpacing: "0.5px"
+            }}
+          >
+            <AccountBalanceIcon sx={{ fontSize: 22 }} /> EXISTING LOANS
+          </Typography>
+
+          {existingLoans.map((loan, index) => {
+            const loanErr = existingLoansErrors[index] || {} as any;
+            return (
+              <Box
+                key={index}
+                sx={{
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  borderRadius: "16px",
+                  p: 2.5,
+                  mb: 3,
+                  backgroundColor: "rgba(255, 255, 255, 0.04)",
+                  position: "relative",
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                  "&:hover": {
+                    backgroundColor: "rgba(255, 255, 255, 0.07)",
+                    borderColor: "rgba(144, 202, 249, 0.4)",
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 6px 16px rgba(0,0,0,0.2)",
+                  }
+                }}
+              >
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "#ffff",
+                      fontWeight: 800,
+                      letterSpacing: "1px",
+                      fontSize: "0.7rem",
+                      backgroundColor: "rgba(144, 202, 249, 0.1)",
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: "6px"
+                    }}
+                  >
+                    LOAN RECORD #{index + 1}
+                  </Typography>
+                  {existingLoans.length > 1 && (
+                    <IconButton
+                      size="small"
+                      onClick={() => handleRemoveLoan(index)}
+                      sx={{
+                        color: "#ff4444",
+                        backgroundColor: "rgba(255,68,68,0.1)",
+                        transition: "all 0.2s ease",
+                        "&:hover": {
+                          backgroundColor: "rgba(255,68,68,0.25)",
+                          transform: "scale(1.1)"
+                        }
+                      }}
+                    >
+                      <Close fontSize="small" />
+                    </IconButton>
+                  )}
+                </Box>
+
+                <Stack spacing={3}>
+                  <FormControl fullWidth variant="filled" error={!!loanErr.has_running_loans} sx={commonFormControlStyles}>
+                    <InputLabel>Existing Loans*</InputLabel>
+                    <Select
+                      value={loan.has_running_loans}
+                      onChange={(e) => handleExistingLoanChange(index, "has_running_loans", e.target.value)}
+                      MenuProps={commonMenuProps}
+                    >
+                      <MenuItem value="yes">Yes</MenuItem>
+                      <MenuItem value="no">No</MenuItem>
+                    </Select>
+                    {loanErr.has_running_loans && <FormHelperText error>{loanErr.has_running_loans}</FormHelperText>}
+                  </FormControl>
+
+                  {loan.has_running_loans === "yes" && (
+                    <FormControl fullWidth variant="filled" error={!!loanErr.which_loan} sx={commonFormControlStyles}>
+                      <InputLabel>Loan Type*</InputLabel>
+                      <Select
+                        value={loan.which_loan}
+                        onChange={(e) => handleExistingLoanChange(index, "which_loan", e.target.value)}
+                        MenuProps={commonMenuProps}
+                      >
+                        <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#333", color: "#90caf9", opacity: "1 !important" }}>Unsecured</MenuItem>
+                        {loanTypes.unsecured.map((l) => (
+                          <MenuItem key={l.value} value={l.value} sx={{ py: 1.2, px: 2, fontSize: '14px' }}>{l.label}</MenuItem>
+                        ))}
+                        <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#333", color: "#90caf9", mt: 1, opacity: "1 !important" }}>Secured</MenuItem>
+                        {loanTypes.secured.map((l) => (
+                          <MenuItem key={l.value} value={l.value} sx={{ py: 1.2, px: 2, fontSize: '14px' }}>{l.label}</MenuItem>
+                        ))}
+                      </Select>
+                      {loanErr.which_loan && <FormHelperText error>{loanErr.which_loan}</FormHelperText>}
+                    </FormControl>
+                  )}
+
+                  {loan.has_running_loans === "yes" && (
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2.5 }}>
+                      <TextField
+                        fullWidth
+                        variant="filled"
+                        label="Outstanding Amount*"
+                        placeholder="0.00"
+                        value={loan.loan_amount}
+                        onChange={(e) => handleExistingLoanChange(index, "loan_amount", e.target.value)}
+                        error={!!loanErr.loan_amount}
+                        helperText={loanErr.loan_amount}
+                        InputProps={{
+                          startAdornment: <InputAdornment position="start"><CurrencyRupeeIcon sx={{ color: "#90caf9", fontSize: 18 }} /></InputAdornment>,
+                        }}
+                        sx={commonTextFieldStyles}
+                      />
+                      <TextField
+                        fullWidth
+                        variant="filled"
+                        label="Running EMI (Optional)"
+                        placeholder="0.00"
+                        value={loan.running_emi}
+                        onChange={(e) => handleExistingLoanChange(index, "running_emi", e.target.value)}
+                        error={!!loanErr.running_emi}
+                        helperText={loanErr.running_emi}
+                        InputProps={{
+                          startAdornment: <InputAdornment position="start"><CurrencyRupeeIcon sx={{ color: "#90caf9", fontSize: 18 }} /></InputAdornment>,
+                        }}
+                        sx={commonTextFieldStyles}
+                      />
+                    </Box>
+                  )}
+                </Stack>
+              </Box>
+            );
+          })}
+
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 1 }}>
+            <Button
+              variant="outlined"
+              size="medium"
+              startIcon={<Edit sx={{ fontSize: 18 }} />}
+              onClick={handleAddLoan}
+              sx={{
+                borderRadius: "12px",
+                color: "#ffff",
+                borderColor: "rgba(144,202,249,0.3)",
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: "0.9rem",
+                px: 4,
+                py: 1,
+                borderWidth: "1.5px",
+                "&:hover": {
+                  borderColor: "#90caf9",
+                  backgroundColor: "rgba(144, 202, 249, 0.08)",
+                  borderWidth: "1.5px",
+                }
+              }}
+            >
+              Add Another Loan Record
+            </Button>
+          </Box>
+        </Box>
+
         <Button
           disabled={
             !!errors.amount ||
@@ -1716,8 +1341,10 @@ const Step1Form: React.FC<Step1FormProps> = ({
             !loanType ||
             !leadType ||
             !caseType ||
-            !hasRunningLoans ||
-            (hasRunningLoans === "yes" && (!whichLoan || !runningLoanAmount)) ||
+            existingLoans.some(loan =>
+              !loan.has_running_loans ||
+              (loan.has_running_loans === "yes" && (!loan.which_loan || !loan.loan_amount))
+            ) ||
             !validateAllProviderAmounts()
           }
           variant="contained"
@@ -1734,8 +1361,8 @@ const Step1Form: React.FC<Step1FormProps> = ({
             backgroundColor: "#039be5",
             width: {
               xs: "80%",
-              md: "45%",
-              sm: "45%",
+              md: "90%",
+              sm: "95%",
             },
             alignSelf: "center",
             marginBottom: 3,

@@ -80,6 +80,8 @@ interface ApplicationCardProps {
     approved_Amount?: number;
     source?: string;
     applicationSource?: string;
+    existing_loans?: string;
+    existingLoans?: string;
     onDelete: (applicationId: string, customerName: string) => void;
   };
   handleStartClick?: (ticketId: number) => void;
@@ -1522,10 +1524,34 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                         day: '2-digit',
                         month: 'short',
                         year: 'numeric',
-                      })}`
+                        })}`
                       : "Not Approved"
                   }
                 />
+                
+                {/* Existing Loans Display */}
+                {(customerApplication.existingLoans || (customerApplication as any).existing_loans) && (
+                  <Box sx={{ mt: 1 }}>
+                    <Typography variant="caption" sx={{ fontWeight: 'bold', color: '#6E44FF', mb: 0.5, display: 'block' }}>
+                      Existing Loans
+                    </Typography>
+                    {(() => {
+                      try {
+                        const loans = JSON.parse(customerApplication.existingLoans || (customerApplication as any).existing_loans);
+                        if (Array.isArray(loans) && loans.length > 0) {
+                          return loans.map((loan, idx) => (
+                            <Typography key={idx} variant="caption" sx={{ display: 'block', color: '#333', ml: 1 }}>
+                              • {capitalizeFirstLetter(loan.which_loan || 'Loan')}: ₹{loan.loan_amount || loan.running_loan_amount || 'N/A'}
+                            </Typography>
+                          ));
+                        }
+                      } catch (e) {
+                        return <Typography variant="caption" sx={{ color: '#666' }}>Error parsing loans</Typography>;
+                      }
+                      return null;
+                    })()}
+                  </Box>
+                )}
               </Box>
             ) : showHistory ? (
               <Box

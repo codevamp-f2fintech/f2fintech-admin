@@ -31,4 +31,16 @@ export const navItems = [
     href: '/company',
     icon: 'business'
   },
+  {
+    key: 'leadType',
+    title: 'Leads',
+    href: '/leads',
+    icon: 'plugs-connected',
+  },
+  {
+    key: 'sendQuery',
+    title: 'Query',
+    href: '/send-query',
+    icon: 'list-magnifying-glass',
+  },
 ] satisfies NavItemConfig[];
