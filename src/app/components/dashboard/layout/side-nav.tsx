@@ -19,17 +19,16 @@ import { navIcons } from "./nav-icons";
 import { Utility } from "@/utils";
 import { Logo } from "../../core/logo";
 
-export function SideNav (): React.JSX.Element {
+export function SideNav(): React.JSX.Element {
   const pathname = usePathname();
-  const [ collapsed, setCollapsed ] = React.useState( true );
+  const [collapsed, setCollapsed] = React.useState(true);
   const { decodedToken } = Utility();
 
   const userRole = decodedToken()?.role;
 
-  const handleToggleCollapse = () => setCollapsed( ( prev ) => !prev );
+  const handleToggleCollapse = () => setCollapsed((prev) => !prev);
 
-  if ( pathname === "/login" )
-  {
+  if (pathname === "/login") {
     return <></>;
   }
 
@@ -91,14 +90,14 @@ export function SideNav (): React.JSX.Element {
       </Stack>
       <Divider sx={{ borderColor: "lightgray" }} />
       <Box component="nav">
-        {renderNavItems( { pathname, items: navItems, collapsed, userRole } )}
+        {renderNavItems({ pathname, items: navItems, collapsed, userRole })}
       </Box>
       <Divider sx={{ borderColor: "lightgray" }} />
     </Box>
   );
 }
 
-function renderNavItems ( {
+function renderNavItems({
   items = [],
   pathname,
   collapsed,
@@ -108,20 +107,17 @@ function renderNavItems ( {
   pathname: string;
   collapsed: boolean;
   userRole: string;
-} ): React.JSX.Element {
+}): React.JSX.Element {
   // Filter nav items based on user role
-  const filteredItems = items.filter( ( item ) => {
+  const filteredItems = items.filter((item) => {
     // SUPERADMIN can only see Company and User
-    if ( userRole === "super admin" )
-    {
+    if (userRole === "super admin") {
       return item.title === "Company" || item.title === "Users" || item.title === "SuperAdminDashboard";
     }
 
     // ADMIN should NOT see Company and Admin User, but SHOULD see Users
-    if ( userRole === "admin" )
-    {
-      if ( item.title === "Company" || item.title === "Admin User" )
-      {
+    if (userRole === "admin") {
+      if (item.title === "Company" || item.title === "Admin User") {
         return false;
       }
       // Admin SHOULD see Users, Loan Provider, Archived
@@ -129,36 +125,36 @@ function renderNavItems ( {
     }
 
     // For non-admin roles (operations, credit, etc.)
-    if ( item.title === "Users" && userRole !== "admin" )
-    {
+    if (item.title === "Users" && userRole !== "admin") {
       return false;
     }
-    if ( item.title === "Company" && userRole !== "admin" )
-    {
-      return false;
-    }
-
-    if ( item.title === "Loan Provider" && userRole !== "admin" )
-    {
+    if (item.title === "Company" && userRole !== "admin") {
       return false;
     }
 
-    if ( item.title === "Archived" && userRole !== "admin" )
-    {
+    if (item.title === "Loan Provider" && userRole !== "admin") {
+      return false;
+    }
+
+    if (item.title === "Archived" && userRole !== "admin") {
+      return false;
+    }
+
+    if ((item.title === "Leads" || item.title === "Query") && userRole !== "admin") {
       return false;
     }
 
     return true;
-  } );
+  });
 
-  const children = filteredItems.map( ( item ) => (
+  const children = filteredItems.map((item) => (
     <NavItem
       key={item.key}
       pathname={pathname}
       collapsed={collapsed}
       {...item}
     />
-  ) );
+  ));
 
   return (
     <Stack component="ul" spacing={1} sx={{ listStyle: "none", mt: 5, p: 0 }}>
@@ -173,7 +169,7 @@ interface NavItemProps extends Omit<NavItemConfig, "items"> {
   collapsed: boolean;
 }
 
-function NavItem ( {
+function NavItem({
   disabled,
   external,
   href,
@@ -182,27 +178,27 @@ function NavItem ( {
   pathname,
   title,
   collapsed,
-}: NavItemProps ): React.JSX.Element {
-  const active = isNavItemActive( {
+}: NavItemProps): React.JSX.Element {
+  const active = isNavItemActive({
     disabled,
     external,
     href,
     matcher,
     pathname,
-  } );
-  const Icon = icon ? navIcons[ icon ] : null;
+  });
+  const Icon = icon ? navIcons[icon] : null;
 
   return (
     <li>
       <Box
-        {...( href
+        {...(href
           ? {
             component: external ? "a" : RouterLink,
             href,
             target: external ? "_blank" : undefined,
             rel: external ? "noreferrer" : undefined,
           }
-          : { role: "button" } )}
+          : { role: "button" })}
         sx={{
           textDecoration: "none !important",
           alignItems: "center",
