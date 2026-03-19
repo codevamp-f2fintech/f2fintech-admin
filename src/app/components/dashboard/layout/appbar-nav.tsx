@@ -30,6 +30,7 @@ import { usePopover } from "@/hooks/use-popover";
 import { CompanyAPI } from "@/apis/CompanyAPI";
 import { ApplicationsAPI, NewApplication } from "@/apis/ApplicationsAPI";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { io } from "socket.io-client";
 
 const SEEN_APPLICATIONS_KEY = "seenApplicationIds";
 
@@ -102,9 +103,24 @@ export function AppBarNav(): React.JSX.Element {
 
   useEffect(() => {
     fetchNewApplications();
-    const interval = setInterval(fetchNewApplications, 120000);
-    return () => clearInterval(interval);
+    
+    // Connect to the Express server (port 8080) where applications are created
+    const webUrl = process.env.NEXT_PUBLIC_WEB_URL?.replace("/api/v1", "") || "http://localhost:8080";
+    const socket = io(webUrl);
+
+    socket.on("connect", () => {
+      console.log("Connected to WebSocket notifications server on port 8080");
+    });
+
+    socket.on("new-application", () => {
+      fetchNewApplications();
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, [fetchNewApplications]);
+
 
   const unreadCount = newApplications.filter((app) => !seenIds.has(app.applicationId)).length;
 
