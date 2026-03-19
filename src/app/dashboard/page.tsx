@@ -235,7 +235,7 @@ export default function Page(): React.JSX.Element {
     const now = new Date();
     const currentMonth = now.toLocaleString("default", { month: "long" });
 
-    setDate(new Date().toISOString().split("T")[0]);
+    setDate(currentDate);
 
     console.log("currentMonth:", currentMonth);
     console.log("currentDateTime:", new Date().toLocaleDateString());

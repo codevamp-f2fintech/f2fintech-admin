@@ -39,94 +39,88 @@ export interface LatestApplicationsProps {
   sx?: SxProps;
 }
 
-export function LatestApplications ( {
+export function LatestApplications({
   sx,
-}: LatestApplicationsProps ): React.JSX.Element {
-  const [ paginationLoading, setPaginationLoading ] = useState<boolean>( false );
-  const [ applications, setApplications ] = useState<
+}: LatestApplicationsProps): React.JSX.Element {
+  const [paginationLoading, setPaginationLoading] = useState<boolean>(false);
+  const [applications, setApplications] = useState<
     CustomerApplicationData | []
-  >( [] );
-  const [ selectedCompany, setSelectedCompany ] = useState<string>( "" );
-  const [ apiEndpoint, setApiEndpoint ] = useState<string>( "get-customer-loan-applications" );
+  >([]);
+  const [selectedCompany, setSelectedCompany] = useState<string>("");
+  const [apiEndpoint, setApiEndpoint] = useState<string>("get-customer-loan-applications");
   const router = useRouter();
-  const isMobile = useMediaQuery( "(max-width:600px)" );
-  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
   // Initialize company from localStorage
-  useEffect( () => {
-    if ( typeof window !== "undefined" )
-    {
-      const savedCompanyId = localStorage.getItem( "selectedCompanyId" );
-      if ( savedCompanyId )
-      {
-        setSelectedCompany( savedCompanyId );
-        setApiEndpoint( `get-customer-loan-applications?companyId=${ savedCompanyId }` );
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedCompanyId = localStorage.getItem("selectedCompanyId");
+      if (savedCompanyId) {
+        setSelectedCompany(savedCompanyId);
+        setApiEndpoint(`get-customer-loan-applications?companyId=${savedCompanyId}`);
       }
     }
-  }, [] );
+  }, []);
 
   // Listen for company change events
-  useEffect( () => {
-    const handleCompanyChange = ( event: any ) => {
-      console.log( "LatestApplications received companyChanged event:", event.detail );
+  useEffect(() => {
+    const handleCompanyChange = (event: any) => {
+      console.log("LatestApplications received companyChanged event:", event.detail);
       const newCompanyId = event.detail;
-      setSelectedCompany( newCompanyId );
+      setSelectedCompany(newCompanyId);
 
       // Save to localStorage
-      if ( typeof window !== "undefined" )
-      {
-        localStorage.setItem( "selectedCompanyId", newCompanyId );
+      if (typeof window !== "undefined") {
+        localStorage.setItem("selectedCompanyId", newCompanyId);
       }
 
       // Update endpoint with company parameter
-      const newEndpoint = `get-customer-loan-applications?companyId=${ newCompanyId }`;
-      setApiEndpoint( newEndpoint );
+      const newEndpoint = `get-customer-loan-applications?companyId=${newCompanyId}`;
+      setApiEndpoint(newEndpoint);
 
       // Reset applications to trigger re-fetch
-      setApplications( [] );
+      setApplications([]);
     };
 
-    window.addEventListener( "companyChanged", handleCompanyChange );
+    window.addEventListener("companyChanged", handleCompanyChange);
 
     // Also listen for localStorage changes
-    const handleStorageChange = ( e: StorageEvent ) => {
-      if ( e.key === "selectedCompanyId" )
-      {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "selectedCompanyId") {
         const newCompanyId = e.newValue || "";
-        setSelectedCompany( newCompanyId );
-        setApiEndpoint( `get-customer-loan-applications?companyId=${ newCompanyId }` );
-        setApplications( [] );
+        setSelectedCompany(newCompanyId);
+        setApiEndpoint(`get-customer-loan-applications?companyId=${newCompanyId}`);
+        setApplications([]);
       }
     };
 
-    window.addEventListener( "storage", handleStorageChange );
+    window.addEventListener("storage", handleStorageChange);
 
     return () => {
-      window.removeEventListener( "companyChanged", handleCompanyChange );
-      window.removeEventListener( "storage", handleStorageChange );
+      window.removeEventListener("companyChanged", handleCompanyChange);
+      window.removeEventListener("storage", handleStorageChange);
     };
-  }, [] );
+  }, []);
 
   // Use the dynamic endpoint
   const {
     value: data,
     error: getApplicationsError,
     swrLoading,
-  } = useGetCustomerApplications( apiEndpoint, 1, 6 );
+  } = useGetCustomerApplications(apiEndpoint, 1, 6);
 
   // Handle API response
-  useEffect( () => {
-    if ( data?.results && data.results.length > 0 )
-    {
-      setApplications( data.results );
-    } else
-    {
-      setApplications( [] );
+  useEffect(() => {
+    if (data?.results && data.results.length > 0) {
+      setApplications(data.results);
+    } else {
+      setApplications([]);
     }
-  }, [ data?.results, getApplicationsError ] );
+  }, [data?.results, getApplicationsError]);
 
   const handleViewAllClick = () => {
-    router.push( "/" );
+    router.push("/");
   };
 
   return (
@@ -234,7 +228,7 @@ export function LatestApplications ( {
                 </TableRow>
               ) : (
                 applications.map(
-                  ( application: CustomerApplicationData, index: number ) => (
+                  (application: CustomerApplicationData, index: number) => (
                     <TableRow
                       key={application.applicationId}
                       sx={{
@@ -305,7 +299,7 @@ export function LatestApplications ( {
                           fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" },
                         }}
                       >
-                        {dayjs( application.applicationDate ).format(
+                        {dayjs(application.applicationDate).format(
                           "MMM D, YYYY"
                         )}
                       </TableCell>

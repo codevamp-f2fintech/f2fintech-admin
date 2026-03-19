@@ -49,30 +49,33 @@ axiosInstance.interceptors.request.use(
     const companyId = cookieStore.companyId;
     const userRole = cookieStore.userRole;
 
-    // Add token to request header
-    if (token) {
-      config.headers["x-access-token"] = token;
-      config.headers["userrole"] = userRole;
-    }
+    // ONLY apply headers if the request is for an internal or local API
+    const isExternal =
+      config.url?.startsWith("http") &&
+      !config.url?.includes("localhost") &&
+      !config.url?.includes("f2fintech.in");
 
-    // FRONTEND-ONLY COMPANY CONTEXT OVERRIDE
-    const selectedCompanyId =
-      typeof window !== "undefined"
-        ? localStorage.getItem("selectedCompanyId")
-        : null;
+    if (!isExternal) {
+      // Add token to request header
+      if (token) {
+        config.headers["x-access-token"] = token;
+        config.headers["userrole"] = userRole;
+      }
 
-    // If dropdown selected → override companyId
-    if (selectedCompanyId) {
-      config.headers["CompanyId"] = selectedCompanyId;
-    }
-    // Else fallback to user's own companyId
-    else if (companyId && userRole !== "super admin") {
-      config.headers["CompanyId"] = companyId;
-    }
+      // FRONTEND-ONLY COMPANY CONTEXT OVERRIDE
+      const selectedCompanyId =
+        typeof window !== "undefined"
+          ? localStorage.getItem("selectedCompanyId")
+          : null;
 
-    else if (userRole === "super admin") {
-      console.log('- companyId exists?', !!companyId);
-      console.log('- userRole is super admin?', userRole === 'super admin');
+      // If dropdown selected → override companyId
+      if (selectedCompanyId) {
+        config.headers["CompanyId"] = selectedCompanyId;
+      }
+      // Else fallback to user's own companyId
+      else if (companyId && userRole !== "super admin") {
+        config.headers["CompanyId"] = companyId;
+      }
     }
 
     return config;

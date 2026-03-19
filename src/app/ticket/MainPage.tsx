@@ -28,6 +28,7 @@ import * as XLSX from "xlsx";
 import ApplicationCard from "../components/common/ApplicationCard";
 import FilterPanel from "../components/common/FilterPanel";
 import Loader from "../components/common/Loader";
+import Toast from "../components/common/Toast";
 import { useDeleteTicket, useGetTickets } from "@/hooks/ticket";
 import { fetcher } from "@/apis/apiClient";
 import { Utility } from "@/utils";
@@ -56,6 +57,7 @@ const Ticket = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [hasMoreData, setHasMoreData] = useState<boolean>(true);
   const { ticket } = useSelector((state: RootState) => state.tickets);
+  const { toast } = useSelector((state: RootState) => state.toast);
   const { deleteTicket, error, loading } = useDeleteTicket();
   const { deleteCustomerApplication } = useDeleteCustomerApplication();
   const isMobile = useMediaQuery("(max-width:600px)");
@@ -1098,6 +1100,11 @@ const Ticket = () => {
         </Grid>
       </Box>
       {swrLoading && <Loader />}
+      <Toast
+        alerting={toast.toastAlert}
+        message={toast.toastMessage}
+        severity={toast.toastSeverity}
+      />
     </Box>
   );
 };

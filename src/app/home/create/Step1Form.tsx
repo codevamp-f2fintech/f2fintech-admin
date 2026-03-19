@@ -449,21 +449,12 @@ const Step1Form: React.FC<Step1FormProps> = ({
     fetchCustomerData();
   }, [storedCustomerId]);
 
-  // Function to register the customer
-  async function registerCustomer(customer) {
-    // Combine title and name before sending
+  const registerCustomer = async (customer: any) => {
+    const companyId = getCompanyId();
     const customerData = {
       ...customer,
-      name: `${customer.title} ${customer.name}`.trim() // Combine title and name
+      name: `${customer.title} ${customer.name}`.trim(),
     };
-
-    const companyId = getCompanyId();
-
-    // const headers: { [ key: string ]: string } = {};
-    // if ( companyId )
-    // {
-    //   headers.company_id = companyId; // Add companyId to headers
-    // }
 
     const { data: res } = await axiosInstance.post(
       `${process.env.NEXT_PUBLIC_WEB_URL}/create-customer`,
@@ -474,7 +465,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
       throw new Error(`Registration failed: ${res.message}`);
     }
     return res.data.id;
-  }
+  };
 
   // Function to create customer info
   async function createCustomerInfo(customerId: number, restValues: any) {
@@ -540,11 +531,11 @@ const Step1Form: React.FC<Step1FormProps> = ({
       })
   }
 
-  const setCustomerData = async (customerInfo) => {
-    setGetStarted(false);
+  const setCustomerData = async (customerInfo: any) => {
+    setGetStarted?.(false);
     setLocalStorage("customerInfo", customerInfo);
     // location.reload();
-  }
+  };
 
   // Create new customer with loan application
   const create = useCallback(
