@@ -102,7 +102,7 @@ export function AppBarNav(): React.JSX.Element {
 
   useEffect(() => {
     fetchNewApplications();
-    const interval = setInterval(fetchNewApplications, 30000);
+    const interval = setInterval(fetchNewApplications, 120000);
     return () => clearInterval(interval);
   }, [fetchNewApplications]);
 
