@@ -35,7 +35,9 @@ const customerApplicationSlice = createSlice({
           state.customerApplication.results = state.customerApplication.results.filter(
             (app) => app.applicationId !== applicationIdToRemove
           );
-          state.customerApplication.count = state.customerApplication.results.length;
+          if (state.customerApplication.count > 0) {
+            state.customerApplication.count -= 1;
+          }
         }
       } else {
         // Reset the entire state

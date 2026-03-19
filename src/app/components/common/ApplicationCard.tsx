@@ -50,7 +50,7 @@ import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { resetCustomerApplications } from "@/redux/features/customerApplicationSlice";
 import { resetTickets } from "@/redux/features/ticketSlice";
-import Toast from "./Toast";
+import { axiosInstance } from "@/apis/config/axiosConfig";
 
 interface ApplicationCardProps {
   customerApplication: {
@@ -208,7 +208,6 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
   const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false);
   const [expanded, setExpanded] = useState<boolean>(false);
   const dispatch: AppDispatch = useDispatch();
-  const { toast } = useSelector((state: RootState) => state.toast);
   const { toastAndNavigate } = Utility();
   const {
     calculateDaysAgo,
@@ -1524,11 +1523,11 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                         day: '2-digit',
                         month: 'short',
                         year: 'numeric',
-                        })}`
+                      })}`
                       : "Not Approved"
                   }
                 />
-                
+
                 {/* Existing Loans Display */}
                 {(customerApplication.existingLoans || (customerApplication as any).existing_loans) && (
                   <Box sx={{ mt: 1 }}>
@@ -2201,7 +2200,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 maxWidth: '10vw',
               }}
             >
-              {capitalizeFirstLetter(customerApplication.leadType)}
+              {capitalizeFirstLetter(customerApplication.leadType || "Null")}
             </Typography>
           </TableCell>
 
@@ -2405,14 +2404,14 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
         {
           showHistory && customerApplication.ticketId && (
             <TableRow>
-              <TableCell colSpan={11} sx={{ bgcolor: "#f5f5f5", p: 2 }}>
+              <TableCell colSpan={20} sx={{ bgcolor: "#f5f5f5", p: 2 }}>
                 <Typography
                   variant="h6"
                   sx={{ color: "#333", mb: 2, fontWeight: "bold" }}
                 >
                   History
                 </Typography>
-                <Box sx={{ maxHeight: "200px", overflowY: "auto" }}>
+                <Box sx={{ maxHeight: "250px", overflowY: "auto", width: "100%" }}>
                   {historyData.length > 0 ? (
                     historyData.map((history, index) => (
                       <Box
@@ -2473,14 +2472,14 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
         {
           showComment && customerApplication.ticketId && (
             <TableRow>
-              <TableCell colSpan={11} sx={{ bgcolor: "#f5f5f5", p: 2 }}>
+              <TableCell colSpan={20} sx={{ bgcolor: "#f5f5f5", p: 2 }}>
                 <Typography
                   variant="h6"
                   sx={{ color: "#333", mb: 2, fontWeight: "bold" }}
                 >
                   Comments
                 </Typography>
-                <Box sx={{ maxHeight: "200px", overflowY: "auto" }}>
+                <Box sx={{ maxHeight: "250px", overflowY: "auto", width: "100%" }}>
                   {commentData?.length > 0 ? (
                     commentData.map((comment, idx) => (
                       <Box
@@ -2812,13 +2811,6 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
-
-      <Toast
-        alerting={toast.toastAlert}
-        severity={toast.toastSeverity}
-        message={toast.toastMessage}
-        toastDuration={toast.toastDuration}
-      />
     </>
   );
 };

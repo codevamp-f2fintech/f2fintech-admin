@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   Grid,
   Button,
@@ -44,9 +45,14 @@ import Toast from "../components/common/Toast";
 
 const ITEMS_PER_PAGE = 6;
 
-const Home: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
+const HomeContent: React.FC = () => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const urlSearch = searchParams.get("search") || "";
+
+  const [searchTerm, setSearchTerm] = useState<string>(urlSearch);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>(urlSearch);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [hasMoreData, setHasMoreData] = useState<boolean>(true);
   const [isSearching, setIsSearching] = useState<boolean>(false);
@@ -58,6 +64,32 @@ const Home: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [toggleListView, setToggleListView] = useState("table");
   const [prevSearchTerm, setPrevSearchTerm] = useState<string>("");
+
+  // Sync state FROM URL (e.g. notification click, browser back/forward)
+  useEffect(() => {
+    const currentUrlSearch = searchParams.get("search") || "";
+    if (currentUrlSearch !== searchTerm) {
+      setSearchTerm(currentUrlSearch);
+      setDebouncedSearchTerm(currentUrlSearch);
+    }
+  }, [searchParams]); // Listen for URL changes via searchParams
+
+  // Sync URL FROM debounced search term (e.g. typing, clearing)
+  useEffect(() => {
+    const currentUrlSearch = searchParams.get("search") || "";
+    // Only update URL if it's different from the current debounced term
+    if (debouncedSearchTerm !== currentUrlSearch) {
+      const params = new URLSearchParams(searchParams.toString());
+      if (debouncedSearchTerm) {
+        params.set("search", debouncedSearchTerm);
+      } else {
+        params.delete("search");
+      }
+      const queryString = params.toString();
+      const newUrl = `${pathname}${queryString ? `?${queryString}` : ""}`;
+      router.replace(newUrl, { scroll: false });
+    }
+  }, [debouncedSearchTerm]); // Only trigger when debouncedSearchTerm actually changes
 
   const { customerApplication } = useSelector(
     (state: RootState) => state.customerApplications
@@ -225,13 +257,10 @@ const Home: React.FC = () => {
     return applications;
   }, [customerApplication, userRole, userCompanyId]);
 
-  // Update the count display to show filtered count
+  // Update the count display to show total count from backend
   const displayCount = useMemo(() => {
-    if (userRole === "admin" || userRole === "super admin") {
-      return customerApplication?.count || 0;
-    }
-    return filteredCustomers.length;
-  }, [customerApplication?.count, filteredCustomers.length, userRole]);
+    return customerApplication?.count || 0;
+  }, [customerApplication?.count]);
 
   // Add this new validation function after validateCompanySelection
   /**
@@ -829,6 +858,14 @@ const Home: React.FC = () => {
         severity={toast.toastSeverity}
       />
     </Box>
+  );
+};
+
+const Home = () => {
+  return (
+    <Suspense fallback={<Loader />}>
+      <HomeContent />
+    </Suspense>
   );
 };
 

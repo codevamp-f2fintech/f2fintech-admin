@@ -140,7 +140,7 @@ function renderNavItems({
       return false;
     }
 
-    if ((item.title === "Leads" || item.title === "Query") && userRole !== "admin") {
+    if ((item.title === "Leads" || item.title === "Query") && userRole !== "admin" && userRole !== "sub admin") {
       return false;
     }
 
