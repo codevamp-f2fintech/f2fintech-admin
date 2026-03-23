@@ -30,6 +30,7 @@ import { usePopover } from "@/hooks/use-popover";
 import { CompanyAPI } from "@/apis/CompanyAPI";
 import { ApplicationsAPI, NewApplication } from "@/apis/ApplicationsAPI";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { io } from "socket.io-client";
 
 const SEEN_APPLICATIONS_KEY = "seenApplicationIds";
 
@@ -76,6 +77,9 @@ export function AppBarNav(): React.JSX.Element {
   const userPopover = usePopover<HTMLDivElement>();
 
   const { decodedToken } = Utility();
+  const userInfo = decodedToken();
+  const role = userInfo?.role;
+  const isSales = role === "sales";
 
   const fetchCompanies = useCallback(async () => {
     try {
@@ -101,10 +105,28 @@ export function AppBarNav(): React.JSX.Element {
   }, []);
 
   useEffect(() => {
+    if (isSales) return;
+    
     fetchNewApplications();
-    const interval = setInterval(fetchNewApplications, 30000);
-    return () => clearInterval(interval);
-  }, [fetchNewApplications]);
+
+    // Connect to the Express server (port 8080) where applications are created
+    const webUrl =
+      process.env.NEXT_PUBLIC_WEB_URL?.replace("/api/v1", "") || "http://localhost:8080";
+    const socket = io(webUrl);
+
+    socket.on("connect", () => {
+      console.log("Connected to WebSocket notifications server on port 8080");
+    });
+
+    socket.on("new-application", () => {
+      fetchNewApplications();
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [fetchNewApplications, isSales]);
+
 
   const unreadCount = newApplications.filter((app) => !seenIds.has(app.applicationId)).length;
 
@@ -232,258 +254,262 @@ export function AppBarNav(): React.JSX.Element {
               </FormControl>
 
               {/* Notification Bell */}
-              <Tooltip title="New Applications">
-                <IconButton
-                  aria-describedby={notifId}
-                  onClick={handleNotifOpen}
-                  sx={{ height: 40, width: 40, position: "relative" }}
-                >
-                  <Badge
-                    badgeContent={unreadCount}
-                    color="error"
-                    max={99}
-                    sx={{
-                      "& .MuiBadge-badge": {
-                        fontSize: "0.65rem",
-                        fontWeight: 700,
-                        minWidth: "14px",
-                        height: "14px",
-                        padding: "0 4px",
-                        animation: unreadCount > 0 ? "pulse 1.5s ease-in-out infinite" : "none",
-                        "@keyframes pulse": {
-                          "0%": { transform: "scale(1)" },
-                          "50%": { transform: "scale(1.2)" },
-                          "100%": { transform: "scale(1)" },
-                        },
-                      },
-                    }}
+              {!isSales && (
+                <Tooltip title="New Applications">
+                  <IconButton
+                    aria-describedby={notifId}
+                    onClick={handleNotifOpen}
+                    sx={{ height: 40, width: 40, position: "relative" }}
                   >
-                    <BellIcon size={28} />
-                  </Badge>
-                </IconButton>
-              </Tooltip>
+                    <Badge
+                      badgeContent={unreadCount}
+                      color="error"
+                      max={99}
+                      sx={{
+                        "& .MuiBadge-badge": {
+                          fontSize: "0.65rem",
+                          fontWeight: 700,
+                          minWidth: "14px",
+                          height: "14px",
+                          padding: "0 4px",
+                          animation: unreadCount > 0 ? "pulse 1.5s ease-in-out infinite" : "none",
+                          "@keyframes pulse": {
+                            "0%": { transform: "scale(1)" },
+                            "50%": { transform: "scale(1.2)" },
+                            "100%": { transform: "scale(1)" },
+                          },
+                        },
+                      }}
+                    >
+                      <BellIcon size={28} />
+                    </Badge>
+                  </IconButton>
+                </Tooltip>
+              )}
 
               {/* Notification Popover */}
-              <Popover
-                id={notifId}
-                open={notifOpen}
-                anchorEl={notifAnchorEl}
-                onClose={handleNotifClose}
-                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-                transformOrigin={{ vertical: "top", horizontal: "right" }}
-                slotProps={{
-                  paper: {
-                    sx: {
-                      width: 360,
-                      maxHeight: 480,
-                      borderRadius: "12px",
-                      boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
-                      overflow: "hidden",
-                      display: "flex",
-                      flexDirection: "column",
-                    },
-                  },
-                }}
-              >
-                {/* Header */}
-                <Box
-                  sx={{
-                    px: 2,
-                    py: 1.5,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    background: "linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%)",
-                    color: "white",
-                  }}
-                >
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <BellIcon size={18} />
-                    <Typography fontWeight={700} fontSize="0.95rem">
-                      New Applications
-                    </Typography>
-                    {unreadCount > 0 && (
-                      <Chip
-                        label={`${unreadCount} new`}
-                        size="small"
-                        sx={{
-                          backgroundColor: "#e53935",
-                          color: "white",
-                          fontWeight: 700,
-                          fontSize: "0.65rem",
-                          height: "20px",
-                        }}
-                      />
-                    )}
-                  </Stack>
-                  {unreadCount > 0 && (
-                    <Button
-                      size="small"
-                      onClick={handleMarkAllRead}
-                      sx={{
-                        color: "rgba(255,255,255,0.85)",
-                        fontSize: "0.7rem",
-                        textTransform: "none",
-                        p: "2px 8px",
-                        minWidth: "auto",
-                        "&:hover": { color: "white", background: "rgba(255,255,255,0.1)" },
-                      }}
-                    >
-                      ✓ Mark all read
-                    </Button>
-                  )}
-                </Box>
-
-                <Divider />
-
-                {/* Application List */}
-                <Box sx={{ overflowY: "auto", flex: 1 }}>
-                  {newApplications.length === 0 ? (
-                    <Box
-                      sx={{
+              {!isSales && (
+                <Popover
+                  id={notifId}
+                  open={notifOpen}
+                  anchorEl={notifAnchorEl}
+                  onClose={handleNotifClose}
+                  anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                  transformOrigin={{ vertical: "top", horizontal: "right" }}
+                  slotProps={{
+                    paper: {
+                      sx: {
+                        width: 360,
+                        maxHeight: 480,
+                        borderRadius: "12px",
+                        boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+                        overflow: "hidden",
                         display: "flex",
                         flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        py: 5,
-                        gap: 1,
-                      }}
-                    >
-                      <BellIcon size={36} color="#bdbdbd" />
-                      <Typography color="text.secondary" fontSize="0.85rem">
-                        No new applications
+                      },
+                    },
+                  }}
+                >
+                  {/* Header */}
+                  <Box
+                    sx={{
+                      px: 2,
+                      py: 1.5,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      background: "linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%)",
+                      color: "white",
+                    }}
+                  >
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <BellIcon size={18} />
+                      <Typography fontWeight={700} fontSize="0.95rem">
+                        New Applications
                       </Typography>
-                    </Box>
-                  ) : (
-                    newApplications.map((app, index) => {
-                      const isUnread = !seenIds.has(app.applicationId);
-                      return (
-                        <React.Fragment key={app.applicationId}>
-                          <Box
-                            onClick={() => {
-                              // mark this one as seen
-                              const updated = new Set(seenIds);
-                              updated.add(app.applicationId);
-                              setSeenIds(updated);
-                              saveSeenIds(updated);
-                              handleNotifClose();
-                              router.push(`/?search=${app.applicationNo}`);
-                            }}
-                            sx={{
-                              px: 2,
-                              py: 1.5,
-                              cursor: "pointer",
-                              display: "flex",
-                              gap: 1.5,
-                              alignItems: "flex-start",
-                              backgroundColor: isUnread ? "rgba(25, 118, 210, 0.05)" : "transparent",
-                              transition: "background 0.15s",
-                              "&:hover": {
-                                backgroundColor: "rgba(25, 118, 210, 0.1)",
-                              },
-                            }}
-                          >
-                            {/* Unread dot */}
-                            <Box
-                              sx={{
-                                mt: "6px",
-                                width: 8,
-                                height: 8,
-                                borderRadius: "50%",
-                                backgroundColor: isUnread ? "#e53935" : "transparent",
-                                flexShrink: 0,
-                              }}
-                            />
-                            <Box sx={{ flex: 1, minWidth: 0 }}>
-                              <Typography
-                                fontWeight={isUnread ? 700 : 500}
-                                fontSize="0.85rem"
-                                noWrap
-                                sx={{ color: "#1a1a2e" }}
-                              >
-                                {app.customerName}
-                              </Typography>
-                              <Stack direction="row" spacing={1} alignItems="center" mt={0.3}>
-                                <Typography fontSize="0.75rem" color="text.secondary">
-                                  {formatAmount(app.amount)}
-                                </Typography>
-                                <Typography fontSize="0.75rem" color="text.secondary">
-                                  •
-                                </Typography>
-                                <Typography
-                                  fontSize="0.62rem"
-                                  sx={{
-                                    backgroundColor: "#e3f2fd",
-                                    color: "#1565c0",
-                                    px: 0.8,
-                                    py: 0.1,
-                                    borderRadius: "4px",
-                                    textTransform: "capitalize",
-                                    fontWeight: 600,
-                                    whiteSpace: "nowrap",
-                                  }}
-                                >
-                                  {app.loanType}
-                                </Typography>
-                                <Typography
-                                  fontSize="0.62rem"
-                                  sx={{
-                                    backgroundColor: "#e3f2fd",
-                                    color: "#1565c0",
-                                    px: 0.8,
-                                    py: 0.1,
-                                    borderRadius: "4px",
-                                    textTransform: "capitalize",
-                                    fontWeight: 400,
-                                    whiteSpace: "nowrap",
-                                  }}
-                                >
-                                  {app.provider}
-                                </Typography>
-                              </Stack>
-                              <Typography fontSize="0.72rem" color="text.secondary" mt={0.3}>
-                                {formatDate(app.applicationDate)}
-                              </Typography>
-                            </Box>
-                          </Box>
-                          {index < newApplications.length - 1 && <Divider sx={{ mx: 2 }} />}
-                        </React.Fragment>
-                      );
-                    })
-                  )}
-                </Box>
-
-                {/* Footer */}
-                {newApplications.length > 0 && (
-                  <>
-                    <Divider />
-                    <Box
-                      sx={{
-                        px: 2,
-                        py: 1,
-                        textAlign: "center",
-                        background: "#f8f9fa",
-                      }}
-                    >
+                      {unreadCount > 0 && (
+                        <Chip
+                          label={`${unreadCount} new`}
+                          size="small"
+                          sx={{
+                            backgroundColor: "#e53935",
+                            color: "white",
+                            fontWeight: 700,
+                            fontSize: "0.65rem",
+                            height: "20px",
+                          }}
+                        />
+                      )}
+                    </Stack>
+                    {unreadCount > 0 && (
                       <Button
                         size="small"
-                        onClick={() => {
-                          handleNotifClose();
-                          router.push("/");
-                        }}
+                        onClick={handleMarkAllRead}
                         sx={{
-                          fontSize: "0.78rem",
+                          color: "rgba(255,255,255,0.85)",
+                          fontSize: "0.7rem",
                           textTransform: "none",
-                          color: "#1976d2",
-                          fontWeight: 600,
+                          p: "2px 8px",
+                          minWidth: "auto",
+                          "&:hover": { color: "white", background: "rgba(255,255,255,0.1)" },
                         }}
                       >
-                        View all applications →
+                        ✓ Mark all read
                       </Button>
-                    </Box>
-                  </>
-                )}
-              </Popover>
+                    )}
+                  </Box>
+
+                  <Divider />
+
+                  {/* Application List */}
+                  <Box sx={{ overflowY: "auto", flex: 1 }}>
+                    {newApplications.length === 0 ? (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          py: 5,
+                          gap: 1,
+                        }}
+                      >
+                        <BellIcon size={36} color="#bdbdbd" />
+                        <Typography color="text.secondary" fontSize="0.85rem">
+                          No new applications
+                        </Typography>
+                      </Box>
+                    ) : (
+                      newApplications.map((app, index) => {
+                        const isUnread = !seenIds.has(app.applicationId);
+                        return (
+                          <React.Fragment key={app.applicationId}>
+                            <Box
+                              onClick={() => {
+                                // mark this one as seen
+                                const updated = new Set(seenIds);
+                                updated.add(app.applicationId);
+                                setSeenIds(updated);
+                                saveSeenIds(updated);
+                                handleNotifClose();
+                                router.push(`/?search=${app.applicationNo}`);
+                              }}
+                              sx={{
+                                px: 2,
+                                py: 1.5,
+                                cursor: "pointer",
+                                display: "flex",
+                                gap: 1.5,
+                                alignItems: "flex-start",
+                                backgroundColor: isUnread ? "rgba(25, 118, 210, 0.05)" : "transparent",
+                                transition: "background 0.15s",
+                                "&:hover": {
+                                  backgroundColor: "rgba(25, 118, 210, 0.1)",
+                                },
+                              }}
+                            >
+                              {/* Unread dot */}
+                              <Box
+                                sx={{
+                                  mt: "6px",
+                                  width: 8,
+                                  height: 8,
+                                  borderRadius: "50%",
+                                  backgroundColor: isUnread ? "#e53935" : "transparent",
+                                  flexShrink: 0,
+                                }}
+                              />
+                              <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Typography
+                                  fontWeight={isUnread ? 700 : 500}
+                                  fontSize="0.85rem"
+                                  noWrap
+                                  sx={{ color: "#1a1a2e" }}
+                                >
+                                  {app.customerName}
+                                </Typography>
+                                <Stack direction="row" spacing={1} alignItems="center" mt={0.3}>
+                                  <Typography fontSize="0.75rem" color="text.secondary">
+                                    {formatAmount(app.amount)}
+                                  </Typography>
+                                  <Typography fontSize="0.75rem" color="text.secondary">
+                                    •
+                                  </Typography>
+                                  <Typography
+                                    fontSize="0.62rem"
+                                    sx={{
+                                      backgroundColor: "#e3f2fd",
+                                      color: "#1565c0",
+                                      px: 0.8,
+                                      py: 0.1,
+                                      borderRadius: "4px",
+                                      textTransform: "capitalize",
+                                      fontWeight: 600,
+                                      whiteSpace: "nowrap",
+                                    }}
+                                  >
+                                    {app.loanType}
+                                  </Typography>
+                                  <Typography
+                                    fontSize="0.62rem"
+                                    sx={{
+                                      backgroundColor: "#e3f2fd",
+                                      color: "#1565c0",
+                                      px: 0.8,
+                                      py: 0.1,
+                                      borderRadius: "4px",
+                                      textTransform: "capitalize",
+                                      fontWeight: 400,
+                                      whiteSpace: "nowrap",
+                                    }}
+                                  >
+                                    {app.provider}
+                                  </Typography>
+                                </Stack>
+                                <Typography fontSize="0.72rem" color="text.secondary" mt={0.3}>
+                                  {formatDate(app.applicationDate)}
+                                </Typography>
+                              </Box>
+                            </Box>
+                            {index < newApplications.length - 1 && <Divider sx={{ mx: 2 }} />}
+                          </React.Fragment>
+                        );
+                      })
+                    )}
+                  </Box>
+
+                  {/* Footer */}
+                  {newApplications.length > 0 && (
+                    <>
+                      <Divider />
+                      <Box
+                        sx={{
+                          px: 2,
+                          py: 1,
+                          textAlign: "center",
+                          background: "#f8f9fa",
+                        }}
+                      >
+                        <Button
+                          size="small"
+                          onClick={() => {
+                            handleNotifClose();
+                            router.push("/");
+                          }}
+                          sx={{
+                            fontSize: "0.78rem",
+                            textTransform: "none",
+                            color: "#1976d2",
+                            fontWeight: 600,
+                          }}
+                        >
+                          View all applications →
+                        </Button>
+                      </Box>
+                    </>
+                  )}
+                </Popover>
+              )}
 
               <Avatar
                 onClick={userPopover.handleOpen}
