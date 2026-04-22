@@ -58,9 +58,10 @@ const Login = (): JSX.Element => {
         console.log("this is console", userId, companyId, companyName, role, access_token);
 
         // Store token in cookie
-        document.cookie = `token=${access_token}; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
+        document.cookie = `oms_cookie=${access_token}; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
 
         // Store all data in localStorage
+        localStorage.setItem('oms_cookie', access_token);
         localStorage.setItem('userId', userId.toString());
         localStorage.setItem('userRole', role);
 

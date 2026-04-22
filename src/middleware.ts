@@ -7,7 +7,7 @@ import { jwtVerify } from "jose";
 // Adjust the path according to your project structure
 
 export async function middleware(request: NextRequest) {
-  const token = request.cookies.get("token")?.value;
+  const token = request.cookies.get("oms_cookie")?.value;
 
   // Redirect to the login page if not authenticated
   const publicPaths = ["/login", "/img/f2Fintechlogo.png"];

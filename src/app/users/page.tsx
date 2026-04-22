@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 const UserList = async () => {
   const cookieStore = cookies();
-  const token = cookieStore.get( "token" )?.value;
+  const token = cookieStore.get( "oms_cookie" )?.value;
   const companyId = cookieStore.get( "companyId" )?.value; // Get companyId from cookies
 
   try

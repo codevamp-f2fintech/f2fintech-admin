@@ -286,7 +286,7 @@ export const Utility = () => {
     // Client-side handling
     if (!token) {
       const cookies = getCookies();
-      token = cookies?.token;
+      token = cookies?.oms_cookie;
     }
     if (token) {
       try {

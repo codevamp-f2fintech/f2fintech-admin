@@ -4,7 +4,7 @@ import { axiosInstance } from "./config/axiosConfig";
  * Utility to inject token and companyId into headers
  */
 const getAuthHeaders = () => {
-  const token = localStorage.getItem( "token" );
+  const token = localStorage.getItem( "oms_cookie" );
   const companyId = localStorage.getItem( "companyId" );
 
   return {

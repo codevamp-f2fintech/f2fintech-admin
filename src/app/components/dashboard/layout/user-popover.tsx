@@ -19,26 +19,25 @@ export interface UserPopoverProps {
   open: boolean;
 }
 
-export function UserPopover ( {
+export function UserPopover({
   anchorEl,
   onClose,
   open,
-}: UserPopoverProps ): React.JSX.Element {
-  const popoverRef = React.useRef<HTMLDivElement | null>( null );
-  const [ userProfile, setUserProfile ] = React.useState( null );
+}: UserPopoverProps): React.JSX.Element {
+  const popoverRef = React.useRef<HTMLDivElement | null>(null);
+  const [userProfile, setUserProfile] = React.useState(null);
   const { capitalizeFirstLetter, decodedToken } = Utility();
 
   // Get user info including company_id from token
   const userInfo = decodedToken();
 
-  console.log( "User Profile:", userProfile );
+  console.log("User Profile:", userProfile);
   // console.log( "User Info from token:", userInfo );
 
-  const handleSignOut = React.useCallback( async (): Promise<void> => {
-    try
-    {
+  const handleSignOut = React.useCallback(async (): Promise<void> => {
+    try {
       // Clear token cookie
-      document.cookie = "token=; path=/; max-age=0; secure; samesite=strict";
+      document.cookie = "oms_cookie=; path=/; max-age=0; secure; samesite=strict";
 
       // Clear all user data cookies
       document.cookie = "userId=; path=/; max-age=0; secure; samesite=strict";
@@ -47,20 +46,20 @@ export function UserPopover ( {
       document.cookie = "companyName=; path=/; max-age=0; secure; samesite=strict";
 
       // Clear localStorage
-      localStorage.removeItem( 'userId' );
-      localStorage.removeItem( 'companyId' );
-      localStorage.removeItem( 'selectedCompanyId' );
-      localStorage.removeItem( 'companyName' );
-      localStorage.removeItem( 'userRole' );
-      localStorage.removeItem( 'email' );
+      localStorage.removeItem('oms_cookie');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('companyId');
+      localStorage.removeItem('selectedCompanyId');
+      localStorage.removeItem('companyName');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('email');
 
-      console.log( 'All storage cleared successfully' );
+      console.log('All storage cleared successfully');
       location.reload();
-    } catch ( err )
-    {
-      console.log( "Sign out error", err );
+    } catch (err) {
+      console.log("Sign out error", err);
     }
-  }, [] );
+  }, []);
 
   return (
     <Popover
@@ -87,10 +86,10 @@ export function UserPopover ( {
       <Box
         sx={{
           p: "16px 20px",
-          background: ( theme ) =>
+          background: (theme) =>
             `linear-gradient(135deg, #0c66e4 0%, #0c66e4 100%)`,
-          borderTopLeftRadius: ( theme ) => theme.shape.borderRadius * 2,
-          borderTopRightRadius: ( theme ) => theme.shape.borderRadius * 2,
+          borderTopLeftRadius: (theme) => theme.shape.borderRadius * 2,
+          borderTopRightRadius: (theme) => theme.shape.borderRadius * 2,
           color: "white",
           display: "flex",
           alignItems: "center",
@@ -121,7 +120,7 @@ export function UserPopover ( {
               width: "100%",
             }}
           >
-            {capitalizeFirstLetter( userInfo?.username || 'User' )}
+            {capitalizeFirstLetter(userInfo?.username || 'User')}
           </Typography>
 
           {/* User Role */}
@@ -137,8 +136,8 @@ export function UserPopover ( {
             }}
           >
             {userProfile?.designation
-              ? capitalizeFirstLetter( userProfile.designation )
-              : capitalizeFirstLetter( userProfile?.role || userInfo?.role || 'User' )}
+              ? capitalizeFirstLetter(userProfile.designation)
+              : capitalizeFirstLetter(userProfile?.role || userInfo?.role || 'User')}
           </Typography>
 
           {/* Company Info - Add this if you want to show company */}
@@ -171,8 +170,8 @@ export function UserPopover ( {
             borderRadius: 1,
             transition: "all 0.2s ease",
             "&:hover": {
-              backgroundColor: ( theme ) =>
-                alpha( theme.palette.primary.main, 0.08 ),
+              backgroundColor: (theme) =>
+                alpha(theme.palette.primary.main, 0.08),
               transform: "translateX(4px)",
             },
           },
