@@ -20,6 +20,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 
 import { Utility } from "@/utils";
+import { getCompanyId } from "@/utils/cookies";
 
 interface Step7FormProps {
   handleBack: () => void;
@@ -60,7 +61,7 @@ const Step7Form: React.FC<Step7FormProps> = ( {
     liability: "",
   } );
 
-  const { getLocalStorage, remLocalStorage } =
+  const { getLocalStorage, remLocalStorage, decodedToken } =
     Utility();
   const storedCustomerId = getLocalStorage( "customerInfo" )?.id;
   const profileDetail = getLocalStorage( "profileDetail" );
@@ -117,6 +118,60 @@ const Step7Form: React.FC<Step7FormProps> = ( {
       console.log( "Error updating customer info:", error );
     }
   };
+
+  // Generate random application number
+  const randomNumberGenerator = (): number =>
+    Math.floor(10000000 + Math.random() * 90000000);
+
+  // Function to create the customer application
+  async function createCustomerApplication(
+    customerId: number,
+    applicationNumber: number,
+    amount: number,
+    tenure: number,
+    provider: string,
+    loanType: string,
+    loanCategory: string,
+    leadType: string,
+    existingLoans: any[],
+    caseType: string,
+  ) {
+    const { data: applicationResponse } =
+      await axiosInstance.post(
+        `${process.env.NEXT_PUBLIC_WEB_URL}/create-application`,
+        {
+          customer_id: customerId,
+          applied_by: decodedToken()?.id,
+          application_no: applicationNumber,
+          amount,
+          tenure,
+          provider,
+          loan_type: loanType,
+          loan_category: loanCategory,
+          lead_type: leadType,
+          existing_loans: JSON.stringify(existingLoans.map((l: any) => ({
+            has_running_loans: l.has_running_loans === "yes" ? 1 : 0,
+            which_loan: l.which_loan,
+            loan_amount: l.loan_amount ? Number(l.loan_amount) : null,
+            running_emi: l.running_emi ? Number(l.running_emi) : null
+          }))),
+          case_type: caseType,
+          source: "admin_portal",
+          company_id: getCompanyId() || getLocalStorage("selectedCompanyId"),
+        })
+    return applicationResponse.data.applicationId;
+  }
+
+  // Function to create loan tracking
+  async function createLoanTracking(applicationId: number) {
+    await axiosInstance.post(
+      `${process.env.NEXT_PUBLIC_WEB_URL}/create-loan-tracking`,
+      {
+        customer_application_id: applicationId,
+        status: "submitted",
+        company_id: getCompanyId() || getLocalStorage("selectedCompanyId"),
+      })
+  }
 
   // Handle deleting a file from the selected files array
   const handleAttachmentDelete = ( index: number ) => {
@@ -182,7 +237,66 @@ const Step7Form: React.FC<Step7FormProps> = ( {
     };
     let attachmentUrls: string[] = [];
 
-    updateFormInfo( data );
+    await updateFormInfo( data );
+
+    // Create applications from pending data
+    const pendingData = getLocalStorage("pendingApplicationData");
+    if (pendingData && storedCustomerId) {
+      try {
+        const {
+          providers,
+          providerAmounts,
+          amount: loanAmount,
+          tenure,
+          loanTypes,
+          loanCategory,
+          leadType,
+          existingLoans,
+          caseType,
+        } = pendingData;
+
+        if (loanTypes && loanTypes.length > 0) {
+          const providerNamesString = providers.join(", ");
+          const applicationPromises = loanTypes.map(async (loanType: string) => {
+            // For simplicity, we'll use the first provider's amount or the main loan amount
+            // Since there's only one application per loan type now.
+            const totalAmount = providerAmounts.length > 0 
+              ? providerAmounts.reduce((acc: number, pa: any) => acc + Number(pa.amount), 0) / providerAmounts.length
+              : loanAmount;
+
+            const applicationNumberGenerated = randomNumberGenerator();
+            const applicationId = await createCustomerApplication(
+              storedCustomerId,
+              applicationNumberGenerated,
+              Number(totalAmount),
+              Number(tenure.split(" ")[0]), // Extract number from "5 Years"
+              providerNamesString,
+              loanType,
+              loanCategory,
+              leadType,
+              existingLoans,
+              caseType,
+            );
+            await createLoanTracking(applicationId);
+            return applicationNumberGenerated;
+          });
+
+          const createdAppNumbers = await Promise.all(applicationPromises);
+          console.log("Applications created successfully from pending data:", createdAppNumbers);
+          
+          // Update customerInfo in localStorage with all application numbers
+          const customerInfo = getLocalStorage("customerInfo");
+          if (customerInfo) {
+            customerInfo.applicationNumbers = createdAppNumbers;
+            setLocalStorage("customerInfo", customerInfo);
+          }
+
+          remLocalStorage("pendingApplicationData");
+        }
+      } catch (error) {
+        console.error("Error creating applications in Step 7:", error);
+      }
+    }
     if ( selectedFiles.length !== 0 )
     {
       for ( const file of selectedFiles )

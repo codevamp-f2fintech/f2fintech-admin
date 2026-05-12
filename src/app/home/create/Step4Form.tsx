@@ -13,11 +13,12 @@ import Toast from "@/app/components/common/Toast";
 import { Utility } from "@/utils";
 
 // Validation schema
-const validationSchema = Yup.object( {
-  aadharFront: Yup.mixed().required( "This Field is Required" ),
-  aadharBack: Yup.mixed().nullable(),
-  passportSizePhoto: Yup.mixed().nullable(),
-} );
+const validationSchema = Yup.object({
+  aadharFront: Yup.mixed().required("Aadhar Card Front is Required"),
+  aadharBack: Yup.mixed().required("Aadhar Card Back is Required"),
+  pancard: Yup.mixed().required("Pan Card is Required"),
+  passportSizePhoto: Yup.mixed().required("Passport Size Photo is Required"),
+});
 
 
 // Initial values
@@ -41,21 +42,21 @@ interface FileInputProps {
   label: string;
   preview?: string;
   accept?: string;
-  onFileChange: ( event: React.ChangeEvent<HTMLInputElement>, name: string ) => void;
-  onDelete: ( name: string ) => void;
+  onFileChange: (event: React.ChangeEvent<HTMLInputElement>, name: string) => void;
+  onDelete: (name: string) => void;
   showWebcamCapture?: boolean;
   onCapturePhoto?: () => void;
 }
 
 // FileInput component for file selection and preview
-const FileInput: React.FC<FileInputProps> = ( {
+const FileInput: React.FC<FileInputProps> = ({
   name,
   label,
   preview,
   accept,
   onFileChange,
   onDelete,
-} ) => (
+}) => (
   <>
     <Typography
       sx={{
@@ -67,6 +68,22 @@ const FileInput: React.FC<FileInputProps> = ( {
       {label}
     </Typography>
 
+    <ErrorMessage name={name}>
+      {(msg) => (
+        <Typography
+          sx={{
+            color: "#FFD700",
+            fontSize: "11px",
+            fontFamily: "Poppins, sans-serif",
+            marginTop: "4px",
+            fontWeight: "700",
+          }}
+        >
+          {msg}
+        </Typography>
+      )}
+    </ErrorMessage>
+
     {!preview && (
       <IconButton component="label" sx={{ color: "#FFD700" }}>
         <AddPhotoAlternateIcon />
@@ -74,7 +91,7 @@ const FileInput: React.FC<FileInputProps> = ( {
           hidden
           type="file"
           accept={accept}
-          onChange={( event ) => onFileChange( event, name )}
+          onChange={(event) => onFileChange(event, name)}
         />
       </IconButton>
     )}
@@ -89,7 +106,7 @@ const FileInput: React.FC<FileInputProps> = ( {
           style={{ maxWidth: "100%", height: "auto" }}
         />
         <IconButton
-          onClick={() => onDelete( name )}
+          onClick={() => onDelete(name)}
           sx={{
             width: "40%",
             position: "absolute",
@@ -115,7 +132,6 @@ const FileInput: React.FC<FileInputProps> = ( {
         </IconButton>
       </Box>
     )}
-    <ErrorMessage name={name} component="div" style={{ color: "red" }} />
   </>
 );
 
@@ -125,44 +141,45 @@ interface Step4FormProps {
   handleBack: () => void;
   allUploadsSuccess: boolean;
   aadharUploadsSuccess: boolean;
-  setAadharUploadsSuccess: ( value: boolean ) => void;
+  setAadharUploadsSuccess: (value: boolean) => void;
 }
 
 // Main form component
-const Step4Form: React.FC<Step4FormProps> = ( {
+const Step4Form: React.FC<Step4FormProps> = ({
   handleNext,
   handleBack,
   allUploadsSuccess,
   aadharUploadsSuccess,
   setAadharUploadsSuccess,
-} ) => {
-  const [ previews, setPreviews ] = useState<{
+}) => {
+  const [previews, setPreviews] = useState<{
     aadharFront: string;
     aadharBack: string;
     passportSizePhoto: string;
     pancard?: string;
-  }>( {
+  }>({
     aadharFront: "",
     aadharBack: "",
-    passportSizePhoto: ""
-  } );
-  const toastInfo = useSelector( ( state: any ) => state.toast );
+    passportSizePhoto: "",
+    pancard: ""
+  });
+  const toastInfo = useSelector((state: any) => state.toast);
   const dispatch = useDispatch();
-  const [ isUploading, setIsUploading ] = useState( false );
+  const [isUploading, setIsUploading] = useState(false);
 
   const { getLocalStorage, setLocalStorage, toastAndNavigate } =
     Utility();
-  const customerId = getLocalStorage( "customerInfo" )?.id;
-  const StatementUpload = getLocalStorage( "StatementUpload" );
+  const customerId = getLocalStorage("customerInfo")?.id;
+  const StatementUpload = getLocalStorage("StatementUpload");
 
-  const [ toast, setToast ] = useState<{
+  const [toast, setToast] = useState<{
     open: boolean;
     message: string;
     severity: "success" | "error";
-  }>( { open: false, message: "", severity: "success" } );
+  }>({ open: false, message: "", severity: "success" });
 
-  const handleToast = ( message: string, severity: "success" | "error" ) => {
-    setToast( { open: true, message, severity } );
+  const handleToast = (message: string, severity: "success" | "error") => {
+    setToast({ open: true, message, severity });
   };
 
 
@@ -170,25 +187,23 @@ const Step4Form: React.FC<Step4FormProps> = ( {
     event: React.ChangeEvent<HTMLInputElement>,
     name: string
   ) => {
-    const file = event.target.files ? event.target.files[ 0 ] : null;
-    if ( file )
-    {
-      setPreviews( ( prev ) => ( { ...prev, [ name ]: URL.createObjectURL( file ) } ) );
+    const file = event.target.files ? event.target.files[0] : null;
+    if (file) {
+      setPreviews((prev) => ({ ...prev, [name]: URL.createObjectURL(file) }));
     }
   };
 
-  const handleDelete = ( name: string ) => {
-    setPreviews( ( prev ) => ( { ...prev, [ name ]: "" } ) );
+  const handleDelete = (name: string) => {
+    setPreviews((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const uploadFileToS3 = async ( file: File, type: string, customerId: string ) => {
-    try
-    {
+  const uploadFileToS3 = async (file: File, type: string, customerId: string) => {
+    try {
       const uploadResponse = await axiosInstance.post(
-        `${ process.env.NEXT_PUBLIC_WEB_URL }/upload-to-s3`,
+        `${process.env.NEXT_PUBLIC_WEB_URL}/upload-to-s3`,
         {
           document: file,
-          folder: `document/${ file.name }`,
+          folder: `document/${file.name}`,
         },
         {
           headers: {
@@ -198,10 +213,9 @@ const Step4Form: React.FC<Step4FormProps> = ( {
       );
       const attachmentUrl = uploadResponse.data.data;
 
-      if ( attachmentUrl )
-      {
+      if (attachmentUrl) {
         await axiosInstance.post(
-          `${ process.env.NEXT_PUBLIC_WEB_URL }/create-document`,
+          `${process.env.NEXT_PUBLIC_WEB_URL}/create-document`,
           {
             customer_id: customerId,
             document_url: attachmentUrl,
@@ -209,85 +223,77 @@ const Step4Form: React.FC<Step4FormProps> = ( {
           }
         );
       }
-    } catch ( err )
-    {
+    } catch (err) {
       // console.error( `Error uploading ${ type }:`, err );
-      handleToast( `Error Uploading ${ type }`, "error" );
+      handleToast(`Error Uploading ${type}`, "error");
     }
   };
 
 
   // Form submission handler
   const handleFormSubmit = useCallback(
-    async ( values: FormValues ) => {
+    async (values: FormValues) => {
       // Check if the user is online
-      if ( !navigator.onLine )
-      {
-        handleToast( "No internet connection. Please try again later.", "error" );
+      if (!navigator.onLine) {
+        handleToast("No internet connection. Please try again later.", "error");
         return;
       }
       const uploadPromises: Promise<any>[] = [];
       const { aadharFront, aadharBack, pancard, passportSizePhoto } = values;
-      setIsUploading( true );
+      setIsUploading(true);
 
-      try
-      {
-        if ( aadharFront )
-        {
-          console.log( "Uploading Aadhar Front" );
-          uploadPromises.push( uploadFileToS3( aadharFront, "aadhaar front", customerId ) );
+      try {
+        if (aadharFront) {
+          console.log("Uploading Aadhar Front");
+          uploadPromises.push(uploadFileToS3(aadharFront, "aadhaar front", customerId));
         }
-        if ( aadharBack )
-        {
-          console.log( "Uploading Aadhar Back" );
-          uploadPromises.push( uploadFileToS3( aadharBack, "aadhaar back", customerId ) );
+        if (aadharBack) {
+          console.log("Uploading Aadhar Back");
+          uploadPromises.push(uploadFileToS3(aadharBack, "aadhaar back", customerId));
         }
-        if ( pancard )
-        {
-          console.log( "Uploading Pancard" );
-          uploadPromises.push( uploadFileToS3( pancard, "pancard", customerId ) );
+        if (pancard) {
+          console.log("Uploading Pancard");
+          uploadPromises.push(uploadFileToS3(pancard, "pancard", customerId));
         }
-        if ( passportSizePhoto )
-        {
-          console.log( "Uploading Passport Size Photo" );
-          uploadPromises.push( uploadFileToS3( passportSizePhoto, "photo", customerId ) );
+        if (passportSizePhoto) {
+          console.log("Uploading Passport Size Photo");
+          uploadPromises.push(uploadFileToS3(passportSizePhoto, "photo", customerId));
         }
 
-        await Promise.all( uploadPromises );
+        await Promise.all(uploadPromises);
         // console.log( "All documents uploaded successfully" );
         // toastAndNavigate( dispatch, true, "info", "Uploaded Successfully" );
-        handleToast( "Documents uploaded successfully!", "success" );
-        setAadharUploadsSuccess( true );
-        setLocalStorage( "profileDetail", true );
+        handleToast("Documents uploaded successfully!", "success");
+        setAadharUploadsSuccess(true);
+        setLocalStorage("profileDetail", true);
 
-        const timer = setTimeout( () => {
+        const timer = setTimeout(() => {
           handleNext(); // Call handleNext to move to the next step after 2 seconds
-        }, 2000 );
-        return () => clearTimeout( timer ); // Clear the timeout if the component unmounts
+        }, 2000);
+        return () => clearTimeout(timer); // Clear the timeout if the component unmounts
 
-      } catch ( err )
-      {
+      } catch (err) {
         // toastAndNavigate( dispatch, true, "error", "Upload Failed. Please Try Again" );
-        handleToast( "Upload Failed. Please Try Again", "error" );
+        handleToast("Upload Failed. Please Try Again", "error");
         // console.error( "Error in uploading one or more documents:", err );
       }
-      setIsUploading( false );
+      setIsUploading(false);
     },
-    [ dispatch, handleNext ]
+    [dispatch, handleNext]
   );
 
-  useEffect( () => {
-    const handleOnline = () => handleToast( "Back online", "success" );
-    const handleOffline = () => handleToast( "You are offline", "error" );
+  useEffect(() => {
+    const handleOnline = () => handleToast("Back online", "success");
+    const handleOffline = () => handleToast("You are offline", "error");
 
-    window.addEventListener( "online", handleOnline );
-    window.addEventListener( "offline", handleOffline );
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     return () => {
-      window.removeEventListener( "online", handleOnline );
-      window.removeEventListener( "offline", handleOffline );
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
-  }, [] );
+  }, []);
 
   return (
     <>
@@ -295,9 +301,24 @@ const Step4Form: React.FC<Step4FormProps> = ( {
         initialValues={initialValues}
         validationSchema={validationSchema}
         onSubmit={handleFormSubmit}
+        validateOnMount={true}
+        initialTouched={{
+          aadharFront: true,
+          aadharBack: true,
+          pancard: true,
+          passportSizePhoto: true,
+        }}
       >
-        {( { dirty, isSubmitting, handleSubmit, setFieldValue } ) => (
-          <Form onSubmit={handleSubmit} encType="multipart/form-data">
+        {({ dirty, isSubmitting, handleSubmit, setFieldValue, setFieldTouched, errors, touched }) => (
+          <Form onSubmit={(e) => {
+            e.preventDefault();
+            // Mark all required fields as touched on submit attempt
+            setFieldTouched("aadharFront", true);
+            setFieldTouched("aadharBack", true);
+            setFieldTouched("pancard", true);
+            setFieldTouched("passportSizePhoto", true);
+            handleSubmit(e);
+          }} encType="multipart/form-data">
             <Box
               sx={{
                 display: "flex",
@@ -341,13 +362,15 @@ const Step4Form: React.FC<Step4FormProps> = ( {
                 label="Aadhar Card Front"
                 preview={previews.aadharFront}
                 accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.odt,.rtf,.xml"
-                onFileChange={( event ) => {
-                  handleFileChange( event, "aadharFront" );
-                  setFieldValue( "aadharFront", event.target.files[ 0 ] );
+                onFileChange={(event) => {
+                  handleFileChange(event, "aadharFront");
+                  setFieldValue("aadharFront", event.target.files[0]);
+                  setFieldTouched("aadharFront", true);
                 }}
                 onDelete={() => {
-                  handleDelete( "aadharFront" );
-                  setFieldValue( "aadharFront", null );
+                  handleDelete("aadharFront");
+                  setFieldValue("aadharFront", null);
+                  setFieldTouched("aadharFront", true);
                 }}
               />
 
@@ -357,13 +380,15 @@ const Step4Form: React.FC<Step4FormProps> = ( {
                 label="Aadhar Card Back"
                 preview={previews.aadharBack}
                 accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.odt,.rtf,.xml"
-                onFileChange={( event ) => {
-                  handleFileChange( event, "aadharBack" );
-                  setFieldValue( "aadharBack", event.target.files[ 0 ] );
+                onFileChange={(event) => {
+                  handleFileChange(event, "aadharBack");
+                  setFieldValue("aadharBack", event.target.files[0]);
+                  setFieldTouched("aadharBack", true);
                 }}
                 onDelete={() => {
-                  handleDelete( "aadharBack" );
-                  setFieldValue( "aadharBack", null );
+                  handleDelete("aadharBack");
+                  setFieldValue("aadharBack", null);
+                  setFieldTouched("aadharBack", true);
                 }}
               />
 
@@ -373,13 +398,15 @@ const Step4Form: React.FC<Step4FormProps> = ( {
                 label="Pan Card"
                 preview={previews.pancard}
                 accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.odt,.rtf,.xml"
-                onFileChange={( event ) => {
-                  handleFileChange( event, "pancard" );
-                  setFieldValue( "pancard", event.target.files[ 0 ] );
+                onFileChange={(event) => {
+                  handleFileChange(event, "pancard");
+                  setFieldValue("pancard", event.target.files[0]);
+                  setFieldTouched("pancard", true);
                 }}
                 onDelete={() => {
-                  handleDelete( "pancard" );
-                  setFieldValue( "pancard", null );
+                  handleDelete("pancard");
+                  setFieldValue("pancard", null);
+                  setFieldTouched("pancard", true);
                 }}
               />
 
@@ -389,13 +416,15 @@ const Step4Form: React.FC<Step4FormProps> = ( {
                 label="Passport Size Photo"
                 preview={previews.passportSizePhoto}
                 accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.odt,.rtf,.xml"
-                onFileChange={( event ) => {
-                  handleFileChange( event, "passportSizePhoto" );
-                  setFieldValue( "passportSizePhoto", event.target.files[ 0 ] );
+                onFileChange={(event) => {
+                  handleFileChange(event, "passportSizePhoto");
+                  setFieldValue("passportSizePhoto", event.target.files[0]);
+                  setFieldTouched("passportSizePhoto", true);
                 }}
                 onDelete={() => {
-                  handleDelete( "passportSizePhoto" );
-                  setFieldValue( "passportSizePhoto", null );
+                  handleDelete("passportSizePhoto");
+                  setFieldValue("passportSizePhoto", null);
+                  setFieldTouched("passportSizePhoto", true);
                 }}
               />
 
@@ -416,7 +445,7 @@ const Step4Form: React.FC<Step4FormProps> = ( {
                 </Button>
                 <Button
                   color="primary"
-                  disabled={!dirty || isSubmitting || !previews.aadharFront}
+                  disabled={!dirty || isSubmitting || !previews.aadharFront || !previews.aadharBack || !previews.pancard || !previews.passportSizePhoto}
                   type="submit"
                   variant="contained"
                   sx={{
@@ -457,19 +486,6 @@ const Step4Form: React.FC<Step4FormProps> = ( {
                     "Upload"
                   )}
                 </Button>
-
-                <Button
-                  sx={{
-                    mr: 4,
-                    mt: 1,
-                    fontFamily: "Poppins",
-                    fontSize: ".9rem",
-                    color: "white"
-                  }}
-                  onClick={handleNext}
-                >
-                  Skip
-                </Button>
               </Box>
             </Box>
           </Form>
@@ -479,11 +495,11 @@ const Step4Form: React.FC<Step4FormProps> = ( {
       <Snackbar
         open={toast.open}
         autoHideDuration={2000}
-        onClose={() => setToast( ( prev ) => ( { ...prev, open: false } ) )}
+        onClose={() => setToast((prev) => ({ ...prev, open: false }))}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <Alert
-          onClose={() => setToast( ( prev ) => ( { ...prev, open: false } ) )}
+          onClose={() => setToast((prev) => ({ ...prev, open: false }))}
           severity={toast.severity}
           sx={{ width: "100%" }}
           variant="filled"

@@ -73,6 +73,7 @@ interface Step1FormProps {
   getStarted?: boolean;
   setGetStarted?: (value: boolean) => void;
   salary?: any;
+  onSubmit?: () => void;
 }
 
 interface ProviderAmount {
@@ -86,11 +87,12 @@ const Step1Form: React.FC<Step1FormProps> = ({
   getStarted,
   setGetStarted,
   salary,
+  onSubmit,
 }) => {
   const [amount, setAmount] = useState<string>("");
   const [providerAmounts, setProviderAmounts] = useState<ProviderAmount[]>([]);
   const [tenure, setTenure] = useState<string>("");
-  const [loanType, setLoanType] = useState("");
+  const [loanTypes, setLoanTypes] = useState<string[]>([]);
   const [loanCategory, setLoanCategory] = useState("");
   const [provider, setProvider] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -140,7 +142,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
   const [editingProvider, setEditingProvider] = useState<string | null>(null);
 
   // Define loan types with categories
-  const loanTypes = {
+  const LOAN_TYPES_DATA = {
     unsecured: [
       { value: "personal loan", label: "Personal Loan" },
       { value: "business loan", label: "Business Loan" },
@@ -158,7 +160,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
 
   const leadTypes = [
     { value: "notion", label: "Notion" },
-    { value: "Dialler", label: "Dialler" },
+    { value: "dialler", label: "Dialler" },
     { value: "field visit", label: "Field visit" },
     { value: "sourcer", label: "Sourcer" },
     { value: "channel partner", label: "Channel partner" },
@@ -271,25 +273,26 @@ const Step1Form: React.FC<Step1FormProps> = ({
     validateExistingLoans(updatedLoans, updatedErrors);
   };
 
-  // Function to determine loan category based on loan type
-  const getLoanCategory = (loanType: string): string => {
+  // Function to determine loan category based on loan type(s)
+  const getLoanCategory = (types: string[]): string => {
     const securedLoanTypes = ["home loan", "lap", "auto loan", "machinery loan"];
     const unsecuredLoanTypes = ["personal loan", "business loan", "professional loan", "education loan", "just inquiry"];
 
-    if (securedLoanTypes.includes(loanType)) {
+    if (types.some(type => securedLoanTypes.includes(type))) {
       return "secured";
-    } else if (unsecuredLoanTypes.includes(loanType)) {
+    } else if (types.some(type => unsecuredLoanTypes.includes(type))) {
       return "unsecured";
     }
     return "";
   };
 
   // Handle loan type change
-  const handleLoanTypeChange = (value: string) => {
-    console.log("Selected Loan Type:", value);
-    setLoanType(value);
+  const handleLoanTypeChange = (value: string[] | string) => {
+    const selectedTypes = typeof value === 'string' ? value.split(',') : value;
+    console.log("Selected Loan Types:", selectedTypes);
+    setLoanTypes(selectedTypes);
 
-    const category = getLoanCategory(value);
+    const category = getLoanCategory(selectedTypes);
     console.log("Determined Loan Category:", category);
 
     setLoanCategory(category);
@@ -297,7 +300,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
     // Reset tenure when loan type changes
     setTenure("");
 
-    validateLoanType(value);
+    validateLoanType(selectedTypes);
   };
 
   const validateProviders = (values: string[]): void => {
@@ -308,9 +311,9 @@ const Step1Form: React.FC<Step1FormProps> = ({
     setErrors((prev) => ({ ...prev, provider: error }));
   };
 
-  const validateLoanType = (value: string): void => {
+  const validateLoanType = (values: string[]): void => {
     let error = "";
-    if (!value) {
+    if (!values || values.length === 0) {
       error = "This Field is required";
     }
     setErrors((prev) => ({ ...prev, loanType: error }));
@@ -410,16 +413,17 @@ const Step1Form: React.FC<Step1FormProps> = ({
   // Validate all provider amounts
   const validateAllProviderAmounts = (): boolean => {
     for (const pa of providerAmounts) {
-      if (!pa.amount) {
+      const currentAmount = pa.amount || amount;
+      if (!currentAmount) {
         return false;
       }
-      if (isNaN(Number(pa.amount))) {
+      if (isNaN(Number(currentAmount))) {
         return false;
       }
-      if (Number(pa.amount) < 50000 || Number(pa.amount) > 100000000) {
+      if (Number(currentAmount) < 50000 || Number(currentAmount) > 100000000) {
         return false;
       }
-      if (Number(pa.amount) % 5 !== 0) {
+      if (Number(currentAmount) % 5 !== 0) {
         return false;
       }
     }
@@ -450,10 +454,11 @@ const Step1Form: React.FC<Step1FormProps> = ({
   }, [storedCustomerId]);
 
   const registerCustomer = async (customer: any) => {
-    const companyId = getCompanyId();
+    const companyId = getCompanyId() || getLocalStorage("selectedCompanyId");
     const customerData = {
       ...customer,
       name: `${customer.title} ${customer.name}`.trim(),
+      company_id: companyId,
     };
 
     const { data: res } = await axiosInstance.post(
@@ -469,12 +474,13 @@ const Step1Form: React.FC<Step1FormProps> = ({
 
   // Function to create customer info
   async function createCustomerInfo(customerId: number, restValues: any) {
-    const companyId = getCompanyId();
+    const companyId = getCompanyId() || getLocalStorage("selectedCompanyId");
     // const headers = companyId ? { companyid: companyId } : {};
     await axiosInstance.post(
       `${process.env.NEXT_PUBLIC_WEB_URL}/create-customer-info`,
       {
         customer_id: customerId,
+        company_id: companyId,
         ...restValues,
       })
   }
@@ -492,7 +498,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
     existingLoans: any[],
     caseType: string,
   ) {
-    const companyId = getCompanyId();
+    const companyId = getCompanyId() || getLocalStorage("selectedCompanyId");
     // const headers = companyId ? { companyid: companyId } : {};
     const { data: applicationResponse } =
       await axiosInstance.post(
@@ -515,7 +521,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
           }))),
           case_type: caseType,
           source: "admin_portal",
-          // company_id: companyId,
+          company_id: companyId,
         })
     return applicationResponse.data.applicationId;
   }
@@ -537,7 +543,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
     // location.reload();
   };
 
-  // Create new customer with loan application
+  // Create new customer only (application creation moved to Step 7)
   const create = useCallback(
     async (values: typeof initialValues) => {
       setLoading(true);
@@ -553,57 +559,44 @@ const Step1Form: React.FC<Step1FormProps> = ({
       };
 
       try {
-        // const companyId = getCompanyId();
-        // if ( !companyId )
-        // {
-        //   throw new Error( 'Company ID is required' );
-        // }
         const customerId = storedCustomerId || (await registerCustomer(customer));
         const customerInfoWithLeadType = {
           ...restValues,
-          lead_type: leadType, // Use the state variable, not values.lead_type
-
+          lead_type: leadType,
         };
         await createCustomerInfo(customerId, customerInfoWithLeadType);
 
-        // Create applications for each selected provider with their specific amounts
-        const applicationPromises = providers.map(async (providerName) => {
-          const providerAmount = providerAmounts.find(pa => pa.provider === providerName)?.amount || amount;
-          const applicationNumberGenerated = randomNumberGenerator();
-          const applicationId = await createCustomerApplication(
-            customerId,
-            applicationNumberGenerated,
-            providerAmount, // Use provider-specific amount
-            tenure,
-            providerName,
-            loanType,
-            loanCategory,
-            leadType,
-            existingLoans,
-            caseType,
-          );
-          await createLoanTracking(applicationId);
-          return applicationNumberGenerated;
-        });
+        // Store application data in localStorage for Step 7
+        const pendingApplicationData = {
+          customerId,
+          providers,
+          providerAmounts,
+          amount,
+          tenure,
+          loanTypes,
+          loanCategory,
+          leadType,
+          existingLoans,
+          caseType,
+        };
+        setLocalStorage("pendingApplicationData", pendingApplicationData);
 
-        const applicationNumbers = await Promise.all(applicationPromises);
-
-        // Store the first application number or all of them as needed
-        setApplicationNumber(applicationNumbers[0]);
+        // Set a temporary state to allow progression in MultiStepForm
+        setApplicationNumber?.("pending");
 
         !storedCustomerId
           ? await setCustomerData({
             id: customerId,
             name: customer.name,
-            applicationNumbers: applicationNumbers, // Store all application numbers
+            applicationNumbers: ["pending"],
           })
-          : location.reload();
+          : null;
 
         setLoading(false);
-        console.log(
-          `Created ${providers.length} applications successfully:`,
-          applicationNumbers
-        );
+        console.log("Customer created and application data stored in localStorage");
+        
+        // Trigger the onSubmit from props to move to the next step
+        onSubmit?.();
       } catch (err) {
         toastAndNavigate(
           dispatch,
@@ -617,7 +610,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
         setLoading(false);
       }
     },
-    [amount, tenure, providers, providerAmounts, loanType, loanCategory, leadType, existingLoans, caseType] // Updated dependency
+    [amount, tenure, providers, providerAmounts, loanTypes, loanCategory, leadType, existingLoans, caseType, onSubmit]
   );
 
   const commonFormControlStyles = {
@@ -719,8 +712,8 @@ const Step1Form: React.FC<Step1FormProps> = ({
     ? []
     : providersData?.data?.results?.map(provider => provider.title) || [];
 
-  // If application number and loan status exists, display success message without making user to fill the form again
-  if (applicationNumber) {
+  // If application number (real one, not "pending") and loan status exists, display success message
+  if (applicationNumber && applicationNumber !== "pending") {
     const storedCustomerInfo = getLocalStorage("customerInfo");
     const allApplicationNumbers = storedCustomerInfo?.applicationNumbers || [applicationNumber];
 
@@ -879,25 +872,41 @@ const Step1Form: React.FC<Step1FormProps> = ({
           {/* Loan Type Field */}
           <Box>
             <FormControl fullWidth variant="filled" error={!!errors.loanType} sx={commonFormControlStyles}>
-              <InputLabel>Loan Type*</InputLabel>
+              <InputLabel>Loan Type* (Select Multiple)</InputLabel>
               <Select
                 name="loanType"
-                value={loanType}
-                onChange={(e) => handleLoanTypeChange(e.target.value)}
-                onBlur={() => validateLoanType(loanType)}
+                multiple
+                value={loanTypes}
+                onChange={(e) => handleLoanTypeChange(e.target.value as string[])}
+                onBlur={() => validateLoanType(loanTypes)}
                 startAdornment={
                   <InputAdornment position="start" sx={{ color: "white !important" }}>
                     <AccountBalanceIcon />
                   </InputAdornment>
                 }
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((value) => (
+                      <Chip
+                        key={value}
+                        label={value}
+                        size="small"
+                        sx={{
+                          backgroundColor: 'rgba(144,202,249,0.3)',
+                          color: 'white',
+                        }}
+                      />
+                    ))}
+                  </Box>
+                )}
                 MenuProps={commonMenuProps}
               >
                 <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#333", color: "#90caf9" }}>Unsecured Loans</MenuItem>
-                {loanTypes.unsecured.map((loan) => (
+                {LOAN_TYPES_DATA.unsecured.map((loan) => (
                   <MenuItem key={loan.value} value={loan.value} sx={{ padding: "10px 16px", fontSize: "14px", borderRadius: "6px" }}>{loan.label}</MenuItem>
                 ))}
                 <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#333", color: "#90caf9", mt: 1 }}>Secured Loans</MenuItem>
-                {loanTypes.secured.map((loan) => (
+                {LOAN_TYPES_DATA.secured.map((loan) => (
                   <MenuItem key={loan.value} value={loan.value} sx={{ padding: "10px 16px", fontSize: "14px", borderRadius: "6px" }}>{loan.label}</MenuItem>
                 ))}
               </Select>
@@ -1240,11 +1249,11 @@ const Step1Form: React.FC<Step1FormProps> = ({
                         MenuProps={commonMenuProps}
                       >
                         <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#333", color: "#90caf9", opacity: "1 !important" }}>Unsecured</MenuItem>
-                        {loanTypes.unsecured.map((l) => (
+                        {LOAN_TYPES_DATA.unsecured.map((l) => (
                           <MenuItem key={l.value} value={l.value} sx={{ py: 1.2, px: 2, fontSize: '14px' }}>{l.label}</MenuItem>
                         ))}
                         <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#333", color: "#90caf9", mt: 1, opacity: "1 !important" }}>Secured</MenuItem>
-                        {loanTypes.secured.map((l) => (
+                        {LOAN_TYPES_DATA.secured.map((l) => (
                           <MenuItem key={l.value} value={l.value} sx={{ py: 1.2, px: 2, fontSize: '14px' }}>{l.label}</MenuItem>
                         ))}
                       </Select>
@@ -1323,13 +1332,14 @@ const Step1Form: React.FC<Step1FormProps> = ({
             !!errors.tenure ||
             !!errors.provider ||
             !!errors.loanType ||
-            !!errors.leadType ||
+            !!leadTypeError ||
             !!caseTypeError ||
             !amount ||
             !tenure ||
             !providers ||
             providers.length === 0 ||
-            !loanType ||
+            !loanTypes ||
+            loanTypes.length === 0 ||
             !leadType ||
             !caseType ||
             existingLoans.some(loan =>

@@ -63,7 +63,7 @@ interface ApplicationCardProps {
     customerState?: string;
     state?: string;
     applicationAmount: string;
-    loanCategory: string;
+    loanType: string;
     leadType?: string;
     applicationTenure: number;
     applicationDate: string;
@@ -599,7 +599,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                     )}
                     <InfoChip
                       icon={<AccountBalanceIcon />}
-                      text={customerApplication?.loanCategory}
+                      text={customerApplication?.loanType}
                       color="#0c66e4"
                     />
                     <InfoChip
@@ -1483,8 +1483,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                       fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
                     }} />}
                   text={
-                    customerApplication.leadType
-                      ? capitalizeFirstLetter(customerApplication.leadType)
+                    customerApplication.loanType
+                      ? capitalizeFirstLetter(customerApplication.loanType)
                       : "No lead type available"
                   }
                 />
@@ -1529,7 +1529,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 />
 
                 {/* Existing Loans Display */}
-                {(customerApplication.existingLoans || (customerApplication as any).existing_loans) && (
+                {/* {(customerApplication.existingLoans || (customerApplication as any).existing_loans) && (
                   <Box sx={{ mt: 1 }}>
                     <Typography variant="caption" sx={{ fontWeight: 'bold', color: '#6E44FF', mb: 0.5, display: 'block' }}>
                       Existing Loans
@@ -1550,7 +1550,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                       return null;
                     })()}
                   </Box>
-                )}
+                )} */}
               </Box>
             ) : showHistory ? (
               <Box
@@ -2186,7 +2186,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
           {/* Loan Category */}
           <TableCell>
             <Typography variant="body2">
-              {capitalizeFirstLetter(customerApplication.loanCategory)}
+              {capitalizeFirstLetter(customerApplication.loanType)}
             </Typography>
           </TableCell>
 
