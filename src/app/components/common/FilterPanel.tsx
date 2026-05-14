@@ -42,6 +42,7 @@ import {
   CancelRounded,
   CurrencyRupeeRounded,
   BusinessRounded,
+  HourglassEmptyRounded,
 } from "@mui/icons-material";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import dayjs from "dayjs";
@@ -80,6 +81,7 @@ const statusOptions = [
   "operations",
   "pendency in file",
   "file send to banker",
+  "file sent to banker - awaiting response",
   "hold",
   "to be approved",
   "to be disbursed",
@@ -158,6 +160,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
       operations: "#2196f3",
       "pendency in file": "#f44336",
       "file send to banker": "#3f51b5",
+      "file sent to banker - awaiting response": "#009688",
       hold: "#ffeb3b",
       "to be approved": "#4caf50",
       "to be disbursed": "#9c27b0",
@@ -216,6 +219,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
       operations: <LoginRounded sx={{ fontSize: 20 }} />,
       "pendency in file": <PendingActionsRounded sx={{ fontSize: 20 }} />,
       "file send to banker": <SendRounded sx={{ fontSize: 20 }} />,
+      "file sent to banker - awaiting response": <HourglassEmptyRounded sx={{ fontSize: 20 }} />,
       hold: <PauseCircleOutlineRounded sx={{ fontSize: 20 }} />,
       "to be approved": <ThumbUpRounded sx={{ fontSize: 20 }} />,
       "to be disbursed": <ForwardRounded sx={{ fontSize: 20 }} />,
@@ -378,16 +382,18 @@ const FilterPanel: React.FC<FilterPanelProps> = ( {
         width: "95%",
       }}
     >
-      <Button
-        startIcon={<ArrowBackRounded />}
-        onClick={() => {
-          router.back();
-        }}
-        sx={{
-          color: "black",
-          alignSelf: { xs: "flex-start", sm: "flex-start", md: "center" }, // Keep button aligned nicely
-        }}
-      />
+      {userRole !== "credit" && (
+        <Button
+          startIcon={<ArrowBackRounded />}
+          onClick={() => {
+            router.back();
+          }}
+          sx={{
+            color: "black",
+            alignSelf: { xs: "flex-start", sm: "flex-start", md: "center" },
+          }}
+        />
+      )}
       {/* Search and Filters Row */}
       <Box
         sx={{

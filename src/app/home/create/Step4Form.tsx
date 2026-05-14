@@ -14,10 +14,10 @@ import { Utility } from "@/utils";
 
 // Validation schema
 const validationSchema = Yup.object({
-  aadharFront: Yup.mixed().required("Aadhar Card Front is Required"),
-  aadharBack: Yup.mixed().required("Aadhar Card Back is Required"),
-  pancard: Yup.mixed().required("Pan Card is Required"),
-  passportSizePhoto: Yup.mixed().required("Passport Size Photo is Required"),
+  aadharFront: Yup.mixed().nullable().required("Aadhar Card Front is Required"),
+  aadharBack: Yup.mixed().nullable().required("Aadhar Card Back is Required"),
+  pancard: Yup.mixed().nullable().required("Pan Card is Required"),
+  passportSizePhoto: Yup.mixed().nullable(),
 });
 
 
@@ -57,82 +57,109 @@ const FileInput: React.FC<FileInputProps> = ({
   onFileChange,
   onDelete,
 }) => (
-  <>
+  <Box sx={{ width: "100%", maxWidth: "340px", my: 2, display: "flex", flexDirection: "column", alignItems: "center" }}>
     <Typography
       sx={{
-        fontSize: "2.5vh",
-        color: " #F2F0EF",
-        fontFamily: "DM sans",
+        fontSize: "14px",
+        color: "#1e293b",
+        fontFamily: "'Inter', sans-serif",
+        fontWeight: 600,
+        mb: 1,
+        textAlign: "center",
       }}
     >
       {label}
     </Typography>
 
-    <ErrorMessage name={name}>
-      {(msg) => (
-        <Typography
-          sx={{
-            color: "#FFD700",
-            fontSize: "11px",
-            fontFamily: "Poppins, sans-serif",
-            marginTop: "4px",
-            fontWeight: "700",
-          }}
-        >
-          {msg}
-        </Typography>
-      )}
-    </ErrorMessage>
-
     {!preview && (
-      <IconButton component="label" sx={{ color: "#FFD700" }}>
-        <AddPhotoAlternateIcon />
+      <Box
+        component="label"
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "100%",
+          height: "110px",
+          border: "2px dashed #cbd5e1",
+          borderRadius: "12px",
+          backgroundColor: "#f8fafc",
+          cursor: "pointer",
+          transition: "all 0.2s ease",
+          "&:hover": {
+            borderColor: "#3949ab",
+            backgroundColor: "#eef2ff",
+          },
+        }}
+      >
+        <IconButton component="span" sx={{ color: "#3949ab", p: 0.5, pointerEvents: "none" }}>
+          <AddPhotoAlternateIcon sx={{ fontSize: 28 }} />
+        </IconButton>
+        <Typography sx={{ fontSize: "12px", color: "#3949ab", fontWeight: 500, mt: 0.5 }}>
+          Click to Browse File
+        </Typography>
         <input
           hidden
           type="file"
           accept={accept}
           onChange={(event) => onFileChange(event, name)}
         />
-      </IconButton>
+      </Box>
     )}
 
     {preview && (
       <Box
-        sx={{ mt: 2, width: "40%", textAlign: "center", position: "relative" }}
+        sx={{
+          mt: 1,
+          width: "100%",
+          textAlign: "center",
+          position: "relative",
+          border: "1px solid #e2e8f0",
+          borderRadius: "8px",
+          p: 1,
+          backgroundColor: "#ffffff",
+        }}
       >
         <img
           src={preview}
           alt={label}
-          style={{ maxWidth: "100%", height: "auto" }}
+          style={{ maxWidth: "100%", maxHeight: "140px", objectFit: "contain", borderRadius: "4px" }}
         />
         <IconButton
           onClick={() => onDelete(name)}
           sx={{
-            width: "40%",
             position: "absolute",
-            top: 20,
-            right: 20,
-            transform: "translate(50%, -50%)",
-            borderRadius: "50%",
-            padding: "5px",
+            top: 4,
+            right: 4,
+            backgroundColor: "rgba(255,255,255,0.9)",
+            boxShadow: "0px 2px 4px rgba(0,0,0,0.1)",
+            "&:hover": { backgroundColor: "#fee2e2" },
+            padding: "4px",
           }}
         >
           <Tooltip title="DELETE">
-            <DeleteIcon
-              sx={{
-                color: "#002147",
-                "&:hover": {
-                  color: "red",
-                  fontSize: "1.5rem",
-                  transition: "all 0.3s ease-in-out",
-                },
-              }}
-            />
+            <DeleteIcon sx={{ color: "#ef4444", fontSize: "18px" }} />
           </Tooltip>
         </IconButton>
       </Box>
     )}
-  </>
+
+    <ErrorMessage name={name}>
+      {(msg) => (
+        <Typography
+          sx={{
+            color: "#ef4444",
+            fontSize: "12px",
+            fontFamily: "'Inter', sans-serif",
+            marginTop: "6px",
+            fontWeight: 500,
+          }}
+        >
+          {msg}
+        </Typography>
+      )}
+    </ErrorMessage>
+  </Box>
 );
 
 // Interface for Step4Form props
@@ -183,6 +210,15 @@ const Step4Form: React.FC<Step4FormProps> = ({
   };
 
 
+  const [successfulUploads, setSuccessfulUploads] = useState<Record<string, boolean>>({});
+
+  const nameToTypeMap: Record<string, string> = {
+    aadharFront: "aadhaar front",
+    aadharBack: "aadhaar back",
+    pancard: "pancard",
+    passportSizePhoto: "photo",
+  };
+
   const handleFileChange = (
     event: React.ChangeEvent<HTMLInputElement>,
     name: string
@@ -190,96 +226,134 @@ const Step4Form: React.FC<Step4FormProps> = ({
     const file = event.target.files ? event.target.files[0] : null;
     if (file) {
       setPreviews((prev) => ({ ...prev, [name]: URL.createObjectURL(file) }));
+      const docType = nameToTypeMap[name];
+      if (docType) {
+        setSuccessfulUploads((prev) => ({ ...prev, [docType]: false }));
+      }
     }
   };
 
   const handleDelete = (name: string) => {
     setPreviews((prev) => ({ ...prev, [name]: "" }));
-  };
-
-  const uploadFileToS3 = async (file: File, type: string, customerId: string) => {
-    try {
-      const uploadResponse = await axiosInstance.post(
-        `${process.env.NEXT_PUBLIC_WEB_URL}/upload-to-s3`,
-        {
-          document: file,
-          folder: `document/${file.name}`,
-        },
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      const attachmentUrl = uploadResponse.data.data;
-
-      if (attachmentUrl) {
-        await axiosInstance.post(
-          `${process.env.NEXT_PUBLIC_WEB_URL}/create-document`,
-          {
-            customer_id: customerId,
-            document_url: attachmentUrl,
-            type: type,
-          }
-        );
-      }
-    } catch (err) {
-      // console.error( `Error uploading ${ type }:`, err );
-      handleToast(`Error Uploading ${type}`, "error");
+    const docType = nameToTypeMap[name];
+    if (docType) {
+      setSuccessfulUploads((prev) => ({ ...prev, [docType]: false }));
     }
   };
 
+  // Resilient single-file upload engine with automatic 3x retries
+  const uploadFileWithRetry = async (file: File, type: string, customerId: string, retries = 3): Promise<boolean> => {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const uploadResponse = await axiosInstance.post(
+          `${process.env.NEXT_PUBLIC_WEB_URL}/upload-to-s3`,
+          {
+            document: file,
+            folder: `document/${file.name}`,
+          },
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+        const attachmentUrl = uploadResponse.data.data;
+
+        if (attachmentUrl) {
+          await axiosInstance.post(
+            `${process.env.NEXT_PUBLIC_WEB_URL}/create-document`,
+            {
+              customer_id: customerId,
+              document_url: attachmentUrl,
+              type: type,
+            }
+          );
+          return true;
+        }
+      } catch (err) {
+        console.warn(`Upload attempt ${attempt} failed for ${type}. Retrying...`);
+        if (attempt === retries) {
+          return false;
+        }
+        // Brief exponential backoff pause before retrying
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+    return false;
+  };
 
   // Form submission handler
   const handleFormSubmit = useCallback(
     async (values: FormValues) => {
-      // Check if the user is online
       if (!navigator.onLine) {
         handleToast("No internet connection. Please try again later.", "error");
         return;
       }
-      const uploadPromises: Promise<any>[] = [];
       const { aadharFront, aadharBack, pancard, passportSizePhoto } = values;
       setIsUploading(true);
 
-      try {
-        if (aadharFront) {
-          console.log("Uploading Aadhar Front");
-          uploadPromises.push(uploadFileToS3(aadharFront, "aadhaar front", customerId));
-        }
-        if (aadharBack) {
-          console.log("Uploading Aadhar Back");
-          uploadPromises.push(uploadFileToS3(aadharBack, "aadhaar back", customerId));
-        }
-        if (pancard) {
-          console.log("Uploading Pancard");
-          uploadPromises.push(uploadFileToS3(pancard, "pancard", customerId));
-        }
-        if (passportSizePhoto) {
-          console.log("Uploading Passport Size Photo");
-          uploadPromises.push(uploadFileToS3(passportSizePhoto, "photo", customerId));
-        }
+      const tasks: Promise<{ type: string; success: boolean }>[] = [];
 
-        await Promise.all(uploadPromises);
-        // console.log( "All documents uploaded successfully" );
-        // toastAndNavigate( dispatch, true, "info", "Uploaded Successfully" );
+      if (aadharFront && !successfulUploads["aadhaar front"]) {
+        tasks.push(
+          uploadFileWithRetry(aadharFront, "aadhaar front", customerId).then((success) => ({ type: "aadhaar front", success }))
+        );
+      } else if (aadharFront) {
+        tasks.push(Promise.resolve({ type: "aadhaar front", success: true }));
+      }
+
+      if (aadharBack && !successfulUploads["aadhaar back"]) {
+        tasks.push(
+          uploadFileWithRetry(aadharBack, "aadhaar back", customerId).then((success) => ({ type: "aadhaar back", success }))
+        );
+      } else if (aadharBack) {
+        tasks.push(Promise.resolve({ type: "aadhaar back", success: true }));
+      }
+
+      if (pancard && !successfulUploads["pancard"]) {
+        tasks.push(
+          uploadFileWithRetry(pancard, "pancard", customerId).then((success) => ({ type: "pancard", success }))
+        );
+      } else if (pancard) {
+        tasks.push(Promise.resolve({ type: "pancard", success: true }));
+      }
+
+      if (passportSizePhoto && !successfulUploads["photo"]) {
+        tasks.push(
+          uploadFileWithRetry(passportSizePhoto, "photo", customerId).then((success) => ({ type: "photo", success }))
+        );
+      } else if (passportSizePhoto) {
+        tasks.push(Promise.resolve({ type: "photo", success: true }));
+      }
+
+      const results = await Promise.all(tasks);
+
+      // Record newly succeeded files so they aren't uploaded again on subsequent attempts
+      const newSuccesses: Record<string, boolean> = { ...successfulUploads };
+      results.forEach((r) => {
+        if (r.success) newSuccesses[r.type] = true;
+      });
+      setSuccessfulUploads(newSuccesses);
+
+      // Check if any active file upload attempt failed
+      const allSucceeded = results.length > 0 && results.every((r) => r.success);
+
+      if (allSucceeded) {
         handleToast("Documents uploaded successfully!", "success");
         setAadharUploadsSuccess(true);
         setLocalStorage("profileDetail", true);
 
         const timer = setTimeout(() => {
-          handleNext(); // Call handleNext to move to the next step after 2 seconds
+          handleNext();
         }, 2000);
-        return () => clearTimeout(timer); // Clear the timeout if the component unmounts
-
-      } catch (err) {
-        // toastAndNavigate( dispatch, true, "error", "Upload Failed. Please Try Again" );
-        handleToast("Upload Failed. Please Try Again", "error");
-        // console.error( "Error in uploading one or more documents:", err );
+        return () => clearTimeout(timer);
+      } else {
+        const failedTypes = results.filter((r) => !r.success).map((r) => r.type).join(", ");
+        handleToast(`Upload incomplete. Failed: ${failedTypes}. Please retry or manually select failed file.`, "error");
       }
       setIsUploading(false);
     },
-    [dispatch, handleNext]
+    [customerId, successfulUploads, handleNext, setAadharUploadsSuccess, setLocalStorage]
   );
 
   useEffect(() => {
@@ -331,26 +405,27 @@ const Step4Form: React.FC<Step4FormProps> = ({
             >
               <Typography
                 sx={{
-                  fontFamily: "DM Sans",
+                  fontFamily: "'Inter', sans-serif",
                   fontSize: {
-                    xs: "1.7rem", // Mobile
-                    sm: "2.5rem", // Tablet
-                    md: "2rem", // Desktop
+                    xs: "1.5rem",
+                    sm: "2rem",
+                    md: "1.8rem",
                   },
-                  color: "white",
-                  fontWeight: 500,
+                  color: "#0f172a",
+                  fontWeight: 700,
                   marginBottom: 1,
+                  mt: 2,
                 }}
               >
-                Profile Details and{" "}
-                <span style={{ color: "#FFD700" }}>Proof</span>
+                Profile Details and <span style={{ color: "#3949ab" }}>Proofs</span>
               </Typography>
               <Typography
                 sx={{
-                  fontFamily: "Poppins",
-                  fontSize: "2vh",
-                  color: "white",
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: "14px",
+                  color: "#475569",
                   marginBottom: 3,
+                  fontWeight: 500,
                 }}
               >
                 Step 3/4
@@ -439,51 +514,53 @@ const Step4Form: React.FC<Step4FormProps> = ({
                 <Button
                   onClick={handleBack}
                   disabled={allUploadsSuccess || StatementUpload}
-                  sx={{ mt: 2, fontFamily: "Poppins", fontSize: ".9rem" }}
+                  sx={{ mt: 2, fontFamily: "'Inter', sans-serif", fontSize: "14px", color: "#64748b", textTransform: "none", fontWeight: 500 }}
                 >
                   Back
                 </Button>
                 <Button
                   color="primary"
-                  disabled={!dirty || isSubmitting || !previews.aadharFront || !previews.aadharBack || !previews.pancard || !previews.passportSizePhoto}
+                  disabled={!dirty || isSubmitting || !previews.aadharFront || !previews.aadharBack || !previews.pancard}
                   type="submit"
                   variant="contained"
                   sx={{
-                    mr: 1,
-                    mt: {
-                      xs: "1rem",
-                      sm: "0",
-                      md: "0",
-                    },
-                    color: "black",
-                    backgroundColor: "#FFD700",
-                    fontFamily: "Poppins",
-                    fontSize: ".9rem",
-                    height: {
-                      xs: "4vh",
-                      sm: "4vh",
-                      md: "6vh",
-                    },
+                    mt: 2,
+                    color: "#ffffff",
+                    backgroundColor: "#3949ab",
+                    fontFamily: "'Inter', sans-serif",
+                    fontWeight: 600,
+                    fontSize: "14px",
+                    textTransform: "none",
+                    borderRadius: "8px",
+                    padding: "8px 24px",
+                    boxShadow: "0px 8px 20px rgba(57, 73, 171, 0.35)",
+                    transition: "all 0.2s ease",
                     "&:hover": {
-                      backgroundColor: "transparent", // Transparent color on hover
+                      backgroundColor: "#303f9f",
+                      boxShadow: "0px 10px 25px rgba(57, 73, 171, 0.45)",
+                      transform: "translateY(-2px)",
+                    },
+                    "&:disabled": {
+                      backgroundColor: "#e2e8f0",
+                      color: "#94a3b8",
+                      boxShadow: "none",
                     },
                   }}
                 >
                   {isUploading ? (
                     <CircularProgress
-                      size={24}
+                      size={20}
                       sx={{
-                        color: "black",
+                        color: "#ffffff",
                         position: "absolute",
                         top: "50%",
                         left: "50%",
-                        marginTop: "-12px", // Adjust positioning so it stays centered
-                        marginLeft: "-12px", // Adjust positioning so it stays centered
-                        zIndex: 1, // Ensure it's displayed on top of the button text
+                        marginTop: "-10px",
+                        marginLeft: "-10px",
                       }}
                     />
                   ) : (
-                    "Upload"
+                    "Upload Documents"
                   )}
                 </Button>
               </Box>

@@ -9,8 +9,10 @@ import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import Collapse from "@mui/material/Collapse";
 import IconButton from "@mui/material/IconButton";
-import MenuIcon from "@mui/icons-material/Menu";
 import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
+import MenuIcon from "@mui/icons-material/Menu";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 import type { NavItemConfig } from "@/types/nav";
 import { isNavItemActive } from "@/utils/is-nav-item-active";
@@ -18,6 +20,14 @@ import { navItems } from "./config";
 import { navIcons } from "./nav-icons";
 import { Utility } from "@/utils";
 import { Logo } from "../../core/logo";
+
+// ─── Sidebar background matches the navbar (#c4d5eb) ───────────────────────
+const SIDEBAR_BG = "#c4d5eb";
+const SIDEBAR_ACTIVE_BG = "rgba(12, 102, 228, 0.15)";
+const SIDEBAR_HOVER_BG = "rgba(12, 102, 228, 0.08)";
+const SIDEBAR_ACTIVE_COLOR = "#0c3d8a";
+const SIDEBAR_ICON_COLOR = "#1e3a5f";
+const SIDEBAR_ICON_ACTIVE_COLOR = "#0c3d8a";
 
 export function SideNav(): React.JSX.Element {
   const pathname = usePathname();
@@ -28,6 +38,22 @@ export function SideNav(): React.JSX.Element {
 
   const handleToggleCollapse = () => setCollapsed((prev) => !prev);
 
+  const handleSignOut = React.useCallback(() => {
+    document.cookie = "oms_cookie=; path=/; max-age=0; secure; samesite=strict";
+    document.cookie = "userId=; path=/; max-age=0; secure; samesite=strict";
+    document.cookie = "userRole=; path=/; max-age=0; secure; samesite=strict";
+    document.cookie = "companyId=; path=/; max-age=0; secure; samesite=strict";
+    document.cookie = "companyName=; path=/; max-age=0; secure; samesite=strict";
+    localStorage.removeItem("oms_cookie");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("companyId");
+    localStorage.removeItem("selectedCompanyId");
+    localStorage.removeItem("companyName");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("email");
+    location.reload();
+  }, []);
+
   if (pathname === "/login") {
     return <></>;
   }
@@ -35,19 +61,19 @@ export function SideNav(): React.JSX.Element {
   return (
     <Box
       sx={{
-        "--SideNav-background": "var(--mui-palette-neutral-950)",
-        "--SideNav-color": "green",
-        "--NavItem-color": "green",
-        "--NavItem-hover-background": "rgba(255, 255, 255, 0.04)",
-        "--NavItem-active-background": "var(--mui-palette-primary-main)",
-        "--NavItem-active-color": "var(--mui-palette-primary-contrastText)",
-        "--NavItem-disabled-color": "var(--mui-palette-neutral-500)",
-        "--NavItem-icon-color": "var(--mui-palette-neutral-400)",
-        "--NavItem-icon-active-color": "var(--mui-palette-primary-contrastText)",
-        "--NavItem-icon-disabled-color": "var(--mui-palette-neutral-600)",
-        backgroundImage: "linear-gradient(135deg, #fff 0%, #fff 100%)",
-        backgroundBlendMode: "multiply, screen, normal",
-        color: "var(--SideNav-color)",
+        "--SideNav-background": SIDEBAR_BG,
+        "--SideNav-color": "#1e3a5f",
+        "--NavItem-color": SIDEBAR_ICON_COLOR,
+        "--NavItem-hover-background": SIDEBAR_HOVER_BG,
+        "--NavItem-active-background": SIDEBAR_ACTIVE_BG,
+        "--NavItem-active-color": SIDEBAR_ACTIVE_COLOR,
+        "--NavItem-disabled-color": "rgba(30,58,95,0.3)",
+        "--NavItem-icon-color": SIDEBAR_ICON_COLOR,
+        "--NavItem-icon-active-color": SIDEBAR_ICON_ACTIVE_COLOR,
+        "--NavItem-icon-disabled-color": "rgba(30,58,95,0.3)",
+        bgcolor: "var(--SideNav-background)",
+        borderRight: "1px solid rgba(12,66,160,0.12)",
+        boxShadow: "2px 0 8px rgba(12,66,160,0.08)",
         display: { xs: "none", lg: "flex" },
         flexDirection: "column",
         height: "100vh",
@@ -57,42 +83,79 @@ export function SideNav(): React.JSX.Element {
         top: 0,
         width: collapsed ? "5vw" : "15vw",
         zIndex: "var(--SideNav-zIndex)",
-        transition: "width 0.3s",
-        // iPad Pro 12.9" (1024 x 1366)
+        transition: "width 0.3s ease",
         "@media only screen and (min-width: 1300px) and (max-width: 1366px) and (orientation: landscape)": {
           width: collapsed ? "100px" : "220px",
         },
         "&::-webkit-scrollbar": { display: "none" },
       }}
     >
-      <Stack spacing={1} sx={{ p: "1rem" }}>
+      {/* ── Logo + hamburger ─────────────────────────────── */}
+      <Stack spacing={1} sx={{ p: "0.75rem" }}>
         <IconButton
           onClick={handleToggleCollapse}
           sx={{
             width: "2rem",
             height: "2rem",
-            color: "black",
+            color: "#1e3a5f",
             alignSelf: collapsed ? "center" : "end",
-            top: "0",
           }}
         >
           <MenuIcon />
         </IconButton>
-        <Box
-          component={RouterLink}
-          href="/"
-          sx={{
-            display: "inline-flex",
-          }}
-        >
+        <Box component={RouterLink} href="/" sx={{ display: "inline-flex" }}>
           <Logo collapsed={collapsed} />
         </Box>
       </Stack>
-      <Divider sx={{ borderColor: "lightgray" }} />
-      <Box component="nav">
+
+      <Divider sx={{ borderColor: "rgba(12,66,160,0.15)" }} />
+
+      {/* ── Nav items ─────────────────────────────────────── */}
+      <Box component="nav" sx={{ flex: 1, overflowY: "auto", "&::-webkit-scrollbar": { display: "none" } }}>
         {renderNavItems({ pathname, items: navItems, collapsed, userRole })}
       </Box>
-      <Divider sx={{ borderColor: "lightgray" }} />
+
+      <Divider sx={{ borderColor: "rgba(12,66,160,0.15)" }} />
+
+      {/* ── Sign Out — pinned at bottom ───────────────────── */}
+      <Box sx={{ p: "0.75rem" }}>
+        <Tooltip title="Sign out" arrow placement="right">
+          <Box
+            onClick={handleSignOut}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+              px: 2,
+              py: 1,
+              borderRadius: "8px",
+              cursor: "pointer",
+              color: "#b71c1c",
+              transition: "all 0.2s ease",
+              justifyContent: collapsed ? "center" : "flex-start",
+              "&:hover": {
+                bgcolor: "rgba(183,28,28,0.08)",
+                transform: "translateX(2px)",
+              },
+            }}
+          >
+            <LogoutIcon sx={{ fontSize: "1.3rem", color: "inherit" }} />
+            <Collapse in={!collapsed} orientation="horizontal">
+              <Typography
+                sx={{
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: "0.9rem",
+                  fontWeight: 600,
+                  whiteSpace: "nowrap",
+                  color: "inherit",
+                }}
+              >
+                Sign out
+              </Typography>
+            </Collapse>
+          </Box>
+        </Tooltip>
+      </Box>
     </Box>
   );
 }
@@ -108,53 +171,26 @@ function renderNavItems({
   collapsed: boolean;
   userRole: string;
 }): React.JSX.Element {
-  // Filter nav items based on user role
   const filteredItems = items.filter((item) => {
-    // SUPERADMIN can only see Company and User
     if (userRole === "super admin") {
       return item.title === "Company" || item.title === "Users" || item.title === "SuperAdminDashboard";
     }
-
-    // ADMIN should NOT see Company and Admin User, but SHOULD see Users
     if (userRole === "admin") {
-      if (item.title === "Company" || item.title === "Admin User") {
-        return false;
-      }
-      // Admin SHOULD see Users, Loan Provider, Archived
+      if (item.title === "Company" || item.title === "Admin User") return false;
       return true;
     }
-
-    // For non-admin roles (operations, credit, etc.)
-    if (item.title === "Users" && userRole !== "admin") {
-      return false;
-    }
-    if (item.title === "Company" && userRole !== "admin") {
-      return false;
-    }
-
-    if (item.title === "Loan Provider" && userRole !== "admin") {
-      return false;
-    }
-
-    if (item.title === "Archived" && userRole !== "admin") {
-      return false;
-    }
-
-    if ((item.title === "Leads" || item.title === "Query") && userRole !== "admin" && userRole !== "sub admin") {
-      return false;
-    }
-
+    if (item.title === "Users" && userRole !== "admin") return false;
+    if (item.title === "Company" && userRole !== "admin") return false;
+    if (item.title === "Loan Provider" && userRole !== "admin") return false;
+    if (item.title === "Archived" && userRole !== "admin") return false;
+    if ((item.title === "Leads" || item.title === "Query") && userRole !== "admin" && userRole !== "sub admin") return false;
     return true;
   });
 
-  const children = filteredItems.map((item) => (
-    <NavItem
-      key={item.key}
-      pathname={pathname}
-      collapsed={collapsed}
-      {...item}
-    />
-  ));
+  const children = filteredItems.map((item) => {
+    const { key, ...rest } = item;
+    return <NavItem key={key} pathname={pathname} collapsed={collapsed} {...rest} />;
+  });
 
   return (
     <Stack component="ul" spacing={1} sx={{ listStyle: "none", mt: 5, p: 0 }}>
@@ -163,29 +199,13 @@ function renderNavItems({
   );
 }
 
-// NavItem component remains the same as before
 interface NavItemProps extends Omit<NavItemConfig, "items"> {
   pathname: string;
   collapsed: boolean;
 }
 
-function NavItem({
-  disabled,
-  external,
-  href,
-  icon,
-  matcher,
-  pathname,
-  title,
-  collapsed,
-}: NavItemProps): React.JSX.Element {
-  const active = isNavItemActive({
-    disabled,
-    external,
-    href,
-    matcher,
-    pathname,
-  });
+function NavItem({ disabled, external, href, icon, matcher, pathname, title, collapsed }: NavItemProps): React.JSX.Element {
+  const active = isNavItemActive({ disabled, external, href, matcher, pathname });
   const Icon = icon ? navIcons[icon] : null;
 
   return (
@@ -202,56 +222,42 @@ function NavItem({
         sx={{
           textDecoration: "none !important",
           alignItems: "center",
-          borderRadius: "0px 20px 20px 0px",
-          color: "red !important",
+          borderRadius: "0px 24px 24px 0px",
+          color: active ? "var(--NavItem-active-color) !important" : "var(--NavItem-color) !important",
           cursor: "pointer",
           display: "flex",
           flexDirection: "row",
           flex: "0 0 auto",
-          gap: 1,
+          gap: 1.5,
           width: "92% !important",
-          padding: "2px 0px 2px 1px",
+          padding: "8px 16px",
           position: "relative",
           justifyContent: collapsed ? "center" : "flex-start",
-          backgroundImage: `linear-gradient(#deebff, #deebff)`,
-          backgroundBlendMode: "multiply, screen, normal",
-          transition: "all 0.3s ease",
+          backgroundColor: active ? "var(--NavItem-active-background)" : "transparent",
+          transition: "all 0.2s ease",
           "&:hover": {
-            backgroundImage: `linear-gradient(#c8d4e6, #c8d4e6)`,
-            transform: "scale(1)",
+            backgroundColor: active ? "var(--NavItem-active-background)" : "var(--NavItem-hover-background)",
           },
         }}
       >
         <Box
           sx={{
-            backgroundColor: "#fff",
+            backgroundColor: active ? "rgba(255,255,255,0.6)" : "transparent",
             alignItems: "center",
             display: "flex",
             justifyContent: "center",
             flex: "0 0 auto",
-            height: "5vh",
-            width: "3vw",
-            borderRadius: "50px",
-            // iPad Pro 12.9" (1024 x 1366)
-            "@media only screen and (min-width: 1300px) and (max-width: 1366px) and (orientation: landscape)": {
-              borderRadius: "20px",
-              width: "60px",
-            },
-            "&:hover": {
-              transform: "scale(1.1)",
-              background:
-                "linear-gradient(125deg, #ECFCFF 0%, #ECFCFF 40%, #B2FCFF calc(40% + 1px), #B2FCFF 60%, #5EDFFF calc(60% + 1px), #5EDFFF 72%, #3E64FF calc(72% + 1px), #3E64FF 100%)",
-            },
+            height: "32px",
+            width: "32px",
+            borderRadius: "8px",
+            transition: "all 0.2s ease",
+            "&:hover": { transform: "scale(1.05)" },
           }}
         >
           {Icon ? (
-            <Tooltip title={title} arrow>
+            <Tooltip title={collapsed ? title : ""} arrow placement="right">
               <Icon
-                fill={
-                  active
-                    ? "var(--NavItem-icon-active-color)"
-                    : "var(--NavItem-icon-color)"
-                }
+                fill={active ? "var(--NavItem-icon-active-color)" : "var(--NavItem-icon-color)"}
                 fontSize="1.4rem"
               />
             </Tooltip>
@@ -261,12 +267,12 @@ function NavItem({
           <Box
             component="span"
             sx={{
-              color: active ? "#0c66e4" : "black",
-              fontFamily: "monospace",
-              fontSize: "1rem",
-              fontWeight: "600",
-              lineHeight: 2.5,
-              textTransform: "capitalize",
+              color: "inherit",
+              fontFamily: "'Inter', sans-serif",
+              fontSize: "0.95rem",
+              fontWeight: active ? "700" : "500",
+              lineHeight: 1.5,
+              textTransform: "none",
               whiteSpace: "nowrap",
             }}
           >

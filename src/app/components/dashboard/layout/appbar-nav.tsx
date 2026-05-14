@@ -81,6 +81,11 @@ export function AppBarNav(): React.JSX.Element {
   const role = userInfo?.role;
   const isSales = role === "sales";
 
+  // Disable the Aggregator selector on ticket detail pages or create page
+  const isTicketPage = /^\/ticket\/[^/]+/.test(pathname ?? "");
+  const isCreatePage = pathname === "/home/create";
+  const disableAggregator = isTicketPage || isCreatePage;
+
   const fetchCompanies = useCallback(async () => {
     try {
       const res = await CompanyAPI.getAll({ page: 1, limit: 100 });
@@ -106,7 +111,7 @@ export function AppBarNav(): React.JSX.Element {
 
   useEffect(() => {
     if (isSales) return;
-    
+
     fetchNewApplications();
 
     // Connect to the Express server (port 8080) where applications are created
@@ -183,10 +188,10 @@ export function AppBarNav(): React.JSX.Element {
           backgroundImage: "linear-gradient(#c4d5eb, #c4d5eb)",
           top: 0,
           zIndex: "6",
-          height: "12vh",
+          height: "60px",
         }}
       >
-        <Toolbar sx={{ minHeight: "64px !important", alignItems: "center" }}>
+        <Toolbar sx={{ minHeight: "56px !important", height: "56px", alignItems: "center" }}>
           <Stack
             direction="row"
             spacing={2}
@@ -209,49 +214,58 @@ export function AppBarNav(): React.JSX.Element {
 
             <Stack sx={{ alignItems: "center" }} direction="row" spacing={2}>
               {/* Company Selector */}
-              <FormControl
-                sx={{
-                  minWidth: 220,
-                  display: { xs: "none", sm: "block" },
-                }}
-                size="small"
+              <Tooltip
+                title={disableAggregator ? "Aggregator cannot be changed here" : ""}
+                placement="bottom"
+                arrow
               >
-                <InputLabel id="company-select-label" shrink>
-                  Aggregator
-                </InputLabel>
-                <Select
-                  labelId="company-select-label"
-                  id="company-select"
-                  value={selectedCompany}
-                  label="Aggregator"
-                  onChange={handleCompanyChange}
-                  displayEmpty
-                  notched
-                  fullWidth
+                <FormControl
                   sx={{
-                    height: "40px",
-                    backgroundColor: "white",
-                    "& .MuiSelect-select": {
-                      height: "40px",
-                      display: "flex",
-                      alignItems: "center",
-                      paddingTop: 0,
-                      paddingBottom: 0,
-                      boxSizing: "border-box",
-                    },
+                    minWidth: 220,
+                    display: { xs: "none", sm: "block" },
+                    opacity: disableAggregator ? 0.55 : 1,
+                    transition: "opacity 0.2s",
                   }}
+                  size="small"
                 >
-                  <MenuItem value="">All Aggregators</MenuItem>
-                  {companies?.map((company: any, index: number) => (
-                    <MenuItem
-                      key={company.id || `company-${index}`}
-                      value={company.companyId ? company.companyId.toString() : ""}
-                    >
-                      {company.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                  <InputLabel id="company-select-label" shrink>
+                    Aggregator
+                  </InputLabel>
+                  <Select
+                    labelId="company-select-label"
+                    id="company-select"
+                    value={selectedCompany}
+                    label="Aggregator"
+                    onChange={handleCompanyChange}
+                    disabled={disableAggregator}
+                    displayEmpty
+                    notched
+                    fullWidth
+                    sx={{
+                      height: "40px",
+                      backgroundColor: "white",
+                      "& .MuiSelect-select": {
+                        height: "40px",
+                        display: "flex",
+                        alignItems: "center",
+                        paddingTop: 0,
+                        paddingBottom: 0,
+                        boxSizing: "border-box",
+                      },
+                    }}
+                  >
+                    <MenuItem value="">All Aggregators</MenuItem>
+                    {companies?.map((company: any, index: number) => (
+                      <MenuItem
+                        key={company.id || `company-${index}`}
+                        value={company.companyId ? company.companyId.toString() : ""}
+                      >
+                        {company.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Tooltip>
 
               {/* Notification Bell */}
               {!isSales && (
@@ -318,7 +332,7 @@ export function AppBarNav(): React.JSX.Element {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
-                      background: "linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%)",
+                      background: "#3f50b5",
                       color: "white",
                     }}
                   >

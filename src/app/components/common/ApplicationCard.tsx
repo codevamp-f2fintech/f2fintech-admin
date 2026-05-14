@@ -27,6 +27,10 @@ import {
   TableRow,
   Modal,
 } from "@mui/material";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs, { Dayjs } from "dayjs";
 import {
   MailRounded,
   PhoneRounded,
@@ -78,6 +82,7 @@ interface ApplicationCardProps {
     disbursed_Amount?: number;
     approved_At?: string;
     approved_Amount?: number;
+    due_date?: string;
     source?: string;
     applicationSource?: string;
     existing_loans?: string;
@@ -207,6 +212,12 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
   const [commentData, setCommentData] = useState<any[]>([]);
   const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false);
   const [expanded, setExpanded] = useState<boolean>(false);
+
+  const [showPickupModal, setShowPickupModal] = useState<boolean>(false);
+  const [pickupDate, setPickupDate] = useState<Dayjs | null>(dayjs().add(2, 'day'));
+  const [isPickingUp, setIsPickingUp] = useState<boolean>(false);
+  const [pickupEvent, setPickupEvent] = useState<React.MouseEvent | undefined>(undefined);
+
   const dispatch: AppDispatch = useDispatch();
   const { toastAndNavigate } = Utility();
   const {
@@ -221,6 +232,11 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
   const isIpad = useMediaQuery("(min-width:1000px) and (max-width:1300px)");
   const [deleteReason, setDeleteReason] = useState<string>("");
+
+  const isOverdue = React.useMemo(() => {
+    if (!customerApplication.due_date || customerApplication.approved_At) return false;
+    return dayjs().isAfter(dayjs(customerApplication.due_date), 'day');
+  }, [customerApplication.due_date, customerApplication.approved_At]);
 
 
   const handleDeleteClick = (e: React.MouseEvent) => {
@@ -345,22 +361,43 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
     }
   }, [showComment, customerApplication?.ticketId]);
 
-  const handleCheckboxChange = async (applicationId: number, e?: React.MouseEvent) => {
+  const handleCheckboxClick = (e?: React.MouseEvent) => {
     // Validate company selection
     if (validateCompanyForCheckbox && !validateCompanyForCheckbox()) {
       e?.preventDefault();
       e?.stopPropagation();
       return;
     }
+    setPickupEvent(e);
+    setPickupDate(dayjs().add(2, 'day'));
+    setShowPickupModal(true);
+  };
 
+  const confirmPickup = async () => {
+    if (!pickupDate) {
+      toastAndNavigate(
+        dispatch,
+        true,
+        "error",
+        "Please select an expected decision date.",
+        null,
+        null,
+        true
+      );
+      return;
+    }
+
+    setIsPickingUp(true);
     try {
       const userInfo = decodedToken();
 
       const ticketResponse = await createTicket({
-        customer_application_id: applicationId,
+        customer_application_id: customerApplication.applicationId,
         user_id: decodedToken()?.id,
         status: "operations",
+        due_date: pickupDate.toISOString(),
       });
+
       if (ticketResponse?.statusCode === 409) {
         toastAndNavigate(
           dispatch,
@@ -373,16 +410,19 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
           true
         );
 
-        dispatch(resetCustomerApplications(applicationId));
+        dispatch(resetCustomerApplications(customerApplication.applicationId));
       } else {
         dispatch(resetTickets());
-        await modifyiedCustomerApplication(applicationId, {
+        await modifyiedCustomerApplication(customerApplication.applicationId, {
           is_picked: 1,
         });
-        dispatch(resetCustomerApplications(applicationId));
+        dispatch(resetCustomerApplications(customerApplication.applicationId));
+        setShowPickupModal(false);
       }
     } catch (error) {
       console.log("Error in checkbox change:", error);
+    } finally {
+      setIsPickingUp(false);
     }
   };
 
@@ -477,7 +517,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
         }));
       }
     };
-    console.log(customerApplication, 'this is it')
+
     return (
       <>
         <Grid item xs={20} key={customerApplication.customerId}>
@@ -515,9 +555,9 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 flexDirection: isMobile ? "row" : "row",
                 alignItems: isMobile ? "stretch" : "center",
                 p: 1,
-                backgroundImage:
-                  "linear-gradient(135deg, #c4d5eb 0%, #c4d5eb 100%)",
-                color: "white",
+                backgroundColor: "#f5f8ff",
+                color: "#1e3a5f",
+                borderBottom: "1px solid rgba(12,66,160,0.08)",
               }}
             >
               <ListItemAvatar sx={{ minWidth: isMobile ? "auto" : 60 }}>
@@ -533,11 +573,12 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   sx={{
                     width: isMobile ? 40 : 32,
                     height: isMobile ? 40 : 32,
-                    bgcolor: "#adb5bd",
+                    background: "#1e3a5f",
                     color: "white",
                     fontSize: isMobile ? 16 : 20,
                     fontWeight: "bold",
-                    border: "1px solid rgba(255,255,255,0.3)",
+                    border: "2px solid white",
+                    boxShadow: "0 2px 8px rgba(12,66,160,0.2)",
                     mx: isMobile ? "auto" : 0,
                     mb: isMobile ? 0.25 : 0,
                   }}
@@ -671,7 +712,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                       icon={<AccessTimeRounded />}
                       text={
                         customerApplication?.approved_At
-                          ? `Disbursed: ${new Date(customerApplication.approved_At).toLocaleDateString('en-IN', {
+                          ? `Approved: ${new Date(customerApplication.approved_At).toLocaleDateString('en-IN', {
                             day: '2-digit',
                             month: 'short',
                             year: 'numeric',
@@ -679,6 +720,19 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                           : "Not Approved"
                       }
                       color="#33415c"
+                    />
+                    <InfoChip
+                      icon={<AccessTimeRounded />}
+                      text={
+                        customerApplication?.due_date
+                          ? `Expected: ${new Date(customerApplication.due_date).toLocaleDateString('en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          })}`
+                          : "No Expected Date"
+                      }
+                      color={isOverdue ? "#D32F2F" : "#33415c"}
                     />
                     <Chip
                       label={formattedCreatedAt}
@@ -755,7 +809,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                     <Checkbox
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleCheckboxChange(customerApplication.applicationId, e);
+                        handleCheckboxClick(e);
                       }}
                       size="small"
                       sx={{
@@ -1335,7 +1389,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 sx={{
                   width: 80,
                   height: 80,
-                  bgcolor: "#33415c",
+                  background: "#1e3a5f",
                   color: "white",
                   fontSize: 36,
                   fontWeight: "bold",
@@ -1344,7 +1398,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   left: "50%",
                   transform: "translateX(-50%)",
                   border: "4px solid white",
-                  boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
+                  boxShadow: "0 4px 10px rgba(12,66,160,0.3)",
                 }}
               />
             </Box>
@@ -1992,7 +2046,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                     <Checkbox
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleCheckboxChange(customerApplication.applicationId, e);
+                        handleCheckboxClick(e);
                       }}
                       size="small"
                       sx={{
@@ -2012,7 +2066,6 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
     );
   };
   const TableView = ({ index }: { index: any }) => {
-    console.log("index", index);
     const [showAttachment, setShowAttachment] = useState({});
     const [currentAttachment, setCurrentAttachment] = useState(null);
 
@@ -2097,7 +2150,6 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
         setCurrentAttachment(null);
       }
     };
-    console.log("customerApplication", customerApplication)
     return (
       <>
         <TableRow
@@ -2268,14 +2320,19 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
           {!isApplication &&
             <TableCell>
               <Typography variant="body2">
-                {customerApplication?.approvedAt
-                  ? new Date(customerApplication.approvedAt).toLocaleDateString('en-IN', {
+                {customerApplication?.approvedAt || customerApplication?.approved_At
+                  ? new Date((customerApplication.approvedAt || customerApplication.approved_At)!).toLocaleDateString('en-IN', {
                     day: '2-digit',
                     month: 'short',
                     year: 'numeric',
                   })
                   : "Not Approved"}
               </Typography>
+              {!(customerApplication?.approvedAt || customerApplication?.approved_At) && customerApplication?.due_date && (
+                <Typography variant="caption" sx={{ color: isOverdue ? "#D32F2F" : "text.secondary", display: 'block', mt: 0.5, fontWeight: isOverdue ? 'bold' : 'normal' }}>
+                  Expected: {new Date(customerApplication.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                </Typography>
+              )}
             </TableCell>
           }
 
@@ -2363,7 +2420,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   <Checkbox
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleCheckboxChange(customerApplication.applicationId, e);
+                      handleCheckboxClick(e);
                     }}
                     size="small"
                     sx={{
@@ -2808,6 +2865,49 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
             startIcon={<DeleteForever />}
           >
             Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Expected Decision Date Pickup Modal */}
+      <Dialog
+        open={showPickupModal}
+        onClose={() => !isPickingUp && setShowPickupModal(false)}
+        maxWidth="sm"
+        fullWidth
+        onClick={(e) => e.stopPropagation()} // Prevent card expansion
+      >
+        <DialogTitle sx={{ fontWeight: "bold" }}>Set Expected Decision Date</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            Please confirm the expected decision date for this application.
+          </DialogContentText>
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DatePicker
+              label="Expected Decision Date"
+              value={pickupDate}
+              onChange={(newValue) => setPickupDate(newValue)}
+              minDate={dayjs()}
+              sx={{ width: "100%", mt: 1 }}
+              format="DD/MM/YYYY"
+            />
+          </LocalizationProvider>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setShowPickupModal(false)}
+            color="inherit"
+            disabled={isPickingUp}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmPickup}
+            variant="contained"
+            disabled={!pickupDate || isPickingUp}
+            sx={{ bgcolor: "#0c66e4", "&:hover": { bgcolor: "#0052cc" } }}
+          >
+            {isPickingUp ? "Confirming..." : "Confirm"}
           </Button>
         </DialogActions>
       </Dialog>

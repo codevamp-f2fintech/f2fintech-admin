@@ -25,12 +25,14 @@ const WorkLogList: React.FC<WorkLogListProps> = ( { userData, workLog } ) => {
       sx={{
         height: "30vh",
         overflowY: "auto",
-        padding: "10px",
-        borderRadius: "8px",
-        width: isMobile ? "77vw" : isTablet ? "80vw" : isIpad ? "80vw" : "46.5vw",
+        width: "100%",
         "&::-webkit-scrollbar": {
-          display: "none",
+          width: "6px",
         },
+        "&::-webkit-scrollbar-thumb": {
+          background: "rgba(12, 102, 228, 0.2)",
+          borderRadius: "3px",
+        }
       }}
     >
       {workLog?.length ? (
@@ -41,41 +43,45 @@ const WorkLogList: React.FC<WorkLogListProps> = ( { userData, workLog } ) => {
           return (
             <Paper
               key={log.id}
-              elevation={3}
+              elevation={0}
               sx={{
-                padding: ".5rem",
-                marginBottom: "1vh",
+                padding: 2,
+                marginBottom: 2,
                 display: "flex",
                 flexDirection: "column",
-                backgroundColor: "#f5f8fa",
-                width: isMobile ? "71vw" : isTablet ? "78.5vw" : isIpad ? "80vw" : "45vw",
+                backgroundColor: "var(--mui-palette-neutral-100)",
+                border: "1px solid var(--mui-palette-neutral-200)",
+                borderRadius: "12px",
+                width: "100%",
               }}
             >
               <Box
                 display="flex"
                 alignItems="center"
-                marginBottom=".5rem"
-                padding=".5rem"
-                sx={{ justifyContent: isMobile ? "center" : isTablet ? "center" : isIpad ? "center" : "flex-start" }}
+                sx={{ mb: 1, gap: 2 }}
               >
-                <Typography fontWeight="bold" sx={{ mr: "1vw", fontSize: isMobile ? ".6rem" : isTablet ? "1rem" : isIpad ? "1rem" : "" }}>
+                <Typography fontWeight="bold" sx={{ color: "text.primary", fontSize: "0.95rem" }}>
                   {capitalizeFirstLetter( loggedBy?.username )}
                 </Typography>
 
                 <Typography
                   sx={{
-                    fontWeight: "500",
-                    fontSize: isMobile ? "0.5rem" : isTablet ? ".8rem" : isIpad ? "1rem" : "",
-                    mr: "20VW",
+                    fontWeight: 600,
+                    fontSize: "0.85rem",
+                    color: "primary.main",
+                    backgroundColor: "primary.light",
+                    px: 1,
+                    borderRadius: "4px"
                   }}
                 >
-                  logged {log.time_spent}
+                  {log.time_spent}
                 </Typography>
                 <Typography
                   sx={{
-                    fontWeight: "500",
-                    fontSize: isMobile ? "0.5rem" : isIpad ? "1rem" : "",
-                    color: "red"
+                    fontWeight: 500,
+                    fontSize: "0.8rem",
+                    color: "text.secondary",
+                    ml: "auto"
                   }}
                 >
                   {format( new Date( log.created_at ), "PPpp" )}
@@ -85,12 +91,13 @@ const WorkLogList: React.FC<WorkLogListProps> = ( { userData, workLog } ) => {
               {/* Work description */}
               <Typography
                 sx={{
-                  margin: "10px 18px 0 20px",
-                  color: "#333",
-                  padding: "10px",
-                  backgroundColor: "#E8F0FE", // Lighter blue background
-                  borderRadius: "4px",
+                  color: "text.primary",
+                  padding: 1.5,
+                  backgroundColor: "#fff",
+                  borderRadius: "8px",
                   fontSize: "0.9rem",
+                  border: "1px solid rgba(0,0,0,0.05)",
+                  lineHeight: 1.6,
                 }}
               >
                 {capitalizeFirstLetter( log.work_description )}
@@ -101,25 +108,19 @@ const WorkLogList: React.FC<WorkLogListProps> = ( { userData, workLog } ) => {
       ) : (
         <Box
           mt={2}
-          mb={3}
-          p={3}
-          borderRadius={2}
-          bgcolor="background.paper"
-          boxShadow={3}
-          textAlign="center"
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          justifyContent="center"
+          p={4}
           sx={{
-            background: "linear-gradient(to right, #f5f5f5, #e0e0e0)",
-            width: "300px",
-            height: "100px",
-            margin: "auto",
+            textAlign: "center",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "100%",
+            color: "text.secondary",
           }}
         >
-          <AccessTimeIcon sx={{ fontSize: 40, mb: 0 }} />
-          <Typography variant="body2" mt={2} sx={{ padding: "0 10px" }}>
+          <AccessTimeIcon sx={{ fontSize: 40, mb: 1, opacity: 0.5 }} />
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>
             No work has been logged for this issue
           </Typography>
         </Box>

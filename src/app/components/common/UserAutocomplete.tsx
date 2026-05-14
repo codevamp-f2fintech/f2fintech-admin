@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { Autocomplete, Box, TextField } from "@mui/material";
+import { Autocomplete, Box, TextField, Tooltip, Divider, Typography, ListSubheader } from "@mui/material";
+import {
+  SupervisorAccountRounded,
+  SupportAgentRounded,
+  PersonRounded,
+} from "@mui/icons-material";
 
 import { User, UserData } from "@/types/user";
 import { TicketDetail } from "@/app/ticket/[ticketId]/MainPage";
@@ -36,6 +41,26 @@ const UserAutocomplete: React.FC<UserAutocompleteProps> = ( {
   const [ allUsers, setAllUsers ] = useState<UserData[]>( [] );
   const [ filteredUsers, setFilteredUsers ] = useState<UserData[]>( [] );
 
+  const getRoleIcon = ( role: string ): JSX.Element => {
+    const icons: { [ key: string ]: JSX.Element } = {
+      "sub admin": <SupervisorAccountRounded sx={{ fontSize: 18 }} />,
+      operations: <SupportAgentRounded sx={{ fontSize: 18 }} />,
+      credit: <SupportAgentRounded sx={{ fontSize: 18 }} />,
+      default: <PersonRounded sx={{ fontSize: 18 }} />,
+    };
+    return icons[ role?.toLowerCase() ] || icons.default;
+  };
+
+  const getRoleColor = ( role: string ): string => {
+    const colors: { [ key: string ]: string } = {
+      "sub admin": "#f57c00",
+      operations: "#1976d2",
+      credit: "#1976d2",
+      default: "#757575",
+    };
+    return colors[ role?.toLowerCase() ] || colors.default;
+  };
+
   useEffect( () => {
     if ( userData?.data?.results )
     {
@@ -46,7 +71,7 @@ const UserAutocomplete: React.FC<UserAutocompleteProps> = ( {
         const selectedUserObj = userData?.data?.results?.find(
           ( user ) => user.id == ticketUser
         );
-        setSelectedUser( selectedUserObj || [] );
+        setSelectedUser( selectedUserObj || null );
       } catch ( error )
       {
         console.error( "Error fetching users:", error );
@@ -54,65 +79,139 @@ const UserAutocomplete: React.FC<UserAutocompleteProps> = ( {
     };
   }, [ userData?.data?.results, ticketId ] );
 
-  // Filter users based on current user's role
+  // Filter and Sort users based on roles
   useEffect( () => {
-    if ( currentUserRole === 'credit' )
-    {
-      setFilteredUsers( allUsers.filter( user => user.role === 'operations' ) );
-    } else
-    {
-      setFilteredUsers( allUsers );
-    }
-  }, [ allUsers, currentUserRole ] );
+    const roleOrder = [ 'credit', 'operations', 'sub admin' ];
+    const filtered = allUsers
+      .filter( user => roleOrder.includes( user.role?.toLowerCase() ) )
+      .sort( ( a, b ) => {
+        return roleOrder.indexOf( a.role?.toLowerCase() ) - roleOrder.indexOf( b.role?.toLowerCase() );
+      } );
+    setFilteredUsers( filtered );
+  }, [ allUsers ] );
 
   return (
     <Box
       sx={{
-        borderRadius: "20px",
-        height: isMobile ? "5vh" : isTab ? "4vh" : "7vh",
-        mt: isMobile ? "3vw" : isTab ? "2vw" : "1vw",
-        width: isMobile ? "75vw" : isTab ? "26vw" : "22vw",
+        width: "100%",
+        mt: 1,
       }}
     >
       {newEmployeeStatus === "forwarded" && (
-        <Autocomplete
-          // options={allUsers || []}
-          options={filteredUsers || []}
-          getOptionLabel={( option ) => `${ option.username } (${ option.role })`}
-          value={selectedUser || null}
-          onChange={( event, value ) => handleForwardAutocomplete( value )}
-          renderInput={( params ) => (
-            <TextField
-              {...params}
-              label="Select User"
-              variant="outlined"
-              type="text"
-              sx={{
-                borderRadius: "20px",
-                "& .MuiOutlinedInput-root": {
-                  color: "black",
-                  backgroundColor: "#eeeeee",
+        <Tooltip title="Select a user to forward this ticket to" placement="top">
+          <Autocomplete
+            options={filteredUsers || []}
+            groupBy={( option ) => option.role}
+            getOptionLabel={( option ) => `${ option.username } (${ option.role })`}
+            value={selectedUser || null}
+            onChange={( event, value ) => handleForwardAutocomplete( value )}
+            renderGroup={( params ) => (
+              <Box key={params.key}>
+                <ListSubheader
+                  sx={{
+                    fontWeight: 'bold',
+                    color: '#155fcc',
+                    bgcolor: '#f0f4f8',
+                    lineHeight: '32px',
+                    textTransform: 'uppercase',
+                    fontSize: '0.75rem',
+                    letterSpacing: '0.05em',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1
+                  }}
+                >
+                  {params.group}
+                </ListSubheader>
+                {params.children}
+                <Divider />
+              </Box>
+            )}
+            renderOption={( props, option ) => {
+              const roleColor = getRoleColor( option.role );
+              // Determine light background based on role color
+              const lightBg = roleColor === "#f57c00" ? "#fff3e0" : roleColor === "#1976d2" ? "#e3f2fd" : "#f5f5f5";
 
-                  "&:hover fieldset": {
-                    borderColor: "white",
+              return (
+                <Box
+                  component="li"
+                  {...props}
+                  sx={{
+                    margin: '4px 8px !important',
+                    borderRadius: '8px !important',
+                    backgroundColor: `${ lightBg } !important`,
+                    border: `1px solid ${ roleColor }20`,
+                    '&:hover': {
+                      backgroundColor: `${ lightBg } !important`,
+                      opacity: 0.9,
+                      borderColor: roleColor,
+                    },
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                    py: '8px !important',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      color: roleColor,
+                      bgcolor: 'white',
+                      borderRadius: '50%',
+                      p: 0.5,
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                    }}
+                  >
+                    {getRoleIcon( option.role )}
+                  </Box>
+                  <Typography sx={{ fontWeight: 500, color: '#172B4D', fontSize: '0.9rem' }}>
+                    {option.username}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      ml: 'auto',
+                      color: roleColor,
+                      fontWeight: 600,
+                      bgcolor: 'white',
+                      px: 1,
+                      borderRadius: 1,
+                      textTransform: 'capitalize',
+                      border: `1px solid ${ roleColor }30`
+                    }}
+                  >
+                    {option.role}
+                  </Typography>
+                </Box>
+              );
+            }}
+            renderInput={( params ) => (
+              <TextField
+                {...params}
+                label="Select User"
+                variant="outlined"
+                type="text"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "8px",
+                    color: "black",
+                    backgroundColor: "#f5f5f5",
+                    "&:hover fieldset": {
+                      borderColor: "#155fcc",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#155fcc",
+                    },
                   },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "white",
+                  "& .MuiInputLabel-root": {
+                    color: "#5E6C84",
                   },
-                },
-                "& .MuiInputLabel-root": {
-                  color: "black",
-                  backgroundColor: "#eeeeee",
-                  padding: "0 5px",
-                  borderRadius: "4px",
-                },
-                "& .MuiSvgIcon-root": {
-                  color: "red",
-                },
-              }}
-            />
-          )}
-        />
+                }}
+              />
+            )}
+          />
+        </Tooltip>
       )}
     </Box>
   );

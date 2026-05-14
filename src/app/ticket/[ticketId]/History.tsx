@@ -60,28 +60,29 @@ const History: React.FC<HistoryProps> = ( { ticketId, activeSection } ) => {
                 <BoltIcon
                   fontSize="small"
                   sx={{
-                    color: "#2c3ce3",
-                    marginRight: "1vw",
+                    color: "primary.main",
+                    marginRight: 2,
                   }}
                 />
                 <Typography
                   variant="body1"
                   sx={{
-                    fontSize: isMobile ? ".6rem" : isTablet ? ".8rem" : "",
-                    width: isMobile ? "30vw" : isTablet ? "30vh" : isIpad ? "40vw" : "50vw",
-                    color: "black",
+                    fontSize: "0.9rem",
+                    fontWeight: 500,
+                    color: "text.primary",
+                    flexGrow: 1,
                   }}
                 >
                   {capitalizedAction}
                 </Typography>
                 <Typography
                   variant="body2"
-                  color="textSecondary"
+                  color="text.secondary"
                   sx={{
-                    ml: "3vw",
-                    color: "red",
-                    fontSize: isMobile ? ".6rem" : "",
-                    width: isMobile ? "30vw" : "32vw",
+                    ml: 2,
+                    fontSize: "0.8rem",
+                    fontWeight: 500,
+                    whiteSpace: "nowrap",
                   }}
                 >
                   {format( dateObj, "dd MMM yyyy HH:mm" )} (
@@ -97,7 +98,7 @@ const History: React.FC<HistoryProps> = ( { ticketId, activeSection } ) => {
           mt={2}
           sx={{
             textAlign: "center",
-            color: "white",
+            color: "text.secondary",
           }}
         >
           No Ticket History Available

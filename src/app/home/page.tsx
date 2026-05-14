@@ -618,8 +618,8 @@ const HomeContent: React.FC = () => {
               <Link href="/home/create" passHref>
                 <Button
                   sx={{
-                    width: "auto",
-                    fontSize: isTab ? "1rem" : "",
+                    width: { xs: "100%", md: "auto" },
+                    fontSize: { xs: "0.7rem", md: "1rem" },
                     bgcolor: "#0c66e4",
                     color: "white",
                     "&:hover": { bgcolor: "#0c66e4" },
@@ -724,7 +724,7 @@ const HomeContent: React.FC = () => {
                   }}
                 >
                   <TableHead>
-                    <TableRow sx={{ backgroundColor: "#3f50b5" }}>
+                    <TableRow sx={{ background: "#3f50b5" }}>
                       <TableCell
                         sx={{
                           fontWeight: "bold",
@@ -781,7 +781,7 @@ const HomeContent: React.FC = () => {
                       <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Location</TableCell>
                       <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Application Date</TableCell>
                       <TableRow sx={{
-                        backgroundColor: "#3f50b5",
+                        background: "#3f50b5",
                         '& td': { borderBottom: 'none' },
                         borderBottom: 'none',
                       }}>
