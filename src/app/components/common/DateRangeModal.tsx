@@ -63,151 +63,159 @@ const DateRangeModal: React.FC<DateRangeModalProps> = ( {
                         overflow: 'hidden',
                     }}
                 >
-                    {/* Header */}
-                    <Box
-                        sx={{
-                            p: 2,
-                            bgcolor: 'primary.main',
-                            color: 'primary.contrastText',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                        }}
-                    >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <DateRangeIcon sx={{ color: '#fff', fontSize: 28 }} />
-                            <Typography variant="h6" sx={{ color: '#fff', fontWeight: 600 }}>
-                                Select Date Range
-                            </Typography>
-                        </Box>
-                        <IconButton
-                            onClick={handleClose}
+                        <Box
                             sx={{
-                                color: '#fff',
-                                '&:hover': {
-                                    bgcolor: 'rgba(255,255,255,0.1)',
-                                },
+                                p: 2,
+                                background: "#3f50b5",
+                                color: 'primary.contrastText',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
                             }}
                         >
-                            <CloseIcon />
-                        </IconButton>
-                    </Box>
-
-                    {/* Content */}
-                    <Box sx={{ p: 3 }}>
-                        {/* Date Inputs Container */}
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                            {/* Start Date */}
-                            <Box>
-                                <Typography
-                                    variant="subtitle2"
-                                    sx={{
-                                        mb: 1,
-                                        color: 'text.primary',
-                                        fontWeight: 600,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 1,
-                                    }}
-                                >
-                                    <EventIcon color="primary" sx={{ fontSize: 20 }} />
-                                    Start Date
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <DateRangeIcon sx={{ color: '#fff', fontSize: 28 }} />
+                                <Typography variant="h6" sx={{ color: '#fff', fontWeight: 600, fontFamily: "'Inter', sans-serif" }}>
+                                    Select Date Range
                                 </Typography>
-                                <TextField
-                                    type="date"
-                                    fullWidth
-                                    value={tempStartDate ? dayjs( tempStartDate ).format( "YYYY-MM-DD" ) : ""}
-                                    onChange={( e ) => setTempStartDate( dayjs( e.target.value ) )}
-                                    sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            borderRadius: 3,
-                                            bgcolor: '#f5f5f5',
-                                            '&:hover': {
-                                                bgcolor: '#eeeeee',
-                                            },
-                                            '&.Mui-focused': {
-                                                bgcolor: '#ffffff',
-                                                boxShadow: '0 0 0 2px rgba(25, 118, 210, 0.2)',
-                                            },
-                                        },
-                                    }}
-                                />
                             </Box>
-                            {/* End Date */}
-                            <Box>
-                                <Typography
-                                    variant="subtitle2"
-                                    sx={{
-                                        mb: 1,
-                                        color: 'text.primary',
-                                        fontWeight: 600,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 1,
-                                    }}
-                                >
-                                    <EventIcon color="primary" sx={{ fontSize: 20 }} />
-                                    End Date
-                                </Typography>
-                                <TextField
-                                    type="date"
-                                    fullWidth
-                                    value={tempEndDate ? dayjs( tempEndDate ).format( "YYYY-MM-DD" ) : ""}
-                                    onChange={( e ) => setTempEndDate( dayjs( e.target.value ) )}
-                                    sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            borderRadius: 3,
-                                            bgcolor: '#f5f5f5',
-                                            '&:hover': {
-                                                bgcolor: '#eeeeee',
-                                            },
-                                            '&.Mui-focused': {
-                                                bgcolor: '#ffffff',
-                                                boxShadow: '0 0 0 2px rgba(25, 118, 210, 0.2)',
-                                            },
-                                        },
-                                    }}
-                                />
-                            </Box>
-                        </Box>
-                        {/* Action Buttons */}
-                        <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>
-                            <Button
-                                fullWidth
-                                variant="outlined"
+                            <IconButton
                                 onClick={handleClose}
                                 sx={{
-                                    borderRadius: 3,
-                                    py: 1.5,
-                                    textTransform: 'none',
-                                    fontSize: '0.95rem',
-                                    fontWeight: 600,
-                                    borderWidth: 2,
+                                    color: '#fff',
                                     '&:hover': {
-                                        borderWidth: 2,
+                                        bgcolor: 'rgba(255,255,255,0.1)',
                                     },
                                 }}
                             >
-                                Cancel
-                            </Button>
-                            <Button
-                                fullWidth
-                                variant="contained"
-                                onClick={handleApply}
-                                startIcon={<CheckIcon />}
-                                sx={{
-                                    borderRadius: 3,
-                                    py: 1.5,
-                                    textTransform: 'none',
-                                    fontSize: '0.95rem',
-                                    fontWeight: 600,
-                                    background: 'linear-gradient(135deg, #2196f3 0%, #1976d2 100%)',
-                                    boxShadow: '0 4px 12px rgba(33, 150, 243, 0.3)',
-                                    '&:hover': {
-                                        boxShadow: '0 6px 16px rgba(33, 150, 243, 0.4)',
-                                    },
-                                }}
-                            >
+                                <CloseIcon />
+                            </IconButton>
+                        </Box>
+
+                        {/* Content */}
+                        <Box sx={{ p: 3, bgcolor: "#f5f8ff" }}>
+                            {/* Date Inputs Container */}
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                                {/* Start Date */}
+                                <Box>
+                                    <Typography
+                                        variant="subtitle2"
+                                        sx={{
+                                            mb: 1,
+                                            color: '#1e3a5f',
+                                            fontWeight: 700,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 1,
+                                            fontFamily: "'Inter', sans-serif"
+                                        }}
+                                    >
+                                        <EventIcon sx={{ color: '#1565c0', fontSize: 20 }} />
+                                        Start Date
+                                    </Typography>
+                                    <TextField
+                                        type="date"
+                                        fullWidth
+                                        value={tempStartDate ? dayjs( tempStartDate ).format( "YYYY-MM-DD" ) : ""}
+                                        onChange={( e ) => setTempStartDate( dayjs( e.target.value ) )}
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                bgcolor: '#ffffff',
+                                                '&:hover': {
+                                                    bgcolor: '#f8f9fa',
+                                                },
+                                                '&.Mui-focused': {
+                                                    bgcolor: '#ffffff',
+                                                    boxShadow: '0 0 0 2px rgba(21, 101, 192, 0.2)',
+                                                },
+                                            },
+                                        }}
+                                    />
+                                </Box>
+                                {/* End Date */}
+                                <Box>
+                                    <Typography
+                                        variant="subtitle2"
+                                        sx={{
+                                            mb: 1,
+                                            color: '#1e3a5f',
+                                            fontWeight: 700,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 1,
+                                            fontFamily: "'Inter', sans-serif"
+                                        }}
+                                    >
+                                        <EventIcon sx={{ color: '#1565c0', fontSize: 20 }} />
+                                        End Date
+                                    </Typography>
+                                    <TextField
+                                        type="date"
+                                        fullWidth
+                                        value={tempEndDate ? dayjs( tempEndDate ).format( "YYYY-MM-DD" ) : ""}
+                                        onChange={( e ) => setTempEndDate( dayjs( e.target.value ) )}
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                bgcolor: '#ffffff',
+                                                '&:hover': {
+                                                    bgcolor: '#f8f9fa',
+                                                },
+                                                '&.Mui-focused': {
+                                                    bgcolor: '#ffffff',
+                                                    boxShadow: '0 0 0 2px rgba(21, 101, 192, 0.2)',
+                                                },
+                                            },
+                                        }}
+                                    />
+                                </Box>
+                            </Box>
+                            {/* Action Buttons */}
+                            <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>
+                                <Button
+                                    fullWidth
+                                    variant="outlined"
+                                    onClick={handleClose}
+                                    sx={{
+                                        borderRadius: 2,
+                                        py: 1.2,
+                                        textTransform: 'none',
+                                        fontSize: '0.95rem',
+                                        fontWeight: 600,
+                                        borderWidth: 1.5,
+                                        color: '#1e3a5f',
+                                        borderColor: '#c4d5eb',
+                                        fontFamily: "'Inter', sans-serif",
+                                        '&:hover': {
+                                            borderWidth: 1.5,
+                                            bgcolor: 'rgba(196, 213, 235, 0.2)',
+                                            borderColor: '#1e3a5f',
+                                        },
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    fullWidth
+                                    variant="contained"
+                                    onClick={handleApply}
+                                    startIcon={<CheckIcon />}
+                                    sx={{
+                                        borderRadius: 2,
+                                        py: 1.2,
+                                        textTransform: 'none',
+                                        fontSize: '0.95rem',
+                                        fontWeight: 600,
+                                        fontFamily: "'Inter', sans-serif",
+                                        background: '#3f50b5',
+                                        boxShadow: '0 4px 12px rgba(21, 101, 192, 0.25)',
+                                        '&:hover': {
+                                            background: '#303f9f',
+                                            boxShadow: '0 6px 16px rgba(21, 101, 192, 0.4)',
+                                        },
+                                    }}
+                                >
                                 Apply
                             </Button>
                         </Box>

@@ -107,6 +107,7 @@ const Step3Form: React.FC<Step3FormProps> = ( {
             )
             setAllUploadsSuccess( true );
             setLocalStorage( "StatementUpload", true );
+            setLocalStorage( "StatementUploadSkipped", false );
             handleToast( "Documents uploaded successfully!", "success" );
           }
         } catch ( err )
@@ -166,31 +167,31 @@ const Step3Form: React.FC<Step3FormProps> = ( {
               }}
             >
               {/* Header section */}
-              <Box sx={{ textAlign: "center", mb: 2 }}>
+              <Box sx={{ textAlign: "center", mb: 3, mt: 2 }}>
                 <Typography
                   sx={{
-                    fontFamily: "DM Sans",
+                    fontFamily: "'Inter', sans-serif",
                     fontSize: {
-                      xs: "1.7rem", // Mobile
-                      sm: "2.5rem", // Tablet
-                      md: "2rem", // Desktop
+                      xs: "1.5rem",
+                      sm: "2rem",
+                      md: "1.8rem",
                     },
-                    color: '#ffffff',
-                    fontWeight: 500,
+                    color: '#0f172a',
+                    fontWeight: 700,
                     marginBottom: 1,
                   }}
                 >
-                  Statement <span style={{ color: "#FFd700" }}>Upload</span>{" "}
+                  Statement <span style={{ color: "#3949ab" }}>Upload</span>
                 </Typography>
                 <Typography
                   sx={{
-                    fontFamily: "Poppins",
-                    fontSize: "2vh",
-                    color: "white",
-                    marginBottom: 3,
+                    fontFamily: "'Inter', sans-serif",
+                    fontSize: "14px",
+                    color: "#475569",
+                    marginBottom: 2,
+                    fontWeight: 500,
                   }}
                   variant="subtitle1"
-                  color="white"
                 >
                   Step 2/4
                 </Typography>
@@ -198,16 +199,17 @@ const Step3Form: React.FC<Step3FormProps> = ( {
                 <Typography
                   sx={{
                     fontSize: {
-                      xs: "0.75rem", // Mobile
-                      sm: "0.875rem", // Tablet
-                      md: "1rem", // Desktop
+                      xs: "0.75rem",
+                      sm: "0.875rem",
+                      md: "0.95rem",
                     },
-                    color: "white",
+                    color: "#64748b",
+                    lineHeight: 1.6,
                   }}
                 >
-                  ( Upload your recent 6 months Bank Statement)
+                  Upload your recent 6 months Bank Statement
                   <br />
-                  (Maximum File Upload Limit Is <span style={{ color: "#FFd700" }}>10</span> )
+                  Maximum File Upload Limit Is <span style={{ color: "#3949ab", fontWeight: "bold" }}>10</span>
                 </Typography>
               </Box>
 
@@ -224,11 +226,39 @@ const Step3Form: React.FC<Step3FormProps> = ( {
               >
                 {/* File picker with multiple file upload support */}
                 {selectedFiles.length < 10 && (
-                  <IconButton
+                  <Box
                     component="label"
-                    sx={{ mb: 0, color: "#FFD700", display: "flex", justifyContent: "center" }}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: { xs: "260px", sm: "320px", md: "380px" },
+                      height: "140px",
+                      border: "2px dashed #cbd5e1",
+                      borderRadius: "12px",
+                      backgroundColor: "#f8fafc",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      my: 2,
+                      "&:hover": {
+                        borderColor: "#3949ab",
+                        backgroundColor: "#eef2ff",
+                      },
+                    }}
                   >
-                    <AddPhotoAlternateIcon />
+                    <IconButton
+                      component="span"
+                      sx={{ color: "#3949ab", pointerEvents: "none", mb: 0.5 }}
+                    >
+                      <AddPhotoAlternateIcon sx={{ fontSize: 36 }} />
+                    </IconButton>
+                    <Typography sx={{ fontSize: "14px", fontWeight: 600, color: "#3949ab" }}>
+                      Click to Browse Statement Files
+                    </Typography>
+                    <Typography sx={{ fontSize: "12px", color: "#64748b", mt: 0.5 }}>
+                      PDF, PNG, JPG, DOC up to 10 files
+                    </Typography>
                     <input
                       ref={inputRef}
                       hidden
@@ -271,7 +301,7 @@ const Step3Form: React.FC<Step3FormProps> = ( {
                         ] );
                       }}
                     />
-                  </IconButton>
+                  </Box>
                 )}
                 {/* Display selected file names with delete icons */}
                 {selectedFiles.length > 0 && (
@@ -316,15 +346,28 @@ const Step3Form: React.FC<Step3FormProps> = ( {
                     type="submit"
                     variant="contained"
                     sx={{
-                      color: "black",
-                      backgroundColor: "#FFD700",
-                      fontFamily: "Poppins",
+                      color: "#ffffff",
+                      backgroundColor: "#3949ab",
+                      fontFamily: "Poppins, sans-serif",
+                      fontWeight: 600,
                       fontSize: "1rem",
                       lineHeight: "1.5rem",
                       mt: 2,
-                      position: "relative", // Ensure the button's content is positioned correctly
+                      borderRadius: "8px",
+                      boxShadow: "0px 8px 20px rgba(57, 73, 171, 0.35)",
+                      position: "relative",
+                      transition: "all 0.2s ease",
+                      textTransform: "none",
+                      padding: "10px 32px",
                       "&:hover": {
-                        backgroundColor: "transparent", // Transparent color on hover
+                        backgroundColor: "#303f9f",
+                        boxShadow: "0px 10px 25px rgba(57, 73, 171, 0.45)",
+                        transform: "translateY(-2px)",
+                      },
+                      "&:disabled": {
+                        backgroundColor: "#e2e8f0",
+                        color: "#94a3b8",
+                        boxShadow: "none",
                       },
                     }}
                   >
@@ -332,31 +375,48 @@ const Step3Form: React.FC<Step3FormProps> = ( {
                       <CircularProgress
                         size={24}
                         sx={{
-                          color: "black",
+                          color: "#ffffff",
                           position: "absolute",
                           top: "50%",
                           left: "50%",
-                          marginTop: "-12px", // Adjust positioning so it stays centered
-                          marginLeft: "-12px", // Adjust positioning so it stays centered
-                          zIndex: 1, // Ensure it's displayed on top of the button text
+                          marginTop: "-12px",
+                          marginLeft: "-12px",
                         }}
                       />
                     ) : (
-                      "Upload"
+                      "Upload Statement"
                     )}
                   </Button>
 
                   <Button
+                    variant="outlined"
                     sx={{
                       mt: 2,
-                      fontFamily: "Poppins",
+                      fontFamily: "Poppins, sans-serif",
+                      fontWeight: 600,
                       fontSize: ".9rem",
-                      color: "white",
+                      color: "#3949ab",
+                      borderColor: "#f59e0b",
+                      backgroundColor: "#fffbeb",
+                      textTransform: "none",
+                      borderRadius: "8px",
+                      padding: "8px 24px",
+                      borderWidth: "1.5px",
+                      transition: "all 0.2s ease",
+                      "&:hover": {
+                        color: "#b45309",
+                        borderColor: "#d97706",
+                        backgroundColor: "#fef3c7",
+                        borderWidth: "1.5px",
+                      },
                     }}
-                    onClick={handleNext}
+                    onClick={() => {
+                      setLocalStorage( "StatementUploadSkipped", true );
+                      handleNext();
+                    }}
                     disabled={selectedFiles.length > 0}
                   >
-                    Skip
+                    Skip Statement Upload
                   </Button>
                 </Box>
 

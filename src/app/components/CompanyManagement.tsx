@@ -13,66 +13,57 @@ import {
     Grid,
 } from "@mui/material";
 import { Add, Edit, Delete, Business } from "@mui/icons-material";
-import { CompanyAPI } from "@/apiClient";
-import { Company } from "@/types/user";
+import { CompanyAPI } from "@/apis/CompanyAPI";
+import { Company } from "@/types/company";
 
 interface CompanyManagementProps {
     currentUser: any;
 }
 
-const CompanyManagement: React.FC<CompanyManagementProps> = ( { currentUser } ) => {
-    const [ companies, setCompanies ] = useState<Company[]>( [] );
-    const [ openDialog, setOpenDialog ] = useState( false );
-    const [ loading, setLoading ] = useState( false );
-    const [ editingCompany, setEditingCompany ] = useState<Company | null>( null );
+const CompanyManagement: React.FC<CompanyManagementProps> = ({ currentUser }) => {
+    const [companies, setCompanies] = useState<Company[]>([]);
+    const [openDialog, setOpenDialog] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [editingCompany, setEditingCompany] = useState<Company | null>(null);
 
-    useEffect( () => {
+    useEffect(() => {
         loadCompanies();
-    }, [] );
+    }, []);
 
     const loadCompanies = async () => {
-        try
-        {
-            const response = await CompanyAPI.getAllCompanies();
-            setCompanies( response.data?.results || [] );
-        } catch ( error )
-        {
-            console.error( "Error loading companies:", error );
+        try {
+            const response = await CompanyAPI.getAll();
+            setCompanies(response.data?.results || []);
+        } catch (error) {
+            console.error("Error loading companies:", error);
         }
     };
 
-    const handleCreateCompany = async ( companyData: { name: string; domain?: string } ) => {
-        setLoading( true );
-        try
-        {
-            await CompanyAPI.createCompany( companyData );
+    const handleCreateCompany = async (companyData: { name: string; domain?: string }) => {
+        setLoading(true);
+        try {
+            await CompanyAPI.create(companyData);
             await loadCompanies();
-            setOpenDialog( false );
-        } catch ( error )
-        {
-            console.error( "Error creating company:", error );
-        } finally
-        {
-            setLoading( false );
+            setOpenDialog(false);
+        } catch (error) {
+            console.error("Error creating company:", error);
+        } finally {
+            setLoading(false);
         }
     };
 
-    const handleDeleteCompany = async ( companyId: string ) => {
-        if ( window.confirm( "Are you sure you want to delete this company?" ) )
-        {
-            try
-            {
-                await CompanyAPI.deleteCompany( companyId );
+    const handleDeleteCompany = async (companyId: string) => {
+        if (window.confirm("Are you sure you want to delete this company?")) {
+            try {
+                await CompanyAPI.delete(companyId);
                 await loadCompanies();
-            } catch ( error )
-            {
-                console.error( "Error deleting company:", error );
+            } catch (error) {
+                console.error("Error deleting company:", error);
             }
         }
     };
 
-    if ( currentUser.role !== "super_admin" )
-    {
+    if (currentUser.role !== "super_admin") {
         return null;
     }
 
@@ -83,14 +74,14 @@ const CompanyManagement: React.FC<CompanyManagementProps> = ( { currentUser } ) 
                 <Button
                     variant="contained"
                     startIcon={<Add />}
-                    onClick={() => setOpenDialog( true )}
+                    onClick={() => setOpenDialog(true)}
                 >
                     Add Company
                 </Button>
             </Box>
 
             <Grid container spacing={3}>
-                {companies.map( ( company ) => (
+                {companies.map((company) => (
                     <Grid item xs={12} sm={6} md={4} key={company.id}>
                         <Card>
                             <CardContent>
@@ -104,19 +95,19 @@ const CompanyManagement: React.FC<CompanyManagementProps> = ( { currentUser } ) 
                                     </Typography>
                                 )}
                                 <Typography variant="body2" color="textSecondary">
-                                    Created: {new Date( company.created_at ).toLocaleDateString()}
+                                    Created: {new Date(company.created_at).toLocaleDateString()}
                                 </Typography>
                                 <Box display="flex" justifyContent="flex-end" mt={2}>
                                     <IconButton
                                         size="small"
-                                        onClick={() => setEditingCompany( company )}
+                                        onClick={() => setEditingCompany(company)}
                                     >
                                         <Edit />
                                     </IconButton>
                                     <IconButton
                                         size="small"
                                         color="error"
-                                        onClick={() => handleDeleteCompany( company.id )}
+                                        onClick={() => handleDeleteCompany(company.id)}
                                     >
                                         <Delete />
                                     </IconButton>
@@ -124,12 +115,12 @@ const CompanyManagement: React.FC<CompanyManagementProps> = ( { currentUser } ) 
                             </CardContent>
                         </Card>
                     </Grid>
-                ) )}
+                ))}
             </Grid>
 
             <CompanyDialog
                 open={openDialog}
-                onClose={() => setOpenDialog( false )}
+                onClose={() => setOpenDialog(false)}
                 onSubmit={handleCreateCompany}
                 loading={loading}
                 company={null}
@@ -137,12 +128,11 @@ const CompanyManagement: React.FC<CompanyManagementProps> = ( { currentUser } ) 
 
             <CompanyDialog
                 open={!!editingCompany}
-                onClose={() => setEditingCompany( null )}
-                onSubmit={async ( data ) => {
-                    if ( editingCompany )
-                    {
-                        await CompanyAPI.updateCompany( editingCompany.id, data );
-                        setEditingCompany( null );
+                onClose={() => setEditingCompany(null)}
+                onSubmit={async (data) => {
+                    if (editingCompany) {
+                        await CompanyAPI.updateCompany(editingCompany.id, data);
+                        setEditingCompany(null);
                         await loadCompanies();
                     }
                 }}
@@ -157,17 +147,16 @@ const CompanyManagement: React.FC<CompanyManagementProps> = ( { currentUser } ) 
 const CompanyDialog: React.FC<{
     open: boolean;
     onClose: () => void;
-    onSubmit: ( data: any ) => void;
+    onSubmit: (data: any) => void;
     loading: boolean;
     company: Company | null;
-}> = ( { open, onClose, onSubmit, loading, company } ) => {
-    const [ name, setName ] = useState( company?.name || "" );
-    const [ domain, setDomain ] = useState( company?.domain || "" );
+}> = ({ open, onClose, onSubmit, loading, company }) => {
+    const [name, setName] = useState(company?.name || "");
+    const [domain, setDomain] = useState(company?.domain || "");
 
     const handleSubmit = () => {
-        if ( name.trim() )
-        {
-            onSubmit( { name: name.trim(), domain: domain.trim() || undefined } );
+        if (name.trim()) {
+            onSubmit({ name: name.trim(), domain: domain.trim() || undefined });
         }
     };
 
@@ -181,7 +170,7 @@ const CompanyDialog: React.FC<{
                     fullWidth
                     label="Company Name"
                     value={name}
-                    onChange={( e ) => setName( e.target.value )}
+                    onChange={(e) => setName(e.target.value)}
                     margin="normal"
                     required
                 />
@@ -189,7 +178,7 @@ const CompanyDialog: React.FC<{
                     fullWidth
                     label="Domain (optional)"
                     value={domain}
-                    onChange={( e ) => setDomain( e.target.value )}
+                    onChange={(e) => setDomain(e.target.value)}
                     margin="normal"
                     placeholder="example.com"
                 />

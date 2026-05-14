@@ -19,9 +19,14 @@ import {
   useMediaQuery,
   Button,
   TextField,
+  Tooltip,
+  Collapse,
+  IconButton,
 } from "@mui/material";
 import { ArrowForwardRounded } from "@mui/icons-material";
-import { ThemeProvider, useTheme } from "@mui/material/styles";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { useTheme } from "@mui/material/styles";
 
 import Loader from "../../components/common/Loader";
 import Comments from "./Comments";
@@ -37,10 +42,10 @@ import Toast from "../../components/common/Toast";
 import UserAutocomplete from "../../components/common/UserAutocomplete";
 
 import type { AppDispatch, RootState } from "@/redux/store";
-import { useMode, ColorModeContext } from "../../../../theme";
 import { useCreateTicketHistory } from "@/hooks/tickethistory";
 import { useModifyTicket } from "@/hooks/ticket";
 import { useGetUsers } from "@/hooks/user";
+import { useCreateTicketActivity } from "@/hooks/ticketActivities";
 import { Utility } from "@/utils";
 
 import { User } from "@/types/user";
@@ -54,6 +59,7 @@ const employeeStatusObj = [
   { value: "operations", label: "Operations" },
   { value: "pendency in file", label: "Pendency In File" },
   { value: "file send to banker", label: "File Send To Banker" },
+  { value: "file sent to banker - awaiting response", label: "File Sent To Banker - Awaiting Response" },
   { value: "to be approved", label: "To Be Approved" },
   { value: "to be disbursed", label: "To Be Disbursed" },
   { value: "approved", label: "Approved" },
@@ -63,6 +69,30 @@ const employeeStatusObj = [
   { value: "drop", label: "Drop" },
   { value: "hold", label: "Hold" },
 ];
+
+export const getStatusColor = (status: string) => {
+  if (!status) return { bg: "#f4f5f7", border: "#dfe1e6", text: "#42526e" };
+  const s = status.toLowerCase().trim();
+  const colors: { [key: string]: { bg: string, border: string, text: string } } = {
+    "under credit review": { bg: "rgba(255, 152, 0, 0.1)", border: "#ff9800", text: "#e65100" },
+    operations: { bg: "rgba(33, 150, 243, 0.1)", border: "#2196f3", text: "#0d47a1" },
+    "pendency in file": { bg: "rgba(244, 67, 54, 0.1)", border: "#f44336", text: "#b71c1c" },
+    "file send to banker": { bg: "rgba(63, 81, 181, 0.1)", border: "#3f51b5", text: "#1a237e" },
+    "file sent to banker - awaiting response": { bg: "rgba(0, 150, 136, 0.1)", border: "#009688", text: "#004d40" },
+    hold: { bg: "rgba(255, 235, 59, 0.15)", border: "#fbc02d", text: "#f57f17" },
+    "to be approved": { bg: "rgba(76, 175, 80, 0.1)", border: "#4caf50", text: "#1b5e20" },
+    "to be disbursed": { bg: "rgba(156, 39, 176, 0.1)", border: "#9c27b0", text: "#4a148c" },
+    approved: { bg: "rgba(139, 195, 74, 0.15)", border: "#8bc34a", text: "#33691e" },
+    disbursed: { bg: "rgba(0, 188, 212, 0.1)", border: "#00bcd4", text: "#006064" },
+    "carry forward": { bg: "rgba(158, 158, 158, 0.1)", border: "#9e9e9e", text: "#424242" },
+    rejected: { bg: "rgba(244, 67, 54, 0.1)", border: "#f44336", text: "#b71c1c" },
+    drop: { bg: "rgba(255, 87, 34, 0.1)", border: "#ff5722", text: "#bf360c" },
+    forwarded: { bg: "rgba(255, 193, 7, 0.15)", border: "#ffb300", text: "#ff6f00" },
+    "forwarded to me": { bg: "rgba(255, 112, 67, 0.1)", border: "#ff7043", text: "#bf360c" },
+    "forwarded by me": { bg: "rgba(38, 198, 218, 0.1)", border: "#26c6da", text: "#006064" },
+  };
+  return colors[s] || { bg: "rgba(149, 117, 205, 0.1)", border: "#9575cd", text: "#512da8" };
+};
 
 export interface TicketDetail {
   ticketId: number | string;
@@ -96,6 +126,8 @@ export interface TicketDetail {
   cashback_amount?: number | string;
   case_type?: string;
   fixed_commission_percentage?: number | string;
+  due_date?: string | Date;
+  companyId?: number | string;
 }
 
 interface TicketDetailResponse {
@@ -110,7 +142,6 @@ const MainPage = () => {
   const [openDialog, setOpenDialog] = useState<boolean>(false);
   const [activeSection, setActiveSection] = useState<string>("Comments");
   const [selectedUser, setSelectedUser] = useState<User>();
-  const [theme, colorMode] = useMode();
   const getTodayLocalDate = () => {
     const today = new Date();
     const year = today.getFullYear();
@@ -208,7 +239,7 @@ const MainPage = () => {
       ? ticketDetailData.approved_amount.toString()
       : "";
   });
-  console.log("approvedAmount>>>>>>>>>>>>>", approvedAmount)
+
   const [isApprovedAmountSaved, setIsApprovedAmountSaved] = useState(() => {
     return !!ticketDetailData?.approved_amount;
   });
@@ -217,6 +248,20 @@ const MainPage = () => {
   const [overage, setOverage] = useState(0);
   const [newLoanStatus, setNewLoanStatus] = useState("");
   const [newEmployeeStatus, setNewEmployeeStatus] = useState("");
+
+  // Pending status change — held until user provides mandatory comment
+  const [pendingNewStatus, setPendingNewStatus] = useState<string>("");
+  const [showStatusCommentBox, setShowStatusCommentBox] = useState<boolean>(false);
+  const [statusChangeComment, setStatusChangeComment] = useState<string>("");
+  const [statusChangeAttachment, setStatusChangeAttachment] = useState<File | null>(null);
+  const [statusChangeAttachmentPreview, setStatusChangeAttachmentPreview] = useState<string>("");
+
+  // Forward-specific comment box state
+  const [pendingForwardUser, setPendingForwardUser] = useState<any>(null);
+  const [showForwardCommentBox, setShowForwardCommentBox] = useState<boolean>(false);
+  const [forwardComment, setForwardComment] = useState<string>("");
+  const [forwardAttachment, setForwardAttachment] = useState<File | null>(null);
+  const [forwardAttachmentPreview, setForwardAttachmentPreview] = useState<string>("");
   const [timeLoggingEstimate, setTimeLoggingEstimate] = useState({
     originalEstimate: "",
     timeSpent: "0",
@@ -247,6 +292,7 @@ const MainPage = () => {
     "create-ticket-history"
   );
   const { modifyTicket } = useModifyTicket("update-ticket");
+  const { createTicketActivity } = useCreateTicketActivity("create-ticket-activity");
   const { value: userData } = useGetUsers({} as User, "get-users", 1, 200);
   const { value: workLog, refetch } = useGetTicketLogs(
     {} as TicketLogs,
@@ -276,6 +322,12 @@ const MainPage = () => {
           }));
           setNewLoanStatus(data.loanStatus);
           setNewEmployeeStatus(data.employeeStatus);
+
+          // Auto-store companyId for credit/ops users who haven't selected an aggregator.
+          // The ticket already knows which company it belongs to — no manual selection needed.
+          if (data.companyId && typeof window !== "undefined" && !localStorage.getItem("selectedCompanyId")) {
+            localStorage.setItem("selectedCompanyId", data.companyId.toString());
+          }
 
           // Set disbursed date/amount if ticket has them
           if (data.disbursed_at) {
@@ -410,239 +462,297 @@ const MainPage = () => {
     }
   }, [ticketDetailData]);
 
-  const handleChangeEmployeeStatus = async (event: any) => {
-    const oldStatus = newEmployeeStatus;
-    const newStatus = event.target.value;
-    setNewEmployeeStatus(newStatus);
+  /** Called by the File Status <Select> onChange. Only sets pending state — no API calls yet. */
+  const handleFileStatusChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+    const newStatus = event.target.value as string;
+    setPendingNewStatus(newStatus);
+    setShowStatusCommentBox(true);
+    setStatusChangeComment("");
+    setStatusChangeAttachment(null);
+    setStatusChangeAttachmentPreview("");
 
-    // Set dates and amounts for both approved and disbursed statuses
+    // Pre-fill date/amount defaults for approved / disbursed panels
     if (newStatus === "disbursed") {
-      if (!disbursedDate) {
-        setDisbursedDate(getTodayLocalDate());
-      }
-      if (!disbursedAmount && ticketDetailData?.applicationAmount) {
+      if (!disbursedDate) setDisbursedDate(getTodayLocalDate());
+      if (!disbursedAmount && ticketDetailData?.applicationAmount)
         setDisbursedAmount(ticketDetailData.applicationAmount.toString());
-      }
     }
-
     if (newStatus === "approved") {
-      if (!approvedDate) {
-        setApprovedDate(getTodayLocalDate());
-      }
-      // Set default approved amount from application amount
-      if (!approvedAmount && ticketDetailData?.applicationAmount) {
+      if (!approvedDate) setApprovedDate(getTodayLocalDate());
+      if (!approvedAmount && ticketDetailData?.applicationAmount)
         setApprovedAmount(ticketDetailData.applicationAmount.toString());
-      }
     }
+    // Clear unrelated date/amount fields
+    if (newStatus !== "disbursed") { setDisbursedDate(""); setDisbursedAmount(""); }
+    if (newStatus !== "approved") { setApprovedDate(""); setApprovedAmount(""); }
+  };
 
-    // Clear dates when switching from these statuses
-    if (newStatus !== "disbursed") {
-      setDisbursedDate("");
-      setDisbursedAmount("");
-    }
-    if (newStatus !== "approved") {
-      setApprovedDate("");
-      setApprovedAmount("");
-    }
+  /** Cancels a pending status change and restores the dropdown to the last saved status. */
+  const handleCancelStatusChange = () => {
+    setPendingNewStatus("");
+    setShowStatusCommentBox(false);
+    setStatusChangeComment("");
+    setStatusChangeAttachment(null);
+    setStatusChangeAttachmentPreview("");
+    // Restore date/amount fields to what the ticket currently has
+    if (ticketDetailData?.disbursed_at) {
+      setDisbursedDate(new Date(ticketDetailData.disbursed_at).toISOString().split("T")[0]);
+      setIsDisbursedDateSaved(true);
+    } else { setDisbursedDate(""); }
+    if (ticketDetailData?.disbursed_amount) {
+      setDisbursedAmount(ticketDetailData.disbursed_amount.toString());
+      setIsDisbursedAmountSaved(true);
+    } else { setDisbursedAmount(""); }
+    if (ticketDetailData?.approved_at) {
+      setApprovedDate(new Date(ticketDetailData.approved_at).toISOString().split("T")[0]);
+      setIsApprovedDateSaved(true);
+    } else { setApprovedDate(""); }
+    if (ticketDetailData?.approved_amount) {
+      setApprovedAmount(ticketDetailData.approved_amount.toString());
+      setIsApprovedAmountSaved(true);
+    } else { setApprovedAmount(""); }
+  };
 
+  /** Handles file input for the status-change mandatory attachment. */
+  const handleStatusAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setStatusChangeAttachment(file);
+    setStatusChangeAttachmentPreview(file.type.startsWith("image/") ? URL.createObjectURL(file) : "");
+  };
+
+  /**
+   * Uploads the optional attachment and saves the status + history + mandatory comment
+   * for all statuses OTHER than "approved" and "disbursed" (those are handled by their
+   * own submit handlers below).
+   */
+  const handleConfirmStatusChange = async () => {
+    if (!statusChangeComment.trim()) {
+      toastAndNavigate(dispatch, true, "error", "A comment is required to change the file status");
+      return;
+    }
+    const oldStatus = newEmployeeStatus;
+    const newStatus = pendingNewStatus;
     try {
-      let updatePayload: any = { status: newStatus };
-
-      // If disbursed status is selected and date/amount are provided, include them
-      if (newStatus === "disbursed" && disbursedDate && disbursedAmount) {
-        updatePayload.disbursed_at = disbursedDate;
-        updatePayload.disbursed_amount = parseFloat(disbursedAmount);
-        if (caseType) updatePayload.case_type = caseType;
-        await modifyTicket(+ticketId, updatePayload);
+      // 1. Optional attachment upload
+      let attachmentUrl: string | null = null;
+      if (statusChangeAttachment) {
+        try {
+          const formData = new FormData();
+          formData.append("document", statusChangeAttachment);
+          formData.append("folder", `comment/${statusChangeAttachment.name}`);
+          const res = await axiosInstance.post(
+            `${process.env.NEXT_PUBLIC_WEB_URL}/upload-to-s3`,
+            formData,
+            { headers: { "Content-Type": "multipart/form-data" } }
+          );
+          attachmentUrl = res.data.data as string;
+        } catch {
+          toastAndNavigate(dispatch, true, "error", "Error uploading attachment");
+          return;
+        }
       }
-
-      // If approved status is selected and date/amount are provided, include them
-      if (newStatus === "approved" && approvedDate && approvedAmount) {
-        updatePayload.approved_at = approvedDate;
-        updatePayload.approved_amount = parseFloat(approvedAmount);
-        if (caseType) updatePayload.case_type = caseType;
-        await modifyTicket(+ticketId, updatePayload);
-      }
-
-      // If no special handling needed, just update status
-      if (newStatus !== "disbursed" && newStatus !== "approved") {
-        if (caseType) updatePayload.case_type = caseType;
-        await modifyTicket(+ticketId, updatePayload);
-      }
-
+      // 2. Update ticket status
+      const updatePayload: Record<string, unknown> = { status: newStatus };
+      if (caseType) updatePayload.case_type = caseType;
+      await modifyTicket(+ticketId, updatePayload);
+      // 3. Ticket history
       const loggedInUser = decodedToken()?.username;
-      let historyMessage = `${loggedInUser} changed File Status from ${oldStatus} to ${newStatus}`;
-
-      // Add date/amount info to history message
-      if (newStatus === "disbursed" && disbursedDate && disbursedAmount) {
-        historyMessage += ` with disbursement date: ${disbursedDate} and amount: ${disbursedAmount}`;
-      }
-      if (newStatus === "approved" && approvedDate && approvedAmount) {
-        historyMessage += ` with approval date: ${approvedDate} and amount: ${approvedAmount}`;
-      }
-
       await createTicketHistory({
         ticket_id: ticketId,
-        action: historyMessage,
+        action: `${loggedInUser} changed File Status from ${oldStatus} to ${newStatus}`,
       });
-
-      // Show appropriate success messages
-      if ((newStatus === "disbursed" && disbursedDate && disbursedAmount) ||
-        (newStatus === "approved" && approvedDate && approvedAmount)) {
-        toastAndNavigate(dispatch, true, "info", "Status Changed Successfully");
-      } else if (newStatus === "disbursed" || newStatus === "approved") {
-        toastAndNavigate(dispatch, true, "info", "Status Changed. Please save the details.");
-      } else {
-        toastAndNavigate(dispatch, true, "info", "Status Changed Successfully");
-      }
-
+      // 4. Save mandatory comment to ticket_activities (same table as bottom Comments)
+      await createTicketActivity({
+        ticket_id: ticketId,
+        user_id: decodedToken()?.id,
+        comment: statusChangeComment,
+        attachment: attachmentUrl,
+      });
+      // 5. Confirm state
+      setNewEmployeeStatus(newStatus);
+      setPendingNewStatus("");
+      setShowStatusCommentBox(false);
+      setStatusChangeComment("");
+      setStatusChangeAttachment(null);
+      setStatusChangeAttachmentPreview("");
+      toastAndNavigate(dispatch, true, "info", "Status Changed Successfully");
       await refetch();
-    } catch (error) {
+    } catch {
       toastAndNavigate(dispatch, true, "error", "Error Changing Status");
     }
   };
 
-  // Combined handler for disbursed date and amount
+  // Combined handler for disbursed date, amount, and mandatory comment
   const handleCombinedDisbursementSubmit = async () => {
+    if (!statusChangeComment.trim()) {
+      toastAndNavigate(dispatch, true, "error", "A comment is required to change the file status");
+      return;
+    }
     if (!disbursedDate) {
       toastAndNavigate(dispatch, true, "error", "Please enter disbursement date");
       return;
     }
-
     if (!disbursedAmount || parseInt(disbursedAmount, 10) <= 0) {
       toastAndNavigate(dispatch, true, "error", "Please enter a valid disbursement amount");
       return;
     }
-
     try {
-      const updatePayload: any = {
+      // 1. Optional attachment upload
+      let attachmentUrl: string | null = null;
+      if (statusChangeAttachment) {
+        try {
+          const formData = new FormData();
+          formData.append("document", statusChangeAttachment);
+          formData.append("folder", `comment/${statusChangeAttachment.name}`);
+          const res = await axiosInstance.post(
+            `${process.env.NEXT_PUBLIC_WEB_URL}/upload-to-s3`,
+            formData,
+            { headers: { "Content-Type": "multipart/form-data" } }
+          );
+          attachmentUrl = res.data.data as string;
+        } catch {
+          toastAndNavigate(dispatch, true, "error", "Error uploading attachment");
+          return;
+        }
+      }
+
+      // 2. Update ticket
+      const updatePayload: Record<string, unknown> = {
         status: "disbursed",
         disbursed_at: disbursedDate,
-        disbursed_amount: parseFloat(disbursedAmount)
+        disbursed_amount: parseFloat(disbursedAmount),
       };
-      // Add cashback amount to payload if provided
-      if (cashbackAmount && parseFloat(cashbackAmount) >= 0) {
+      if (cashbackAmount && parseFloat(cashbackAmount) >= 0)
         updatePayload.cashback_amount = parseFloat(cashbackAmount);
-      }
-
-      // Add case type to payload if provided
-      if (caseType) {
-        updatePayload.case_type = caseType;
-      }
-
-      // Add fixed commission percentage to payload if provided
-      if (fixedCommissionPercentage && parseFloat(fixedCommissionPercentage) >= 0) {
+      if (caseType) updatePayload.case_type = caseType;
+      if (fixedCommissionPercentage && parseFloat(fixedCommissionPercentage) >= 0)
         updatePayload.fixed_commission_percentage = parseFloat(fixedCommissionPercentage);
-      }
-
       await modifyTicket(+ticketId, updatePayload);
 
-      // Trigger commission processing AFTER all details are saved
+      // 3. Trigger commission
       try {
         const commissionResponse = await axiosInstance.post(
           `${process.env.NEXT_PUBLIC_API_URL}/trigger-commission/${ticketId}`
         );
-        console.log("[COMMISSION] Triggered after save details:", commissionResponse.data);
+        if (commissionResponse.data?.success) console.log("Commission triggered successfully");
       } catch (commErr) {
         console.error("[COMMISSION] Failed to trigger commission:", commErr);
       }
 
+      // 4. Ticket history
       const loggedInUser = decodedToken()?.username;
-      // Build history message dynamically
       let historyMessage = `${loggedInUser} set disbursement details - Date: ${disbursedDate}, Amount: ${disbursedAmount}`;
-
-      // Add cashback to history message if provided
-      if (cashbackAmount && parseFloat(cashbackAmount) >= 0) {
-        historyMessage += `, Cashback: ${cashbackAmount}`;
-      }
-
-      // Add case type to history message if provided
-      if (caseType) {
-        historyMessage += `, Case Type: ${caseType}`;
-      }
-
-      // Add fixed commission percentage to history message if provided
-      if (fixedCommissionPercentage && parseFloat(fixedCommissionPercentage) >= 0) {
+      if (cashbackAmount && parseFloat(cashbackAmount) >= 0) historyMessage += `, Cashback: ${cashbackAmount}`;
+      if (caseType) historyMessage += `, Case Type: ${caseType}`;
+      if (fixedCommissionPercentage && parseFloat(fixedCommissionPercentage) >= 0)
         historyMessage += `, Fixed Commission: ${fixedCommissionPercentage}%`;
-      }
+      await createTicketHistory({ ticket_id: ticketId, action: historyMessage });
 
-      await createTicketHistory({
+      // 5. Save mandatory comment to ticket_activities
+      await createTicketActivity({
         ticket_id: ticketId,
-        action: historyMessage,
+        user_id: decodedToken()?.id,
+        comment: statusChangeComment,
+        attachment: attachmentUrl,
       });
 
+      // 6. Update saved flags and reset comment state
       setIsDisbursedDateSaved(true);
       setIsDisbursedAmountSaved(true);
-      // Set cashback as saved if provided
-      if (cashbackAmount && parseFloat(cashbackAmount) >= 0) {
-        setIsCashbackAmountSaved(true);
-      }
-      // Set fixed commission percentage as saved if provided
-      if (fixedCommissionPercentage && parseFloat(fixedCommissionPercentage) >= 0) {
+      if (cashbackAmount && parseFloat(cashbackAmount) >= 0) setIsCashbackAmountSaved(true);
+      if (fixedCommissionPercentage && parseFloat(fixedCommissionPercentage) >= 0)
         setIsFixedCommissionPercentageSaved(true);
-      }
+      setNewEmployeeStatus("disbursed");
+      setPendingNewStatus("");
+      setShowStatusCommentBox(false);
+      setStatusChangeComment("");
+      setStatusChangeAttachment(null);
+      setStatusChangeAttachmentPreview("");
 
-      toastAndNavigate(dispatch, true, "info", cashbackAmount ? "Disbursement details saved successfully" : "Disbursement details saved successfully");
+      toastAndNavigate(dispatch, true, "info", "Disbursement details saved successfully");
       await refetch();
       await fetchTicketDetails();
-    } catch (error) {
+    } catch {
       toastAndNavigate(dispatch, true, "error", "Error saving disbursement details");
     }
   };
 
-  // Handler for approved date and amount
+  // Handler for approved date, amount, and mandatory comment
   const handleCombinedApprovalSubmit = async () => {
+    if (!statusChangeComment.trim()) {
+      toastAndNavigate(dispatch, true, "error", "A comment is required to change the file status");
+      return;
+    }
     if (!approvedDate) {
       toastAndNavigate(dispatch, true, "error", "Please enter approval date");
       return;
     }
-
     if (!approvedAmount || parseInt(approvedAmount, 10) <= 0) {
       toastAndNavigate(dispatch, true, "error", "Please enter a valid approval amount");
       return;
     }
-
     try {
-      const updatePayload: any = {
+      // 1. Optional attachment upload
+      let attachmentUrl: string | null = null;
+      if (statusChangeAttachment) {
+        try {
+          const formData = new FormData();
+          formData.append("document", statusChangeAttachment);
+          formData.append("folder", `comment/${statusChangeAttachment.name}`);
+          const res = await axiosInstance.post(
+            `${process.env.NEXT_PUBLIC_WEB_URL}/upload-to-s3`,
+            formData,
+            { headers: { "Content-Type": "multipart/form-data" } }
+          );
+          attachmentUrl = res.data.data as string;
+        } catch {
+          toastAndNavigate(dispatch, true, "error", "Error uploading attachment");
+          return;
+        }
+      }
+
+      // 2. Update ticket
+      const updatePayload: Record<string, unknown> = {
         status: "approved",
         approved_at: approvedDate,
-        approved_amount: parseFloat(approvedAmount)
+        approved_amount: parseFloat(approvedAmount),
       };
-
-      if (caseType) {
-        updatePayload.case_type = caseType;
-      }
-
-      // Add fixed commission percentage to payload if provided
-      if (fixedCommissionPercentage && parseFloat(fixedCommissionPercentage) >= 0) {
+      if (caseType) updatePayload.case_type = caseType;
+      if (fixedCommissionPercentage && parseFloat(fixedCommissionPercentage) >= 0)
         updatePayload.fixed_commission_percentage = parseFloat(fixedCommissionPercentage);
-      }
-
       await modifyTicket(+ticketId, updatePayload);
 
+      // 3. Ticket history
       const loggedInUser = decodedToken()?.username;
       let historyMessage = `${loggedInUser} set approval details - Date: ${approvedDate}, Amount: ${approvedAmount}`;
-
-      if (caseType) {
-        historyMessage += `, Case Type: ${caseType}`;
-      }
-
-      if (fixedCommissionPercentage && parseFloat(fixedCommissionPercentage) >= 0) {
+      if (caseType) historyMessage += `, Case Type: ${caseType}`;
+      if (fixedCommissionPercentage && parseFloat(fixedCommissionPercentage) >= 0)
         historyMessage += `, Fixed Commission: ${fixedCommissionPercentage}%`;
-      }
+      await createTicketHistory({ ticket_id: ticketId, action: historyMessage });
 
-      await createTicketHistory({
+      // 4. Save mandatory comment to ticket_activities
+      await createTicketActivity({
         ticket_id: ticketId,
-        action: historyMessage,
+        user_id: decodedToken()?.id,
+        comment: statusChangeComment,
+        attachment: attachmentUrl,
       });
 
+      // 5. Update saved flags and reset comment state
       setIsApprovedDateSaved(true);
       setIsApprovedAmountSaved(true);
+      setNewEmployeeStatus("approved");
+      setPendingNewStatus("");
+      setShowStatusCommentBox(false);
+      setStatusChangeComment("");
+      setStatusChangeAttachment(null);
+      setStatusChangeAttachmentPreview("");
 
       toastAndNavigate(dispatch, true, "info", "Approval details saved successfully");
       await refetch();
       await fetchTicketDetails();
-    } catch (error) {
+    } catch {
       toastAndNavigate(dispatch, true, "error", "Error saving approval details");
     }
   };
@@ -675,36 +785,106 @@ const MainPage = () => {
     }
   };
 
-  const handleForwardAutocomplete = async (value: any) => {
+  /** Called when a user is selected in the forward autocomplete. Stores the pending user and shows the comment box. */
+  const handleForwardAutocomplete = (value: any) => {
+    if (!value) return;
     setSelectedUser(value);
+    setPendingForwardUser(value);
+    setShowForwardCommentBox(true);
+    setForwardComment("");
+    setForwardAttachment(null);
+    setForwardAttachmentPreview("");
+  };
+
+  /** Handles file input for the forward mandatory attachment. */
+  const handleForwardAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setForwardAttachment(file);
+    setForwardAttachmentPreview(file.type.startsWith("image/") ? URL.createObjectURL(file) : "");
+  };
+
+  /** Cancels the forward — resets all forward state and closes the comment box. */
+  const handleCancelForward = () => {
+    setPendingForwardUser(null);
+    setShowForwardCommentBox(false);
+    setForwardComment("");
+    setForwardAttachment(null);
+    setForwardAttachmentPreview("");
+    setSelectedUser(null);
+    setNewEmployeeStatus("");
+  };
+
+  /** Confirms the forward — runs the API calls then saves the comment to ticket_activities. */
+  const handleConfirmForward = async () => {
+    if (!forwardComment.trim()) {
+      toastAndNavigate(dispatch, true, "error", "A reason is required to forward the ticket");
+      return;
+    }
+    if (!pendingForwardUser) return;
     try {
       const employeeRole = decodedToken()?.role;
       const loggedInUser = decodedToken()?.username;
       const userId = decodedToken()?.id;
 
-      let updatePayload: any = {
-        forwarded_to: value.id,
+      // 1. Optional attachment upload
+      let attachmentUrl: string | null = null;
+      if (forwardAttachment) {
+        try {
+          const formData = new FormData();
+          formData.append("document", forwardAttachment);
+          formData.append("folder", `comment/${forwardAttachment.name}`);
+          const res = await axiosInstance.post(
+            `${process.env.NEXT_PUBLIC_WEB_URL}/upload-to-s3`,
+            formData,
+            { headers: { "Content-Type": "multipart/form-data" } }
+          );
+          attachmentUrl = res.data.data as string;
+        } catch {
+          toastAndNavigate(dispatch, true, "error", "Error uploading attachment");
+          return;
+        }
+      }
+
+      // 2. Update ticket — forwarded fields + status
+      const updatePayload: any = {
+        forwarded_to: pendingForwardUser.id,
         forwarded_by: userId,
         is_forwarded: 1,
       };
-
-      let historyMessage = `${loggedInUser} forwarded the ticket to ${value.username}`;
-
+      let historyMessage = `${loggedInUser} forwarded the ticket to ${pendingForwardUser.username}`;
       if (employeeRole === "credit") {
         updatePayload.status = "operations";
         historyMessage += " and status is set to operations";
       } else if (employeeRole === "operations") {
         updatePayload.status = "under credit review";
+        historyMessage += " and status is set to under credit review";
       }
       await modifyTicket(+ticketId, updatePayload);
 
-      await createTicketHistory({
+      // 3. Ticket history
+      await createTicketHistory({ ticket_id: ticketId, action: historyMessage });
+
+      // 4. Save forward reason as a comment in ticket_activities
+      await createTicketActivity({
         ticket_id: ticketId,
-        action: historyMessage,
+        user_id: userId,
+        comment: forwardComment,
+        attachment: attachmentUrl,
       });
+
+      // 5. Reset all forward state
+      setPendingForwardUser(null);
+      setShowForwardCommentBox(false);
+      setForwardComment("");
+      setForwardAttachment(null);
+      setForwardAttachmentPreview("");
+      setNewEmployeeStatus("");
+
       toastAndNavigate(dispatch, true, "info", "File Forwarded Successfully");
       await refetch();
-    } catch (error) {
+      await fetchTicketDetails();
+    } catch {
       toastAndNavigate(dispatch, true, "error", "Error Forwarding File");
     }
   };
@@ -714,1152 +894,1465 @@ const MainPage = () => {
   const showWorkLog = () => setActiveSection("WorkLog");
 
   return (
-    <ThemeProvider theme={theme}>
-      <ColorModeContext.Provider value={colorMode}>
-        <Container
-          maxWidth={false}
+    <>
+      <Container
+        maxWidth={false}
+        sx={{
+          px: { xs: 1, sm: 2, lg: 3 },
+          py: { xs: 1, sm: 2 },
+          minHeight: '100vh',
+          maxWidth: '1800px',
+          margin: '0 auto',
+        }}
+      >
+        <Grid
+          container
+          spacing={{ xs: 1, sm: 1.5, md: 2 }}
           sx={{
-            px: { xs: 1, sm: 2, md: 3 },
-            py: { xs: 1, sm: 2 },
-            minHeight: '100vh',
+            justifyContent: 'center',
+            alignItems: 'stretch',
           }}
         >
+          {/* Main Content Section */}
           <Grid
-            container
-            spacing={{ xs: 1, sm: 2, md: 3 }}
+            item
+            xs={12}
+            md={8}
+            lg={8}
+            xl={8}
             sx={{
-              justifyContent: 'center',
-              alignItems: 'flex-start',
+              order: { xs: 1, lg: 1 },
             }}
           >
-            {/* Main Content Section */}
-            <Grid
-              item
-              xs={12}
-              lg={8}
+            <Paper
+              elevation={0}
               sx={{
-                order: { xs: 1, lg: 1 },
+                p: { xs: 2, sm: 3, md: 4 },
+                width: '100%',
               }}
             >
-              <Paper
-                elevation={5}
-                sx={{
-                  p: { xs: 2, sm: 3, md: 4 },
-                  backgroundImage: "linear-gradient(135deg, #fff 0%, #f8f8f8 100%)",
-                  backgroundBlendMode: "multiply, screen, normal",
-                  borderRadius: 3,
-                  width: '100%',
-                }}
-              >
-                <TicketDetail
-                  ticketDetailData={ticketDetailData}
-                  isMobile={isMobile}
-                  isTab={isTablet}
-                  isIpad={isIpad}
-                />
+              <TicketDetail
+                ticketDetailData={ticketDetailData}
+                isMobile={isMobile}
+                isTab={isTablet}
+                isIpad={isIpad}
+              />
 
-                <TicketDocuments
-                  isMobile={isMobile}
-                  isTab={isTablet}
-                  isIpad={isIpad}
-                  documents={ticketDetailData?.customerDocuments ?? []}
-                  customerId={
-                    ticketDetailData?.customer_id ||
-                    ticketDetailData?.customerId
-                  }
-                />
+              <Divider sx={{ my: 3, opacity: 0.6 }} />
 
-                <TicketVoiceNotes
-                  isMobile={isMobile}
-                  isTab={isTablet}
-                  isIpad={isIpad}
-                  ticketDetailData={ticketDetailData}
-                />
-
-                {/* Activity Section */}
-                <Box
-                  sx={{
-                    mt: 4,
-                    mb: 4,
-                    display: 'flex',
-                    flexDirection: { xs: 'column', sm: 'row' },
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    borderRadius: 2,
-                    bgcolor: '#e9ecef',
-                    p: { xs: 2, sm: 1 },
-                    gap: { xs: 2, sm: 0 },
-                  }}
-                >
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      // minWidth: { xs: 'auto', sm: 120 },
-                    }}
-                  >
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        ml: 2,
-                        mt: 0,
-                        color: "black",
-                        fontSize: isMobile
-                          ? ".7rem"
-                          : isTab
-                            ? "0.9rem" // Slightly smaller for tab
-                            : "1.1rem",
-                      }}
-                    >
-                      Activity:
-                    </Typography>
-                  </Box>
-
-                  <Box
-                    sx={{
-                      width: isMobile ? "60vw" : isTab ? "48vw" : "20vw", // Adjusted tab width
-                      height: "7vh",
-                      borderRadius: "0px 10px 10px 0px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-evenly", // Better spacing for tab
-                    }}
-                  >
-                    <Typography
-                      component="span"
-                      sx={{
-                        backgroundColor:
-                          activeSection === "Comments" ? "#155fcc" : "white",
-                        color: activeSection === "Comments" ? "white" : "black",
-                        fontSize: isMobile
-                          ? ".7rem"
-                          : isTab
-                            ? "0.8rem"
-                            : "12px", // Adjusted tab font
-                        borderRadius: "4px",
-                        marginLeft: isTab ? "0" : "10px", // Remove extra margin on tab
-                        padding: isTab ? "0.3rem" : ".4rem", // Adjusted padding for tab
-                        cursor: "pointer",
-                        whiteSpace: "nowrap", // Prevent text wrapping
-                      }}
-                      onClick={showComments}
-                    >
-                      Comments
-                    </Typography>
-                    <Typography
-                      component="span"
-                      sx={{
-                        backgroundColor:
-                          activeSection === "History" ? "#155fcc" : "white",
-                        color: activeSection === "History" ? "white" : "black",
-                        fontSize: isMobile
-                          ? ".7rem"
-                          : isTab
-                            ? "0.8rem"
-                            : "12px", // Adjusted tab font
-                        borderRadius: "4px",
-                        marginLeft: isTab ? "0" : "10px", // Remove extra margin on tab
-                        padding: isTab ? "0.3rem" : "6px", // Adjusted padding for tab
-                        cursor: "pointer",
-                        whiteSpace: "nowrap", // Prevent text wrapping
-                      }}
-                      onClick={showHistory}
-                    >
-                      History
-                    </Typography>
-                    <Typography
-                      component="span"
-                      ref={workLogRef}
-                      sx={{
-                        backgroundColor:
-                          activeSection === "WorkLog" ? "#155fcc" : "white",
-                        color: activeSection === "WorkLog" ? "white" : "black",
-                        fontSize: isMobile
-                          ? ".7rem"
-                          : isTab
-                            ? "0.8rem"
-                            : "12px", // Adjusted tab font
-                        borderRadius: "4px",
-                        marginLeft: isTab ? "0" : "10px", // Remove extra margin on tab
-                        padding: isTab ? "0.3rem" : "6px", // Adjusted padding for tab
-                        cursor: "pointer",
-                        whiteSpace: "nowrap", // Prevent text wrapping
-                      }}
-                      onClick={showWorkLog}
-                    >
-                      Work Log
-                    </Typography>
-                  </Box>
-                </Box>
-
-                {/* Content Sections */}
-                {activeSection === "Comments" && (
-                  <Comments storedTicketId={ticketId} userData={userData} />
-                )}
-
-                {activeSection === "History" && (
-                  <History ticketId={ticketId} activeSection={activeSection} />
-                )}
-
-                {activeSection === "WorkLog" && (
-                  <WorkLogList userData={userData} workLog={(workLog as any)?.data} />
-                )}
-              </Paper>
-            </Grid>
-
-            {/* Sidebar Section */}
-            <Grid
-              item
-              xs={12}
-              lg={4}
-              sx={{
-                order: { xs: 2, lg: 2 },
-              }}
-            >
-              <Paper
-                elevation={4}
-                sx={{
-                  p: { xs: 1.5, sm: 2, md: 3 },
-                  borderRadius: { xs: 2, sm: 3 },
-                  position: { xs: 'static', lg: 'Fixed' },
-                  top: { lg: "7.5rem" },
-                  pb: { xs: "5vh", sm: "5vh", md: "5vh", lg: "10vh" },
-                  height: {
-                    xs: "70vh",
-                    sm: "62vh",
-                    md: "50vh",
-                    lg: "75vh"
-                  },
-                  maxHeight: {
-                    xs: "70vh",
-                    sm: "75vh",
-                    md: "80vh",
-                    lg: "100vh"
-                  },
-                  overflowY: 'auto',
-                  overflowX: 'hidden',
-                  boxShadow: {
-                    xs: '0px 2px 10px rgba(149, 117, 205, 0.2)',
-                    sm: '0px 4px 20px rgba(149, 117, 205, 0.3)'
-                  },
-                  backgroundImage: 'linear-gradient(135deg, #fff 0%, #fff 100%)',
-                  width: { xs: '100%', lg: '28vw' },
-                  // Custom scrollbar styles for webkit browsers
-                  "&::-webkit-scrollbar": {
-                    width: "6px",
-                  },
-                  "&::-webkit-scrollbar-track": {
-                    background: "transparent",
-                  },
-                  "&::-webkit-scrollbar-thumb": {
-                    background: "rgba(149, 117, 205, 0.3)",
-                    borderRadius: "3px",
-                    "&:hover": {
-                      background: "rgba(149, 117, 205, 0.5)",
-                    },
-                  },
-                  // Hide scrollbar for Firefox
-                  scrollbarWidth: "thin",
-                  scrollbarColor: "rgba(149, 117, 205, 0.3) transparent",
-                  // Smooth scrolling
-                  scrollBehavior: 'smooth',
-                }}
-              >
-                {/* Forward Button */}
-                <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
-                  <Button
-                    color="info"
-                    endIcon={<ArrowForwardRounded />}
-                    size={isMobile ? "small" : "medium"}
-                    variant="contained"
-                    // onClick={() => setNewEmployeeStatus( "forwarded" )}
-                    onClick={() => setNewEmployeeStatus("forwarded")}
-                    sx={{
-                      bgcolor: '#155fcc',
-                      textTransform: 'uppercase',
-                      borderRadius: { xs: 1.5, sm: 2 },
-                      py: { xs: 1, sm: 1.5, md: 1 },
-                      px: { xs: 1, sm: 2 },
-                      fontSize: {
-                        xs: '0.75rem',
-                        sm: '0.8rem',
-                        md: '0.85rem'
-                      },
-                      minHeight: { xs: '36px', sm: '42px' },
-                      '&:hover': {
-                        bgcolor: '#1248a8',
-                      },
-                    }}
-                  >
-                    Forward
-                  </Button>
-                </Box>
-
-
-
-                {/* User Autocomplete */}
-                {newEmployeeStatus === "forwarded" && (
-                  <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
-                    <UserAutocomplete
+              <Box sx={{ mt: 2 }}>
+                <Grid container spacing={{ xs: 2, md: 3 }}>
+                  <Grid item xs={12} lg={6}>
+                    <TicketDocuments
                       isMobile={isMobile}
                       isTab={isTablet}
-                      newEmployeeStatus={newEmployeeStatus}
-                      selectedUser={selectedUser}
-                      setSelectedUser={setSelectedUser}
-                      handleForwardAutocomplete={handleForwardAutocomplete}
-                      userData={userData}
-                      ticketId={ticketId}
-                      userId={ticketDetailData?.userId}
-                      isForwarded={ticketDetailData?.isForwarded}
-                      ticketDetailData={ticketDetailData}
-                      currentUserRole={decodedToken()?.role}
+                      isIpad={isIpad}
+                      documents={ticketDetailData?.customerDocuments ?? []}
+                      customerId={
+                        ticketDetailData?.customer_id ||
+                        ticketDetailData?.customerId
+                      }
                     />
-                  </Box>
-                )}
+                  </Grid>
+                  <Grid item xs={12} lg={6}>
+                    <TicketVoiceNotes
+                      isMobile={isMobile}
+                      isTab={isTablet}
+                      isIpad={isIpad}
+                      ticketDetailData={ticketDetailData}
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
 
-                <Divider sx={{
-                  my: { xs: 1.5, sm: 2 },
-                  borderColor: '#e0e0e0'
-                }} />
+              {/* Activity Section */}
+              <Box
+                sx={{
+                  mt: 4,
+                  mb: 3,
+                  display: 'flex',
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  borderBottom: '1px solid rgba(0,0,0,0.08)',
+                  pb: 1,
+                  gap: { xs: 2, sm: 0 },
+                }}
+              >
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      color: "#172B4D",
+                      fontWeight: 700,
+                      fontSize: { xs: "1.2rem", md: "1.4rem" },
+                    }}
+                  >
+                    Activity:
+                  </Typography>
+                </Box>
 
-                {/* File Status */}
-                {decodedToken()?.role !== "credit" && (
-                  <>
-                    {decodedToken()?.role !== "credit" && (
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: { xs: 1, sm: 1.5, md: 2 },
-                          p: { xs: 1.5, sm: 2 },
-                          borderRadius: { xs: 1.5, sm: 2 },
-                          bgcolor: '#b39ddb',
-                          boxShadow: '0px 4px 20px rgba(149, 117, 205, 0.3)',
-                          mb: { xs: 1.5, sm: 2 },
-                          transition: 'transform 0.3s ease',
-                          '&:hover': {
-                            transform: 'scale(1.02)',
-                          },
-                        }}
-                      >
-                        <Typography
-                          variant="subtitle1"
-                          sx={{
-                            color: 'white',
-                            fontWeight: 'bold',
-                            fontSize: {
-                              xs: '0.8rem',
-                              sm: '0.9rem',
-                              md: '1rem'
-                            },
-                            lineHeight: 1.2,
-                          }}
-                        >
-                          File Status:
-                        </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                  }}
+                >
+                  <Tooltip title="View comments and updates">
+                    <Button
+                      variant={activeSection === "Comments" ? "contained" : "outlined"}
+                      onClick={showComments}
+                      sx={{
+                        textTransform: "none",
+                        fontWeight: 600,
+                        fontSize: "0.85rem",
+                        borderRadius: "8px",
+                        bgcolor: activeSection === "Comments" ? "#155fcc" : "transparent",
+                        color: activeSection === "Comments" ? "white" : "#5E6C84",
+                        borderColor: activeSection === "Comments" ? "#155fcc" : "#dfe1e6",
+                        boxShadow: "none",
+                        "&:hover": {
+                          boxShadow: "none",
+                          bgcolor: activeSection === "Comments" ? "#104da8" : "rgba(9, 30, 66, 0.04)",
+                        }
+                      }}
+                    >
+                      Comments
+                    </Button>
+                  </Tooltip>
+                  <Tooltip title="View ticket history">
+                    <Button
+                      variant={activeSection === "History" ? "contained" : "outlined"}
+                      onClick={showHistory}
+                      sx={{
+                        textTransform: "none",
+                        fontWeight: 600,
+                        fontSize: "0.85rem",
+                        borderRadius: "8px",
+                        bgcolor: activeSection === "History" ? "#155fcc" : "transparent",
+                        color: activeSection === "History" ? "white" : "#5E6C84",
+                        borderColor: activeSection === "History" ? "#155fcc" : "#dfe1e6",
+                        boxShadow: "none",
+                        "&:hover": {
+                          boxShadow: "none",
+                          bgcolor: activeSection === "History" ? "#104da8" : "rgba(9, 30, 66, 0.04)",
+                        }
+                      }}
+                    >
+                      History
+                    </Button>
+                  </Tooltip>
+                  <Tooltip title="View operational work logs">
+                    <Button
+                      variant={activeSection === "WorkLog" ? "contained" : "outlined"}
+                      onClick={showWorkLog}
+                      sx={{
+                        textTransform: "none",
+                        fontWeight: 600,
+                        fontSize: "0.85rem",
+                        borderRadius: "8px",
+                        bgcolor: activeSection === "WorkLog" ? "#155fcc" : "transparent",
+                        color: activeSection === "WorkLog" ? "white" : "#5E6C84",
+                        borderColor: activeSection === "WorkLog" ? "#155fcc" : "#dfe1e6",
+                        boxShadow: "none",
+                        "&:hover": {
+                          boxShadow: "none",
+                          bgcolor: activeSection === "WorkLog" ? "#104da8" : "rgba(9, 30, 66, 0.04)",
+                        }
+                      }}
+                    >
+                      Work Log
+                    </Button>
+                  </Tooltip>
+                </Box>
+              </Box>
 
-                        <FormControl
-                          variant="filled"
-                          fullWidth
-                          size={isMobile ? "small" : "medium"}
-                          sx={{
-                            bgcolor: 'white',
-                            borderRadius: { xs: 1.5, sm: 2 },
-                            '& .MuiFilledInput-root': {
-                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                              minHeight: { xs: '48px', sm: '56px' },
-                              paddingTop: { xs: '24px', sm: '.4rem' },
-                            },
-                            '& .MuiInputLabel-root': {
-                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                              transform: isMobile ? 'translate(12px, 8px) scale(1)' : 'translate(12px, 10px) scale(1)',
-                              top: { xs: '-4px', sm: '-2px' },
-                            },
-                            '& .MuiInputLabel-shrink': {
-                              transform: isMobile ? 'translate(12px, 2px) scale(0.75)' : 'translate(12px, 4px) scale(0.75)',
-                              top: 0,
-                            },
-                            '& .MuiFilledInput-input': {
-                              paddingTop: { xs: '8px', sm: '12px' },
-                              paddingBottom: { xs: '8px', sm: '12px' },
-                            },
-                            '& .MuiSelect-select': {
-                              paddingTop: { xs: '8px', sm: '12px' } + ' !important',
-                              paddingBottom: { xs: '8px', sm: '12px' } + ' !important',
-                            },
-                            '& .MuiFilledInput-underline:before': {
-                              borderBottom: 'none',
-                            },
-                            '& .MuiFilledInput-underline:after': {
-                              borderBottom: 'none',
-                            },
-                            '& .MuiFilledInput-underline:hover:before': {
-                              borderBottom: 'none !important',
-                            },
-                          }}
-                        >
-                          <InputLabel>File Status</InputLabel>
-                          <Select
-                            value={newEmployeeStatus}
-                            onChange={handleChangeEmployeeStatus}
-                            sx={{
-                              borderRadius: 1,
-                              '& .MuiSelect-select': {
-                                fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                                py: { xs: 1, sm: 1.5 },
-                              }
-                            }}
-                            MenuProps={{
-                              PaperProps: {
-                                sx: {
-                                  maxHeight: 200,
-                                  '& .MuiMenuItem-root': {
-                                    fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                                    minHeight: { xs: '36px', sm: '48px' },
-                                  }
-                                }
-                              }
-                            }}
-                          >
-                            {employeeStatusObj.map((status) => (
-                              <MenuItem key={status.value} value={status.value}>
-                                {status.label}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </Box>
-                    )}
+              {/* Content Sections */}
+              {activeSection === "Comments" && (
+                <Comments storedTicketId={ticketId} userData={userData} />
+              )}
 
-                    {newEmployeeStatus === "approved" && (
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: { xs: 1, sm: 1.5, md: 2 },
-                          p: { xs: 1.5, sm: 2 },
-                          borderRadius: { xs: 1.5, sm: 2 },
-                          bgcolor: '#b39ddb',
-                          boxShadow: '0px 4px 20px rgba(149, 117, 205, 0.3)',
-                          mb: { xs: 1.5, sm: 2 },
-                          transition: 'transform 0.3s ease',
-                          '&:hover': {
-                            transform: 'scale(1.02)',
-                          },
-                        }}
-                      >
-                        {/* Title */}
-                        <Typography
-                          variant="subtitle1"
-                          align="center"
-                          sx={{
-                            color: 'white',
-                            fontWeight: 'bold',
-                            fontSize: {
-                              xs: '0.8rem',
-                              sm: '0.9rem',
-                              md: '1rem',
-                            },
-                            lineHeight: 1.2,
-                          }}
-                        >
-                          Approval Details
-                        </Typography>
+              {activeSection === "History" && (
+                <History ticketId={ticketId} activeSection={activeSection} />
+              )}
 
-                        {/* Date Field */}
-                        <TextField
-                          fullWidth
-                          type="date"
-                          label="Date"
-                          value={approvedDate}
-                          onChange={(e) => setApprovedDate(e.target.value)}
-                          variant="filled"
-                          InputLabelProps={{ shrink: true }}
-                          sx={{
-                            bgcolor: 'white',
-                            borderRadius: { xs: 1.5, sm: 2 },
-                            '& .MuiFilledInput-root': {
-                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                              minHeight: { xs: '48px', sm: '56px' },
-                              paddingTop: { xs: '24px', sm: '.4rem' },
-                            },
-                            '& .MuiInputLabel-root': {
-                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                              transform: 'translate(12px, 10px) scale(1)',
-                            },
-                            '& .MuiInputLabel-shrink': {
-                              transform: 'translate(12px, 4px) scale(0.75)',
-                              top: 0,
-                            },
-                            '& .MuiFilledInput-input': {
-                              paddingTop: { xs: '8px', sm: '12px' },
-                              paddingBottom: { xs: '8px', sm: '12px' },
-                            },
-                            '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
-                              borderBottom: 'none',
-                            },
-                            '& .MuiFilledInput-underline:hover:before': {
-                              borderBottom: 'none !important',
-                            },
-                          }}
-                        />
+              {activeSection === "WorkLog" && (
+                <WorkLogList userData={userData} workLog={(workLog as any)?.data} />
+              )}
+            </Paper>
+          </Grid>
 
-                        {/* Amount Field */}
-                        <TextField
-                          fullWidth
-                          type="number"
-                          label="Amount"
-                          value={formatDisplayAmount(approvedAmount)}
-                          placeholder="Enter amount"
-                          onChange={(e) => {
-                            // Store the raw value but display formatted
-                            const rawValue = e.target.value;
-                            setApprovedAmount(rawValue);
-                          }}
-                          onBlur={(e) => {
-                            // Format the amount when field loses focus
-                            if (e.target.value) {
-                              const formatted = formatDecimalAmount(e.target.value);
-                              setApprovedAmount(formatted);
-                            }
-                          }}
-                          variant="filled"
-                          InputLabelProps={{ shrink: true }}
-                          sx={{
-                            bgcolor: 'white',
-                            borderRadius: { xs: 1.5, sm: 2 },
-                            '& .MuiFilledInput-root': {
-                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                              minHeight: { xs: '48px', sm: '56px' },
-                              paddingTop: { xs: '24px', sm: '.4rem' },
-                            },
-                            '& .MuiInputLabel-root': {
-                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                              transform: 'translate(12px, 10px) scale(1)',
-                            },
-                            '& .MuiInputLabel-shrink': {
-                              transform: 'translate(12px, 4px) scale(0.75)',
-                              top: 0,
-                            },
-                            '& .MuiFilledInput-input': {
-                              paddingTop: { xs: '8px', sm: '12px' },
-                              paddingBottom: { xs: '8px', sm: '12px' },
-                            },
-                            '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
-                              borderBottom: 'none',
-                            },
-                            '& .MuiFilledInput-underline:hover:before': {
-                              borderBottom: 'none !important',
-                            },
-                          }}
-                        />
-
-                        {/* Case Type Field */}
-                        <TextField
-                          select
-                          fullWidth
-                          label="Case Type"
-                          value={caseType}
-                          onChange={(e) => setCaseType(e.target.value)}
-                          variant="filled"
-                          InputLabelProps={{ shrink: true }}
-                          sx={{
-                            bgcolor: 'white',
-                            borderRadius: { xs: 1.5, sm: 2 },
-                            '& .MuiFilledInput-root': {
-                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                              minHeight: { xs: '48px', sm: '56px' },
-                              paddingTop: { xs: '24px', sm: '.4rem' },
-                            },
-                            '& .MuiInputLabel-root': {
-                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                              transform: 'translate(12px, 10px) scale(1)',
-                            },
-                            '& .MuiInputLabel-shrink': {
-                              transform: 'translate(12px, 4px) scale(0.75)',
-                              top: 0,
-                            },
-                            '& .MuiFilledInput-input': {
-                              paddingTop: { xs: '8px', sm: '12px' },
-                              paddingBottom: { xs: '8px', sm: '12px' },
-                            },
-                            '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
-                              borderBottom: 'none',
-                            },
-                            '& .MuiFilledInput-underline:hover:before': {
-                              borderBottom: 'none !important',
-                            },
-                          }}
-                        >
-                          <MenuItem value="fresh">Fresh</MenuItem>
-                          <MenuItem value="top_up">Top up</MenuItem>
-                        </TextField>
-
-                        {/* Fixed Commission Percentage Field */}
-                        <TextField
-                          fullWidth
-                          type="number"
-                          label="Fixed Commission Percentage"
-                          placeholder="Enter fixed commission percentage"
-                          value={fixedCommissionPercentage}
-                          onChange={(e) => setFixedCommissionPercentage(e.target.value)}
-                          variant="filled"
-                          InputLabelProps={{ shrink: true }}
-                          sx={{
-                            bgcolor: 'white',
-                            borderRadius: { xs: 1.5, sm: 2 },
-                            '& .MuiFilledInput-root': {
-                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                              minHeight: { xs: '48px', sm: '56px' },
-                              paddingTop: { xs: '24px', sm: '.4rem' },
-                            },
-                            '& .MuiInputLabel-root': {
-                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                              transform: 'translate(12px, 10px) scale(1)',
-                            },
-                            '& .MuiInputLabel-shrink': {
-                              transform: 'translate(12px, 4px) scale(0.75)',
-                              top: 0,
-                            },
-                            '& .MuiFilledInput-input': {
-                              paddingTop: { xs: '8px', sm: '12px' },
-                              paddingBottom: { xs: '8px', sm: '12px' },
-                            },
-                            '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
-                              borderBottom: 'none',
-                            },
-                            '& .MuiFilledInput-underline:hover:before': {
-                              borderBottom: 'none !important',
-                            },
-                          }}
-                        />
-
-                        {/* Save Button */}
-                        <Box display="flex" justifyContent="center" mt={1}>
-                          <Button
-                            variant="contained"
-                            size="medium"
-                            onClick={handleCombinedApprovalSubmit}
-                            disabled={
-                              !approvedDate ||
-                              !(approvedAmount || ticketDetailData?.applicationAmount) ||
-                              parseFloat(approvedAmount || ticketDetailData?.applicationAmount || 0) <= 0
-                            }
-                            sx={{
-                              bgcolor: "#2e7d32",
-                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                              borderRadius: { xs: 1.5, sm: 2 },
-                              px: { xs: 2, sm: 4 },
-                              py: { xs: 0.8, sm: 1.2 },
-                              '&:hover': { bgcolor: "#1b5e20" },
-                              '&:disabled': { bgcolor: "#ccc", color: "#666" },
-                            }}
-                          >
-                            Save Details
-                          </Button>
-                        </Box>
-                      </Box>
-                    )}
-
-                    {newEmployeeStatus === "disbursed" && (
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: { xs: 1, sm: 1.5, md: 2 },
-                          p: { xs: 1.5, sm: 2 },
-                          borderRadius: { xs: 1.5, sm: 2 },
-                          bgcolor: '#b39ddb',
-                          boxShadow: '0px 4px 20px rgba(149, 117, 205, 0.3)',
-                          mb: { xs: 1.5, sm: 2 },
-                          transition: 'transform 0.3s ease',
-                          '&:hover': {
-                            transform: 'scale(1.02)',
-                          },
-                        }}
-                      >
-                        {/* Title */}
-                        <Typography
-                          variant="subtitle1"
-                          align="center"
-                          sx={{
-                            color: 'white',
-                            fontWeight: 'bold',
-                            fontSize: {
-                              xs: '0.8rem',
-                              sm: '0.9rem',
-                              md: '1rem',
-                            },
-                            lineHeight: 1.2,
-                          }}
-                        >
-                          Disbursement Details
-                        </Typography>
-
-                        {/* Date Field */}
-                        <TextField
-                          fullWidth
-                          type="date"
-                          label="Date"
-                          value={disbursedDate}
-                          onChange={(e) => setDisbursedDate(e.target.value)}
-                          variant="filled"
-                          InputLabelProps={{ shrink: true }}
-                          sx={{
-                            bgcolor: 'white',
-                            borderRadius: { xs: 1.5, sm: 2 },
-                            '& .MuiFilledInput-root': {
-                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                              minHeight: { xs: '48px', sm: '56px' },
-                              paddingTop: { xs: '24px', sm: '.4rem' },
-                            },
-                            '& .MuiInputLabel-root': {
-                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                              transform: 'translate(12px, 10px) scale(1)',
-                            },
-                            '& .MuiInputLabel-shrink': {
-                              transform: 'translate(12px, 4px) scale(0.75)',
-                              top: 0,
-                            },
-                            '& .MuiFilledInput-input': {
-                              paddingTop: { xs: '8px', sm: '12px' },
-                              paddingBottom: { xs: '8px', sm: '12px' },
-                            },
-                            '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
-                              borderBottom: 'none',
-                            },
-                            '& .MuiFilledInput-underline:hover:before': {
-                              borderBottom: 'none !important',
-                            },
-                          }}
-                        />
-
-                        {/* Amount Field */}
-                        <TextField
-                          fullWidth
-                          type="number"
-                          label="Amount"
-                          placeholder="Enter amount"
-                          value={disbursedAmount}
-                          onChange={(e) => setDisbursedAmount(e.target.value)}
-                          variant="filled"
-                          InputLabelProps={{ shrink: true }}
-                          sx={{
-                            bgcolor: 'white',
-                            borderRadius: { xs: 1.5, sm: 2 },
-                            '& .MuiFilledInput-root': {
-                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                              minHeight: { xs: '48px', sm: '56px' },
-                              paddingTop: { xs: '24px', sm: '.4rem' },
-                            },
-                            '& .MuiInputLabel-root': {
-                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                              transform: 'translate(12px, 10px) scale(1)',
-                            },
-                            '& .MuiInputLabel-shrink': {
-                              transform: 'translate(12px, 4px) scale(0.75)',
-                              top: 0,
-                            },
-                            '& .MuiFilledInput-input': {
-                              paddingTop: { xs: '8px', sm: '12px' },
-                              paddingBottom: { xs: '8px', sm: '12px' },
-                            },
-                            '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
-                              borderBottom: 'none',
-                            },
-                            '& .MuiFilledInput-underline:hover:before': {
-                              borderBottom: 'none !important',
-                            },
-                          }}
-                        />
-                        {/* Add Cashback Field Here */}
-                        <TextField
-                          fullWidth
-                          type="number"
-                          label="Cashback Amount"
-                          placeholder="Enter cashback amount"
-                          value={cashbackAmount}
-                          onChange={(e) => setCashbackAmount(e.target.value)}
-                          variant="filled"
-                          InputLabelProps={{ shrink: true }}
-                          sx={{
-                            bgcolor: 'white',
-                            borderRadius: { xs: 1.5, sm: 2 },
-                            '& .MuiFilledInput-root': {
-                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                              minHeight: { xs: '48px', sm: '56px' },
-                              paddingTop: { xs: '24px', sm: '.4rem' },
-                            },
-                            '& .MuiInputLabel-root': {
-                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                              transform: 'translate(12px, 10px) scale(1)',
-                            },
-                            '& .MuiInputLabel-shrink': {
-                              transform: 'translate(12px, 4px) scale(0.75)',
-                              top: 0,
-                            },
-                            '& .MuiFilledInput-input': {
-                              paddingTop: { xs: '8px', sm: '12px' },
-                              paddingBottom: { xs: '8px', sm: '12px' },
-                            },
-                            '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
-                              borderBottom: 'none',
-                            },
-                            '& .MuiFilledInput-underline:hover:before': {
-                              borderBottom: 'none !important',
-                            },
-                          }}
-                        />
-
-                        {/* Case Type Field */}
-                        <TextField
-                          select
-                          fullWidth
-                          label="Case Type"
-                          placeholder="Case type"
-                          value={caseType}
-                          onChange={(e) => setCaseType(e.target.value)}
-                          variant="filled"
-                          InputLabelProps={{ shrink: true }}
-                          sx={{
-                            bgcolor: 'white',
-                            borderRadius: { xs: 1.5, sm: 2 },
-                            '& .MuiFilledInput-root': {
-                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                              minHeight: { xs: '48px', sm: '56px' },
-                              paddingTop: { xs: '24px', sm: '.4rem' },
-                            },
-                            '& .MuiInputLabel-root': {
-                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                              transform: 'translate(12px, 10px) scale(1)',
-                            },
-                            '& .MuiInputLabel-shrink': {
-                              transform: 'translate(12px, 4px) scale(0.75)',
-                              top: 0,
-                            },
-                            '& .MuiFilledInput-input': {
-                              paddingTop: { xs: '8px', sm: '12px' },
-                              paddingBottom: { xs: '8px', sm: '12px' },
-                            },
-                            '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
-                              borderBottom: 'none',
-                            },
-                            '& .MuiFilledInput-underline:hover:before': {
-                              borderBottom: 'none !important',
-                            },
-                          }}
-                        >
-                          <MenuItem value="fresh">Fresh</MenuItem>
-                          <MenuItem value="top_up">Top up</MenuItem>
-                        </TextField>
-
-                        {/* Fixed Commission Percentage Field */}
-                        <TextField
-                          fullWidth
-                          type="number"
-                          label="Fixed Commission Percentage ( % )"
-                          placeholder="Enter fixed commission percentage"
-                          value={fixedCommissionPercentage}
-                          onChange={(e) => setFixedCommissionPercentage(e.target.value)}
-                          variant="filled"
-                          InputLabelProps={{ shrink: true }}
-                          sx={{
-                            bgcolor: 'white',
-                            borderRadius: { xs: 1.5, sm: 2 },
-                            '& .MuiFilledInput-root': {
-                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                              minHeight: { xs: '48px', sm: '56px' },
-                              paddingTop: { xs: '24px', sm: '.4rem' },
-                            },
-                            '& .MuiInputLabel-root': {
-                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                              transform: 'translate(12px, 10px) scale(1)',
-                            },
-                            '& .MuiInputLabel-shrink': {
-                              transform: 'translate(12px, 4px) scale(0.75)',
-                              top: 0,
-                            },
-                            '& .MuiFilledInput-input': {
-                              paddingTop: { xs: '8px', sm: '12px' },
-                              paddingBottom: { xs: '8px', sm: '12px' },
-                            },
-                            '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
-                              borderBottom: 'none',
-                            },
-                            '& .MuiFilledInput-underline:hover:before': {
-                              borderBottom: 'none !important',
-                            },
-                          }}
-                        />
+          {/* Sidebar Section */}
+          <Grid
+            item
+            xs={12}
+            md={4}
+            lg={4}
+            xl={4}
+            sx={{
+              order: { xs: 2, lg: 2 },
+            }}
+          >
+            <Paper
+              elevation={0}
+              sx={{
+                p: { xs: 2, sm: 3 },
+                position: { xs: 'static', lg: 'sticky' },
+                top: { lg: "calc(var(--MainNav-height, 64px) + 24px)" },
+                zIndex: 10,
+                width: '100%',
+                pb: { xs: "5vh", lg: "10vh" },
+                height: {
+                  xs: "auto",
+                  lg: "calc(100vh - 8rem)"
+                },
+                maxHeight: {
+                  lg: "calc(100vh - 8rem)"
+                },
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                backgroundColor: "#fff",
+                // Custom scrollbar styles for webkit browsers
+                "&::-webkit-scrollbar": {
+                  width: "6px",
+                },
+                "&::-webkit-scrollbar-track": {
+                  background: "transparent",
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  background: "rgba(149, 117, 205, 0.3)",
+                  borderRadius: "3px",
+                  "&:hover": {
+                    background: "rgba(149, 117, 205, 0.5)",
+                  },
+                },
+                // Hide scrollbar for Firefox
+                scrollbarWidth: "thin",
+                scrollbarColor: "rgba(149, 117, 205, 0.3) transparent",
+                // Smooth scrolling
+                scrollBehavior: 'smooth',
+              }}
+            >
+              {/* Forward Button */}
+              <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
+                <Tooltip title="Forward this ticket to another user">
+                  <span>
+                    <Button
+                      color="info"
+                      endIcon={<ArrowForwardRounded />}
+                      size={isMobile ? "small" : "medium"}
+                      variant="contained"
+                      onClick={() => setNewEmployeeStatus("forwarded")}
+                      sx={{
+                        bgcolor: '#155fcc',
+                        textTransform: 'uppercase',
+                        borderRadius: { xs: 1.5, sm: 2 },
+                        py: { xs: 1, sm: 1.5, md: 1 },
+                        px: { xs: 1, sm: 2 },
+                        fontSize: {
+                          xs: '0.75rem',
+                          sm: '0.8rem',
+                          md: '0.85rem'
+                        },
+                        minHeight: { xs: '36px', sm: '42px' },
+                        '&:hover': {
+                          bgcolor: '#1248a8',
+                        },
+                      }}
+                    >
+                      Forward
+                    </Button>
+                  </span>
+                </Tooltip>
+              </Box>
 
 
-                        {/* Save Button */}
-                        <Box display="flex" justifyContent="center" mt={1}>
-                          <Button
-                            variant="contained"
-                            size="medium"
-                            onClick={handleCombinedDisbursementSubmit}
-                            disabled={
-                              !disbursedDate ||
-                              !(disbursedAmount || ticketDetailData?.applicationAmount) ||
-                              parseFloat(disbursedAmount || ticketDetailData?.applicationAmount || 0) <= 0
-                            }
-                            sx={{
-                              bgcolor: "#2e7d32",
-                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                              borderRadius: { xs: 1.5, sm: 2 },
-                              px: { xs: 2, sm: 4 },
-                              py: { xs: 0.8, sm: 1.2 },
-                              '&:hover': { bgcolor: "#1b5e20" },
-                              '&:disabled': { bgcolor: "#ccc", color: "#666" },
-                            }}
-                          >
-                            Save Details
-                          </Button>
-                        </Box>
-                      </Box>
-                    )}
 
+              {/* User Autocomplete */}
+              {newEmployeeStatus === "forwarded" && (
+                <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
+                  <UserAutocomplete
+                    isMobile={isMobile}
+                    isTab={isTablet}
+                    newEmployeeStatus={newEmployeeStatus}
+                    selectedUser={selectedUser}
+                    setSelectedUser={setSelectedUser}
+                    handleForwardAutocomplete={handleForwardAutocomplete}
+                    userData={userData}
+                    ticketId={ticketId}
+                    userId={ticketDetailData?.userId}
+                    isForwarded={ticketDetailData?.isForwarded}
+                    ticketDetailData={ticketDetailData}
+                    currentUserRole={decodedToken()?.role}
+                  />
+                </Box>
+              )}
 
-                  </>
-                )}
-
+              {/* Forward Reason Comment Box — slides in after a user is selected */}
+              <Collapse in={showForwardCommentBox} timeout={300} unmountOnExit>
                 <Box
                   sx={{
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: { xs: 1, sm: 1.5, md: 2 },
+                    gap: 1.5,
                     p: { xs: 1.5, sm: 2 },
                     borderRadius: { xs: 1.5, sm: 2 },
-                    bgcolor: '#b39ddb',
+                    bgcolor: 'rgba(21, 95, 204, 0.04)',
+                    border: '1px solid rgba(21, 95, 204, 0.2)',
                     mb: { xs: 1.5, sm: 2 },
-                    transition: 'transform 0.3s ease',
-                    '&:hover': {
-                      transform: 'scale(1.02)',
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ fontWeight: 700, color: 'text.primary', fontSize: { xs: '0.8rem', sm: '0.9rem' } }}
+                  >
+                    Reason for Forwarding{' '}
+                    <Typography component="span" sx={{ color: 'error.main', fontSize: '0.85rem' }}>*</Typography>
+                  </Typography>
+
+                  {/* Comment input with attachment icon */}
+                  <Box sx={{ position: 'relative' }}>
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={3}
+                      placeholder={`Add a reason for forwarding to ${pendingForwardUser?.username || 'user'}...`}
+                      value={forwardComment}
+                      onChange={(e) => setForwardComment(e.target.value)}
+                      variant="outlined"
+                      size="small"
+                      sx={{ '& .MuiOutlinedInput-root': { bgcolor: '#fff', pr: '40px' } }}
+                    />
+                    <Tooltip title="Add attachment">
+                      <IconButton
+                        component="label"
+                        size="small"
+                        sx={{ position: 'absolute', bottom: 6, right: 4 }}
+                      >
+                        <AttachFileIcon fontSize="small" />
+                        <input type="file" hidden onChange={handleForwardAttachmentChange} />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+
+                  {/* Attachment preview */}
+                  {forwardAttachment && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      {forwardAttachmentPreview && (
+                        <Box
+                          component="img"
+                          src={forwardAttachmentPreview}
+                          alt="Preview"
+                          sx={{ maxHeight: 60, maxWidth: 60, borderRadius: 1 }}
+                        />
+                      )}
+                      <Typography variant="caption" sx={{ flexGrow: 1, wordBreak: 'break-all' }}>
+                        {forwardAttachment.name}
+                      </Typography>
+                      <IconButton
+                        size="small"
+                        onClick={() => { setForwardAttachment(null); setForwardAttachmentPreview(""); }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  )}
+
+                  {/* Action buttons */}
+                  <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={handleCancelForward}
+                      sx={{ fontSize: { xs: '0.75rem', sm: '0.8rem' } }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      disabled={!forwardComment.trim()}
+                      onClick={handleConfirmForward}
+                      sx={{
+                        bgcolor: '#155fcc',
+                        fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                        '&:hover': { bgcolor: '#104da8' },
+                        '&:disabled': { bgcolor: '#ccc', color: '#666' },
+                      }}
+                    >
+                      Forward
+                    </Button>
+                  </Box>
+                </Box>
+              </Collapse>
+
+              <Divider sx={{
+                my: { xs: 1.5, sm: 2 },
+                borderColor: '#e0e0e0'
+              }} />
+
+              {/* File Status */}
+              {decodedToken()?.role !== "credit" && (
+                <>
+                  {decodedToken()?.role !== "credit" && (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: { xs: 1, sm: 1.5, md: 2 },
+                        p: { xs: 1.5, sm: 2 },
+                        borderRadius: { xs: 1.5, sm: 2 },
+                        bgcolor: 'var(--mui-palette-neutral-50)',
+                        border: '1px solid var(--mui-palette-neutral-200)',
+                        mb: { xs: 1.5, sm: 2 },
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      <Typography
+                        variant="subtitle1"
+                        sx={{
+                          color: 'text.primary',
+                          fontWeight: 'bold',
+                          fontSize: {
+                            xs: '0.8rem',
+                            sm: '0.9rem',
+                            md: '1rem'
+                          },
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        File Status:
+                      </Typography>
+
+                      <FormControl
+                        variant="filled"
+                        fullWidth
+                        size={isMobile ? "small" : "medium"}
+                        sx={{
+                          bgcolor: 'white',
+                          borderRadius: { xs: 1.5, sm: 2 },
+                          '& .MuiFilledInput-root': {
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                            minHeight: { xs: '48px', sm: '56px' },
+                            paddingTop: { xs: '24px', sm: '.4rem' },
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                            transform: isMobile ? 'translate(12px, 8px) scale(1)' : 'translate(12px, 10px) scale(1)',
+                            top: { xs: '-4px', sm: '-2px' },
+                          },
+                          '& .MuiInputLabel-shrink': {
+                            transform: isMobile ? 'translate(12px, 2px) scale(0.75)' : 'translate(12px, 4px) scale(0.75)',
+                            top: 0,
+                          },
+                          '& .MuiFilledInput-input': {
+                            paddingTop: { xs: '8px', sm: '12px' },
+                            paddingBottom: { xs: '8px', sm: '12px' },
+                          },
+                          '& .MuiSelect-select': {
+                            paddingTop: { xs: '8px', sm: '12px' } + ' !important',
+                            paddingBottom: { xs: '8px', sm: '12px' } + ' !important',
+                          },
+                          '& .MuiFilledInput-underline:before': {
+                            borderBottom: 'none',
+                          },
+                          '& .MuiFilledInput-underline:after': {
+                            borderBottom: 'none',
+                          },
+                          '& .MuiFilledInput-underline:hover:before': {
+                            borderBottom: 'none !important',
+                          },
+                        }}
+                      >
+                        <InputLabel>File Status</InputLabel>
+                        <Select
+                          value={pendingNewStatus || newEmployeeStatus}
+                          onChange={handleFileStatusChange}
+                          sx={{
+                            borderRadius: 1,
+                            '& .MuiSelect-select': {
+                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                              py: { xs: 1, sm: 1.5 },
+                            }
+                          }}
+                          MenuProps={{
+                            PaperProps: {
+                              sx: {
+                                maxHeight: 200,
+                                '& .MuiMenuItem-root': {
+                                  fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                                  minHeight: { xs: '36px', sm: '48px' },
+                                }
+                              }
+                            }
+                          }}
+                        >
+                          {employeeStatusObj.map((status) => (
+                            <MenuItem key={status.value} value={status.value}>
+                              {status.label}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Box>
+                  )}
+
+                  {/* Slide-in mandatory comment box — only for non-approved/disbursed statuses */}
+                  <Collapse
+                    in={showStatusCommentBox && pendingNewStatus !== "approved" && pendingNewStatus !== "disbursed"}
+                    timeout={300}
+                    unmountOnExit
+                  >
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 1.5,
+                        p: { xs: 1.5, sm: 2 },
+                        borderRadius: { xs: 1.5, sm: 2 },
+                        bgcolor: 'var(--mui-palette-neutral-50)',
+                        border: '1px solid var(--mui-palette-neutral-200)',
+                        mb: { xs: 1.5, sm: 2 },
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      <Typography
+                        variant="subtitle2"
+                        sx={{ fontWeight: 700, color: 'text.primary', fontSize: { xs: '0.8rem', sm: '0.9rem' } }}
+                      >
+                        Comment{' '}
+                        <Typography component="span" sx={{ color: 'error.main', fontSize: '0.85rem' }}>*</Typography>
+                      </Typography>
+
+                      {/* Comment input with attachment icon */}
+                      <Box sx={{ position: 'relative' }}>
+                        <TextField
+                          fullWidth
+                          multiline
+                          rows={3}
+                          placeholder="Add a comment for this status change..."
+                          value={statusChangeComment}
+                          onChange={(e) => setStatusChangeComment(e.target.value)}
+                          variant="outlined"
+                          size="small"
+                          sx={{ '& .MuiOutlinedInput-root': { bgcolor: '#fff', pr: '40px' } }}
+                        />
+                        <Tooltip title="Add attachment">
+                          <IconButton
+                            component="label"
+                            size="small"
+                            sx={{ position: 'absolute', bottom: 6, right: 4 }}
+                          >
+                            <AttachFileIcon fontSize="small" />
+                            <input type="file" hidden onChange={handleStatusAttachmentChange} />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+
+                      {/* Attachment preview */}
+                      {statusChangeAttachment && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          {statusChangeAttachmentPreview && (
+                            <Box
+                              component="img"
+                              src={statusChangeAttachmentPreview}
+                              alt="Preview"
+                              sx={{ maxHeight: 60, maxWidth: 60, borderRadius: 1 }}
+                            />
+                          )}
+                          <Typography variant="caption" sx={{ flexGrow: 1, wordBreak: 'break-all' }}>
+                            {statusChangeAttachment.name}
+                          </Typography>
+                          <IconButton
+                            size="small"
+                            onClick={() => { setStatusChangeAttachment(null); setStatusChangeAttachmentPreview(""); }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      )}
+
+                      {/* Action buttons */}
+                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={handleCancelStatusChange}
+                          sx={{ fontSize: { xs: '0.75rem', sm: '0.8rem' } }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          disabled={!statusChangeComment.trim()}
+                          onClick={handleConfirmStatusChange}
+                          sx={{
+                            bgcolor: '#155fcc',
+                            fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                            '&:hover': { bgcolor: '#104da8' },
+                            '&:disabled': { bgcolor: '#ccc', color: '#666' },
+                          }}
+                        >
+                          Save Status
+                        </Button>
+                      </Box>
+                    </Box>
+                  </Collapse>
+
+                  {/* Approved Details Panel — shown while pending or after confirmed */}
+                  {(pendingNewStatus === "approved" || newEmployeeStatus === "approved") && (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: { xs: 1, sm: 1.5, md: 2 },
+                        p: { xs: 1.5, sm: 2 },
+                        borderRadius: { xs: 1.5, sm: 2 },
+                        bgcolor: 'var(--mui-palette-neutral-50)',
+                        border: '1px solid var(--mui-palette-neutral-200)',
+                        mb: { xs: 1.5, sm: 2 },
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      {/* Title */}
+                      <Typography
+                        variant="subtitle1"
+                        align="center"
+                        sx={{
+                          color: 'text.primary',
+                          fontWeight: 'bold',
+                          fontSize: {
+                            xs: '0.8rem',
+                            sm: '0.9rem',
+                            md: '1rem',
+                          },
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        Approval Details
+                      </Typography>
+
+                      {/* Date Field */}
+                      <TextField
+                        fullWidth
+                        type="date"
+                        label="Date"
+                        value={approvedDate}
+                        onChange={(e) => setApprovedDate(e.target.value)}
+                        variant="filled"
+                        InputLabelProps={{ shrink: true }}
+                        sx={{
+                          bgcolor: 'white',
+                          borderRadius: { xs: 1.5, sm: 2 },
+                          '& .MuiFilledInput-root': {
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                            minHeight: { xs: '48px', sm: '56px' },
+                            paddingTop: { xs: '24px', sm: '.4rem' },
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                            transform: 'translate(12px, 10px) scale(1)',
+                          },
+                          '& .MuiInputLabel-shrink': {
+                            transform: 'translate(12px, 4px) scale(0.75)',
+                            top: 0,
+                          },
+                          '& .MuiFilledInput-input': {
+                            paddingTop: { xs: '8px', sm: '12px' },
+                            paddingBottom: { xs: '8px', sm: '12px' },
+                          },
+                          '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
+                            borderBottom: 'none',
+                          },
+                          '& .MuiFilledInput-underline:hover:before': {
+                            borderBottom: 'none !important',
+                          },
+                        }}
+                      />
+
+                      {/* Amount Field */}
+                      <TextField
+                        fullWidth
+                        type="number"
+                        label="Amount"
+                        value={formatDisplayAmount(approvedAmount)}
+                        placeholder="Enter amount"
+                        onChange={(e) => {
+                          // Store the raw value but display formatted
+                          const rawValue = e.target.value;
+                          setApprovedAmount(rawValue);
+                        }}
+                        onBlur={(e) => {
+                          // Format the amount when field loses focus
+                          if (e.target.value) {
+                            const formatted = formatDecimalAmount(e.target.value);
+                            setApprovedAmount(formatted);
+                          }
+                        }}
+                        variant="filled"
+                        InputLabelProps={{ shrink: true }}
+                        sx={{
+                          bgcolor: 'white',
+                          borderRadius: { xs: 1.5, sm: 2 },
+                          '& .MuiFilledInput-root': {
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                            minHeight: { xs: '48px', sm: '56px' },
+                            paddingTop: { xs: '24px', sm: '.4rem' },
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                            transform: 'translate(12px, 10px) scale(1)',
+                          },
+                          '& .MuiInputLabel-shrink': {
+                            transform: 'translate(12px, 4px) scale(0.75)',
+                            top: 0,
+                          },
+                          '& .MuiFilledInput-input': {
+                            paddingTop: { xs: '8px', sm: '12px' },
+                            paddingBottom: { xs: '8px', sm: '12px' },
+                          },
+                          '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
+                            borderBottom: 'none',
+                          },
+                          '& .MuiFilledInput-underline:hover:before': {
+                            borderBottom: 'none !important',
+                          },
+                        }}
+                      />
+
+                      {/* Case Type Field */}
+                      <TextField
+                        select
+                        fullWidth
+                        label="Case Type"
+                        value={caseType}
+                        onChange={(e) => setCaseType(e.target.value)}
+                        variant="filled"
+                        InputLabelProps={{ shrink: true }}
+                        sx={{
+                          bgcolor: 'white',
+                          borderRadius: { xs: 1.5, sm: 2 },
+                          '& .MuiFilledInput-root': {
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                            minHeight: { xs: '48px', sm: '56px' },
+                            paddingTop: { xs: '24px', sm: '.4rem' },
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                            transform: 'translate(12px, 10px) scale(1)',
+                          },
+                          '& .MuiInputLabel-shrink': {
+                            transform: 'translate(12px, 4px) scale(0.75)',
+                            top: 0,
+                          },
+                          '& .MuiFilledInput-input': {
+                            paddingTop: { xs: '8px', sm: '12px' },
+                            paddingBottom: { xs: '8px', sm: '12px' },
+                          },
+                          '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
+                            borderBottom: 'none',
+                          },
+                          '& .MuiFilledInput-underline:hover:before': {
+                            borderBottom: 'none !important',
+                          },
+                        }}
+                      >
+                        <MenuItem value="fresh">Fresh</MenuItem>
+                        <MenuItem value="top_up">Top up</MenuItem>
+                      </TextField>
+
+                      {/* Fixed Commission Percentage Field */}
+                      <TextField
+                        fullWidth
+                        type="number"
+                        label="Fixed Commission Percentage"
+                        placeholder="Enter fixed commission percentage"
+                        value={fixedCommissionPercentage}
+                        onChange={(e) => setFixedCommissionPercentage(e.target.value)}
+                        variant="filled"
+                        InputLabelProps={{ shrink: true }}
+                        sx={{
+                          bgcolor: 'white',
+                          borderRadius: { xs: 1.5, sm: 2 },
+                          '& .MuiFilledInput-root': {
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                            minHeight: { xs: '48px', sm: '56px' },
+                            paddingTop: { xs: '24px', sm: '.4rem' },
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                            transform: 'translate(12px, 10px) scale(1)',
+                          },
+                          '& .MuiInputLabel-shrink': {
+                            transform: 'translate(12px, 4px) scale(0.75)',
+                            top: 0,
+                          },
+                          '& .MuiFilledInput-input': {
+                            paddingTop: { xs: '8px', sm: '12px' },
+                            paddingBottom: { xs: '8px', sm: '12px' },
+                          },
+                          '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
+                            borderBottom: 'none',
+                          },
+                          '& .MuiFilledInput-underline:hover:before': {
+                            borderBottom: 'none !important',
+                          },
+                        }}
+                      />
+
+                      {/* Mandatory comment box — inside approved panel */}
+                      <Box sx={{ position: 'relative' }}>
+                        <TextField
+                          fullWidth
+                          multiline
+                          rows={3}
+                          placeholder="Add a comment for this status change... *"
+                          value={statusChangeComment}
+                          onChange={(e) => setStatusChangeComment(e.target.value)}
+                          variant="outlined"
+                          size="small"
+                          label="Comment (required)"
+                          InputLabelProps={{ shrink: true }}
+                          sx={{ '& .MuiOutlinedInput-root': { bgcolor: '#fff', pr: '40px' } }}
+                        />
+                        <Tooltip title="Add attachment">
+                          <IconButton
+                            component="label"
+                            size="small"
+                            sx={{ position: 'absolute', bottom: 6, right: 4 }}
+                          >
+                            <AttachFileIcon fontSize="small" />
+                            <input type="file" hidden onChange={handleStatusAttachmentChange} />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+
+                      {statusChangeAttachment && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          {statusChangeAttachmentPreview && (
+                            <Box
+                              component="img"
+                              src={statusChangeAttachmentPreview}
+                              alt="Preview"
+                              sx={{ maxHeight: 60, maxWidth: 60, borderRadius: 1 }}
+                            />
+                          )}
+                          <Typography variant="caption" sx={{ flexGrow: 1, wordBreak: 'break-all' }}>
+                            {statusChangeAttachment.name}
+                          </Typography>
+                          <IconButton
+                            size="small"
+                            onClick={() => { setStatusChangeAttachment(null); setStatusChangeAttachmentPreview(""); }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      )}
+
+                      {/* Save Button */}
+                      <Box display="flex" justifyContent="space-between" alignItems="center" mt={1}>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={handleCancelStatusChange}
+                          sx={{ fontSize: { xs: '0.75rem', sm: '0.8rem' } }}
+                        >
+                          Cancel
+                        </Button>
+                        <Tooltip title="Submit approval details and update status">
+                          <span>
+                            <Button
+                              variant="contained"
+                              size="medium"
+                              onClick={handleCombinedApprovalSubmit}
+                              disabled={
+                                !statusChangeComment.trim() ||
+                                !approvedDate ||
+                                !(approvedAmount || ticketDetailData?.applicationAmount) ||
+                                parseFloat(approvedAmount || ticketDetailData?.applicationAmount || 0) <= 0
+                              }
+                              sx={{
+                                bgcolor: "primary.main",
+                                fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                                borderRadius: { xs: 1.5, sm: 2 },
+                                px: { xs: 2, sm: 4 },
+                                py: { xs: 0.8, sm: 1.2 },
+                                '&:hover': { bgcolor: "primary.dark" },
+                                '&:disabled': { bgcolor: "#ccc", color: "#666" },
+                              }}
+                            >
+                              Save Details
+                            </Button>
+                          </span>
+                        </Tooltip>
+                      </Box>
+                    </Box>
+                  )}
+
+                  {/* Disbursement Details Panel — shown while pending or after confirmed */}
+                  {(pendingNewStatus === "disbursed" || newEmployeeStatus === "disbursed") && (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: { xs: 1, sm: 1.5, md: 2 },
+                        p: { xs: 1.5, sm: 2 },
+                        borderRadius: { xs: 1.5, sm: 2 },
+                        bgcolor: 'var(--mui-palette-neutral-50)',
+                        border: '1px solid var(--mui-palette-neutral-200)',
+                        mb: { xs: 1.5, sm: 2 },
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      {/* Title */}
+                      <Typography
+                        variant="subtitle1"
+                        align="center"
+                        sx={{
+                          color: 'text.primary',
+                          fontWeight: 'bold',
+                          fontSize: {
+                            xs: '0.8rem',
+                            sm: '0.9rem',
+                            md: '1rem',
+                          },
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        Disbursement Details
+                      </Typography>
+
+                      {/* Date Field */}
+                      <TextField
+                        fullWidth
+                        type="date"
+                        label="Date"
+                        value={disbursedDate}
+                        onChange={(e) => setDisbursedDate(e.target.value)}
+                        variant="filled"
+                        InputLabelProps={{ shrink: true }}
+                        sx={{
+                          bgcolor: 'white',
+                          borderRadius: { xs: 1.5, sm: 2 },
+                          '& .MuiFilledInput-root': {
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                            minHeight: { xs: '48px', sm: '56px' },
+                            paddingTop: { xs: '24px', sm: '.4rem' },
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                            transform: 'translate(12px, 10px) scale(1)',
+                          },
+                          '& .MuiInputLabel-shrink': {
+                            transform: 'translate(12px, 4px) scale(0.75)',
+                            top: 0,
+                          },
+                          '& .MuiFilledInput-input': {
+                            paddingTop: { xs: '8px', sm: '12px' },
+                            paddingBottom: { xs: '8px', sm: '12px' },
+                          },
+                          '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
+                            borderBottom: 'none',
+                          },
+                          '& .MuiFilledInput-underline:hover:before': {
+                            borderBottom: 'none !important',
+                          },
+                        }}
+                      />
+
+                      {/* Amount Field */}
+                      <TextField
+                        fullWidth
+                        type="number"
+                        label="Amount"
+                        placeholder="Enter amount"
+                        value={disbursedAmount}
+                        onChange={(e) => setDisbursedAmount(e.target.value)}
+                        variant="filled"
+                        InputLabelProps={{ shrink: true }}
+                        sx={{
+                          bgcolor: 'white',
+                          borderRadius: { xs: 1.5, sm: 2 },
+                          '& .MuiFilledInput-root': {
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                            minHeight: { xs: '48px', sm: '56px' },
+                            paddingTop: { xs: '24px', sm: '.4rem' },
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                            transform: 'translate(12px, 10px) scale(1)',
+                          },
+                          '& .MuiInputLabel-shrink': {
+                            transform: 'translate(12px, 4px) scale(0.75)',
+                            top: 0,
+                          },
+                          '& .MuiFilledInput-input': {
+                            paddingTop: { xs: '8px', sm: '12px' },
+                            paddingBottom: { xs: '8px', sm: '12px' },
+                          },
+                          '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
+                            borderBottom: 'none',
+                          },
+                          '& .MuiFilledInput-underline:hover:before': {
+                            borderBottom: 'none !important',
+                          },
+                        }}
+                      />
+                      {/* Add Cashback Field Here */}
+                      <TextField
+                        fullWidth
+                        type="number"
+                        label="Cashback Amount"
+                        placeholder="Enter cashback amount"
+                        value={cashbackAmount}
+                        onChange={(e) => setCashbackAmount(e.target.value)}
+                        variant="filled"
+                        InputLabelProps={{ shrink: true }}
+                        sx={{
+                          bgcolor: 'white',
+                          borderRadius: { xs: 1.5, sm: 2 },
+                          '& .MuiFilledInput-root': {
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                            minHeight: { xs: '48px', sm: '56px' },
+                            paddingTop: { xs: '24px', sm: '.4rem' },
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                            transform: 'translate(12px, 10px) scale(1)',
+                          },
+                          '& .MuiInputLabel-shrink': {
+                            transform: 'translate(12px, 4px) scale(0.75)',
+                            top: 0,
+                          },
+                          '& .MuiFilledInput-input': {
+                            paddingTop: { xs: '8px', sm: '12px' },
+                            paddingBottom: { xs: '8px', sm: '12px' },
+                          },
+                          '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
+                            borderBottom: 'none',
+                          },
+                          '& .MuiFilledInput-underline:hover:before': {
+                            borderBottom: 'none !important',
+                          },
+                        }}
+                      />
+
+                      {/* Case Type Field */}
+                      <TextField
+                        select
+                        fullWidth
+                        label="Case Type"
+                        placeholder="Case type"
+                        value={caseType}
+                        onChange={(e) => setCaseType(e.target.value)}
+                        variant="filled"
+                        InputLabelProps={{ shrink: true }}
+                        sx={{
+                          bgcolor: 'white',
+                          borderRadius: { xs: 1.5, sm: 2 },
+                          '& .MuiFilledInput-root': {
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                            minHeight: { xs: '48px', sm: '56px' },
+                            paddingTop: { xs: '24px', sm: '.4rem' },
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                            transform: 'translate(12px, 10px) scale(1)',
+                          },
+                          '& .MuiInputLabel-shrink': {
+                            transform: 'translate(12px, 4px) scale(0.75)',
+                            top: 0,
+                          },
+                          '& .MuiFilledInput-input': {
+                            paddingTop: { xs: '8px', sm: '12px' },
+                            paddingBottom: { xs: '8px', sm: '12px' },
+                          },
+                          '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
+                            borderBottom: 'none',
+                          },
+                          '& .MuiFilledInput-underline:hover:before': {
+                            borderBottom: 'none !important',
+                          },
+                        }}
+                      >
+                        <MenuItem value="fresh">Fresh</MenuItem>
+                        <MenuItem value="top_up">Top up</MenuItem>
+                      </TextField>
+
+                      {/* Fixed Commission Percentage Field */}
+                      <TextField
+                        fullWidth
+                        type="number"
+                        label="Fixed Commission Percentage ( % )"
+                        placeholder="Enter fixed commission percentage"
+                        value={fixedCommissionPercentage}
+                        onChange={(e) => setFixedCommissionPercentage(e.target.value)}
+                        variant="filled"
+                        InputLabelProps={{ shrink: true }}
+                        sx={{
+                          bgcolor: 'white',
+                          borderRadius: { xs: 1.5, sm: 2 },
+                          '& .MuiFilledInput-root': {
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                            minHeight: { xs: '48px', sm: '56px' },
+                            paddingTop: { xs: '24px', sm: '.4rem' },
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                            transform: 'translate(12px, 10px) scale(1)',
+                          },
+                          '& .MuiInputLabel-shrink': {
+                            transform: 'translate(12px, 4px) scale(0.75)',
+                            top: 0,
+                          },
+                          '& .MuiFilledInput-input': {
+                            paddingTop: { xs: '8px', sm: '12px' },
+                            paddingBottom: { xs: '8px', sm: '12px' },
+                          },
+                          '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after': {
+                            borderBottom: 'none',
+                          },
+                          '& .MuiFilledInput-underline:hover:before': {
+                            borderBottom: 'none !important',
+                          },
+                        }}
+                      />
+
+
+                      {/* Mandatory comment box — inside disbursed panel */}
+                      <Box sx={{ position: 'relative' }}>
+                        <TextField
+                          fullWidth
+                          multiline
+                          rows={3}
+                          placeholder="Add a comment for this status change... *"
+                          value={statusChangeComment}
+                          onChange={(e) => setStatusChangeComment(e.target.value)}
+                          variant="outlined"
+                          size="small"
+                          label="Comment (required)"
+                          InputLabelProps={{ shrink: true }}
+                          sx={{ '& .MuiOutlinedInput-root': { bgcolor: '#fff', pr: '40px' } }}
+                        />
+                        <Tooltip title="Add attachment">
+                          <IconButton
+                            component="label"
+                            size="small"
+                            sx={{ position: 'absolute', bottom: 6, right: 4 }}
+                          >
+                            <AttachFileIcon fontSize="small" />
+                            <input type="file" hidden onChange={handleStatusAttachmentChange} />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+
+                      {statusChangeAttachment && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          {statusChangeAttachmentPreview && (
+                            <Box
+                              component="img"
+                              src={statusChangeAttachmentPreview}
+                              alt="Preview"
+                              sx={{ maxHeight: 60, maxWidth: 60, borderRadius: 1 }}
+                            />
+                          )}
+                          <Typography variant="caption" sx={{ flexGrow: 1, wordBreak: 'break-all' }}>
+                            {statusChangeAttachment.name}
+                          </Typography>
+                          <IconButton
+                            size="small"
+                            onClick={() => { setStatusChangeAttachment(null); setStatusChangeAttachmentPreview(""); }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      )}
+
+                      {/* Save Button */}
+                      <Box display="flex" justifyContent="space-between" alignItems="center" mt={1}>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={handleCancelStatusChange}
+                          sx={{ fontSize: { xs: '0.75rem', sm: '0.8rem' } }}
+                        >
+                          Cancel
+                        </Button>
+                        <Tooltip title="Submit disbursement details and finalize status">
+                          <span>
+                            <Button
+                              variant="contained"
+                              size="medium"
+                              onClick={handleCombinedDisbursementSubmit}
+                              disabled={
+                                !statusChangeComment.trim() ||
+                                !disbursedDate ||
+                                !(disbursedAmount || ticketDetailData?.applicationAmount) ||
+                                parseFloat(disbursedAmount || ticketDetailData?.applicationAmount || 0) <= 0
+                              }
+                              sx={{
+                                bgcolor: "primary.main",
+                                fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                                borderRadius: { xs: 1.5, sm: 2 },
+                                px: { xs: 2, sm: 4 },
+                                py: { xs: 0.8, sm: 1.2 },
+                                '&:hover': { bgcolor: "primary.dark" },
+                                '&:disabled': { bgcolor: "#ccc", color: "#666" },
+                              }}
+                            >
+                              Save Details
+                            </Button>
+                          </span>
+                        </Tooltip>
+                      </Box>
+                    </Box>
+                  )}
+
+
+                </>
+              )}
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: { xs: 1, sm: 1.5, md: 2 },
+                  p: { xs: 1.5, sm: 2 },
+                  borderRadius: { xs: 1.5, sm: 2 },
+                  bgcolor: 'var(--mui-palette-neutral-50)',
+                  border: '1px solid var(--mui-palette-neutral-200)',
+                  mb: { xs: 1.5, sm: 2 },
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    color: 'text.primary',
+                    fontWeight: 'bold',
+                    fontSize: {
+                      xs: '0.8rem',
+                      sm: '0.9rem',
+                      md: '1rem'
+                    },
+                    lineHeight: 1.2,
+                  }}
+                >
+                  Loan Status:
+                </Typography>
+
+                <FormControl
+                  variant="filled"
+                  fullWidth
+                  size={isMobile ? "small" : "medium"}
+                  sx={{
+                    bgcolor: 'white',
+                    borderRadius: { xs: 1.5, sm: 2 },
+                    '& .MuiFilledInput-root': {
+                      fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                      minHeight: { xs: '40px', sm: '48px' },
+                      paddingTop: { xs: '24px', sm: '.4rem' },
+                    },
+                    '& .MuiInputLabel-root': {
+                      fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                      transform: isMobile ? 'translate(12px, 12px) scale(1)' : 'translate(12px, 16px) scale(1)',
+                    },
+                    '& .MuiInputLabel-shrink': {
+                      transform: isMobile ? 'translate(12px, 4px) scale(0.75)' : 'translate(12px, 6px) scale(0.75)',
+                    },
+                    '& .MuiFilledInput-underline:before': {
+                      borderBottom: 'none',
+                    },
+                    '& .MuiFilledInput-underline:after': {
+                      borderBottom: 'none',
+                    },
+                    '& .MuiFilledInput-underline:hover:before': {
+                      borderBottom: 'none !important',
                     },
                   }}
                 >
-                  <Typography
-                    variant="subtitle1"
+                  <InputLabel>Loan Status</InputLabel>
+                  <Select
+                    value={newLoanStatus}
+                    onChange={handleChangeLoanStatus}
                     sx={{
-                      color: 'white',
-                      fontWeight: 'bold',
-                      fontSize: {
-                        xs: '0.8rem',
-                        sm: '0.9rem',
-                        md: '1rem'
-                      },
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    Loan Status:
-                  </Typography>
-
-                  <FormControl
-                    variant="filled"
-                    fullWidth
-                    size={isMobile ? "small" : "medium"}
-                    sx={{
-                      bgcolor: 'white',
-                      borderRadius: { xs: 1.5, sm: 2 },
-                      '& .MuiFilledInput-root': {
+                      borderRadius: 1,
+                      '& .MuiSelect-select': {
                         fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                        minHeight: { xs: '40px', sm: '48px' },
-                        paddingTop: { xs: '24px', sm: '.4rem' },
-                      },
-                      '& .MuiInputLabel-root': {
-                        fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                        transform: isMobile ? 'translate(12px, 12px) scale(1)' : 'translate(12px, 16px) scale(1)',
-                      },
-                      '& .MuiInputLabel-shrink': {
-                        transform: isMobile ? 'translate(12px, 4px) scale(0.75)' : 'translate(12px, 6px) scale(0.75)',
-                      },
-                      '& .MuiFilledInput-underline:before': {
-                        borderBottom: 'none',
-                      },
-                      '& .MuiFilledInput-underline:after': {
-                        borderBottom: 'none',
-                      },
-                      '& .MuiFilledInput-underline:hover:before': {
-                        borderBottom: 'none !important',
-                      },
+                        py: { xs: 1, sm: 1.5 },
+                      }
                     }}
-                  >
-                    <InputLabel>Loan Status</InputLabel>
-                    <Select
-                      value={newLoanStatus}
-                      onChange={handleChangeLoanStatus}
-                      sx={{
-                        borderRadius: 1,
-                        '& .MuiSelect-select': {
-                          fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                          py: { xs: 1, sm: 1.5 },
-                        }
-                      }}
-                      MenuProps={{
-                        PaperProps: {
-                          sx: {
-                            maxHeight: 200,
-                            '& .MuiMenuItem-root': {
-                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                              minHeight: { xs: '36px', sm: '48px' },
-                            }
+                    MenuProps={{
+                      PaperProps: {
+                        sx: {
+                          maxHeight: 200,
+                          '& .MuiMenuItem-root': {
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                            minHeight: { xs: '36px', sm: '48px' },
                           }
                         }
-                      }}
-                    >
-                      <MenuItem value="submitted">Submitted</MenuItem>
-                      <MenuItem value="under credit review">Under Credit Review</MenuItem>
-                      <MenuItem value="login">Login</MenuItem>
-                      <MenuItem value="approved">Approved</MenuItem>
-                      <MenuItem value="disbursed">Disbursed</MenuItem>
-                      <MenuItem value="carry forward">Carry Forward</MenuItem>
-                      <MenuItem value="hold">Hold</MenuItem>
-                      <MenuItem value="drop">Drop</MenuItem>
-                      <MenuItem value="rejected">Rejected</MenuItem>
-                      <MenuItem value="relook">Relook</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Box>
+                      }
+                    }}
+                  >
+                    <MenuItem value="submitted">Submitted</MenuItem>
+                    <MenuItem value="under credit review">Under Credit Review</MenuItem>
+                    <MenuItem value="login">Login</MenuItem>
+                    <MenuItem value="approved">Approved</MenuItem>
+                    <MenuItem value="disbursed">Disbursed</MenuItem>
+                    <MenuItem value="carry forward">Carry Forward</MenuItem>
+                    <MenuItem value="hold">Hold</MenuItem>
+                    <MenuItem value="drop">Drop</MenuItem>
+                    <MenuItem value="rejected">Rejected</MenuItem>
+                    <MenuItem value="relook">Relook</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
 
 
 
-                {/* Assignee */}
-                <Box
+              {/* Assignee */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  p: { xs: 0.5, sm: 1 },
+                  mb: { xs: 1.5, sm: 2 },
+                  bgcolor: { xs: '#f5f5f5', sm: 'transparent' },
+                  borderRadius: { xs: 1, sm: 0 },
+                }}
+              >
+                <Typography
+                  variant="body2"
                   sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    p: { xs: 0.5, sm: 1 },
-                    mb: { xs: 1.5, sm: 2 },
-                    bgcolor: { xs: '#f5f5f5', sm: 'transparent' },
-                    borderRadius: { xs: 1, sm: 0 },
+                    fontSize: {
+                      xs: '0.75rem',
+                      sm: '0.8rem',
+                      md: '0.9rem',
+                      lg: '1rem'
+                    },
+                    fontWeight: 'bold',
+                    color: 'black',
                   }}
                 >
+                  Assignee
+                </Typography>
+
+                <Box sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: { xs: 0.5, sm: 1 },
+                  flexShrink: 0,
+                }}>
                   <Typography
                     variant="body2"
                     sx={{
-                      fontSize: {
-                        xs: '0.75rem',
-                        sm: '0.8rem',
-                        md: '0.9rem',
-                        lg: '1rem'
-                      },
-                      fontWeight: 'bold',
                       color: 'black',
+                      fontSize: {
+                        xs: '0.7rem',
+                        sm: '0.75rem',
+                        md: '0.8rem'
+                      },
+                      maxWidth: { xs: '80px', sm: '120px' },
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
                     }}
                   >
-                    Assignee
+                    {capitalizeFirstLetter(decodedToken()?.username)}
                   </Typography>
-
-                  <Box sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: { xs: 0.5, sm: 1 },
-                    flexShrink: 0,
-                  }}>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: 'black',
-                        fontSize: {
-                          xs: '0.7rem',
-                          sm: '0.75rem',
-                          md: '0.8rem'
-                        },
-                        maxWidth: { xs: '80px', sm: '120px' },
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {capitalizeFirstLetter(decodedToken()?.username)}
-                    </Typography>
-                    <Avatar
-                      sx={{
-                        bgcolor: '#ADB5BD',
-                        color: 'white',
-                        width: { xs: 28, sm: 32, md: 40 },
-                        // height: { xs: 28, sm: 32, md: 40 },
-                        fontSize: { xs: '0.7rem', sm: '0.8rem', md: '1rem' },
-                      }}
-                      alt={capitalizeFirstLetter(decodedToken()?.username)}
-                      src={capitalizeFirstLetter(decodedToken()?.username)}
-                    // alt={capitalizeFirstLetter( decodedToken()?.username )}
-                    // src={capitalizeFirstLetter( decodedToken()?.username )}
-                    />
-                  </Box>
-                </Box>
-
-                {/* Original Estimate Field */}
-                <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
-                  <OriginalEstimateField
-                    ticketId={ticketId}
-                    initialEstimate={ticketDetailData?.originalEstimate}
-                    userRole={decodedToken()?.role}
+                  <Avatar
+                    sx={{
+                      bgcolor: '#ADB5BD',
+                      color: 'white',
+                      width: { xs: 28, sm: 32, md: 40 },
+                      // height: { xs: 28, sm: 32, md: 40 },
+                      fontSize: { xs: '0.7rem', sm: '0.8rem', md: '1rem' },
+                    }}
+                    alt={capitalizeFirstLetter(decodedToken()?.username)}
+                    src={capitalizeFirstLetter(decodedToken()?.username)}
+                  // alt={capitalizeFirstLetter( decodedToken()?.username )}
+                  // src={capitalizeFirstLetter( decodedToken()?.username )}
                   />
                 </Box>
+              </Box>
 
-                {/* Time Tracking */}
-                <Box sx={{ mt: { xs: 1.5, sm: 2 } }}>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontSize: {
-                        xs: '0.75rem',
-                        sm: '0.8rem',
-                        md: '0.9rem',
-                        lg: '.9rem'
-                      },
-                      ml: ".6vw",
-                      fontWeight: 'bold',
-                      color: 'black',
-                      // mb: { xs: 0.5, sm: 1 },
-                    }}
-                  >
-                    Time Tracking
-                  </Typography>
+              {/* Original Estimate Field */}
+              <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
+                <OriginalEstimateField
+                  ticketId={ticketId}
+                  initialEstimate={ticketDetailData?.originalEstimate}
+                  userRole={decodedToken()?.role}
+                />
+              </Box>
 
-                  <Box
-                    sx={{
-                      width: '100%',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      mt: { xs: 0.5, sm: 1, lg: 2 },
-                      px: { xs: 0, sm: 1 },
+              {/* Time Tracking */}
+              <Box sx={{ mt: { xs: 1.5, sm: 2 } }}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: {
+                      xs: '0.75rem',
+                      sm: '0.8rem',
+                      md: '0.9rem',
+                      lg: '.9rem'
+                    },
+                    ml: ".6vw",
+                    fontWeight: 'bold',
+                    color: 'black',
+                    // mb: { xs: 0.5, sm: 1 },
+                  }}
+                >
+                  Time Tracking
+                </Typography>
+
+                <Box
+                  sx={{
+                    width: '100%',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    mt: { xs: 0.5, sm: 1, lg: 2 },
+                    px: { xs: 0, sm: 1 },
+                  }}
+                >
+                  <ProgressBar
+                    setOpenDialog={setOpenDialog}
+                    timeLoggingEstimate={{
+                      timeSpent: timeLoggingEstimate.timeSpent,
+                      originalEstimate: timeLoggingEstimate.originalEstimate,
                     }}
-                  >
-                    <ProgressBar
-                      setOpenDialog={setOpenDialog}
-                      timeLoggingEstimate={{
-                        timeSpent: timeLoggingEstimate.timeSpent,
-                        originalEstimate: timeLoggingEstimate.originalEstimate,
-                      }}
-                      progress={progress}
-                      overage={overage}
-                    />
-                  </Box>
+                    progress={progress}
+                    overage={overage}
+                  />
                 </Box>
-              </Paper>
-            </Grid>
+              </Box>
+            </Paper>
           </Grid>
-        </Container>
-        <TrackingForm
-          openDialog={openDialog}
-          setOpenDialog={setOpenDialog}
-          ticketDetailData={workLog?.data}
-          ticketId={ticketId}
-          originalEstimate={ticketDetailData?.originalEstimate}
-        />
-        <Toast
-          alerting={toast.toastAlert}
-          severity={toast.toastSeverity}
-          message={toast.toastMessage}
-        />
-        {loading && <Loader />}
-      </ColorModeContext.Provider>
-    </ThemeProvider>
+        </Grid>
+      </Container>
+      <TrackingForm
+        openDialog={openDialog}
+        setOpenDialog={setOpenDialog}
+        ticketDetailData={workLog?.data}
+        ticketId={ticketId}
+        originalEstimate={ticketDetailData?.originalEstimate}
+      />
+      <Toast
+        alerting={toast.toastAlert}
+        severity={toast.toastSeverity}
+        message={toast.toastMessage}
+      />
+      {loading && <Loader />}
+    </>
   );
 };
 

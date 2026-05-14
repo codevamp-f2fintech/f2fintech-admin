@@ -12,6 +12,7 @@ import {
   Button,
   Checkbox,
   Container,
+  Chip,
   FormControl,
   FormGroup,
   FormControlLabel,
@@ -29,15 +30,23 @@ import {
   IconButton,
   Stack,
   FormHelperText,
+  ListItemText,
   OutlinedInput,
 } from "@mui/material";
-import { CurrencyRupee as CurrencyRupeeIcon, AccessTime, Close, Edit } from "@mui/icons-material";
+import { CurrencyRupee as CurrencyRupeeIcon, AccessTime, Close, Edit, Check } from "@mui/icons-material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import CallIcon from "@mui/icons-material/Call";
 import SmsIcon from "@mui/icons-material/Sms";
 import EmailIcon from "@mui/icons-material/Email";
+import PersonIcon from "@mui/icons-material/Person";
+import BadgeIcon from "@mui/icons-material/Badge";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
+import HomeIcon from "@mui/icons-material/Home";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import WorkIcon from "@mui/icons-material/Work";
+import BusinessIcon from "@mui/icons-material/Business";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -47,7 +56,46 @@ import step1ValidationSchema from "./step1ValidationSchema";
 import { Utility } from "@/utils";
 import Toast from "@/app/components/common/Toast";
 import { useGetLoanProviders } from "@/hooks/loanProvider";
-import { Chip, ListItemText } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+
+const INDIAN_STATES = [
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+  "Andaman and Nicobar Islands",
+  "Chandigarh",
+  "Dadra and Nagar Haveli and Daman and Diu",
+  "Delhi",
+  "Jammu and Kashmir",
+  "Ladakh",
+  "Lakshadweep",
+  "Puducherry"
+];
 
 const initialValues = {
   title: "",
@@ -73,6 +121,7 @@ interface Step1FormProps {
   getStarted?: boolean;
   setGetStarted?: (value: boolean) => void;
   salary?: any;
+  onSubmit?: () => void;
 }
 
 interface ProviderAmount {
@@ -86,18 +135,21 @@ const Step1Form: React.FC<Step1FormProps> = ({
   getStarted,
   setGetStarted,
   salary,
+  onSubmit,
 }) => {
   const [amount, setAmount] = useState<string>("");
+  const [customerDraft, setCustomerDraft] = useState(initialValues);
   const [providerAmounts, setProviderAmounts] = useState<ProviderAmount[]>([]);
   const [tenure, setTenure] = useState<string>("");
-  const [loanType, setLoanType] = useState("");
+  const [loanType, setLoanType] = useState<string>("");
   const [loanCategory, setLoanCategory] = useState("");
   const [provider, setProvider] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [leadType, setLeadType] = useState<string>("");
   const [leadTypeError, setLeadTypeError] = useState<string>("");
-  const [caseType, setCaseType] = useState<string>("");
+  const [caseType, setCaseType] = useState<string>("fresh");
   const [caseTypeError, setCaseTypeError] = useState<string>("");
+  const [stateSearch, setStateSearch] = useState<string>("");
 
   // Multiple Existing Loans State
   const [existingLoans, setExistingLoans] = useState([
@@ -140,7 +192,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
   const [editingProvider, setEditingProvider] = useState<string | null>(null);
 
   // Define loan types with categories
-  const loanTypes = {
+  const LOAN_TYPES_DATA = {
     unsecured: [
       { value: "personal loan", label: "Personal Loan" },
       { value: "business loan", label: "Business Loan" },
@@ -158,7 +210,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
 
   const leadTypes = [
     { value: "notion", label: "Notion" },
-    { value: "Dialler", label: "Dialler" },
+    { value: "dialler", label: "Dialler" },
     { value: "field visit", label: "Field visit" },
     { value: "sourcer", label: "Sourcer" },
     { value: "channel partner", label: "Channel partner" },
@@ -272,13 +324,13 @@ const Step1Form: React.FC<Step1FormProps> = ({
   };
 
   // Function to determine loan category based on loan type
-  const getLoanCategory = (loanType: string): string => {
+  const getLoanCategory = (type: string): string => {
     const securedLoanTypes = ["home loan", "lap", "auto loan", "machinery loan"];
     const unsecuredLoanTypes = ["personal loan", "business loan", "professional loan", "education loan", "just inquiry"];
 
-    if (securedLoanTypes.includes(loanType)) {
+    if (securedLoanTypes.includes(type)) {
       return "secured";
-    } else if (unsecuredLoanTypes.includes(loanType)) {
+    } else if (unsecuredLoanTypes.includes(type)) {
       return "unsecured";
     }
     return "";
@@ -286,7 +338,6 @@ const Step1Form: React.FC<Step1FormProps> = ({
 
   // Handle loan type change
   const handleLoanTypeChange = (value: string) => {
-    console.log("Selected Loan Type:", value);
     setLoanType(value);
 
     const category = getLoanCategory(value);
@@ -410,16 +461,17 @@ const Step1Form: React.FC<Step1FormProps> = ({
   // Validate all provider amounts
   const validateAllProviderAmounts = (): boolean => {
     for (const pa of providerAmounts) {
-      if (!pa.amount) {
+      const currentAmount = pa.amount || amount;
+      if (!currentAmount) {
         return false;
       }
-      if (isNaN(Number(pa.amount))) {
+      if (isNaN(Number(currentAmount))) {
         return false;
       }
-      if (Number(pa.amount) < 50000 || Number(pa.amount) > 100000000) {
+      if (Number(currentAmount) < 50000 || Number(currentAmount) > 100000000) {
         return false;
       }
-      if (Number(pa.amount) % 5 !== 0) {
+      if (Number(currentAmount) % 5 !== 0) {
         return false;
       }
     }
@@ -449,11 +501,56 @@ const Step1Form: React.FC<Step1FormProps> = ({
     fetchCustomerData();
   }, [storedCustomerId]);
 
+  // Restore Step 1 in-memory form drafts if accidentally refreshed
+  useEffect(() => {
+    const savedDraft = getLocalStorage("step1DraftData");
+    if (savedDraft) {
+      if (savedDraft.amount) setAmount(savedDraft.amount);
+      if (savedDraft.loanType) {
+        setLoanType(savedDraft.loanType);
+        const category = getLoanCategory(savedDraft.loanType);
+        setLoanCategory(category);
+      }
+      if (savedDraft.tenure) setTenure(savedDraft.tenure);
+      if (savedDraft.providers) setProviders(savedDraft.providers);
+      if (savedDraft.providerAmounts) setProviderAmounts(savedDraft.providerAmounts);
+      if (savedDraft.leadType) setLeadType(savedDraft.leadType);
+      if (savedDraft.caseType) setCaseType(savedDraft.caseType);
+      if (savedDraft.existingLoans) setExistingLoans(savedDraft.existingLoans);
+    }
+
+    // Restore Phase 2 transition state and typed Formik draft variables securely
+    if (getLocalStorage("step1GetStarted")) {
+      setGetStarted?.(true);
+      const savedCustomer = getLocalStorage("step1CustomerDraft");
+      if (savedCustomer) {
+        setCustomerDraft(savedCustomer);
+      }
+    }
+  }, []);
+
+  // Auto-save active input values to draft storage live on editing
+  useEffect(() => {
+    if (amount || loanType || tenure || providers.length > 0 || leadType) {
+      setLocalStorage("step1DraftData", {
+        amount,
+        loanType,
+        tenure,
+        providers,
+        providerAmounts,
+        leadType,
+        caseType,
+        existingLoans,
+      });
+    }
+  }, [amount, loanType, tenure, providers, providerAmounts, leadType, caseType, existingLoans]);
+
   const registerCustomer = async (customer: any) => {
-    const companyId = getCompanyId();
+    const companyId = getCompanyId() || getLocalStorage("selectedCompanyId");
     const customerData = {
       ...customer,
       name: `${customer.title} ${customer.name}`.trim(),
+      company_id: companyId,
     };
 
     const { data: res } = await axiosInstance.post(
@@ -469,12 +566,13 @@ const Step1Form: React.FC<Step1FormProps> = ({
 
   // Function to create customer info
   async function createCustomerInfo(customerId: number, restValues: any) {
-    const companyId = getCompanyId();
+    const companyId = getCompanyId() || getLocalStorage("selectedCompanyId");
     // const headers = companyId ? { companyid: companyId } : {};
     await axiosInstance.post(
       `${process.env.NEXT_PUBLIC_WEB_URL}/create-customer-info`,
       {
         customer_id: customerId,
+        company_id: companyId,
         ...restValues,
       })
   }
@@ -492,7 +590,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
     existingLoans: any[],
     caseType: string,
   ) {
-    const companyId = getCompanyId();
+    const companyId = getCompanyId() || getLocalStorage("selectedCompanyId");
     // const headers = companyId ? { companyid: companyId } : {};
     const { data: applicationResponse } =
       await axiosInstance.post(
@@ -515,7 +613,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
           }))),
           case_type: caseType,
           source: "admin_portal",
-          // company_id: companyId,
+          company_id: companyId,
         })
     return applicationResponse.data.applicationId;
   }
@@ -537,7 +635,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
     // location.reload();
   };
 
-  // Create new customer with loan application
+  // Create new customer only (application creation moved to Step 7)
   const create = useCallback(
     async (values: typeof initialValues) => {
       setLoading(true);
@@ -553,57 +651,44 @@ const Step1Form: React.FC<Step1FormProps> = ({
       };
 
       try {
-        // const companyId = getCompanyId();
-        // if ( !companyId )
-        // {
-        //   throw new Error( 'Company ID is required' );
-        // }
         const customerId = storedCustomerId || (await registerCustomer(customer));
         const customerInfoWithLeadType = {
           ...restValues,
-          lead_type: leadType, // Use the state variable, not values.lead_type
-
+          lead_type: leadType,
         };
         await createCustomerInfo(customerId, customerInfoWithLeadType);
 
-        // Create applications for each selected provider with their specific amounts
-        const applicationPromises = providers.map(async (providerName) => {
-          const providerAmount = providerAmounts.find(pa => pa.provider === providerName)?.amount || amount;
-          const applicationNumberGenerated = randomNumberGenerator();
-          const applicationId = await createCustomerApplication(
-            customerId,
-            applicationNumberGenerated,
-            providerAmount, // Use provider-specific amount
-            tenure,
-            providerName,
-            loanType,
-            loanCategory,
-            leadType,
-            existingLoans,
-            caseType,
-          );
-          await createLoanTracking(applicationId);
-          return applicationNumberGenerated;
-        });
+        // Store application data in localStorage for Step 7
+        const pendingApplicationData = {
+          customerId,
+          providers,
+          providerAmounts,
+          amount,
+          tenure,
+          loanTypes: [loanType], // Keep it as array to maintain compatibility with Step7Form
+          loanCategory,
+          leadType,
+          existingLoans,
+          caseType,
+        };
+        setLocalStorage("pendingApplicationData", pendingApplicationData);
 
-        const applicationNumbers = await Promise.all(applicationPromises);
-
-        // Store the first application number or all of them as needed
-        setApplicationNumber(applicationNumbers[0]);
+        // Set a temporary state to allow progression in MultiStepForm
+        setApplicationNumber?.("pending");
 
         !storedCustomerId
           ? await setCustomerData({
             id: customerId,
             name: customer.name,
-            applicationNumbers: applicationNumbers, // Store all application numbers
+            applicationNumbers: ["pending"],
           })
-          : location.reload();
+          : null;
 
         setLoading(false);
-        console.log(
-          `Created ${providers.length} applications successfully:`,
-          applicationNumbers
-        );
+        console.log("Customer created and application data stored in localStorage");
+
+        // Trigger the onSubmit from props to move to the next step
+        onSubmit?.();
       } catch (err) {
         toastAndNavigate(
           dispatch,
@@ -617,98 +702,141 @@ const Step1Form: React.FC<Step1FormProps> = ({
         setLoading(false);
       }
     },
-    [amount, tenure, providers, providerAmounts, loanType, loanCategory, leadType, existingLoans, caseType] // Updated dependency
+    [amount, tenure, providers, providerAmounts, loanType, loanCategory, leadType, existingLoans, caseType, onSubmit]
   );
 
   const commonFormControlStyles = {
-    "& .MuiFilledInput-root": {
-      backgroundColor: "rgba(255, 255, 255, 0.08)",
-      borderRadius: "12px",
-      color: "white",
-      boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-      transition: "all 0.3s ease",
-      "& .MuiSelect-filled": {
-        color: "white !important",
+    "& .MuiOutlinedInput-root": {
+      backgroundColor: "#ffffff",
+      borderRadius: "12px", // Beautiful capsule-rounded border shown in the reference photo
+      color: "#0f172a",
+      transition: "all 0.2s ease",
+      alignItems: "center", // Ensures child elements share exact centerline alignment
+      "& .MuiSelect-outlined": {
+        paddingTop: "14px",
+        paddingBottom: "14px",
+        paddingLeft: "4px !important", // Tightly draws the selected value next to the start icon
+        fontSize: "14px",
+        fontWeight: 500,
+        display: "flex",
+        alignItems: "center",
       },
-      "&:before, &:after": {
-        borderBottom: "none !important",
+      "& .MuiOutlinedInput-notchedOutline": {
+        borderColor: "#cbd5e1",
+        borderWidth: "1px",
+        transition: "all 0.2s ease",
       },
-      "&:hover": {
-        backgroundColor: "rgba(255,255,255,0.12)",
+      "&:hover .MuiOutlinedInput-notchedOutline": {
+        borderColor: "#94a3b8",
       },
-      "&.Mui-focused": {
-        backgroundColor: "rgba(255,255,255,0.15)",
-        boxShadow: "0 0 0 2px rgba(144,202,249,0.4)",
+      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+        borderColor: "#3949ab",
+        borderWidth: "2px",
+      },
+      "&.Mui-disabled .MuiOutlinedInput-notchedOutline": {
+        borderColor: "#e2e8f0",
       },
       "&.Mui-disabled": {
-        backgroundColor: "rgba(255, 255, 255, 0.08) !important",
-        color: "rgba(255,255,255,0.5) !important",
-        WebkitTextFillColor: "rgba(255,255,255,0.5) !important",
+        backgroundColor: "#f1f5f9 !important",
       },
     },
     "& .MuiInputLabel-root": {
-      color: "rgba(255,255,255,0.7)",
-      fontSize: "14px",
-      "&.Mui-disabled": {
-        color: "rgba(255,255,255,0.5) !important",
+      color: "#475569",
+      fontSize: "13px",
+      fontWeight: 500,
+      backgroundColor: "#ffffff", // Ensures the outline break behind the label text renders pristinely
+      px: 0.5,
+      "&.Mui-focused": {
+        color: "#3949ab !important",
       },
     },
-    "& .Mui-focused": {
-      color: "#ffffff !important",
+    "& .MuiInputAdornment-root": {
+      color: "#3949ab !important", // Striking Royal Blue start icons matching the reference photo
+      marginRight: "2px",
+      display: "flex",
+      alignItems: "center",
+      "& *": { color: "#3949ab !important" },
     },
     "& .MuiSelect-icon": {
-      color: "white",
+      color: "#64748b",
     },
   };
 
   const commonTextFieldStyles = {
-    "& .MuiFilledInput-root": {
-      backgroundColor: "rgba(255, 255, 255, 0.08)",
-      borderRadius: "12px",
-      color: "white",
-      boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-      transition: "all 0.3s ease",
-      "&:before, &:after": {
-        borderBottom: "none !important",
+    "& .MuiOutlinedInput-root": {
+      backgroundColor: "#ffffff",
+      borderRadius: "12px", // Beautiful capsule-rounded border shown in the reference photo
+      color: "#0f172a",
+      transition: "all 0.2s ease",
+      alignItems: "center", // Ensures child elements share exact centerline alignment
+      "& .MuiInputBase-input": {
+        paddingTop: "14px",
+        paddingBottom: "14px",
+        paddingLeft: "4px !important", // Tightly draws the input value next to the start icon
+        fontSize: "14px",
+        fontWeight: 500,
+        color: "#0f172a",
       },
-      "&:hover": {
-        backgroundColor: "rgba(255,255,255,0.12)",
+      "& .MuiOutlinedInput-notchedOutline": {
+        borderColor: "#cbd5e1",
+        borderWidth: "1px",
+        transition: "all 0.2s ease",
       },
-      "&.Mui-focused": {
-        backgroundColor: "rgba(255,255,255,0.15)",
-        boxShadow: "0 0 0 2px rgba(144,202,249,0.4)",
+      "&:hover .MuiOutlinedInput-notchedOutline": {
+        borderColor: "#94a3b8",
+      },
+      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+        borderColor: "#3949ab",
+        borderWidth: "2px",
+      },
+      "&.Mui-disabled .MuiOutlinedInput-notchedOutline": {
+        borderColor: "#e2e8f0",
       },
       "&.Mui-disabled": {
-        backgroundColor: "rgba(255, 255, 255, 0.08) !important",
-        color: "rgba(255,255,255,0.5) !important",
-        WebkitTextFillColor: "rgba(255,255,255,0.5) !important",
+        backgroundColor: "#f1f5f9 !important",
       },
     },
     "& .MuiInputLabel-root": {
-      color: "rgba(255,255,255,0.7)",
-      fontSize: "14px",
-      "&.Mui-disabled": {
-        color: "rgba(255,255,255,0.5) !important",
+      color: "#475569",
+      fontSize: "13px",
+      fontWeight: 500,
+      backgroundColor: "#ffffff",
+      px: 0.5,
+      "&.Mui-focused": {
+        color: "#3949ab !important",
       },
     },
-    "& .Mui-focused": {
-      color: "#ffffff !important",
+    "& .MuiInputAdornment-root": {
+      color: "#3949ab !important", // Striking Royal Blue start icons matching the reference photo
+      marginRight: "2px",
+      display: "flex",
+      alignItems: "center",
+      "& *": { color: "#3949ab !important" },
     },
   };
 
   const commonMenuProps = {
     PaperProps: {
       sx: {
-        bgcolor: "#1e1e1e",
-        borderRadius: "10px",
+        bgcolor: "#ffffff",
+        borderRadius: "12px",
+        boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+        border: "1px solid #e2e8f0",
+        mt: 1,
         "& .MuiMenuItem-root": {
-          color: "white",
+          color: "#1e293b",
+          fontSize: "14px",
+          fontWeight: 500,
+          borderRadius: "6px",
+          mx: 1,
+          my: 0.5,
           "&:hover": {
-            backgroundColor: "#333",
+            backgroundColor: "#f1f5f9",
           },
           "&.Mui-selected": {
-            backgroundColor: "#90caf9 !important",
-            color: "#fff",
+            backgroundColor: "#eef2ff !important",
+            color: "#3949ab",
+            fontWeight: 600,
           },
         },
       },
@@ -719,96 +847,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
     ? []
     : providersData?.data?.results?.map(provider => provider.title) || [];
 
-  // If application number and loan status exists, display success message without making user to fill the form again
-  if (applicationNumber) {
-    const storedCustomerInfo = getLocalStorage("customerInfo");
-    const allApplicationNumbers = storedCustomerInfo?.applicationNumbers || [applicationNumber];
 
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          flexDirection: "column",
-          marginTop: 2,
-          padding: 3,
-          border: "1px solid #b6b6b6",
-          borderRadius: "20px",
-          boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
-          backgroundColor: "#f9f9f9",
-          maxWidth: "500px",
-          margin: "auto",
-        }}
-      >
-        <Typography
-          sx={{
-            fontSize: "1.4rem",
-            lineHeight: "2rem",
-            color: "#1976d2",
-            fontWeight: "600",
-            fontFamily: "Roboto, sans-serif",
-            marginBottom: 2,
-            textAlign: "center",
-          }}
-        >
-          Your applications are submitted!
-        </Typography>
-
-        {allApplicationNumbers.length > 1 ? (
-          <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: "1rem", color: "#333", mb: 1 }}>
-              Your Application Numbers are:
-            </Typography>
-            {allApplicationNumbers.map((appNum, index) => (
-              <Typography key={index} sx={{ fontSize: "0.9rem", color: "#333", textAlign: "center" }}>
-                <strong>{appNum}</strong>
-              </Typography>
-            ))}
-          </Box>
-        ) : (
-          <Typography sx={{ fontSize: "1rem", color: "#333", mb: 2 }}>
-            Your Application Number is <strong>{applicationNumber}</strong>.
-          </Typography>
-        )}
-
-        <Typography
-          sx={{
-            fontSize: "1rem",
-            color: "#333",
-            marginBottom: 2,
-            textAlign: "center",
-          }}
-        >
-          We will contact you within the next half an hour.
-          {!salary && ` To speed up the process, please complete the next steps.`}
-        </Typography>
-
-        {salary ? (
-          <Button
-            variant="contained"
-            color="primary"
-            sx={{
-              width: "100%",
-              borderRadius: "10px 10px 10px 10px",
-              bgcolor: "#3244e6",
-              color: "white",
-              "&:hover": {
-                bgcolor: "#5a68ec",
-                color: "white",
-              },
-            }}
-            onClick={() => {
-              remLocalStorage("customerInfo");
-              location.reload();
-            }}
-          >
-            Fill Another Application
-          </Button>
-        ) : null}
-      </Box>
-    );
-  }
 
   // Initial form view with amount and tenure selection
   if (!getStarted) {
@@ -824,18 +863,15 @@ const Step1Form: React.FC<Step1FormProps> = ({
       >
         <Typography
           sx={{
-            fontSize: {
-              xs: "4vw",
-              sm: "3.5vw",
-              md: "1.7vw",
-            },
-            lineHeight: "2rem",
-            color: "#ffffff",
-            fontFamily: "DM sans",
-            marginBottom: 2,
+            fontSize: { xs: "1.2rem", sm: "1.4rem", md: "1.6rem" },
+            fontWeight: 700,
+            color: "#0f172a",
+            fontFamily: "'Inter', sans-serif",
+            marginBottom: 3,
+            textAlign: "center",
           }}
         >
-          Get the loan best suited for your wish
+          Initialize Loan Parameters
         </Typography>
 
         {/* Main Fields Grid */}
@@ -853,10 +889,9 @@ const Step1Form: React.FC<Step1FormProps> = ({
             <TextField
               autoComplete="off"
               fullWidth
-              variant="filled"
+              variant="outlined"
               name="amount"
               label="Loan Amount Required*"
-              placeholder="Loan Amount Required"
               value={amount}
               onChange={(e) => {
                 setAmount(e.target.value);
@@ -867,7 +902,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
               helperText={errors.amount}
               InputProps={{
                 startAdornment: (
-                  <InputAdornment position="start" sx={{ color: "white !important" }}>
+                  <InputAdornment position="start">
                     <CurrencyRupeeIcon />
                   </InputAdornment>
                 ),
@@ -878,27 +913,37 @@ const Step1Form: React.FC<Step1FormProps> = ({
 
           {/* Loan Type Field */}
           <Box>
-            <FormControl fullWidth variant="filled" error={!!errors.loanType} sx={commonFormControlStyles}>
+            <FormControl fullWidth variant="outlined" error={!!errors.loanType} sx={commonFormControlStyles}>
               <InputLabel>Loan Type*</InputLabel>
               <Select
                 name="loanType"
                 value={loanType}
-                onChange={(e) => handleLoanTypeChange(e.target.value)}
+                onChange={(e) => handleLoanTypeChange(e.target.value as string)}
                 onBlur={() => validateLoanType(loanType)}
                 startAdornment={
-                  <InputAdornment position="start" sx={{ color: "white !important" }}>
+                  <InputAdornment position="start">
                     <AccountBalanceIcon />
                   </InputAdornment>
                 }
+                renderValue={(selected) => {
+                  const item = [...LOAN_TYPES_DATA.unsecured, ...LOAN_TYPES_DATA.secured].find((l) => l.value === selected);
+                  return item ? item.label : selected;
+                }}
                 MenuProps={commonMenuProps}
               >
-                <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#333", color: "#90caf9" }}>Unsecured Loans</MenuItem>
-                {loanTypes.unsecured.map((loan) => (
-                  <MenuItem key={loan.value} value={loan.value} sx={{ padding: "10px 16px", fontSize: "14px", borderRadius: "6px" }}>{loan.label}</MenuItem>
+                <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#f8fafc", color: "#3949ab", opacity: "1 !important" }}>Unsecured Loans</MenuItem>
+                {LOAN_TYPES_DATA.unsecured.map((loan) => (
+                  <MenuItem key={loan.value} value={loan.value} sx={{ padding: "10px 16px", fontSize: "14px", borderRadius: "6px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>{loan.label}</span>
+                    {loanType === loan.value && <Check sx={{ fontSize: 18, color: "#3949ab", fontWeight: "bold" }} />}
+                  </MenuItem>
                 ))}
-                <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#333", color: "#90caf9", mt: 1 }}>Secured Loans</MenuItem>
-                {loanTypes.secured.map((loan) => (
-                  <MenuItem key={loan.value} value={loan.value} sx={{ padding: "10px 16px", fontSize: "14px", borderRadius: "6px" }}>{loan.label}</MenuItem>
+                <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#f8fafc", color: "#3949ab", mt: 1, opacity: "1 !important" }}>Secured Loans</MenuItem>
+                {LOAN_TYPES_DATA.secured.map((loan) => (
+                  <MenuItem key={loan.value} value={loan.value} sx={{ padding: "10px 16px", fontSize: "14px", borderRadius: "6px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>{loan.label}</span>
+                    {loanType === loan.value && <Check sx={{ fontSize: 18, color: "#3949ab", fontWeight: "bold" }} />}
+                  </MenuItem>
                 ))}
               </Select>
               {errors.loanType && <Typography color="error" sx={{ mt: 0.5, ml: 1, fontSize: "11px", fontFamily: "Verdana, sans-serif" }}>{errors.loanType}</Typography>}
@@ -907,7 +952,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
 
           {/* Tenure Field */}
           <Box>
-            <FormControl fullWidth variant="filled" error={!!errors.tenure} sx={commonFormControlStyles}>
+            <FormControl fullWidth variant="outlined" error={!!errors.tenure} sx={commonFormControlStyles}>
               <InputLabel>{loanCategory ? `Select Tenure (${loanCategory === 'secured' ? 'Long Term' : 'Short Term'})` : "Select A Comfortable Tenure"}</InputLabel>
               <Select
                 name="tenure"
@@ -919,14 +964,18 @@ const Step1Form: React.FC<Step1FormProps> = ({
                 onBlur={() => validateTenure(tenure)}
                 disabled={!loanCategory}
                 startAdornment={
-                  <InputAdornment position="start" sx={{ color: "white !important" }}>
+                  <InputAdornment position="start">
                     <AccessTime />
                   </InputAdornment>
                 }
+                renderValue={(selected) => selected}
                 MenuProps={commonMenuProps}
               >
                 {(loanCategory ? tenureOptions[loanCategory] : []).map((label) => (
-                  <MenuItem key={label} value={label} sx={{ padding: "10px 16px", fontSize: "14px", borderRadius: "6px" }}>{label}</MenuItem>
+                  <MenuItem key={label} value={label} sx={{ padding: "10px 16px", fontSize: "14px", borderRadius: "6px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>{label}</span>
+                    {tenure === label && <Check sx={{ fontSize: 18, color: "#3949ab", fontWeight: "bold" }} />}
+                  </MenuItem>
                 ))}
               </Select>
               {errors.tenure && <Typography color="error" sx={{ mt: 0.5, ml: 1, fontSize: "11px", fontFamily: "Verdana, sans-serif" }}>{errors.tenure || (loanCategory ? "" : "Please select a loan type first")}</Typography>}
@@ -935,7 +984,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
 
           {/* Providers Field */}
           <Box>
-            <FormControl fullWidth variant="filled" error={!!errors.provider} sx={commonFormControlStyles}>
+            <FormControl fullWidth variant="outlined" error={!!errors.provider} sx={commonFormControlStyles}>
               <InputLabel>Provider Names* (Select Multiple)</InputLabel>
               <Select
                 name="providers"
@@ -947,7 +996,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
                 }}
                 onBlur={() => validateProviders(providers)}
                 startAdornment={
-                  <InputAdornment position="start" sx={{ color: "white !important" }}>
+                  <InputAdornment position="start">
                     <AccountBalanceIcon />
                   </InputAdornment>
                 }
@@ -959,9 +1008,10 @@ const Step1Form: React.FC<Step1FormProps> = ({
                         label={value}
                         size="small"
                         sx={{
-                          backgroundColor: 'rgba(144,202,249,0.3)',
-                          color: 'white',
-                          '& .MuiChip-deleteIcon': { color: 'white' },
+                          backgroundColor: '#eef2ff',
+                          color: '#3949ab',
+                          fontWeight: 600,
+                          '& .MuiChip-deleteIcon': { color: '#3949ab' },
                         }}
                         onDelete={() => handleProviderRemove(value)}
                         onMouseDown={(event) => event.stopPropagation()}
@@ -969,42 +1019,27 @@ const Step1Form: React.FC<Step1FormProps> = ({
                     ))}
                   </Box>
                 )}
-                MenuProps={{
-                  PaperProps: {
-                    sx: {
-                      bgcolor: "#1e1e1e",
-                      borderRadius: "10px",
-                      "& .MuiMenuItem-root": {
-                        color: "white",
-                        "&:hover": { backgroundColor: "#333" },
-                        "&.Mui-selected": { color: "#fff" },
-                      },
-                      overflow: "auto",
-                      scrollbarWidth: "none",
-                      "&::-webkit-scrollbar": { display: "none" },
-                    },
-                  },
-                }}
+                MenuProps={commonMenuProps}
               >
                 <MenuItem
                   value="Let F2 Fintech decide your lender"
                   sx={{
-                    backgroundColor: "rgba(50, 68, 230, 0.1)",
-                    borderBottom: "1px solid rgba(255,255,255,0.1)",
-                    "&:hover": { backgroundColor: "rgba(50, 68, 230, 0.2)" },
-                    "&.Mui-selected": { backgroundColor: "rgba(50, 68, 230, 0.4) !important" },
+                    backgroundColor: "rgba(57, 73, 171, 0.04)",
+                    borderBottom: "1px solid #f1f5f9",
+                    "&:hover": { backgroundColor: "rgba(57, 73, 171, 0.08)" },
+                    "&.Mui-selected": { backgroundColor: "rgba(57, 73, 171, 0.12) !important" },
                   }}
                 >
                   <Checkbox
                     checked={providers.indexOf("Let F2 Fintech decide your lender") > -1}
-                    sx={{ color: "rgba(255,255,255,0.7)", '&.Mui-checked': { color: "#3244e6" } }}
+                    sx={{ color: "#94a3b8", '&.Mui-checked': { color: "#3949ab" } }}
                   />
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: "#90caf9" }}>Let F2 Fintech decide your lender</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: "#3949ab" }}>Let F2 Fintech decide your lender</Typography>
                 </MenuItem>
                 {PROVIDER_OPTIONS.map((providerName) => (
                   <MenuItem key={providerName} value={providerName} sx={{ padding: "10px 16px", fontSize: "14px", borderRadius: "6px" }}>
-                    <Checkbox checked={providers.indexOf(providerName) > -1} sx={{ color: 'white', '&.Mui-checked': { color: '#90caf9' } }} />
-                    <ListItemText primary={providerName} sx={{ color: 'white' }} />
+                    <Checkbox checked={providers.indexOf(providerName) > -1} sx={{ color: '#94a3b8', '&.Mui-checked': { color: '#3949ab' } }} />
+                    <ListItemText primary={providerName} sx={{ color: '#1e293b' }} />
                   </MenuItem>
                 ))}
               </Select>
@@ -1014,7 +1049,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
 
           {/* Lead Type Field */}
           <Box>
-            <FormControl fullWidth variant="filled" error={!!leadTypeError} sx={commonFormControlStyles}>
+            <FormControl fullWidth variant="outlined" error={!!leadTypeError} sx={commonFormControlStyles}>
               <InputLabel>Lead Type*</InputLabel>
               <Select
                 name="leadType"
@@ -1025,14 +1060,21 @@ const Step1Form: React.FC<Step1FormProps> = ({
                 }}
                 onBlur={() => validateLeadType(leadType)}
                 startAdornment={
-                  <InputAdornment position="start" sx={{ color: "white !important" }}>
+                  <InputAdornment position="start">
                     <AccountBalanceIcon />
                   </InputAdornment>
                 }
+                renderValue={(selected) => {
+                  const item = leadTypes.find((l) => l.value === selected);
+                  return item ? item.label : selected;
+                }}
                 MenuProps={commonMenuProps}
               >
                 {leadTypes.map((lead) => (
-                  <MenuItem key={lead.value} value={lead.value} sx={{ padding: "10px 16px", fontSize: "14px", borderRadius: "6px" }}>{lead.label}</MenuItem>
+                  <MenuItem key={lead.value} value={lead.value} sx={{ padding: "10px 16px", fontSize: "14px", borderRadius: "6px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>{lead.label}</span>
+                    {leadType === lead.value && <Check sx={{ fontSize: 18, color: "#3949ab", fontWeight: "bold" }} />}
+                  </MenuItem>
                 ))}
               </Select>
               {leadTypeError && <Typography color="error" sx={{ mt: 0.5, ml: 1, fontSize: "11px", fontFamily: "Verdana, sans-serif" }}>{leadTypeError}</Typography>}
@@ -1041,7 +1083,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
 
           {/* Case Type Field */}
           <Box>
-            <FormControl fullWidth variant="filled" error={!!caseTypeError} sx={commonFormControlStyles}>
+            <FormControl fullWidth variant="outlined" error={!!caseTypeError} sx={commonFormControlStyles}>
               <InputLabel>Case Type*</InputLabel>
               <Select
                 name="caseType"
@@ -1052,14 +1094,21 @@ const Step1Form: React.FC<Step1FormProps> = ({
                 }}
                 onBlur={() => validateCaseType(caseType)}
                 startAdornment={
-                  <InputAdornment position="start" sx={{ color: "white !important" }}>
+                  <InputAdornment position="start">
                     <AccountBalanceIcon />
                   </InputAdornment>
                 }
+                renderValue={(selected) => (selected === "top_up" ? "Top Up" : selected === "fresh" ? "Fresh" : selected)}
                 MenuProps={commonMenuProps}
               >
-                <MenuItem value="top_up" sx={{ padding: "10px 16px", fontSize: "14px", borderRadius: "6px" }}>Top Up</MenuItem>
-                <MenuItem value="fresh" sx={{ padding: "10px 16px", fontSize: "14px", borderRadius: "6px" }}>Fresh</MenuItem>
+                <MenuItem value="top_up" sx={{ padding: "10px 16px", fontSize: "14px", borderRadius: "6px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span>Top Up</span>
+                  {caseType === "top_up" && <Check sx={{ fontSize: 18, color: "#3949ab", fontWeight: "bold" }} />}
+                </MenuItem>
+                <MenuItem value="fresh" sx={{ padding: "10px 16px", fontSize: "14px", borderRadius: "6px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span>Fresh</span>
+                  {caseType === "fresh" && <Check sx={{ fontSize: 18, color: "#3949ab", fontWeight: "bold" }} />}
+                </MenuItem>
               </Select>
               {caseTypeError && <Typography color="error" sx={{ mt: 0.5, ml: 1, fontSize: "11px", fontFamily: "Verdana, sans-serif" }}>{caseTypeError}</Typography>}
             </FormControl>
@@ -1073,17 +1122,19 @@ const Step1Form: React.FC<Step1FormProps> = ({
               width: { xs: "90%", sm: "95%", md: "90%" },
               mb: 3,
               p: 2,
-              backgroundColor: "rgba(255, 255, 255, 0.08)",
-              borderRadius: "12px",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
+              backgroundColor: "#eef2ff",
+              borderRadius: "10px",
+              border: "1px solid #c7d2fe",
             }}
           >
             <Typography
               sx={{
-                color: "white",
-                fontSize: "14px",
-                fontWeight: "600",
-                mb: 2,
+                color: "#3949ab",
+                fontSize: "13px",
+                fontWeight: 700,
+                mb: 1.5,
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
               }}
             >
               Customize Amounts per Provider:
@@ -1098,15 +1149,17 @@ const Step1Form: React.FC<Step1FormProps> = ({
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
-                      p: 1,
-                      backgroundColor: "rgba(255, 255, 255, 0.05)",
-                      borderRadius: "8px",
+                      p: 1.2,
+                      backgroundColor: "#ffffff",
+                      borderRadius: "6px",
+                      border: "1px solid #e0e7ff",
                     }}
                   >
                     <Typography
                       sx={{
-                        color: "white",
+                        color: "#1e293b",
                         fontSize: "13px",
+                        fontWeight: 500,
                         flex: 1,
                       }}
                     >
@@ -1115,9 +1168,9 @@ const Step1Form: React.FC<Step1FormProps> = ({
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <Typography
                         sx={{
-                          color: "#90caf9",
+                          color: "#3949ab",
                           fontSize: "13px",
-                          fontWeight: "600",
+                          fontWeight: 700,
                         }}
                       >
                         ₹{providerAmount || "Not set"}
@@ -1126,9 +1179,10 @@ const Step1Form: React.FC<Step1FormProps> = ({
                         size="small"
                         onClick={() => openAmountDialog(providerName)}
                         sx={{
-                          color: "#90caf9",
-                          '&:hover': {
-                            backgroundColor: "rgba(144, 202, 249, 0.1)",
+                          color: "#3949ab",
+                          padding: "4px",
+                          "&:hover": {
+                            backgroundColor: "#eef2ff",
                           },
                         }}
                       >
@@ -1143,21 +1197,22 @@ const Step1Form: React.FC<Step1FormProps> = ({
         )}
 
         {/* Existing Loans Loop - Relocated with Premium Styling */}
-        <Box sx={{ width: { xs: "90%", sm: "95%", md: "90%" }, mb: 4, mt: 2 }}>
+        <Box sx={{ width: { xs: "90%", sm: "95%", md: "90%" }, mb: 1, mt: 2 }}>
           <Typography
             sx={{
-              color: "#90caf9",
-              fontWeight: 600,
-              fontSize: "1.1rem",
-              fontFamily: "Poppins",
-              mb: 2.5,
+              color: "#3949ab",
+              fontWeight: 700,
+              fontSize: "1rem",
+              fontFamily: "'Inter', sans-serif",
+              mb: 2,
               display: "flex",
               alignItems: "center",
-              gap: 1.5,
-              letterSpacing: "0.5px"
+              gap: 1,
+              letterSpacing: "0.5px",
+              textTransform: "uppercase",
             }}
           >
-            <AccountBalanceIcon sx={{ fontSize: 22 }} /> EXISTING LOANS
+            <AccountBalanceIcon sx={{ fontSize: 20 }} /> Existing Loans
           </Typography>
 
           {existingLoans.map((loan, index) => {
@@ -1166,19 +1221,18 @@ const Step1Form: React.FC<Step1FormProps> = ({
               <Box
                 key={index}
                 sx={{
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                  borderRadius: "16px",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "12px",
                   p: 2.5,
                   mb: 3,
-                  backgroundColor: "rgba(255, 255, 255, 0.04)",
+                  backgroundColor: "#f8fafc",
                   position: "relative",
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                  transition: "all 0.2s ease",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
                   "&:hover": {
-                    backgroundColor: "rgba(255, 255, 255, 0.07)",
-                    borderColor: "rgba(144, 202, 249, 0.4)",
-                    transform: "translateY(-2px)",
-                    boxShadow: "0 6px 16px rgba(0,0,0,0.2)",
+                    backgroundColor: "#ffffff",
+                    borderColor: "#cbd5e1",
+                    boxShadow: "0 4px 12px rgba(57, 73, 171, 0.08)",
                   }
                 }}
               >
@@ -1186,11 +1240,12 @@ const Step1Form: React.FC<Step1FormProps> = ({
                   <Typography
                     variant="caption"
                     sx={{
-                      color: "#ffff",
-                      fontWeight: 800,
-                      letterSpacing: "1px",
-                      fontSize: "0.7rem",
-                      backgroundColor: "rgba(144, 202, 249, 0.1)",
+                      color: "#3949ab",
+                      fontWeight: 700,
+                      letterSpacing: "0.5px",
+                      fontSize: "0.75rem",
+                      backgroundColor: "#eef2ff",
+                      border: "1px solid #e0e7ff",
                       px: 1.5,
                       py: 0.5,
                       borderRadius: "6px"
@@ -1203,12 +1258,12 @@ const Step1Form: React.FC<Step1FormProps> = ({
                       size="small"
                       onClick={() => handleRemoveLoan(index)}
                       sx={{
-                        color: "#ff4444",
-                        backgroundColor: "rgba(255,68,68,0.1)",
+                        color: "#ef4444",
+                        backgroundColor: "#fef2f2",
                         transition: "all 0.2s ease",
                         "&:hover": {
-                          backgroundColor: "rgba(255,68,68,0.25)",
-                          transform: "scale(1.1)"
+                          backgroundColor: "#fee2e2",
+                          transform: "scale(1.05)"
                         }
                       }}
                     >
@@ -1218,34 +1273,51 @@ const Step1Form: React.FC<Step1FormProps> = ({
                 </Box>
 
                 <Stack spacing={3}>
-                  <FormControl fullWidth variant="filled" error={!!loanErr.has_running_loans} sx={commonFormControlStyles}>
+                  <FormControl fullWidth variant="outlined" error={!!loanErr.has_running_loans} sx={commonFormControlStyles}>
                     <InputLabel>Existing Loans*</InputLabel>
                     <Select
                       value={loan.has_running_loans}
                       onChange={(e) => handleExistingLoanChange(index, "has_running_loans", e.target.value)}
+                      renderValue={(selected) => (selected === "yes" ? "Yes" : selected === "no" ? "No" : selected)}
                       MenuProps={commonMenuProps}
                     >
-                      <MenuItem value="yes">Yes</MenuItem>
-                      <MenuItem value="no">No</MenuItem>
+                      <MenuItem value="yes" sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span>Yes</span>
+                        {loan.has_running_loans === "yes" && <Check sx={{ fontSize: 18, color: "#3949ab", fontWeight: "bold" }} />}
+                      </MenuItem>
+                      <MenuItem value="no" sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span>No</span>
+                        {loan.has_running_loans === "no" && <Check sx={{ fontSize: 18, color: "#3949ab", fontWeight: "bold" }} />}
+                      </MenuItem>
                     </Select>
                     {loanErr.has_running_loans && <FormHelperText error>{loanErr.has_running_loans}</FormHelperText>}
                   </FormControl>
 
                   {loan.has_running_loans === "yes" && (
-                    <FormControl fullWidth variant="filled" error={!!loanErr.which_loan} sx={commonFormControlStyles}>
+                    <FormControl fullWidth variant="outlined" error={!!loanErr.which_loan} sx={commonFormControlStyles}>
                       <InputLabel>Loan Type*</InputLabel>
                       <Select
                         value={loan.which_loan}
                         onChange={(e) => handleExistingLoanChange(index, "which_loan", e.target.value)}
+                        renderValue={(selected) => {
+                          const item = [...LOAN_TYPES_DATA.unsecured, ...LOAN_TYPES_DATA.secured].find((l) => l.value === selected);
+                          return item ? item.label : selected;
+                        }}
                         MenuProps={commonMenuProps}
                       >
-                        <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#333", color: "#90caf9", opacity: "1 !important" }}>Unsecured</MenuItem>
-                        {loanTypes.unsecured.map((l) => (
-                          <MenuItem key={l.value} value={l.value} sx={{ py: 1.2, px: 2, fontSize: '14px' }}>{l.label}</MenuItem>
+                        <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#f8fafc", color: "#3949ab", opacity: "1 !important" }}>Unsecured</MenuItem>
+                        {LOAN_TYPES_DATA.unsecured.map((l) => (
+                          <MenuItem key={l.value} value={l.value} sx={{ py: 1.2, px: 2, fontSize: '14px', display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span>{l.label}</span>
+                            {loan.which_loan === l.value && <Check sx={{ fontSize: 18, color: "#3949ab", fontWeight: "bold" }} />}
+                          </MenuItem>
                         ))}
-                        <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#333", color: "#90caf9", mt: 1, opacity: "1 !important" }}>Secured</MenuItem>
-                        {loanTypes.secured.map((l) => (
-                          <MenuItem key={l.value} value={l.value} sx={{ py: 1.2, px: 2, fontSize: '14px' }}>{l.label}</MenuItem>
+                        <MenuItem disabled sx={{ fontWeight: "bold", backgroundColor: "#f8fafc", color: "#3949ab", mt: 1, opacity: "1 !important" }}>Secured</MenuItem>
+                        {LOAN_TYPES_DATA.secured.map((l) => (
+                          <MenuItem key={l.value} value={l.value} sx={{ py: 1.2, px: 2, fontSize: '14px', display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span>{l.label}</span>
+                            {loan.which_loan === l.value && <Check sx={{ fontSize: 18, color: "#3949ab", fontWeight: "bold" }} />}
+                          </MenuItem>
                         ))}
                       </Select>
                       {loanErr.which_loan && <FormHelperText error>{loanErr.which_loan}</FormHelperText>}
@@ -1256,7 +1328,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
                     <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2.5 }}>
                       <TextField
                         fullWidth
-                        variant="filled"
+                        variant="outlined"
                         label="Outstanding Amount*"
                         placeholder="0.00"
                         value={loan.loan_amount}
@@ -1264,13 +1336,13 @@ const Step1Form: React.FC<Step1FormProps> = ({
                         error={!!loanErr.loan_amount}
                         helperText={loanErr.loan_amount}
                         InputProps={{
-                          startAdornment: <InputAdornment position="start"><CurrencyRupeeIcon sx={{ color: "#90caf9", fontSize: 18 }} /></InputAdornment>,
+                          startAdornment: <InputAdornment position="start"><CurrencyRupeeIcon sx={{ color: "#64748b", fontSize: 18 }} /></InputAdornment>,
                         }}
                         sx={commonTextFieldStyles}
                       />
                       <TextField
                         fullWidth
-                        variant="filled"
+                        variant="outlined"
                         label="Running EMI (Optional)"
                         placeholder="0.00"
                         value={loan.running_emi}
@@ -1278,7 +1350,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
                         error={!!loanErr.running_emi}
                         helperText={loanErr.running_emi}
                         InputProps={{
-                          startAdornment: <InputAdornment position="start"><CurrencyRupeeIcon sx={{ color: "#90caf9", fontSize: 18 }} /></InputAdornment>,
+                          startAdornment: <InputAdornment position="start"><CurrencyRupeeIcon sx={{ color: "#64748b", fontSize: 18 }} /></InputAdornment>,
                         }}
                         sx={commonTextFieldStyles}
                       />
@@ -1289,32 +1361,35 @@ const Step1Form: React.FC<Step1FormProps> = ({
             );
           })}
 
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 1 }}>
-            <Button
-              variant="outlined"
-              size="medium"
-              startIcon={<Edit sx={{ fontSize: 18 }} />}
-              onClick={handleAddLoan}
-              sx={{
-                borderRadius: "12px",
-                color: "#ffff",
-                borderColor: "rgba(144,202,249,0.3)",
-                textTransform: 'none',
-                fontWeight: 600,
-                fontSize: "0.9rem",
-                px: 4,
-                py: 1,
-                borderWidth: "1.5px",
-                "&:hover": {
-                  borderColor: "#90caf9",
-                  backgroundColor: "rgba(144, 202, 249, 0.08)",
+          {/* Conditionally reveal the add button ONLY if the active/last record explicitly specifies 'yes' to running loans */}
+          {existingLoans[existingLoans.length - 1]?.has_running_loans === "yes" && (
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 1 }}>
+              <Button
+                variant="outlined"
+                size="medium"
+                startIcon={<Edit sx={{ fontSize: 18 }} />}
+                onClick={handleAddLoan}
+                sx={{
+                  borderRadius: "8px",
+                  color: "#3949ab",
+                  borderColor: "#3949ab",
+                  textTransform: "none",
+                  fontWeight: 600,
+                  fontSize: "0.9rem",
+                  px: 3,
+                  py: 1,
                   borderWidth: "1.5px",
-                }
-              }}
-            >
-              Add Another Loan Record
-            </Button>
-          </Box>
+                  "&:hover": {
+                    borderColor: "#303f9f",
+                    backgroundColor: "#eef2ff",
+                    borderWidth: "1.5px",
+                  }
+                }}
+              >
+                Add Another Loan Record
+              </Button>
+            </Box>
+          )}
         </Box>
 
         <Button
@@ -1323,7 +1398,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
             !!errors.tenure ||
             !!errors.provider ||
             !!errors.loanType ||
-            !!errors.leadType ||
+            !!leadTypeError ||
             !!caseTypeError ||
             !amount ||
             !tenure ||
@@ -1341,25 +1416,37 @@ const Step1Form: React.FC<Step1FormProps> = ({
           variant="contained"
           endIcon={<ArrowForwardIcon />}
           onClick={() => {
+            setLocalStorage("step1GetStarted", true);
             setGetStarted(true);
           }}
           sx={{
-            fontWeight: "500",
-            fontSize: "1rem",
-            fontFamily: "Poppins",
+            fontWeight: 600,
+            fontSize: "0.95rem",
+            fontFamily: "'Inter', sans-serif",
             lineHeight: "1.5rem",
-            mt: 2,
-            backgroundColor: "#039be5",
-            width: {
-              xs: "80%",
-              md: "90%",
-              sm: "95%",
+            mt: 1.5, // Tightened margin pulling the button closer to the form controls
+            backgroundColor: "#3949ab",
+            color: "#ffffff",
+            borderRadius: "8px",
+            height: "46px",
+            textTransform: "none",
+            width: "100%",
+            maxWidth: "600px",
+            boxShadow: "0 4px 12px rgba(57, 73, 171, 0.25)",
+            transition: "all 0.2s ease",
+            "&:hover": {
+              backgroundColor: "#303f9f",
+              boxShadow: "0 6px 16px rgba(57, 73, 171, 0.35)",
             },
-            alignSelf: "center",
+            "&:disabled": {
+              backgroundColor: "#e2e8f0",
+              color: "#64748b",
+              boxShadow: "none",
+            },
             marginBottom: 3,
           }}
         >
-          LET&apos;S GET STARTED
+          Let's Get Started
         </Button>
 
         {/* Provider Amount Dialog */}
@@ -1443,21 +1530,31 @@ const Step1Form: React.FC<Step1FormProps> = ({
     );
   }
 
+  // Component to reactively track and auto-save active Formik values live on typing
+  const FormikAutoSave: React.FC<{ values: any }> = ({ values }) => {
+    useEffect(() => {
+      if (values.title || values.name || values.contact || values.email || values.pan) {
+        setLocalStorage("step1CustomerDraft", values);
+      }
+    }, [values]);
+    return null;
+  };
+
   // ... Rest of your form code remains exactly the same ...
   // Main form view for getting customer details
   return (
     <Box
       sx={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #4444d3ff 0%, #16213e 50%, #0f3460 100%)',
-        py: 2,
-        px: { xs: 2, sm: 3, md: 0 },
-        mt: 10
+        width: "100%",
+        backgroundColor: "transparent",
+        py: 0,
+        px: 0,
+        mt: 1
       }}
     >
       <Formik
         enableReinitialize
-        initialValues={initialValues}
+        initialValues={customerDraft}
         validationSchema={step1ValidationSchema}
         onSubmit={(values) => create(values)}
       >
@@ -1473,6 +1570,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
           handleSubmit,
         }) => (
           <Form onSubmit={handleSubmit}>
+            <FormikAutoSave values={values} />
             <Container
               maxWidth="md"
               sx={{
@@ -1481,12 +1579,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
                 alignItems: "center",
                 width: "100%",
                 marginBottom: "15px",
-                padding: { xs: "1rem", sm: "2rem" },
-                backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: '20px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                padding: 0,
               }}
             >
               {/* Header Section */}
@@ -1496,50 +1589,37 @@ const Step1Form: React.FC<Step1FormProps> = ({
                   flexDirection: "column",
                   alignItems: "center",
                   mb: 4,
-                  mt: { xs: 0, sm: 0, md: 30, lg: 15 },
+                  mt: 0,
                 }}
               >
                 <Typography
                   sx={{
                     fontFamily: "DM Sans, sans-serif",
                     fontSize: {
-                      xs: "1rem",
-                      sm: "1.2rem",
-                      md: "1.5rem",
+                      xs: "1.2rem",
+                      sm: "1.5rem",
+                      md: "1.8rem",
                     },
-                    color: "#ffffff",
-                    fontWeight: 300,
+                    color: "#333333",
+                    fontWeight: 600,
                     marginBottom: 1,
                     textAlign: 'center',
-                    letterSpacing: '0.5px',
                   }}
                 >
-                  Basic <span style={{ color: "#ffd700", textShadow: '0 0 10px rgba(255, 215, 0, 0.5)' }}>Details</span>
+                  Basic <span style={{ color: "#3949ab" }}>Details</span>
                 </Typography>
 
-                <Box
+                <Typography
                   sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                    px: 3,
-                    py: 1,
-                    backgroundColor: 'rgba(3, 155, 229, 0.2)',
-                    borderRadius: '20px',
-                    border: '1px solid rgba(3, 155, 229, 0.3)',
+                    fontFamily: "'Inter', sans-serif",
+                    fontSize: "14px",
+                    color: "#475569",
+                    fontWeight: 500,
                   }}
+                  variant="subtitle1"
                 >
-                  <Typography
-                    sx={{
-                      fontFamily: "Poppins, sans-serif",
-                      fontSize: { xs: "0.9rem", sm: ".7rem" },
-                      color: "#ffffff",
-                      fontWeight: 500,
-                    }}
-                  >
-                    Step 1/4
-                  </Typography>
-                </Box>
+                  Step 1/4
+                </Typography>
               </Box>
 
               {/* Form Fields Container */}
@@ -1550,7 +1630,8 @@ const Step1Form: React.FC<Step1FormProps> = ({
                   justifyContent: "center",
                   alignItems: "center",
                   width: '100%',
-                  gap: 3,
+                  gap: 2.5,
+                  mt: 1,
                 }}
               >
                 {/* Title and Name Row */}
@@ -1564,76 +1645,42 @@ const Step1Form: React.FC<Step1FormProps> = ({
                   }}
                 >
                   {/* Title Dropdown */}
+                  {/* Title Dropdown */}
                   <FormControl
-                    variant="filled"
-                    sx={{
-                      minWidth: { xs: '100%', sm: 120 },
-                      "& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after": {
-                        borderBottom: "none !important",
-                      },
-                      "& .MuiInputBase-root": {
-                        backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                        borderRadius: '12px',
-                        '&:hover': {
-                          backgroundColor: 'rgba(255, 255, 255, 0.12)',
-                        },
-                        '&.Mui-focused': {
-                          backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                        },
-                      },
-                      "& .MuiInputBase-input": {
-                        color: "#ffffff",
-                        fontSize: '16px',
-                      },
-                      "& .MuiInputLabel-root": {
-                        color: "#b0b0b0",
-                        fontSize: '16px',
-                      },
-                      "& .MuiSelect-icon": {
-                        color: "#ffffff",
-                      },
-                    }}
+                    variant="outlined"
+                    sx={{ ...commonFormControlStyles, minWidth: { xs: '100%', sm: 120 } }}
                     error={!!touched.title && !!errors.title}
                   >
-                    <InputLabel>Title*</InputLabel>
+                    <InputLabel shrink>Title*</InputLabel>
                     <Select
                       name="title"
                       value={values.title}
                       onChange={handleChange}
                       onBlur={handleBlur}
-                      MenuProps={{
-                        PaperProps: {
-                          sx: {
-                            bgcolor: "rgba(26, 26, 46, 0.95)",
-                            backdropFilter: 'blur(10px)',
-                            color: "#ffffff",
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            borderRadius: '12px',
-                            "& .MuiMenuItem-root": {
-                              color: "#ffffff",
-                              '&:hover': {
-                                backgroundColor: 'rgba(3, 155, 229, 0.2)',
-                              },
-                            },
-                          },
-                        },
-                      }}
+                      label="Title*"
+                      startAdornment={
+                        <InputAdornment position="start">
+                          <BadgeIcon />
+                        </InputAdornment>
+                      }
+                      renderValue={(selected) => selected || ""}
+                      MenuProps={commonMenuProps}
                     >
-                      <MenuItem value="Mr">Mr</MenuItem>
-                      <MenuItem value="Mrs">Mrs</MenuItem>
-                      <MenuItem value="Miss">Miss</MenuItem>
-                      <MenuItem value="Dr">Dr</MenuItem>
-                      <MenuItem value="Ca">Ca</MenuItem>
+                      {["Mr", "Mrs", "Miss", "Dr", "Ca"].map((t) => (
+                        <MenuItem key={t} value={t} sx={{ display: "flex", justifyContent: "space-between" }}>
+                          {t}
+                          {values.title === t && <Check sx={{ color: "#3949ab", fontSize: 18 }} />}
+                        </MenuItem>
+                      ))}
                     </Select>
                     {touched.title && errors.title && (
                       <Typography
                         sx={{
-                          color: "#ff6b6b",
+                          color: "#ef4444",
                           marginLeft: 1,
-                          margin: "4px 14px",
+                          margin: "4px 4px",
                           fontSize: "12px",
-                          fontFamily: "Poppins, sans-serif",
-                          fontWeight: "400",
+                          fontFamily: "'Inter', sans-serif",
                         }}
                       >
                         {errors.title}
@@ -1644,194 +1691,198 @@ const Step1Form: React.FC<Step1FormProps> = ({
                   {/* Name TextField */}
                   <TextField
                     autoComplete="off"
-                    variant="filled"
+                    variant="outlined"
                     type="text"
                     name="name"
                     label="Name*"
+                    InputLabelProps={{ shrink: true }}
                     value={values.name}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     error={!!touched.name && !!errors.name}
                     helperText={touched.name && errors.name}
-                    sx={{
-                      flex: 1,
-                      "& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after": {
-                        borderBottom: "none !important",
-                      },
-                      "& .MuiInputBase-root": {
-                        backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                        borderRadius: '12px',
-                        '&:hover': {
-                          backgroundColor: 'rgba(255, 255, 255, 0.12)',
-                        },
-                        '&.Mui-focused': {
-                          backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                        },
-                      },
-                      "& .MuiInputBase-input": {
-                        color: "#ffffff",
-                        fontSize: '16px',
-                      },
-                      "& .MuiInputLabel-root": {
-                        color: "#b0b0b0",
-                        fontSize: '16px',
-                      },
-                      "& .MuiFormHelperText-root": {
-                        color: "#ff6b6b",
-                        fontSize: '12px',
-                      },
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <PersonIcon />
+                        </InputAdornment>
+                      ),
                     }}
+                    sx={{ ...commonTextFieldStyles, flex: 1 }}
                   />
                 </Box>
 
                 {/* Standard Form Fields */}
                 {[
-                  { name: 'contact', label: 'Contact*', type: 'number' },
-                  { name: 'email', label: 'E-mail*', type: 'email' },
-                  { name: 'pan', label: 'PAN*', type: 'text', special: 'pan' },
-                  { name: 'father_name', label: 'Father\'s Name*', type: 'text' },
-                  { name: 'mother_name', label: 'Mother\'s Name*', type: 'text' },
-                  { name: 'working_address', label: 'Working Address*', type: 'text' },
-                  { name: 'permanent_address', label: 'Permanent Address*', type: 'text' },
-                  { name: 'current_address', label: 'Current Address*', type: 'text' },
-                  { name: 'city', label: 'City*', type: 'text' },
-                  { name: 'state', label: 'State*', type: 'text' },
-                ].map((field) => (
-                  <TextField
-                    key={field.name}
-                    autoComplete="off"
-                    variant="filled"
-                    type={field.type}
-                    name={field.name}
-                    label={field.label}
-                    value={values[field.name]}
-                    onChange={field.special === 'pan' ?
-                      (event) => {
-                        const uppercaseValue = event.target.value.toUpperCase();
-                        setFieldValue("pan", uppercaseValue);
-                      } : handleChange
-                    }
+                  { name: 'contact', label: 'Contact*', type: 'number', icon: CallIcon },
+                  { name: 'email', label: 'E-mail*', type: 'email', icon: EmailIcon },
+                  { name: 'pan', label: 'PAN*', type: 'text', special: 'pan', icon: CreditCardIcon },
+                  { name: 'father_name', label: 'Father\'s Name*', type: 'text', icon: PersonIcon },
+                  { name: 'mother_name', label: 'Mother\'s Name*', type: 'text', icon: PersonIcon },
+                  { name: 'working_address', label: 'Working Address*', type: 'text', icon: BusinessIcon },
+                  { name: 'permanent_address', label: 'Permanent Address*', type: 'text', icon: HomeIcon },
+                  { name: 'current_address', label: 'Current Address*', type: 'text', icon: LocationOnIcon },
+                  { name: 'city', label: 'City*', type: 'text', icon: LocationOnIcon },
+                ].map((field) => {
+                  const IconComponent = field.icon;
+                  return (
+                    <TextField
+                      key={field.name}
+                      autoComplete="off"
+                      variant="outlined"
+                      type={field.type}
+                      name={field.name}
+                      label={field.label}
+                      InputLabelProps={{ shrink: true }}
+                      value={values[field.name]}
+                      onChange={field.special === 'pan' ?
+                        (event) => {
+                          const uppercaseValue = event.target.value.toUpperCase();
+                          setFieldValue("pan", uppercaseValue);
+                        } : handleChange
+                      }
+                      onBlur={handleBlur}
+                      error={!!touched[field.name] && !!errors[field.name]}
+                      helperText={touched[field.name] && errors[field.name]}
+                      inputProps={field.special === 'pan' ? {
+                        maxLength: 10,
+                        style: { textTransform: "uppercase" },
+                      } : {}}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <IconComponent />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{ ...commonTextFieldStyles, width: "100%", maxWidth: "600px" }}
+                    />
+                  );
+                })}
+
+                {/* State Dropdown with Search */}
+                <FormControl
+                  variant="outlined"
+                  error={!!touched.state && !!errors.state}
+                  sx={{ ...commonFormControlStyles, width: "100%", maxWidth: "600px" }}
+                >
+                  <InputLabel shrink>State*</InputLabel>
+                  <Select
+                    name="state"
+                    value={values.state}
+                    onChange={handleChange}
                     onBlur={handleBlur}
-                    error={!!touched[field.name] && !!errors[field.name]}
-                    helperText={touched[field.name] && errors[field.name]}
-                    inputProps={field.special === 'pan' ? {
-                      maxLength: 10,
-                      style: { textTransform: "uppercase" },
-                    } : {}}
-                    sx={{
-                      width: "100%",
-                      maxWidth: "600px",
-                      "& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after": {
-                        borderBottom: "none !important",
-                      },
-                      "& .MuiInputBase-root": {
-                        backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                        borderRadius: '12px',
-                        paddingTop: '.7rem',
-                        '&:hover': {
-                          backgroundColor: 'rgba(255, 255, 255, 0.12)',
-                        },
-                        '&.Mui-focused': {
-                          backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                        },
-                      },
-                      "& .MuiInputBase-input": {
-                        color: "#ffffff",
-                        fontSize: '16px',
-                        padding: '16px 12px',
-                      },
-                      "& .MuiInputLabel-root": {
-                        color: "#b0b0b0",
-                        fontSize: '16px',
-                      },
-                      "& .MuiFormHelperText-root": {
-                        color: "#ff6b6b",
-                        fontSize: '12px',
-                      },
-                    }}
-                  />
-                ))}
+                    label="State*"
+                    startAdornment={
+                      <InputAdornment position="start">
+                        <LocationOnIcon />
+                      </InputAdornment>
+                    }
+                    renderValue={(selected) => selected || ""}
+                    MenuProps={commonMenuProps}
+                  >
+                    <Box sx={{ p: 1, position: "sticky", top: 0, bgcolor: "#ffffff", zIndex: 1, borderBottom: "1px solid #e2e8f0" }}>
+                      <TextField
+                        size="small"
+                        autoFocus
+                        placeholder="Type to search state..."
+                        value={stateSearch}
+                        onChange={(e) => setStateSearch(e.target.value)}
+                        onKeyDown={(e) => e.stopPropagation()}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <SearchIcon sx={{ fontSize: 20, color: "#94a3b8 !important" }} />
+                            </InputAdornment>
+                          ),
+                        }}
+                        sx={{
+                          width: "100%",
+                          "& .MuiOutlinedInput-root": {
+                            borderRadius: "8px",
+                            "& .MuiInputBase-input": { py: 1, px: 1.5, fontSize: "14px", color: "#0f172a" }
+                          }
+                        }}
+                      />
+                    </Box>
+                    {INDIAN_STATES.filter((s) => s.toLowerCase().includes(stateSearch.toLowerCase())).map((st) => (
+                      <MenuItem key={st} value={st} sx={{ display: "flex", justifyContent: "space-between", py: 1.2 }}>
+                        {st}
+                        {values.state === st && <Check sx={{ color: "#3949ab", fontSize: 18 }} />}
+                      </MenuItem>
+                    ))}
+                    {INDIAN_STATES.filter((s) => s.toLowerCase().includes(stateSearch.toLowerCase())).length === 0 && (
+                      <MenuItem disabled sx={{ py: 1.5, justifyContent: "center", color: "#94a3b8" }}>
+                        No states found
+                      </MenuItem>
+                    )}
+                  </Select>
+
+                  {touched.state && errors.state && (
+                    <Typography
+                      sx={{
+                        color: "#ef4444",
+                        marginLeft: 1,
+                        margin: "4px 4px",
+                        fontSize: "12px",
+                        fontFamily: "'Inter', sans-serif",
+                      }}
+                    >
+                      {errors.state}
+                    </Typography>
+                  )}
+                </FormControl>
 
                 {/* Employment Type Dropdown */}
                 <FormControl
-                  variant="filled"
+                  variant="outlined"
                   error={!!touched.employment_type && !!errors.employment_type}
-                  sx={{
-                    width: "100%",
-                    maxWidth: "600px",
-                    "& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after": {
-                      borderBottom: "none !important",
-                    },
-                    "& .MuiInputBase-root": {
-                      backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                      borderRadius: '12px',
-                      '&:hover': {
-                        backgroundColor: 'rgba(255, 255, 255, 0.12)',
-                      },
-                      '&.Mui-focused': {
-                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                      },
-                    },
-                    "& .MuiInputBase-input": {
-                      color: "#ffffff",
-                      fontSize: '16px',
-                    },
-                    "& .MuiInputLabel-root": {
-                      color: "#b0b0b0",
-                      fontSize: '16px',
-                    },
-                    "& .MuiSelect-icon": {
-                      color: "#ffffff",
-                    },
-                  }}
+                  sx={{ ...commonFormControlStyles, width: "100%", maxWidth: "600px" }}
                 >
-                  <InputLabel>Employment Type*</InputLabel>
+                  <InputLabel shrink>Employment Type*</InputLabel>
                   <Select
                     name="employment_type"
                     value={values.employment_type}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    MenuProps={{
-                      PaperProps: {
-                        sx: {
-                          bgcolor: "rgba(26, 26, 46, 0.95)",
-                          backdropFilter: 'blur(10px)',
-                          color: "#ffffff",
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
-                          borderRadius: '12px',
-                          "& .MuiMenuItem-root": {
-                            color: "#ffffff",
-                            '&:hover': {
-                              backgroundColor: 'rgba(3, 155, 229, 0.2)',
-                            },
-                          },
-                        },
-                      },
-                    }}
+                    label="Employment Type*"
+                    startAdornment={
+                      <InputAdornment position="start">
+                        <WorkIcon />
+                      </InputAdornment>
+                    }
+                    renderValue={(selected) => selected ? selected.charAt(0).toUpperCase() + selected.slice(1) : ""}
+                    MenuProps={commonMenuProps}
                   >
-                    <MenuItem value="salaried">Salaried</MenuItem>
-                    <MenuItem value="business">Business</MenuItem>
-                    <MenuItem value="professional">Professional</MenuItem>
+                    {[
+                      { value: "salaried", label: "Salaried" },
+                      { value: "business", label: "Business" },
+                      { value: "professional", label: "Professional" },
+                    ].map((emp) => (
+                      <MenuItem key={emp.value} value={emp.value} sx={{ display: "flex", justifyContent: "space-between" }}>
+                        {emp.label}
+                        {values.employment_type === emp.value && <Check sx={{ color: "#3949ab", fontSize: 18 }} />}
+                      </MenuItem>
+                    ))}
                   </Select>
 
                   <ErrorMessage
                     name="employment_type"
                     component="div"
                     style={{
-                      color: "#ff6b6b",
-                      margin: "4px 14px",
+                      color: "#ef4444",
+                      margin: "4px 4px",
                       fontSize: "12px",
-                      fontFamily: "Poppins, sans-serif",
-                      fontWeight: "400",
+                      fontFamily: "'Inter', sans-serif",
                     }}
                   />
                 </FormControl>
 
                 {/* Date of Birth */}
-                <Box sx={{ width: "100%", maxWidth: "600px", backgroundColor: "#bdbdbd", display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column", padding: 2, borderRadius: 2, boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)" }}>
+                <Box sx={{ width: "100%", maxWidth: "600px", display: "flex", flexDirection: "column" }}>
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <DatePicker
-                      format="DD MMMM YYYY"
+                      format="DD MM YYYY"
                       views={["year", "month", "day"]}
                       label="Select Date Of Birth*"
                       name="dob"
@@ -1844,45 +1895,40 @@ const Step1Form: React.FC<Step1FormProps> = ({
                         <TextField
                           {...params}
                           fullWidth
-                          variant="filled"
-                          sx={{
-                            "& .MuiInputBase-root": {
-                              backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                              borderRadius: '12px',
-                              '&:hover': {
-                                backgroundColor: 'rgba(255, 255, 255, 0.12)',
-                              },
-                              '&.Mui-focused': {
-                                backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                              },
-                            },
-                            "& .MuiInputBase-input": {
-                              color: "#ffffff",
-                              fontSize: '16px',
-                            },
-                            "& .MuiInputLabel-root": {
-                              color: "#b0b0b0",
-                              fontSize: '16px',
-                            },
+                          variant="outlined"
+                          label="Select Date Of Birth*"
+                          InputLabelProps={{ shrink: true }}
+                          InputProps={{
+                            ...params.InputProps,
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <AccessTime />
+                              </InputAdornment>
+                            ),
                           }}
+                          sx={commonTextFieldStyles}
                         />
                       )}
                       PopperProps={{
                         sx: {
                           "& .MuiPaper-root": {
-                            backgroundColor: "rgba(26, 26, 46, 0.95)",
-                            backdropFilter: 'blur(10px)',
-                            color: "#ffffff",
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            borderRadius: '12px',
+                            backgroundColor: "#ffffff",
+                            boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+                            border: "1px solid #e2e8f0",
+                            borderRadius: "12px",
+                            color: "#0f172a",
                           },
                           "& .MuiPickersDay-root": {
-                            color: "#ffffff",
-                            '&:hover': {
-                              backgroundColor: 'rgba(3, 155, 229, 0.3)',
+                            color: "#0f172a",
+                            "&:hover": {
+                              backgroundColor: "#f1f5f9",
                             },
-                            '&.Mui-selected': {
-                              backgroundColor: '#039be5',
+                            "&.Mui-selected": {
+                              backgroundColor: "#3949ab",
+                              color: "#ffffff",
+                              "&:hover": {
+                                backgroundColor: "#303f9f",
+                              },
                             },
                           },
                         },
@@ -1894,20 +1940,19 @@ const Step1Form: React.FC<Step1FormProps> = ({
                     name="dob"
                     component="div"
                     style={{
-                      color: "#ff6b6b",
-                      margin: "4px 14px",
+                      color: "#ef4444",
+                      margin: "4px 4px",
                       fontSize: "12px",
-                      fontFamily: "Poppins, sans-serif",
-                      fontWeight: "400",
+                      fontFamily: "'Inter', sans-serif",
                     }}
                   />
 
                   <Typography
                     sx={{
                       fontSize: "12px",
-                      color: "black",
-                      ml: "16px",
-                      mt: "4px",
+                      color: "#64748b",
+                      mt: 0.5,
+                      mx: 0.5,
                     }}
                   >
                     Minimum age 20 required
@@ -1915,16 +1960,16 @@ const Step1Form: React.FC<Step1FormProps> = ({
                 </Box>
 
                 {/* Terms Checkboxes */}
-                <Box sx={{ width: "100%", maxWidth: "600px", mt: 2 }}>
-                  <FormGroup sx={{ mb: 3 }}>
+                <Box sx={{ width: "100%", maxWidth: "600px", mt: 1 }}>
+                  <FormGroup sx={{ mb: 2 }}>
                     <FormControlLabel
                       control={
                         <Checkbox
                           defaultChecked
                           sx={{
-                            color: "#b0b0b0",
-                            '&.Mui-checked': {
-                              color: "#039be5",
+                            color: "#94a3b8",
+                            "&.Mui-checked": {
+                              color: "#3949ab",
                             },
                           }}
                         />
@@ -1932,10 +1977,10 @@ const Step1Form: React.FC<Step1FormProps> = ({
                       label={
                         <Typography
                           sx={{
-                            fontSize: { xs: "13px", sm: "14px", md: "15px" },
-                            color: "#ffffff",
+                            fontSize: "13px",
+                            color: "#334155",
                             lineHeight: 1.5,
-                            fontFamily: "Poppins, sans-serif",
+                            fontFamily: "'Inter', sans-serif",
                           }}
                         >
                           I agree to opt for the product and service of F2fintech.
@@ -1947,18 +1992,18 @@ const Step1Form: React.FC<Step1FormProps> = ({
                     />
                   </FormGroup>
 
-                  <FormGroup sx={{ mb: 4 }}>
+                  <FormGroup sx={{ mb: 3 }}>
                     <FormControlLabel
                       control={
                         <Checkbox
                           defaultChecked
                           sx={{
-                            color: "#b0b0b0",
-                            '&.Mui-checked': {
-                              color: "#039be5",
+                            color: "#94a3b8",
+                            "&.Mui-checked": {
+                              color: "#3949ab",
                             },
-                            alignSelf: 'flex-start',
-                            mt: 0.5,
+                            alignSelf: "flex-start",
+                            mt: 0.25,
                           }}
                         />
                       }
@@ -1966,11 +2011,11 @@ const Step1Form: React.FC<Step1FormProps> = ({
                         <Box>
                           <Typography
                             sx={{
-                              fontSize: { xs: "13px", sm: "14px" },
-                              color: "#ffffff",
+                              fontSize: "13px",
+                              color: "#334155",
                               lineHeight: 1.5,
-                              fontFamily: "Poppins, sans-serif",
-                              mb: 2,
+                              fontFamily: "'Inter', sans-serif",
+                              mb: 1.5,
                             }}
                           >
                             I further consent to receive the loan and product
@@ -1983,13 +2028,13 @@ const Step1Form: React.FC<Step1FormProps> = ({
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "flex-start",
-                            gap: 3,
-                            flexWrap: 'wrap',
+                            gap: 2.5,
+                            flexWrap: "wrap",
                           }}>
-                            <SmsIcon sx={{ color: '#039be5', fontSize: 28 }} />
-                            <CallIcon sx={{ color: '#039be5', fontSize: 28 }} />
-                            <WhatsAppIcon sx={{ color: '#25D366', fontSize: 28 }} />
-                            <EmailIcon sx={{ color: '#039be5', fontSize: 28 }} />
+                            <SmsIcon sx={{ color: "#3949ab", fontSize: 24 }} />
+                            <CallIcon sx={{ color: "#3949ab", fontSize: 24 }} />
+                            <WhatsAppIcon sx={{ color: "#25D366", fontSize: 24 }} />
+                            <EmailIcon sx={{ color: "#3949ab", fontSize: 24 }} />
                           </Box>
                         </Box>
                       }
@@ -2003,35 +2048,35 @@ const Step1Form: React.FC<Step1FormProps> = ({
                   type="submit"
                   sx={{
                     color: "#ffffff",
-                    fontWeight: "600",
-                    borderRadius: "25px",
-                    fontSize: { xs: "16px", sm: "17px", md: "18px" },
-                    lineHeight: "1.5rem",
-                    width: { xs: "200px", sm: "220px", md: "240px" },
-                    height: "50px",
-                    mt: 2,
+                    fontWeight: 600,
+                    borderRadius: "8px",
+                    fontSize: "15px",
+                    width: "100%",
+                    maxWidth: "600px",
+                    height: "46px",
+                    mt: 1,
                     mb: 2,
-                    background: 'linear-gradient(45deg, #039be5 30%, #0288d1 90%)',
-                    boxShadow: '0 4px 20px rgba(3, 155, 229, 0.4)',
-                    fontFamily: "Poppins, sans-serif",
-                    textTransform: 'none',
-                    transition: 'all 0.3s ease',
+                    backgroundColor: "#3949ab",
+                    boxShadow: "0px 8px 20px rgba(57, 73, 171, 0.35)",
+                    fontFamily: "'Inter', sans-serif",
+                    textTransform: "none",
+                    transition: "all 0.2s ease",
                     "&:hover": {
-                      background: 'linear-gradient(45deg, #0288d1 30%, #0277bd 90%)',
-                      boxShadow: '0 6px 25px rgba(3, 155, 229, 0.6)',
-                      transform: 'translateY(-2px)',
+                      backgroundColor: "#303f9f",
+                      boxShadow: "0px 10px 25px rgba(57, 73, 171, 0.45)",
+                      transform: "translateY(-2px)",
                     },
                     "&:disabled": {
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      color: 'rgba(255, 255, 255, 0.5)',
-                      boxShadow: 'none',
+                      backgroundColor: "#e2e8f0",
+                      color: "#94a3b8",
+                      boxShadow: "none",
                     },
                   }}
                 >
                   {loading ? (
-                    <CircularProgress size={24} sx={{ color: "#ffffff" }} />
+                    <CircularProgress size={20} sx={{ color: "#ffffff" }} />
                   ) : (
-                    "Apply Now"
+                    "Proceed To Next Step"
                   )}
                 </Button>
               </Box>

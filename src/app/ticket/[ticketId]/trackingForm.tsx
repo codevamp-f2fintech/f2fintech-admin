@@ -217,33 +217,17 @@ const TrackingForm: React.FC<FormComponentProps> = ( {
         onClose={handleDialogClose}
         aria-labelledby="responsive-dialog-title"
         sx={{
-          top: isMobile ? "22%" : isTab ? "15%" : "10.5%",
-          height: isMobile ? "65vh" : isTab ? "60vh" : "87vh",
-          padding: "2rem",
-          boxShadow:
-            "rgba(0, 0, 0, 0.1) 0px -23px 20px 0px inset, rgba(0, 0, 0, 0.15) 0px -36px 30px 0px inset, rgba(0, 0, 0, 0.1) 0px -79px 40px 0px inset, rgba(0, 0, 0, 0.06) 0px 2px 1px, rgba(0, 0, 0, 0.09) 0px 4px 2px, rgba(0, 0, 0, 0.09) 0px 8px 4px, rgba(0, 0, 0, 0.09) 0px 16px 8px, rgba(0, 0, 0, 0.09) 0px 32px 16px",
-
           "& .MuiPaper-root": {
-            width: isMobile ? "110vw" : isTab ? "90vw" : "100vw",
-            borderRadius: isMobile ? "20px" : isTab ? "20px" : "20px",
-
-            backgroundImage:
-              theme.palette.mode === "light"
-                ? `linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85))`
-                : `linear-gradient(rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.9))`,
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "center",
-            backgroundSize: "cover",
+            borderRadius: "16px",
+            padding: 2,
           },
         }}
       >
         <Typography
-          fontSize="1.8rem"
-          fontWeight="600"
-          display={isMobile ? "" : isTab ? "" : "inline-block"}
+          variant="h5"
+          fontWeight="700"
           textAlign="center"
-          marginTop={isMobile ? "2vh" : isTab ? "5vh" : "10px"}
-          marginBottom={isMobile ? "1vh" : isTab ? "3vh" : ""}
+          sx={{ mt: 2, mb: 1, color: "text.primary" }}
         >
           Time Tracking
         </Typography>
@@ -284,16 +268,14 @@ const TrackingForm: React.FC<FormComponentProps> = ( {
                   {/* Blue Progress (within estimate preview) */}
                   <LinearProgress
                     variant="determinate"
-                    value={previewProgress > 100 ? 100 : previewProgress} // Cap progress at 100%
+                    value={previewProgress > 100 ? 100 : previewProgress}
                     sx={{
                       height: 8,
-                      borderRadius: 2,
-                      backgroundColor: "lightgray",
-                      width: isMobile ? "78vw" : isTab ? "45vw" : "30vw",
-
+                      borderRadius: 4,
+                      flexGrow: 1,
+                      backgroundColor: "var(--mui-palette-neutral-200)",
                       "& .MuiLinearProgress-bar": {
                         backgroundColor: "#36B37E",
-                        transition: "all 0.3s ease", // Smooth transition
                       },
                     }}
                   />
@@ -357,9 +339,9 @@ const TrackingForm: React.FC<FormComponentProps> = ( {
                   gap="20px"
                   padding="20px"
                   mt={4}
-                  bgcolor="#f9f9f9"
-                  borderRadius="8px"
-                  boxShadow="0 2px 8px rgba(0, 0, 0, 0.1)"
+                  bgcolor="var(--mui-palette-neutral-50)"
+                  borderRadius="12px"
+                  border="1px solid var(--mui-palette-neutral-200)"
                 >
                   {/* Time Spent Field */}
                   <TextField
@@ -414,9 +396,9 @@ const TrackingForm: React.FC<FormComponentProps> = ( {
                 p="20px"
               >
                 <Button
-                  color="error"
+                  color="inherit"
                   variant="outlined"
-                  sx={{ mr: 3 }}
+                  sx={{ mr: 2, px: 4 }}
                   onClick={() => {
                     resetForm();
                     handleDialogClose();
@@ -426,8 +408,9 @@ const TrackingForm: React.FC<FormComponentProps> = ( {
                 </Button>
                 <Button
                   type="submit"
-                  color="info"
-                  variant="outlined"
+                  color="primary"
+                  variant="contained"
+                  sx={{ px: 4 }}
                   disabled={!dirty || isSubmitting}
                 >
                   Save

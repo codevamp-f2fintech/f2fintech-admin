@@ -444,7 +444,7 @@ const Ticket = () => {
     const queryMonth = searchParams.get("month");
 
     // Set all filters from URL
-    setSortBy(queryStatus || "all");
+    setSortBy(queryStatus || (userRole === "credit" ? "forwarded" : "all"));
     setLoanProvider(queryProvider || "all");
     setStartDate(queryStartDate || null);
     setEndDate(queryEndDate || null);
@@ -770,16 +770,14 @@ const Ticket = () => {
               sx={{
                 minWidth: { xs: "40px", sm: "44px", md: "48px" },
                 height: { xs: "40px", sm: "44px", md: "48px" },
-                background:
-                  "linear-gradient(135deg, #3f50b5 30%, #80adc9ff 90%)",
+                background: "#3f50b5",
                 color: "#fff",
                 borderRadius: { xs: "8px", sm: "10px", md: "12px" },
-                boxShadow: "0 4px 10px rgba(76, 175, 80, 0.3)",
+                boxShadow: "0 4px 10px rgba(63, 80, 181, 0.3)",
                 transition: "all 0.3s ease",
                 "&:hover": {
-                  background:
-                    "linear-gradient(135deg, #3f50b5 30%, #a0bcd7ff 90%)",
-                  boxShadow: "0 6px 14px rgba(76, 175, 80, 0.5)",
+                  background: "#303f9f",
+                  boxShadow: "0 6px 14px rgba(63, 80, 181, 0.5)",
                   transform: "translateY(-2px)",
                 },
                 position: "absolute",
@@ -961,7 +959,6 @@ const Ticket = () => {
                 <Box
                   sx={{
                     width: "100%",
-                    overflowX: "auto",
                     borderRadius: 2,
                     boxShadow: 2,
                   }}
@@ -972,25 +969,24 @@ const Ticket = () => {
                       borderRadius: 2,
                       overflowX: "auto",
                       width: "100%",
-                      maxWidth: {
-                        xs: "90vw",
-                        sm: "90vw",
-                        md: "100vw",
-                        lg: "100vw",
+                      maxWidth: "100vw",
+                      '&::-webkit-scrollbar': {
+                        display: 'none',
                       },
-                      minWidth: "100%",
+                      msOverflowStyle: 'none',
+                      scrollbarWidth: 'none',
                     }}
                   >
                     <Table
                       sx={{
                         tableLayout: "auto",
                         "& .MuiTableCell-root": {
-                          padding: "8px",
+                          padding: { xs: "4px", sm: "6px", md: "8px" },
                         },
                       }}
                     >
                       <TableHead>
-                        <TableRow sx={{ backgroundColor: "#3f50b5" }}>
+                        <TableRow sx={{ background: "#3f50b5" }}>
                           <TableCell
                             sx={{
                               fontWeight: "bold",
@@ -1034,7 +1030,7 @@ const Ticket = () => {
                           )} */}
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Amount</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Provider</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Category</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Loan Type</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Lead Type</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Tenure</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Location</TableCell>

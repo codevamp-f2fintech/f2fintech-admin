@@ -19,6 +19,7 @@ import {
   ListItemText,
   ListItemSecondaryAction,
   Badge,
+  Tooltip,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AudioFileIcon from "@mui/icons-material/Audiotrack";
@@ -39,17 +40,17 @@ import Loader from "../../components/common/Loader";
 import { TicketVoiceNote, TicketVoiceNoteData } from "@/types/ticketVoiceNote";
 
 interface UploadProgress {
-  [ key: string ]: number;
+  [key: string]: number;
 }
 
-const TicketVoiceNotes = ( { isMobile, isTab, isIpad, ticketDetailData } ) => {
-  const [ selectedAudioFiles, setSelectedAudioFiles ] = useState<File[]>( [] );
-  const [ loading, setLoading ] = useState( false );
-  const [ uploadProgress, setUploadProgress ] = useState<UploadProgress>( {} );
-  const inputRef = useRef<HTMLInputElement>( null );
+const TicketVoiceNotes = ({ isMobile, isTab, isIpad, ticketDetailData }) => {
+  const [selectedAudioFiles, setSelectedAudioFiles] = useState<File[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress>({});
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const dispatch: AppDispatch = useDispatch();
-  const { toast } = useSelector( ( state: RootState ) => state.toast );
+  const { toast } = useSelector((state: RootState) => state.toast);
   const { toastAndNavigate, decodedToken } = Utility();
   const { createTicketHistory } = useCreateTicketHistory(
     "create-ticket-history"
@@ -63,55 +64,53 @@ const TicketVoiceNotes = ( { isMobile, isTab, isIpad, ticketDetailData } ) => {
   } = useGetTicketVoiceNotes(
     {} as TicketVoiceNote,
     ticketDetailData?.ticketId
-      ? `get-ticket-voice-notes/${ ticketDetailData.ticketId }`
+      ? `get-ticket-voice-notes/${ticketDetailData.ticketId}`
       : ""
   );
 
   const { createTicketVoiceNote, loading: createLoading } =
-    useCreateTicketVoiceNote( "create-ticket-voice-note" );
+    useCreateTicketVoiceNote("create-ticket-voice-note");
   const { deleteTicketVoiceNote, loading: deleteLoading } =
-    useDeleteTicketVoiceNote( "delete-ticket-voice-note" );
+    useDeleteTicketVoiceNote("delete-ticket-voice-note");
 
   // Handle multiple file selection
-  const handleFileChange = ( e: React.ChangeEvent<HTMLInputElement> ) => {
-    const files = Array.from( e.target.files || [] );
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
     const validFiles: File[] = [];
 
-    files.forEach( ( file ) => {
+    files.forEach((file) => {
       // Validate file size (20MB limit)
-      if ( file.size > 20 * 1024 * 1024 )
-      {
+      if (file.size > 20 * 1024 * 1024) {
         toastAndNavigate(
           dispatch,
           true,
           "error",
-          `${ file.name } exceeds 20MB limit`
+          `${file.name} exceeds 20MB limit`
         );
         return;
       }
-      validFiles.push( file );
-    } );
-    setSelectedAudioFiles( ( prev ) => [ ...prev, ...validFiles ] );
+      validFiles.push(file);
+    });
+    setSelectedAudioFiles((prev) => [...prev, ...validFiles]);
   };
 
   // Remove selected file
-  const removeSelectedFile = ( index: number ) => {
-    setSelectedAudioFiles( ( prev ) => prev.filter( ( _, i ) => i !== index ) );
+  const removeSelectedFile = (index: number) => {
+    setSelectedAudioFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   // Upload single voice note with progress tracking
   const uploadSingleVoiceNote = async (
     file: File
   ): Promise<{ success: boolean; fileName: string; error?: string }> => {
-    try
-    {
+    try {
       // Upload file to S3
       const formData = new FormData();
-      formData.append( "document", file );
-      formData.append( "folder", `voice-note/${ file.name }` );
+      formData.append("document", file);
+      formData.append("folder", `voice-note/${file.name}`);
 
       const uploadResponse = await axiosInstance.post(
-        `${ process.env.NEXT_PUBLIC_WEB_URL }/upload-to-s3`,
+        `${process.env.NEXT_PUBLIC_WEB_URL}/upload-to-s3`,
         formData,
         {
           headers: {
@@ -119,18 +118,17 @@ const TicketVoiceNotes = ( { isMobile, isTab, isIpad, ticketDetailData } ) => {
           },
           maxContentLength: 20 * 1024 * 1024,
           maxBodyLength: 20 * 1024 * 1024,
-          onUploadProgress: ( progressEvent ) => {
+          onUploadProgress: (progressEvent) => {
             const progress = Math.round(
-              ( progressEvent.loaded * 100 ) / ( progressEvent.total || 1 )
+              (progressEvent.loaded * 100) / (progressEvent.total || 1)
             );
-            setUploadProgress( ( prev ) => ( {
+            setUploadProgress((prev) => ({
               ...prev,
-              [ file.name ]: progress,
-            } ) );
+              [file.name]: progress,
+            }));
           },
         }
       );
-      // console.log(uploadResponse, 'uploadresponse')
       // const attachmentUrl = "https://f2fintechcustomerdocs.s3.eu-north-1.amazonaws.com/voice-note/ElevenLabs_2025-02-19T10_53_14_George_pre_s50_sb75_se0_b_m2.mp3";
       const attachmentUrl = uploadResponse?.data?.data;
 
@@ -141,15 +139,14 @@ const TicketVoiceNotes = ( { isMobile, isTab, isIpad, ticketDetailData } ) => {
         voice_note_url: attachmentUrl,
       };
 
-      const response = await createTicketVoiceNote( voiceNoteData );
-      if ( response?.statusCode === 201 )
-      {
+      const response = await createTicketVoiceNote(voiceNoteData);
+      if (response?.statusCode === 201) {
         const loggedInUser = decodedToken()?.username;
-        const historyMessage = `${ loggedInUser } uploaded a voice note - ${ file.name }`;
-        await createTicketHistory( {
+        const historyMessage = `${loggedInUser} uploaded a voice note - ${file.name}`;
+        await createTicketHistory({
           ticket_id: ticketDetailData.ticketId,
           action: historyMessage,
-        } );
+        });
         return { success: true, fileName: file.name };
       }
       return {
@@ -157,9 +154,8 @@ const TicketVoiceNotes = ( { isMobile, isTab, isIpad, ticketDetailData } ) => {
         fileName: file.name,
         error: "Failed to create voice note record",
       };
-    } catch ( error )
-    {
-      console.error( `Error uploading ${ file.name }:`, error );
+    } catch (error) {
+      console.error(`Error uploading ${file.name}:`, error);
       return {
         success: false,
         fileName: file.name,
@@ -169,50 +165,45 @@ const TicketVoiceNotes = ( { isMobile, isTab, isIpad, ticketDetailData } ) => {
   };
 
   // Upload all selected voice notes in parallel
-  const handleVoiceNotesUpload = useCallback( async () => {
-    if ( selectedAudioFiles.length === 0 || !ticketDetailData?.ticketId ) return;
-    setLoading( true );
+  const handleVoiceNotesUpload = useCallback(async () => {
+    if (selectedAudioFiles.length === 0 || !ticketDetailData?.ticketId) return;
+    setLoading(true);
 
-    try
-    {
+    try {
       // Upload all files in parallel using Promise.all
-      const uploadPromises = selectedAudioFiles.map( ( file ) =>
-        uploadSingleVoiceNote( file )
+      const uploadPromises = selectedAudioFiles.map((file) =>
+        uploadSingleVoiceNote(file)
       );
-      const results = await Promise.all( uploadPromises );
+      const results = await Promise.all(uploadPromises);
 
       // Process results
-      const successfulUploads = results.filter( ( result ) => result.success );
-      const failedUploads = results.filter( ( result ) => !result.success );
+      const successfulUploads = results.filter((result) => result.success);
+      const failedUploads = results.filter((result) => !result.success);
 
       // Clear selected files and reset input
-      setSelectedAudioFiles( [] );
-      if ( inputRef.current )
-      {
+      setSelectedAudioFiles([]);
+      if (inputRef.current) {
         inputRef.current.value = "";
       }
       // Refresh the voice notes list
       refetch();
 
       // Show appropriate toast message
-      if ( successfulUploads.length > 0 && failedUploads.length === 0 )
-      {
+      if (successfulUploads.length > 0 && failedUploads.length === 0) {
         toastAndNavigate(
           dispatch,
           true,
           "success",
-          `All ${ successfulUploads.length } voice note(s) uploaded successfully`
+          `All ${successfulUploads.length} voice note(s) uploaded successfully`
         );
-      } else if ( successfulUploads.length > 0 && failedUploads.length > 0 )
-      {
+      } else if (successfulUploads.length > 0 && failedUploads.length > 0) {
         toastAndNavigate(
           dispatch,
           true,
           "warning",
-          `${ successfulUploads.length } uploaded successfully, ${ failedUploads.length } failed`
+          `${successfulUploads.length} uploaded successfully, ${failedUploads.length} failed`
         );
-      } else
-      {
+      } else {
         toastAndNavigate(
           dispatch,
           true,
@@ -222,40 +213,36 @@ const TicketVoiceNotes = ( { isMobile, isTab, isIpad, ticketDetailData } ) => {
       }
 
       // Log failed uploads for debugging
-      if ( failedUploads.length > 0 )
-      {
-        console.error( "Failed uploads:", failedUploads );
+      if (failedUploads.length > 0) {
+        console.error("Failed uploads:", failedUploads);
       }
-    } catch ( error )
-    {
-      console.error( "Error in parallel upload:", error );
+    } catch (error) {
+      console.error("Error in parallel upload:", error);
       toastAndNavigate(
         dispatch,
         true,
         "error",
         "Error uploading voice notes. Please try again"
       );
-    } finally
-    {
-      setLoading( false );
-      setUploadProgress( {} );
+    } finally {
+      setLoading(false);
+      setUploadProgress({});
     }
-  }, [ selectedAudioFiles, ticketDetailData ] );
+  }, [selectedAudioFiles, ticketDetailData]);
 
   // Delete voice note
   const handleDeleteVoiceNote = async (
     voiceNoteId: number,
     voiceNoteUrl: string
   ) => {
-    try
-    {
-      await deleteTicketVoiceNote( voiceNoteId );
+    try {
+      await deleteTicketVoiceNote(voiceNoteId);
       const loggedInUser = decodedToken()?.username;
-      const historyMessage = `${ loggedInUser } deleted a voice note`;
-      await createTicketHistory( {
+      const historyMessage = `${loggedInUser} deleted a voice note`;
+      await createTicketHistory({
         ticket_id: ticketDetailData.ticketId,
         action: historyMessage,
-      } );
+      });
       toastAndNavigate(
         dispatch,
         true,
@@ -263,130 +250,115 @@ const TicketVoiceNotes = ( { isMobile, isTab, isIpad, ticketDetailData } ) => {
         "Voice note deleted successfully"
       );
       await refetch();
-    } catch ( error )
-    {
-      console.error( "Error deleting voice note:", error );
-      toastAndNavigate( dispatch, true, "error", "Error deleting voice note" );
+    } catch (error) {
+      console.error("Error deleting voice note:", error);
+      toastAndNavigate(dispatch, true, "error", "Error deleting voice note");
     }
   };
 
   // Format date for display
-  const formatDate = ( dateString: string ) => {
-    const date = new Date( dateString );
-    return date.toLocaleString( "en-US", {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    } );
+    });
   };
 
   // Get file name from URL
-  const getFileName = ( url: string ) => {
-    const parts = url.split( "/" );
-    return parts[ parts.length - 1 ] || "Voice Note";
+  const getFileName = (url: string) => {
+    const parts = url.split("/");
+    return parts[parts.length - 1] || "Voice Note";
   };
 
   // Format file size
-  const formatFileSize = ( bytes: number ) => {
-    if ( bytes === 0 ) return "0 Bytes";
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = [ "Bytes", "KB", "MB", "GB" ];
-    const i = Math.floor( Math.log( bytes ) / Math.log( k ) );
-    return parseFloat( ( bytes / Math.pow( k, i ) ).toFixed( 2 ) ) + " " + sizes[ i ];
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  if ( swrLoading )
-  {
+  if (swrLoading) {
     return <Loader />;
   }
 
   return (
-    <Box
-      sx={{
-        width: "100%",
-        maxWidth: "100%",
-        margin: "0 auto",
-      }}
-    >
+    <Box sx={{ height: "100%", width: "100%" }}>
       <Paper
-        elevation={5}
+        elevation={0}
         sx={{
-          padding: 3,
-          marginTop: isMobile ? "2vh" : isTab ? "2rem" : "5vh",
-          borderRadius: "12px",
-          bgcolor: "#f4f4f4",
-          height: "fit-content",
+          padding: { xs: 2, sm: 3 },
+          height: "100%",
           maxHeight: "75vh",
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
-          backgroundColor: "#fff",
-          boxShadow:
-            " rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;",
         }}
       >
         {/* Header */}
-        <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-          <AudioFileIcon sx={{ color: "#9575cd", mr: 1, fontSize: "2rem" }} />
+        <Box sx={{ display: "flex", alignItems: "center", mb: 2, borderBottom: "1px solid rgba(0,0,0,0.06)", pb: 1.5 }}>
           <Typography
-            variant="h5"
+            variant="h6"
             sx={{
-              color: "#9575cd",
-              fontWeight: "bold",
-              fontSize: isMobile ? "1.2rem" : isIpad ? "1.8rem" : "1.5rem",
+              color: "text.primary",
+              fontWeight: 700,
+              fontSize: { xs: "1.1rem", sm: "1.2rem", md: "1.3rem" },
             }}
           >
-            Voice Notes ({voiceNotes?.length || 0})
+            Voice Notes
           </Typography>
         </Box>
 
         {/* Upload Section */}
-        <Card
+        <Box
           sx={{
             mb: 3,
-            bgcolor: "#b39ddb",
-            color: "white",
-            borderRadius: "8px",
+            bgcolor: "rgba(12, 102, 228, 0.04)",
+            border: "1px dashed rgba(12, 102, 228, 0.3)",
+            borderRadius: "12px",
             flexShrink: 0,
+            p: 2.5,
           }}
         >
-          <CardContent sx={{ p: 2 }}>
+          <Box sx={{ p: 1 }}>
             <Typography
-              variant="h6"
-              sx={{ mb: 2, fontSize: isMobile ? "1rem" : isIpad ? "1.4rem" : "1.1rem" }}
+              variant="subtitle1"
+              sx={{ mb: 1.5, fontWeight: 600, color: "#172B4D", fontSize: "0.95rem" }}
             >
               Upload Voice Notes
             </Typography>
 
             {/* File Selection */}
-            <Box sx={{ mb: 2 }}>
-              <Button
-                component="label"
-                variant="contained"
-                startIcon={<AttachFile />}
-                sx={{
-                  bgcolor: "white",
-                  color: "#9575cd",
-                  "&:hover": { bgcolor: "#f5f5f5" },
-                  mb: 1,
-                  fontSize: isMobile ? ".6rem" : isIpad ? "1.2rem" : "1rem",
-                }}
-              >
-                Select Audio Files
-                <input
-                  ref={inputRef}
-                  hidden
-                  type="file"
-                  accept="audio/*"
-                  multiple
-                  onChange={handleFileChange}
-                />
-              </Button>
+            <Box sx={{ mb: 2, display: "flex", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
+              <Tooltip title="Select multiple audio files (Max 20MB each)">
+                <Button
+                  component="label"
+                  variant="contained"
+                  color="primary"
+                  startIcon={<AttachFile />}
+                  sx={{
+                    px: 3,
+                  }}
+                >
+                  Select Audio Files
+                  <input
+                    ref={inputRef}
+                    hidden
+                    type="file"
+                    accept="audio/*"
+                    multiple
+                    onChange={handleFileChange}
+                  />
+                </Button>
+              </Tooltip>
               <Typography
                 variant="caption"
-                sx={{ display: "block", mt: 1, opacity: 0.8, fontSize: isMobile ? ".6rem" : isIpad ? "1rem" : "" }}
+                sx={{ opacity: 0.8, color: "#5E6C84" }}
               >
                 Select multiple audio files (Max 20MB each)
               </Typography>
@@ -407,7 +379,7 @@ const TicketVoiceNotes = ( { isMobile, isTab, isIpad, ticketDetailData } ) => {
                     p: 1,
                   }}
                 >
-                  {selectedAudioFiles.map( ( file, index ) => (
+                  {selectedAudioFiles.map((file, index) => (
                     <Box
                       key={index}
                       sx={{
@@ -433,12 +405,12 @@ const TicketVoiceNotes = ( { isMobile, isTab, isIpad, ticketDetailData } ) => {
                           {file.name}
                         </Typography>
                         <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                          {formatFileSize( file.size )}
+                          {formatFileSize(file.size)}
                         </Typography>
-                        {uploadProgress[ file.name ] && (
+                        {uploadProgress[file.name] && (
                           <LinearProgress
                             variant="determinate"
-                            value={uploadProgress[ file.name ]}
+                            value={uploadProgress[file.name]}
                             sx={{
                               mt: 0.5,
                               "& .MuiLinearProgress-bar": {
@@ -448,39 +420,44 @@ const TicketVoiceNotes = ( { isMobile, isTab, isIpad, ticketDetailData } ) => {
                           />
                         )}
                       </Box>
-                      <IconButton
-                        size="medium"
-                        onClick={() => removeSelectedFile( index )}
-                        sx={{ color: "white" }}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
+                      <Tooltip title="Remove file">
+                        <IconButton
+                          size="medium"
+                          onClick={() => removeSelectedFile(index)}
+                          sx={{ color: "white" }}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
                     </Box>
-                  ) )}
+                  ))}
                 </Box>
               </Box>
             )}
 
             {/* Upload Button */}
             {selectedAudioFiles.length > 0 && (
-              <Button
-                onClick={handleVoiceNotesUpload}
-                disabled={loading || createLoading}
-                variant="contained"
-                startIcon={<CloudUpload />}
-                sx={{
-                  bgcolor: "white",
-                  color: "#9575cd",
-                  "&:hover": { bgcolor: "#f5f5f5" },
-                  fontSize: isIpad ? "1.2rem" : "1rem",
-                }}
-              >
-                Upload {selectedAudioFiles.length} File
-                {selectedAudioFiles.length > 1 ? "s" : ""}
-              </Button>
+              <Box sx={{ mt: 2 }}>
+                <Tooltip title="Start uploading selected voice notes">
+                  <span>
+                    <Button
+                      onClick={handleVoiceNotesUpload}
+                      disabled={loading || createLoading}
+                      variant="outlined"
+                      color="primary"
+                      startIcon={<CloudUpload />}
+                      sx={{
+                        px: 3,
+                      }}
+                    >
+                      Upload {selectedAudioFiles.length} File{selectedAudioFiles.length > 1 ? "s" : ""}
+                    </Button>
+                  </span>
+                </Tooltip>
+              </Box>
             )}
-          </CardContent>
-        </Card>
+          </Box>
+        </Box>
 
         {/* Voice Notes List */}
         <Box
@@ -496,17 +473,17 @@ const TicketVoiceNotes = ( { isMobile, isTab, isIpad, ticketDetailData } ) => {
               borderRadius: "3px",
             },
             "&::-webkit-scrollbar-thumb": {
-              background: "#9575cd",
+              background: "rgba(12, 102, 228, 0.3)",
               borderRadius: "3px",
             },
             "&::-webkit-scrollbar-thumb:hover": {
-              background: "#7e57c2",
+              background: "rgba(12, 102, 228, 0.5)",
             },
           }}
         >
           {voiceNotes && voiceNotes.data && voiceNotes.data.length > 0 ? (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              {voiceNotes.data.map( ( voiceNote: TicketVoiceNoteData ) => (
+              {voiceNotes.data.map((voiceNote: TicketVoiceNoteData) => (
                 <Card
                   key={voiceNote.id}
                   sx={{
@@ -515,7 +492,7 @@ const TicketVoiceNotes = ( { isMobile, isTab, isIpad, ticketDetailData } ) => {
                     "&:hover": { boxShadow: 3 },
                   }}
                 >
-                  <CardContent sx={{ p: 2 }}>
+                  <CardContent sx={{ p: "16px !important" }}>
                     {/* Voice Note Header */}
                     <Box
                       sx={{
@@ -529,9 +506,9 @@ const TicketVoiceNotes = ( { isMobile, isTab, isIpad, ticketDetailData } ) => {
                         sx={{ display: "flex", alignItems: "center", gap: 1 }}
                       >
                         <Avatar
-                          sx={{ width: 32, height: 32, bgcolor: "#9575cd" }}
+                          sx={{ width: 36, height: 36, bgcolor: "primary.light", color: "primary.main" }}
                         >
-                          <PersonIcon sx={{ fontSize: "1rem" }} />
+                          <PersonIcon sx={{ fontSize: "1.2rem" }} />
                         </Avatar>
                         <Box>
                           {/* <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
@@ -547,28 +524,30 @@ const TicketVoiceNotes = ( { isMobile, isTab, isIpad, ticketDetailData } ) => {
                             {/* <AccessTimeIcon sx={{ fontSize: "0.8rem", color: "#666" }} /> */}
                             <Typography
                               variant="caption"
-                              color="text.secondary"
+                              sx={{ color: "#5E6C84", fontWeight: 500 }}
                             >
-                              <b style={{ fontSize: "13px" }}>Uploaded At:</b>{" "}
-                              {formatDate( voiceNote.created_at )}
+                              <span style={{ color: "#172B4D", fontWeight: 600 }}>Uploaded At:</span>{" "}
+                              {formatDate(voiceNote.created_at)}
                             </Typography>
                           </Box>
                         </Box>
                       </Box>
 
-                      <IconButton
-                        onClick={() =>
-                          handleDeleteVoiceNote(
-                            voiceNote.id,
-                            voiceNote.voice_note_url
-                          )
-                        }
-                        disabled={deleteLoading}
-                        sx={{ color: "#d32f2f" }}
-                        size="small"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
+                      <Tooltip title="Delete this voice note">
+                        <IconButton
+                          onClick={() =>
+                            handleDeleteVoiceNote(
+                              voiceNote.id,
+                              voiceNote.voice_note_url
+                            )
+                          }
+                          disabled={deleteLoading}
+                          sx={{ color: "#d32f2f" }}
+                          size="small"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
                     </Box>
 
                     {/* Audio Player */}
@@ -581,7 +560,7 @@ const TicketVoiceNotes = ( { isMobile, isTab, isIpad, ticketDetailData } ) => {
                       }}
                     >
                       <Typography variant="body2" sx={{ mb: 1, color: "#666" }}>
-                        {getFileName( voiceNote.voice_note_url )}
+                        {getFileName(voiceNote.voice_note_url)}
                       </Typography>
                       <audio
                         controls
@@ -607,7 +586,7 @@ const TicketVoiceNotes = ( { isMobile, isTab, isIpad, ticketDetailData } ) => {
                     </Box>
                   </CardContent>
                 </Card>
-              ) )}
+              ))}
             </Box>
           ) : (
             <Box
@@ -633,7 +612,7 @@ const TicketVoiceNotes = ( { isMobile, isTab, isIpad, ticketDetailData } ) => {
         message={toast.toastMessage}
       />
 
-      {( loading || createLoading || deleteLoading ) && <Loader />}
+      {(loading || createLoading || deleteLoading) && <Loader />}
     </Box>
   );
 };

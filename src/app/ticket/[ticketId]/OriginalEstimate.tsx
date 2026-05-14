@@ -7,6 +7,7 @@ import {
   IconButton,
   useMediaQuery,
   Paper,
+  Tooltip,
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
@@ -146,9 +147,11 @@ const OriginalEstimateField: React.FC<OriginalEstimateProps> = ( {
           </Typography>
 
           {userRole === "admin" && (
-            <IconButton size="small" onClick={handleEnterEdit}>
-              <EditIcon fontSize="inherit" />
-            </IconButton>
+            <Tooltip title="Edit original estimate">
+              <IconButton size="small" onClick={handleEnterEdit}>
+                <EditIcon fontSize="inherit" />
+              </IconButton>
+            </Tooltip>
           )}
         </Box>
       )}
@@ -193,16 +196,20 @@ const OriginalEstimateField: React.FC<OriginalEstimateProps> = ( {
               zIndex: 9999,
             }}
           >
-            <IconButton
-              size="small"
-              onClick={handleSave}
-              aria-label="Save new estimate"
-            >
-              <CheckIcon fontSize="inherit" />
-            </IconButton>
-            <IconButton size="small" onClick={handleCancel} aria-label="Cancel">
-              <CloseIcon fontSize="inherit" />
-            </IconButton>
+            <Tooltip title="Save estimate">
+              <IconButton
+                size="small"
+                onClick={handleSave}
+                aria-label="Save new estimate"
+              >
+                <CheckIcon fontSize="inherit" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Cancel editing">
+              <IconButton size="small" onClick={handleCancel} aria-label="Cancel">
+                <CloseIcon fontSize="inherit" />
+              </IconButton>
+            </Tooltip>
           </Paper>
         </Box>
       )}

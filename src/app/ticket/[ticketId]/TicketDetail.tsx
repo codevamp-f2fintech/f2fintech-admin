@@ -8,6 +8,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   TextField,
   FormControl,
   InputLabel,
@@ -15,6 +16,7 @@ import {
   MenuItem,
   useMediaQuery,
   useTheme,
+  Tooltip,
 } from "@mui/material";
 import { ArrowBackRounded, EditRounded } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
@@ -26,11 +28,13 @@ import { AppDispatch, RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import { useCreateTicketHistory } from "@/hooks/tickethistory";
 import { useGetLoanProviders } from "@/hooks/loanProvider";
+import dayjs from "dayjs";
+import React from "react";
 
-const TicketDetail = ( { ticketDetailData, isTab } ) => {
+const TicketDetail = ({ ticketDetailData, isTab }) => {
   const router = useRouter();
   const dispatch: AppDispatch = useDispatch();
-  const { toast } = useSelector( ( state: RootState ) => state.toast );
+  const { toast } = useSelector((state: RootState) => state.toast);
   const {
     capitalizeFirstLetter,
     formatTenure,
@@ -40,113 +44,139 @@ const TicketDetail = ( { ticketDetailData, isTab } ) => {
     toastAndNavigate,
   } = Utility();
 
-  const [ openEditModal, setOpenEditModal ] = useState( false );
-  const [ editedTicketData, setEditedTicketData ] = useState( ticketDetailData );
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [editedTicketData, setEditedTicketData] = useState(ticketDetailData);
   const { createTicketHistory } = useCreateTicketHistory(
     "create-ticket-history"
   );
   const muiTheme = useTheme();
   const userRole = decodedToken()?.role;
-  const isMobile = useMediaQuery( muiTheme.breakpoints.down( 'sm' ) );
-  const isTablet = useMediaQuery( muiTheme.breakpoints.between( 'sm', 'md' ) );
-  const isIpad = useMediaQuery( muiTheme.breakpoints.between( 'md', 'lg' ) );
-  const isDesktop = useMediaQuery( muiTheme.breakpoints.up( 'lg' ) );
+  const isMobile = useMediaQuery(muiTheme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(muiTheme.breakpoints.between('sm', 'md'));
+  const isIpad = useMediaQuery(muiTheme.breakpoints.between('md', 'lg'));
+  const isDesktop = useMediaQuery(muiTheme.breakpoints.up('lg'));
 
   // Fetch loan providers
   const { value: providersData, swrLoading: providersLoading } =
-    useGetLoanProviders( null, "get-all-loan-providers", 1, 100 );
+    useGetLoanProviders(null, "get-all-loan-providers", 1, 100);
 
   const PROVIDER_OPTIONS = providersLoading
     ? []
-    : providersData?.data?.results?.map( provider => provider.title ) || [];
+    : providersData?.data?.results?.map(provider => provider.title) || [];
+
+  const isOverdue = React.useMemo(() => {
+    if (!ticketDetailData?.due_date || ticketDetailData?.approved_at) return false;
+    return dayjs().isAfter(dayjs(ticketDetailData.due_date), 'day');
+  }, [ticketDetailData?.due_date, ticketDetailData?.approved_at]);
 
 
   // Update editedTicketData when ticketDetailData changes
-  useEffect( () => {
-    if ( ticketDetailData )
-    {
-      setEditedTicketData( ticketDetailData );
+  useEffect(() => {
+    if (ticketDetailData) {
+      setEditedTicketData(ticketDetailData);
     }
-  }, [ ticketDetailData ] );
+  }, [ticketDetailData]);
 
   const handleOpenEditModal = () => {
-    setOpenEditModal( true );
+    setOpenEditModal(true);
   };
 
   const handleCloseEditModal = () => {
-    setOpenEditModal( false );
+    setOpenEditModal(false);
   };
 
-  const handleInputChange = ( e ) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    const updatedTicketData = { ...editedTicketData, [ name ]: value };
-    setEditedTicketData( updatedTicketData );
+    const updatedTicketData = { ...editedTicketData, [name]: value };
+    setEditedTicketData(updatedTicketData);
   };
   // A helper function to compare the original and edited ticket details
-  const getChangedFields = ( original, edited ) => {
+  const getChangedFields = (original, edited) => {
     const changes: string[] = [];
-    Object.keys( original ).forEach( ( key ) => {
-      if ( original[ key ] !== edited[ key ] )
-      {
+    Object.keys(original).forEach((key) => {
+      if (original[key] !== edited[key]) {
         changes.push(
-          `${ key } changed from "${ original[ key ] }" to "${ edited[ key ] }"`
+          `${key} changed from "${original[key]}" to "${edited[key]}"`
         );
       }
-    } );
+    });
     return changes;
   };
 
   const handleSaveEdit = async () => {
-    try
-    {
+    try {
       // Call the update API on Save
       const { data: response } = await axiosInstance.patch(
-        `${ process.env.NEXT_PUBLIC_API_URL }/update-loan-application/${ editedTicketData?.applicationId }`,
+        `${process.env.NEXT_PUBLIC_API_URL}/update-loan-application/${editedTicketData?.applicationId}`,
         editedTicketData
       );
-      if ( response?.statusCode === 200 )
-      {
+      if (response?.statusCode === 200) {
         const loggedInUser = decodedToken()?.username;
-        const changes = getChangedFields( ticketDetailData, editedTicketData );
+        const changes = getChangedFields(ticketDetailData, editedTicketData);
 
-        const formattedChanges = changes.map( ( change ) => {
-          const [ key, rest ] = change.split( " changed from " );
-          return `${ key } changed from ${ rest }`;
-        } );
+        const formattedChanges = changes.map((change) => {
+          const [key, rest] = change.split(" changed from ");
+          return `${key} changed from ${rest}`;
+        });
 
         const historyMessage =
           changes.length > 0
-            ? `${ loggedInUser } edited the following Ticket Details:
-               ${ formattedChanges }`
-            : `${ loggedInUser } did not change any details.`;
+            ? `${loggedInUser} edited the following Ticket Details:
+               ${formattedChanges}`
+            : `${loggedInUser} did not change any details.`;
 
-        const createdHistory = await createTicketHistory( {
+        const createdHistory = await createTicketHistory({
           ticket_id: ticketDetailData?.ticketId,
           action: historyMessage,
-        } );
-        if ( createdHistory?.statusCode === 200 )
-        {
+        });
+        if (createdHistory?.statusCode === 200) {
           toastAndNavigate(
             dispatch,
             true,
             "info",
             "Ticket Details Edited Successfully"
           );
-          setOpenEditModal( false );
-        } else
-        {
-          setOpenEditModal( false );
+          setOpenEditModal(false);
+        } else {
+          setOpenEditModal(false);
         }
-      } else
-      {
-        setOpenEditModal( false );
+      } else {
+        setOpenEditModal(false);
       }
-    } catch ( error )
-    {
-      console.error( "Error saving the ticket:", error );
-      setOpenEditModal( false );
+    } catch (error) {
+      console.error("Error saving the ticket:", error);
+      setOpenEditModal(false);
     }
   };
+  const DetailItem = ({ label, value, isOverdue = false }: { label: string; value: React.ReactNode; isOverdue?: boolean }) => (
+    <Box sx={{ mb: 2.5 }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: isOverdue ? "error.main" : "text.secondary",
+          textTransform: "uppercase",
+          fontWeight: 700,
+          letterSpacing: "0.05em",
+          display: "block",
+          mb: 0.5,
+        }}
+      >
+        {label}
+      </Typography>
+      <Typography
+        variant="body1"
+        sx={{
+          color: isOverdue ? "error.main" : "text.primary",
+          fontWeight: isOverdue ? 700 : 600,
+          fontSize: "0.95rem",
+          wordWrap: "break-word"
+        }}
+      >
+        {value || "-"}
+      </Typography>
+    </Box>
+  );
+
   return (
     <>
       <Box
@@ -164,284 +194,105 @@ const TicketDetail = ( { ticketDetailData, isTab } ) => {
           }}
         >
           <Box sx={{ display: "flex", alignItems: "flex-start" }}>
-            <Button
-              startIcon={<ArrowBackRounded />}
-              onClick={() => router.back()}
-              sx={{ color: "black" }}
-            >
-              Back
-            </Button>
+            <Tooltip title="Go back to the previous page">
+              <Button
+                startIcon={<ArrowBackRounded />}
+                onClick={() => router.back()}
+                sx={{ color: "black" }}
+              >
+                Back
+              </Button>
+            </Tooltip>
           </Box>
 
           {/* Edit Button */}
           <Box sx={{ marginLeft: "auto" }}>
-            <Button
-              startIcon={<EditRounded />}
-              onClick={handleOpenEditModal}
-              sx={{ color: "black" }}
-            >
-              Edit
-            </Button>
+            <Tooltip title="Edit ticket details">
+              <Button
+                startIcon={<EditRounded />}
+                onClick={handleOpenEditModal}
+                sx={{ color: "black" }}
+              >
+                Edit
+              </Button>
+            </Tooltip>
           </Box>
         </Box>
-        <Box sx={{ display: "flex", justifyContent: "center" }}>
-          <Typography
-            variant="h5"
-            sx={{
-              color: "black",
-              textDecoration: "none",
-              fontSize: isMobile ? "1rem" : isIpad ? "2.5rem" : "1.5rem",
-              fontFamily: "monospace",
-              fontStyle: "revert-layer",
-              fontWeight: "bold",
-
-            }}
-          >
-            Ticket ID: F2FIN-{ticketDetailData?.ticketId}
-          </Typography>
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 1 }}>
+          <Box sx={{
+            backgroundColor: "rgba(12, 102, 228, 0.08)",
+            padding: "10px 28px",
+            borderRadius: "10px",
+            border: "1px solid rgba(12, 102, 228, 0.2)"
+          }}>
+            <Typography
+              variant="h5"
+              sx={{
+                color: "primary.main",
+                fontSize: "1.1rem",
+                fontWeight: 800,
+                letterSpacing: "0.05em"
+              }}
+            >
+              TICKET ID: F2FIN-{ticketDetailData?.ticketId}
+            </Typography>
+          </Box>
         </Box>
       </Box>
 
       <Box
-        mt={2}
-        display="flex"
-        alignItems="center"
-        justifyContent={"center"}
-        gap={2}
         sx={{
+          mt: 2,
+          mb: 3,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 2,
           borderRadius: "14px",
-          flexDirection: isMobile ? "column" : isTab ? "" : "",
+          flexDirection: isMobile ? "column" : "row",
         }}
       >
         <Box
           sx={{
             flex: 1,
-            p: 3,
+            p: { xs: 2.5, sm: 3, md: 4 },
             borderRadius: 4,
-            backgroundImage: `linear-gradient(64.5deg, #fff 14.7%, #fff 88.7%)`,
-            transition: "transform 0.3s ease",
-            boxShadow:
-              " rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;",
+            backgroundColor: "#fff",
+            border: "1px solid rgba(0,0,0,0.05)",
+            boxShadow: "0px 4px 20px rgba(0,0,0,0.03)",
           }}
         >
           <Grid container spacing={3}>
             {/* Ticket Details */}
             <Grid item xs={12} sm={6}>
-              <Typography
-                sx={{
-                  color: "#172B4D",
-                  fontSize: isIpad ? "1.4rem" : "1rem",
-                  mb: 1,
-                  fontFamily: "",
-                }}
-              >
-                <strong>Name:</strong>{" "}
-                <Box
-                  component="span"
-                  sx={{
-                    color: "#5E6C84",
-                    fontSize: isIpad ? "1.4rem" : ".9rem",
-                    fontWeight: 500,
-                  }}
-                >
-                  {capitalizeFirstLetter( editedTicketData?.customerName )}
-                </Box>
-              </Typography>
-              <Typography
-                sx={{
-                  mb: 1,
-                  wordWrap: "break-word",
-                  blackSpace: "normal",
-                  fontFamily: "",
-                  color: "#172B4D",
-                  fontSize: isIpad ? "1.4rem" : "1rem",
-                  mb: 1,
-                }}
-              >
-                <strong>Email:</strong>
-                <Box
-                  component="span"
-                  sx={{
-                    color: "#5E6C84",
-                    fontSize: isIpad ? "1.4rem" : ".9rem",
-                    fontWeight: 500,
-                  }}
-                >
-                  {editedTicketData?.customerEmail}
-                </Box>
-              </Typography>
+              <DetailItem label="Name" value={capitalizeFirstLetter(editedTicketData?.customerName)} />
+              <DetailItem label="Email" value={editedTicketData?.customerEmail} />
+              <DetailItem label="Location" value={capitalizeFirstLetter(editedTicketData?.customerLocation)} />
+              <DetailItem label="Tenure" value={formatTenure(editedTicketData?.applicationTenure)} />
+              <DetailItem label="Loan Provider" value={capitalizeFirstLetter(editedTicketData?.provider) || "No provider available"} />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <Typography
-                sx={{
-                  color: "#172B4D",
-                  fontSize: isIpad ? "1.4rem" : "1rem",
-                  mb: 1,
-                  fontFamily: "",
-                }}
-              >
-                <strong>Contact:</strong> +91{" "}
-                <Box
-                  component="span"
-                  sx={{
-                    color: "#5E6C84",
-                    fontSize: isIpad ? "1.4rem" : ".9rem",
-                    fontWeight: 500,
-                  }}
-                >
-                  {editedTicketData?.customerContact}
-                </Box>
-              </Typography>
-              <Typography
-                sx={{
-                  color: "#172B4D",
-                  fontSize: isIpad ? "1.4rem" : "1rem",
-                  mb: 1,
-                  fontFamily: "",
-                }}
-              >
-                <strong>Designation:</strong>{" "}
-                <Box
-                  component="span"
-                  sx={{
-                    color: "#5E6C84",
-                    fontSize: isIpad ? "1.4rem" : ".9rem",
-                    fontWeight: 500,
-                  }}
-                >
-                  {capitalizeFirstLetter( editedTicketData?.customerDesignation )}
-                </Box>
-              </Typography>
+              <DetailItem label="Contact" value={`+91 ${editedTicketData?.customerContact || ""}`} />
+              <DetailItem label="Designation" value={capitalizeFirstLetter(editedTicketData?.customerDesignation)} />
+              <DetailItem label="Amount" value={formatAmount(editedTicketData?.applicationAmount)} />
+              <DetailItem label="Application Date" value={formatDate(editedTicketData?.applicationDate)} />
+              <DetailItem label="Loan Category" value={capitalizeFirstLetter(editedTicketData?.loanCategory) || "No category available"} />
             </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography
-                sx={{
-                  color: "#172B4D",
-                  fontSize: isIpad ? "1.4rem" : "1rem",
-                  mb: 1,
-                  fontFamily: "",
-                }}
-              >
-                <strong>Location:</strong>{" "}
-                <Box
-                  component="span"
-                  sx={{
-                    color: "#5E6C84",
-                    fontSize: isIpad ? "1.4rem" : ".9rem",
-                    fontWeight: 500,
-                  }}
-                >
-                  {capitalizeFirstLetter( editedTicketData?.customerLocation )}
-                </Box>
-              </Typography>
-              <Typography
-                sx={{
-                  color: "#172B4D",
-                  fontSize: isIpad ? "1.4rem" : "1rem",
-                  mb: 1,
-                  fontFamily: "",
-                }}
-              >
-                <strong>Tenure:</strong>{" "}
-                <Box
-                  component="span"
-                  sx={{
-                    color: "#5E6C84",
-                    fontSize: isIpad ? "1.4rem" : ".9rem",
-                    fontWeight: 500,
-                  }}
-                >
-                  {formatTenure( editedTicketData?.applicationTenure )}
-                </Box>
-              </Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography
-                sx={{
-                  color: "#172B4D",
-                  fontSize: isIpad ? "1.4rem" : "1rem",
-                  mb: 1,
-                  fontFamily: "",
-                }}
-              >
-                <strong>Amount:</strong>{" "}
-                <Box
-                  component="span"
-                  sx={{
-                    color: "#5E6C84",
-                    fontSize: isIpad ? "1.4rem" : ".9rem",
-                    fontWeight: 500,
-                  }}
-                >
-                  {formatAmount( editedTicketData?.applicationAmount )}{" "}
-                </Box>
-              </Typography>
-              <Typography
-                sx={{
-                  color: "#172B4D",
-                  fontSize: isIpad ? "1.4rem" : "1rem",
-                  mb: 1,
-                  fontFamily: "",
-                }}
-              >
-                <strong>Application Date:</strong>{" "}
-                <Box
-                  component="span"
-                  sx={{
-                    color: "#5E6C84",
-                    fontSize: isIpad ? "1.4rem" : ".9rem",
-                    fontWeight: 500,
-                  }}
-                >
-                  {formatDate( editedTicketData?.applicationDate )}
-                </Box>
-              </Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography
-                sx={{
-                  color: "#172B4D",
-                  fontSize: isIpad ? "1.4rem" : "1rem",
-                  mb: 1,
-                  fontFamily: "",
-                }}
-              >
-                <strong>Loan Provider:</strong>{" "}
-                <Box
-                  component="span"
-                  sx={{
-                    color: "#5E6C84",
-                    fontSize: isIpad ? "1.4rem" : ".9rem",
-                    fontWeight: 500,
-                  }}
-                >
-                  {capitalizeFirstLetter( editedTicketData?.provider ) ||
-                    "No provider available"}{" "}
-                </Box>
-              </Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography
-                sx={{
-                  color: "#172B4D",
-                  fontSize: isIpad ? "1.4rem" : "1rem",
-                  mb: 1,
-                  fontFamily: "",
-                }}
-              >
-                <strong>Loan Category:</strong>{" "}
-                <Box
-                  component="span"
-                  sx={{
-                    color: "#5E6C84",
-                    fontSize: isIpad ? "1.4rem" : ".9rem",
-                    fontWeight: 500,
-                  }}
-                >
-                  {capitalizeFirstLetter( editedTicketData?.loanCategory ) ||
-                    "No category available"}
-                </Box>
-              </Typography>
+            <Grid item xs={12} sm={12}>
+              <Divider sx={{ my: 1, borderColor: "rgba(0,0,0,0.05)" }} />
+              <DetailItem
+                label="Expected Decision"
+                value={
+                  editedTicketData?.due_date
+                    ? new Date(editedTicketData.due_date).toLocaleDateString('en-IN', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                    })
+                    : "No Expected Date"
+                }
+                isOverdue={isOverdue}
+              />
             </Grid>
           </Grid>
         </Box>
@@ -491,7 +342,7 @@ const TicketDetail = ( { ticketDetailData, isTab } ) => {
                 autoComplete="off"
               />
             </Grid>
-            {( userRole === "admin" || userRole === "sub admin" ) && (
+            {(userRole === "admin" || userRole === "sub admin") && (
               <Grid item xs={12}>
                 <FormControl fullWidth sx={{ mb: 2 }}>
                   <InputLabel id="provider-select-label">
@@ -505,11 +356,11 @@ const TicketDetail = ( { ticketDetailData, isTab } ) => {
                     label="Loan Provider"
                     onChange={handleInputChange}
                   >
-                    {PROVIDER_OPTIONS.map( ( bank ) => (
+                    {PROVIDER_OPTIONS.map((bank) => (
                       <MenuItem key={bank} value={bank}>
                         {bank}
                       </MenuItem>
-                    ) )}
+                    ))}
                   </Select>
                 </FormControl>
               </Grid>

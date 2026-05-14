@@ -172,7 +172,6 @@ async function getDoneTicketsByMonth(year: number): Promise<Ticket[]> {
     const params: any = { year };
 
     const response = await axiosInstance.get("/dashboard/tickets/done-counts-by-month", { params });
-    console.log("Monthly done tickets response:", response.data);
 
     return response.data.data.map((ticket: Ticket) => ticket.count);
   } catch (error) {
@@ -215,7 +214,6 @@ export default function Page(): React.JSX.Element {
   // Sync with global company selection
   useEffect(() => {
     const handleGlobalCompanyChange = (event: any) => {
-      console.log("Dashboard received companyChanged event:", event.detail);
       setSelectedCompany(event.detail);
     };
 
@@ -234,12 +232,7 @@ export default function Page(): React.JSX.Element {
   useEffect(() => {
     const now = new Date();
     const currentMonth = now.toLocaleString("default", { month: "long" });
-
     setDate(currentDate);
-
-    console.log("currentMonth:", currentMonth);
-    console.log("currentDateTime:", new Date().toLocaleDateString());
-    console.log("currentYear:", typeof currentYear);
   }, []);
 
   const formatDateTime = (date: Date) => {
