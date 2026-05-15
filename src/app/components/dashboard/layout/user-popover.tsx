@@ -49,6 +49,8 @@ export function UserPopover({ onClose, open }: UserPopoverProps): React.JSX.Elem
     { icon: <CheckCircleIcon sx={{ fontSize: 18 }} />, label: "Access", value: "Verified Member", color: "#00796b" },
   ];
 
+  const AVATAR_SIZE = 72;
+
   return (
     <Dialog
       open={open}
@@ -60,21 +62,23 @@ export function UserPopover({ onClose, open }: UserPopoverProps): React.JSX.Elem
           borderRadius: "16px",
           overflow: "hidden",
           boxShadow: "0 24px 64px rgba(0,0,0,0.18)",
-          maxWidth: 400,
+          maxWidth: 480,
         },
       }}
     >
       {/* ── Banner ── */}
       <Box
         sx={{
-          height: 100,
           bgcolor: "#3f50b5",
           position: "relative",
           flexShrink: 0,
+          height: 110,
         }}
       >
         {/* subtle overlay */}
         <Box sx={{ position: "absolute", inset: 0, bgcolor: "rgba(255,255,255,0.04)" }} />
+
+        {/* Profile Overview label */}
         <Typography
           sx={{
             position: "absolute",
@@ -90,6 +94,8 @@ export function UserPopover({ onClose, open }: UserPopoverProps): React.JSX.Elem
         >
           Profile Overview
         </Typography>
+
+        {/* Close button */}
         <Tooltip title="Close" arrow>
           <IconButton
             onClick={onClose}
@@ -104,85 +110,95 @@ export function UserPopover({ onClose, open }: UserPopoverProps): React.JSX.Elem
               transition: "all 0.2s",
               width: 28,
               height: 28,
+              zIndex: 1,
             }}
           >
             <CloseIcon sx={{ fontSize: 16 }} />
           </IconButton>
         </Tooltip>
+
+        {/* Avatar — bottom edge touches banner bottom */}
+        <Box
+          sx={{
+            position: "absolute",
+            bottom: 0,
+            left: 24,
+            zIndex: 2,
+          }}
+        >
+          <Avatar
+            sx={{
+              width: AVATAR_SIZE,
+              height: AVATAR_SIZE,
+              border: "4px solid white",
+              background: "#3f50b5",
+              fontSize: "1.6rem",
+              fontWeight: 800,
+              fontFamily: "'Inter', sans-serif",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+            }}
+          >
+            {initials}
+          </Avatar>
+          {/* Active dot */}
+          <Box
+            sx={{
+              position: "absolute",
+              bottom: 4,
+              right: 4,
+              width: 14,
+              height: 14,
+              borderRadius: "50%",
+              bgcolor: "#10b981",
+              border: "2px solid white",
+              boxShadow: "0 0 0 2px rgba(16,185,129,0.3)",
+            }}
+          />
+        </Box>
+
+        {/* Name + role — beside avatar, aligned to bottom of banner */}
+        <Box
+          sx={{
+            position: "absolute",
+            bottom: 10,
+            left: 24 + AVATAR_SIZE + 16,
+            zIndex: 2,
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: "1.15rem",
+              fontWeight: 800,
+              color: "white",
+              lineHeight: 1.2,
+              fontFamily: "'Inter', sans-serif",
+            }}
+          >
+            {name}
+          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5, flexWrap: "wrap" }}>
+            <Chip
+              label={role}
+              size="small"
+              sx={{
+                height: 20,
+                fontSize: "0.68rem",
+                fontWeight: 700,
+                bgcolor: "rgba(255,255,255,0.2)",
+                color: "white",
+                border: "none",
+                fontFamily: "'Inter', sans-serif",
+              }}
+            />
+            <Typography sx={{ fontSize: "0.68rem", color: "#10b981", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              ● Active
+            </Typography>
+          </Box>
+        </Box>
       </Box>
 
-      <DialogContent sx={{ p: 0, bgcolor: "#f5f8ff" }}>
-        {/* ── Avatar + name row ── */}
-        <Box sx={{ px: 3, pb: 2 }}>
-          <Box sx={{ display: "flex", alignItems: "flex-end", gap: 2, mt: "-40px", mb: 2 }}>
-            {/* Avatar */}
-            <Box sx={{ position: "relative", flexShrink: 0, width: 90, height: 90, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Avatar
-                sx={{
-                  width: 80,
-                  height: 80,
-                  boxSizing: "border-box",
-                  border: "4px solid white",
-                  background: "#3f50b5",
-                  fontSize: "1.8rem",
-                  fontWeight: 800,
-                  boxShadow: "0 4px 20px rgba(12,66,160,0.35)",
-                  fontFamily: "'Inter', sans-serif",
-                }}
-              >
-                {initials}
-              </Avatar>
-              {/* Active dot */}
-              <Box
-                sx={{
-                  position: "absolute",
-                  bottom: 4,
-                  right: 4,
-                  width: 14,
-                  height: 14,
-                  borderRadius: "50%",
-                  bgcolor: "#10b981",
-                  border: "2px solid white",
-                  boxShadow: "0 0 0 2px rgba(16,185,129,0.3)",
-                }}
-              />
-            </Box>
-
-            {/* Name + role badge */}
-            <Box sx={{ pb: 0.5, flex: 1, minWidth: 0, ml: 2 }}>
-              <Typography
-                sx={{
-                  fontSize: "1.15rem",
-                  fontWeight: 800,
-                  color: "#1e3a5f",
-                  lineHeight: 1.2,
-                  fontFamily: "'Inter', sans-serif",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {name}
-              </Typography>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5, flexWrap: "wrap" }}>
-                <Chip
-                  label={role}
-                  size="small"
-                  sx={{
-                    height: 20,
-                    fontSize: "0.68rem",
-                    fontWeight: 700,
-                    bgcolor: "rgba(21,101,192,0.1)",
-                    color: "#1565c0",
-                    border: "none",
-                    fontFamily: "'Inter', sans-serif",
-                  }}
-                />
-                <Typography sx={{ fontSize: "0.68rem", color: "#10b981", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                  ● Active
-                </Typography>
-              </Box>
-            </Box>
-          </Box>
-
+      <DialogContent sx={{ p: 0, bgcolor: "#f5f8ff", overflowX: "hidden" }}>
+        <Box sx={{ px: 3, pt: 2.5, pb: 2.5 }}>
           <Divider sx={{ borderColor: "rgba(12,66,160,0.12)", mb: 2 }} />
 
           {/* ── Info cards ── */}
