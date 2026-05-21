@@ -38,6 +38,8 @@ import {
   MenuItem,
   InputLabel,
   Button,
+  Tooltip,
+  Typography,
 } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import { axiosInstance } from "../../apis/config/axiosConfig";
@@ -191,11 +193,352 @@ async function fetchAgentCount(): Promise<number | null> {
   }
 }
 
+async function fetchAggregateTicketCounts(
+  date?: string,
+  month?: string,
+  year?: string,
+): Promise<any> {
+  try {
+    const params: any = {};
+    if (date) params.date = date;
+    if (month) params.month = month;
+    if (year) params.year = year;
+
+    const response = await axiosInstance.get("/dashboard/tickets/aggregate-counts", { params });
+    return response.data.data;
+  } catch (error) {
+    console.error("Failed to fetch aggregate counts:", error);
+    return {};
+  }
+}
+
+const SummaryCard = ({ title, value, icon: Icon, tooltip, color }: any) => (
+  <Tooltip title={tooltip} arrow placement="top">
+    <Paper
+      elevation={0}
+      sx={{
+        p: 3,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderRadius: 2,
+        border: '1px solid #e2e8f0',
+        backgroundColor: '#ffffff',
+        transition: 'box-shadow 0.2s',
+        cursor: 'default',
+        '&:hover': { boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }
+      }}
+    >
+      <Box>
+        <Typography variant="overline" sx={{ color: '#64748b', fontWeight: 600, letterSpacing: '0.5px' }}>
+          {title}
+        </Typography>
+        <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b', mt: 1 }}>
+          {value}
+        </Typography>
+      </Box>
+      <Box sx={{ p: 1.5, borderRadius: '50%', backgroundColor: `${color}15`, color: color }}>
+        <Icon fontSize="medium" />
+      </Box>
+    </Paper>
+  </Tooltip>
+);
+
+const StatCard = ({ title, value, amount, icon: Icon, tooltip, link }: any) => {
+  const mainColor = 'rgb(44, 60, 227)';
+  return (
+    <Tooltip title={tooltip} arrow placement="top">
+      <Paper
+        elevation={0}
+        component={Link}
+        href={link || "#"}
+        sx={{
+          p: 2.5,
+          borderRadius: '12px',
+          border: '1px solid #e2e8f0',
+          borderLeft: '4px solid #e2e8f0',
+          backgroundColor: '#ffffff',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          cursor: 'pointer',
+          textDecoration: 'none',
+          display: 'block',
+          '&:hover': {
+            borderColor: '#cbd5e1',
+            borderLeftColor: mainColor,
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01)',
+            transform: 'translateY(-3px)',
+          }
+        }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+          <Typography
+            variant="subtitle2"
+            sx={{
+              color: '#64748b',
+              fontWeight: 700,
+              fontSize: '0.75rem',
+              letterSpacing: '0.5px',
+              textTransform: 'uppercase',
+              lineHeight: 1.3,
+              maxWidth: '75%'
+            }}
+          >
+            {title}
+          </Typography>
+          <Box
+            className="icon-wrapper"
+            sx={{
+              p: 1,
+              borderRadius: '10px',
+              backgroundColor: 'rgba(44, 60, 227, 0.1)',
+              color: mainColor,
+              display: 'flex',
+            }}
+          >
+            <Icon fontSize="small" />
+          </Box>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
+          <Typography variant="h4" sx={{ fontWeight: 800, color: '#0f172a', lineHeight: 1, letterSpacing: '-0.5px' }}>
+            {Number(value || 0).toLocaleString('en-IN')}
+          </Typography>
+          {amount != null && (
+            <Typography variant="caption" sx={{ color: '#059669', fontWeight: 700, backgroundColor: '#ecfdf5', px: 1.5, py: 0.75, borderRadius: '6px', fontSize: '0.85rem' }}>
+              ₹{Number(amount).toLocaleString('en-IN')}
+            </Typography>
+          )}
+        </Box>
+      </Paper>
+    </Tooltip>
+  );
+};
+
+function SubAdminDashboard() {
+  const { decodedToken, getCookies } = Utility();
+  const cookies = getCookies();
+  const userToken = (cookies as any).token;
+  const { id, role, companyId } = decodedToken(userToken?.value);
+
+  const [date, setDate] = useState<string | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<string>("");
+
+  const [counts, setCounts] = useState<{ [key: string]: number }>({});
+  const [totalApps, setTotalApps] = useState<number>(0);
+  const [newApps, setNewApps] = useState<any>({});
+  const [approvedData, setApprovedData] = useState<any>({});
+  const [disbursedData, setDisbursedData] = useState<any>({});
+
+  const currentYear = new Date().getFullYear();
+  const [currentDateTime, setCurrentDateTime] = useState(new Date());
+
+  const [selectedCompany, setSelectedCompany] = useState<string>(
+    typeof window !== "undefined" ? localStorage.getItem("selectedCompanyId") || "" : ""
+  );
+
+  useEffect(() => {
+    const handleGlobalCompanyChange = (event: any) => setSelectedCompany(event.detail);
+    window.addEventListener("companyChanged", handleGlobalCompanyChange);
+    return () => window.removeEventListener("companyChanged", handleGlobalCompanyChange);
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentDateTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const now = new Date();
+    setDate(now.toLocaleDateString("en-CA"));
+  }, []);
+
+  const formatDateTime = (date: Date) => {
+    return date.toLocaleString("en-US", {
+      weekday: "long", year: "numeric", month: "long", day: "numeric",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+    });
+  };
+
+  const handleMonthChange = (e: any) => {
+    let newMonth = e.target.value;
+    if (newMonth && newMonth !== "") setDate("");
+    if (newMonth === "All") newMonth = "";
+    setSelectedMonth(newMonth);
+  };
+
+  const handleDateChange = (e: any) => {
+    const newDate = e.target.value;
+    setDate(newDate);
+    if (newDate && newDate !== "") setSelectedMonth("");
+  };
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [aggCounts, apps, freshApps, approved, disbursed] = await Promise.all([
+          fetchAggregateTicketCounts(date || undefined, selectedMonth || undefined, selectedMonth ? currentYear.toString() : undefined),
+          fetchTotalApplications(), // ALWAYS show all time
+          fetchTotalNewApplication(selectedMonth || undefined, selectedMonth ? currentYear : undefined, date || undefined),
+          fetchTotalTickets("approved", id, role, date || undefined, selectedMonth || undefined, selectedMonth ? currentYear.toString() : undefined),
+          fetchTotalTickets("disbursed", id, role, date || undefined, selectedMonth || undefined, selectedMonth ? currentYear.toString() : undefined)
+        ]);
+        setCounts(aggCounts || {});
+        setTotalApps(apps || 0);
+        setNewApps(freshApps || {});
+        setApprovedData(typeof approved === 'object' && approved !== null ? approved : { count: approved, amount: null });
+        setDisbursedData(typeof disbursed === 'object' && disbursed !== null ? disbursed : { count: disbursed, amount: null });
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    loadData();
+  }, [date, selectedMonth, selectedCompany]);
+
+  const getLink = (status: string) => {
+    const base = `/ticket?status=${encodeURIComponent(status)}`;
+    if (selectedMonth) {
+      // Dummy logic for link generation to avoid importing large utility methods here.
+      // The original code used getFirstDayOfMonth, but we can just pass the month parameter for standard query usage
+      return `${base}&month=${encodeURIComponent(selectedMonth)}`;
+    }
+    return base;
+  };
+
+  return (
+    <Box sx={{ p: 3, maxWidth: 1600, margin: '0 auto' }}>
+      {/* Top Filter Bar */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Box>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b' }}>
+            Sub Admin Overview
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#64748b', mt: 0.5 }}>
+            {formatDateTime(currentDateTime)}
+          </Typography>
+        </Box>
+
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>Month</InputLabel>
+            <Select value={selectedMonth} onChange={handleMonthChange} label="Month" sx={{ bgcolor: '#fff' }}>
+              <MenuItem value="All">All Months</MenuItem>
+              {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map(m => (
+                <MenuItem key={m} value={m}>{m}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <TextField
+            label="Date"
+            type="date"
+            value={date || ""}
+            onChange={handleDateChange}
+            size="small"
+            sx={{ bgcolor: '#fff', minWidth: 150 }}
+            InputLabelProps={{ shrink: true }}
+          />
+        </Box>
+      </Box>
+
+      {/* Section 1: Application Overview */}
+      <Typography variant="h6" sx={{ fontWeight: 600, color: '#334155', mb: 2 }}>
+        Application Overview
+      </Typography>
+      <Grid container spacing={2} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={4} lg={4}>
+          <StatCard title="Total Applications" value={totalApps || 0} icon={ArchiveIcon} color="#1de9b6" link="#" tooltip="Total count of all applications (showing all time)" />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4} lg={4}>
+          <StatCard title="Fresh Applications" value={newApps.count || 0} icon={FiberNewIcon} color="#00e5ff" link="/" tooltip="New fresh applications" />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4} lg={4}>
+          <StatCard title="Total Tickets" value={counts['total'] || 0} icon={FilterListRounded} color="#cddc39" link={getLink('all')} tooltip="Total tickets in system" />
+        </Grid>
+      </Grid>
+
+      {/* Section 2: Active Pipeline */}
+      <Typography variant="h6" sx={{ fontWeight: 600, color: '#334155', mb: 2 }}>
+        Active Pipeline
+      </Typography>
+      <Grid container spacing={2} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={4} lg={4}>
+          <StatCard title="Under Credit Review" value={counts['under credit review'] || 0} icon={WorkHistoryIcon} color="#8bc34a" link={getLink('under credit review')} tooltip="" />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4} lg={4}>
+          <StatCard title="Operations" value={counts['operations'] || 0} icon={LoginRounded} color="#ffa726" link={getLink('operations')} tooltip="" />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4} lg={4}>
+          <StatCard title="Pendency in File" value={counts['pendency in file'] || 0} icon={PendingActionsIcon} color="#ff7043" link={getLink('pendency in file')} tooltip="" />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4} lg={4}>
+          <StatCard title="File Send to Banker" value={counts['file send to banker'] || 0} icon={SendRounded} color="#827717" link={getLink('file send to banker')} tooltip="" />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4} lg={4}>
+          <StatCard title="Awaiting Banker Response" value={counts['file sent to banker - awaiting response'] || 0} icon={SendTimeExtensionIcon} color="#9e9d24" link={getLink('file sent to banker - awaiting response')} tooltip="" />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4} lg={4}>
+          <StatCard title="Hold" value={counts['hold'] || 0} icon={PauseCircleOutlineRounded} color="#1a237e" link={getLink('hold')} tooltip="" />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4} lg={4}>
+          <StatCard title="To be Approved" value={counts['to be approved'] || 0} icon={ThumbUpRounded} color="#26c6da" link={getLink('to be approved')} tooltip="" />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4} lg={4}>
+          <StatCard title="To be Disbursed" value={counts['to be disbursed'] || 0} icon={ForwardRounded} color="#a5d6a7" link={getLink('to be disbursed')} tooltip="" />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4} lg={4}>
+          <StatCard title="Carry Forward" value={counts['carry forward'] || 0} icon={SendTimeExtensionIcon} color="#795548" link={getLink('carry forward')} tooltip="" />
+        </Grid>
+      </Grid>
+
+      {/* Section 3: Final Outcomes */}
+      <Typography variant="h6" sx={{ fontWeight: 600, color: '#334155', mb: 2 }}>
+        Final Outcomes
+      </Typography>
+      <Grid container spacing={2} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3} lg={3}>
+          <StatCard title="Approved" value={approvedData.count || 0} amount={approvedData.amount} icon={AccountBalanceRounded} color="#69f0ae" link={getLink('approved')} tooltip="Funds Approved" />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3} lg={3}>
+          <StatCard title="Disbursed" value={disbursedData.count || 0} amount={disbursedData.amount} icon={ReportRounded} color="#ff9800" link={getLink('disbursed')} tooltip="Funds Disbursed" />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3} lg={3}>
+          <StatCard title="Rejected" value={counts['rejected'] || 0} icon={CancelRounded} color="#dd2c00" link={getLink('rejected')} tooltip="Rejected Tickets" />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3} lg={3}>
+          <StatCard title="Drop" value={counts['drop'] || 0} icon={DeleteForeverRounded} color="#ff6e40" link={getLink('drop')} tooltip="Dropped Tickets" />
+        </Grid>
+      </Grid>
+
+      {/* Bottom Section: Action Lists */}
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={5}>
+          <Paper elevation={0} sx={{ p: 2, border: '1px solid #e2e8f0', borderRadius: 2, height: '100%' }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#1e293b', mb: 2 }}>
+              Recent Applications
+            </Typography>
+            <LatestApplications sx={{ height: "100%", boxShadow: 'none' }} />
+          </Paper>
+        </Grid>
+        <Grid item xs={12} md={7}>
+          <Paper elevation={0} sx={{ p: 2, border: '1px solid #e2e8f0', borderRadius: 2, height: '100%' }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#1e293b', mb: 2 }}>
+              Agent Activity Monitoring
+            </Typography>
+            <LatestOrders sx={{ height: "100%", boxShadow: 'none' }} />
+          </Paper>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+}
+
 export default function Page(): React.JSX.Element {
   const { decodedToken, getCookies } = Utility();
   const cookies = getCookies();
   const userToken = (cookies as any).token;
   const { id, role, companyId } = decodedToken(userToken?.value);
+
+  if (role === 'sub admin') {
+    return <SubAdminDashboard />;
+  }
 
   const [date, setDate] = useState<string | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string>("");
@@ -305,11 +648,7 @@ export default function Page(): React.JSX.Element {
         totalTicketsByMonth,
         doneTicketsByMonth,
       ] = await Promise.all([
-        fetchTotalApplications(
-          selectedMonth || undefined,
-          selectedMonth ? currentYear : undefined,
-          date
-        ),
+        fetchTotalApplications(), // ALWAYS show all time
         fetchTotalNewApplication(
           selectedMonth || undefined,
           selectedMonth ? currentYear : undefined,
@@ -383,6 +722,7 @@ export default function Page(): React.JSX.Element {
       iconBgColor: "#1de9b6",
       count: allCounts?.totalApplications,
       link: "#",
+      tooltip: "(All Time Count Of Applications)",
     },
     {
       icon: FiberNewIcon,

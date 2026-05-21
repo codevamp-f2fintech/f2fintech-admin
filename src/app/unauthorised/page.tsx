@@ -3,12 +3,23 @@ import React from "react";
 import { Box, Button, Container, Typography } from "@mui/material";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { Utility } from "@/utils";
 
 const Unauthorised: React.FC = () => {
   const router = useRouter();
+  const { decodedToken } = Utility();
 
   const handleGoHome = () => {
-    router.push("/");
+    const role = decodedToken?.role;
+    if (role === "super admin") {
+      router.push("/company");
+    } else if (role === "credit") {
+      router.push("/ticket");
+    } else if (role === "sales") {
+      router.push("/home");
+    } else {
+      router.push("/");
+    }
   };
 
   return (
@@ -64,9 +75,9 @@ const Unauthorised: React.FC = () => {
           color="primary"
           size="large"
           onClick={handleGoHome}
-          sx={{ width: "15vw" }}
+          sx={{ width: "15vw", mt: 2 }}
         >
-          Go Back to Home
+          Go to Dashboard
         </Button>
       </Box>
     </Container>

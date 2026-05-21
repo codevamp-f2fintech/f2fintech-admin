@@ -15,6 +15,7 @@ import {
   CardActions,
   Button,
   useMediaQuery,
+  Tooltip,
 } from "@mui/material";
 import {
   Person,
@@ -37,44 +38,50 @@ export interface LatestUsersProps {
   sx?: SxProps;
 }
 
-export function LatestOrders ( { sx }: LatestUsersProps ): React.JSX.Element {
+export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
   const { value: users, swrLoading: usersLoading } = useGetUsers(
     {} as User,
     "get-users",
     1,
     6
   );
+
+  // Fetch only tickets for the current month to avoid loading 500 records
+  const currentMonthStart = dayjs().startOf("month").format("YYYY-MM-DD");
+  const currentMonthEnd = dayjs().endOf("month").format("YYYY-MM-DD");
+
   const { value: tickets, swrLoading: ticketsLoading } = useGetTickets(
     `get-all-tickets`,
     1,
-    500
+    1000,
+    "",
+    currentMonthStart,
+    currentMonthEnd
   );
 
   const router = useRouter();
-  const { capitalizeFirstLetter } = Utility();
-  const isMobile = useMediaQuery( "(max-width:600px)" );
-  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
+  const { capitalizeFirstLetter, decodedToken } = Utility();
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
-  const getTicketCounts = ( userId: string | number ) => {
-    if ( !tickets?.results ) return { open: 0, inProgress: 0, done: 0 };
+  // decodedToken is a function — must be called to get the payload
+  const role = decodedToken()?.role;
+  const canViewAllUsers = role === "admin" || role === "super admin";
+
+  const getTicketCounts = (userId: string | number) => {
+    if (!tickets?.results) return { done: 0 };
     const userTickets = tickets.results.filter(
-      ( ticket ) => ticket.user_id == userId
+      (ticket) => ticket.user_id == userId
     );
     return {
-      open: userTickets.filter(
-        ( ticket ) => ticket.ticketStatus.toLowerCase() === "relook"
-      ).length,
-      inProgress: userTickets.filter(
-        ( ticket ) => ticket.ticketStatus.toLowerCase() === "to be login"
-      ).length,
       done: userTickets.filter(
-        ( ticket ) => ticket.ticketStatus.toLowerCase() === "to be disbursed"
+        (ticket) => ticket.ticketStatus.toLowerCase() === "disbursed"
       ).length,
     };
   };
 
   const handleViewAllClick = () => {
-    router.push( "/users" );
+    router.push("/users");
   };
 
   return (
@@ -156,15 +163,15 @@ export function LatestOrders ( { sx }: LatestUsersProps ): React.JSX.Element {
                 <TableCell align="center" sx={{ fontWeight: 600 }}>
                   Email
                 </TableCell>
-                <TableCell align="center" sx={{ fontWeight: 600 }}>
-                  Relook
-                </TableCell>
-                <TableCell align="center" sx={{ fontWeight: 600 }}>
-                  In Progress
-                </TableCell>
-                <TableCell align="center" sx={{ fontWeight: 600 }}>
-                  Disbursed
-                </TableCell>
+                <Tooltip
+                  title={`Disbursed tickets count for ${dayjs().format("MMMM YYYY")} (current month)`}
+                  placement="top"
+                  arrow
+                >
+                  <TableCell align="center" sx={{ fontWeight: 600, cursor: "help" }}>
+                    Disbursed
+                  </TableCell>
+                </Tooltip>
                 <TableCell sx={{ fontWeight: 600 }}>Joined On</TableCell>
               </TableRow>
             </TableHead>
@@ -182,8 +189,8 @@ export function LatestOrders ( { sx }: LatestUsersProps ): React.JSX.Element {
                   </TableCell>
                 </TableRow>
               ) : (
-                users?.data?.results?.map( ( agent: UserData, index: number ) => {
-                  const { open, inProgress, done } = getTicketCounts( agent.id );
+                users?.data?.results?.map((agent: UserData, index: number) => {
+                  const { done } = getTicketCounts(agent.id);
 
                   return (
                     <TableRow
@@ -221,7 +228,7 @@ export function LatestOrders ( { sx }: LatestUsersProps ): React.JSX.Element {
                               textOverflow: "ellipsis",
                             }}
                           >
-                            {capitalizeFirstLetter( agent.username )}
+                            {capitalizeFirstLetter(agent.username)}
                           </Typography>
                         </Box>
                       </TableCell>
@@ -262,40 +269,6 @@ export function LatestOrders ( { sx }: LatestUsersProps ): React.JSX.Element {
                             justifyContent: "center",
                           }}
                         >
-                          <ConfirmationNumber
-                            sx={{
-                              color: "warning.main",
-                              fontSize: { xs: "1rem", sm: "1.2rem" },
-                            }}
-                          />
-                          <Typography sx={{ ml: 1 }}>{open}</Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <Refresh
-                            sx={{
-                              color: "primary.main",
-                              fontSize: { xs: "1rem", sm: "1.2rem" },
-                            }}
-                          />
-                          <Typography sx={{ ml: 1 }}>{inProgress}</Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
                           <CheckCircle
                             sx={{
                               color: "success.main",
@@ -310,11 +283,11 @@ export function LatestOrders ( { sx }: LatestUsersProps ): React.JSX.Element {
                           fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" },
                         }}
                       >
-                        {dayjs( agent.created_at ).format( "MMM D, YYYY" )}
+                        {dayjs(agent.created_at).format("MMM D, YYYY")}
                       </TableCell>
                     </TableRow>
                   );
-                } )
+                })
               )}
             </TableBody>
           </Table>
@@ -322,44 +295,46 @@ export function LatestOrders ( { sx }: LatestUsersProps ): React.JSX.Element {
       </Box>
 
       {/* Footer Button */}
-      <Box
-        sx={{
-          height: { xs: "8vh", sm: "5vh", md: "9vh" },
-          mb: { xs: "1vh", sm: 0 },
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "flex-end",
-          p: { xs: 1, sm: 2 },
-        }}
-      >
-        <Button
-          color="inherit"
-          endIcon={<ArrowRightIcon />}
-          size="small"
-          variant="text"
-          onClick={handleViewAllClick}
+      {canViewAllUsers && (
+        <Box
           sx={{
-            width: { xs: "140px", sm: "15vw", md: "8vw" },
-            fontSize: { xs: "0.8rem", sm: "0.9rem" },
-            mr: "1vw",
-            bgcolor: "#0c66e4",
-            color: "white",
-            "&:hover": {
-              bgcolor: "#0c66e4",
-              color: "white",
-            },
-            whiteSpace: "nowrap",
-            mt: {
-              xs: 3,
-              md: 0,
-              sm: 0,
-              lg: 0,
-            },
+            height: { xs: "8vh", sm: "5vh", md: "9vh" },
+            mb: { xs: "1vh", sm: 0 },
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            p: { xs: 1, sm: 2 },
           }}
         >
-          View all
-        </Button>
-      </Box>
+          <Button
+            color="inherit"
+            endIcon={<ArrowRightIcon />}
+            size="small"
+            variant="text"
+            onClick={handleViewAllClick}
+            sx={{
+              width: { xs: "140px", sm: "15vw", md: "8vw" },
+              fontSize: { xs: "0.8rem", sm: "0.9rem" },
+              mr: "1vw",
+              bgcolor: "#0c66e4",
+              color: "white",
+              "&:hover": {
+                bgcolor: "#0c66e4",
+                color: "white",
+              },
+              whiteSpace: "nowrap",
+              mt: {
+                xs: 3,
+                md: 0,
+                sm: 0,
+                lg: 0,
+              },
+            }}
+          >
+            View all
+          </Button>
+        </Box>
+      )}
     </Paper>
   );
 }

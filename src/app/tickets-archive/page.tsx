@@ -83,28 +83,24 @@ const ArchivedTicketsPage = () => {
   };
 
   const fetchUsers = async () => {
-    try
-    {
+    try {
       // Since you're already using axios with interceptors, use axios instead of fetch
-      const response = await axiosInstance.get( '/get-users', {
+      const response = await axiosInstance.get('/get-users', {
         params: {
           page: 1,
           limit: 100
         }
-      } );
+      });
 
       const data = response.data;
 
-      if ( data.statusCode === 200 )
-      {
-        setUsers( data.data.results || data.data );
-      } else
-      {
-        console.error( "Failed to fetch users:", data.message );
+      if (data.statusCode === 200) {
+        setUsers(data.data.results || data.data);
+      } else {
+        console.error("Failed to fetch users:", data.message);
       }
-    } catch ( err )
-    {
-      console.error( "Error fetching users:", err );
+    } catch (err) {
+      console.error("Error fetching users:", err);
     }
   };
 
@@ -113,45 +109,40 @@ const ArchivedTicketsPage = () => {
   }, []);
 
   // Mock API call
-  const fetchArchivedTickets = async ( page = 1, appliedFilters = filters ) => {
-    try
-    {
-      setLoading( true );
+  const fetchArchivedTickets = async (page = 1, appliedFilters = filters) => {
+    try {
+      setLoading(true);
 
       // Use axiosInstance instead of fetch
-      const response = await axiosInstance.get( '/get-all-archived-tickets', {
+      const response = await axiosInstance.get('/get-all-archived-tickets', {
         params: {
           page: page.toString(),
           limit: limit.toString(),
-          ...( appliedFilters.status && { status: appliedFilters.status } ),
-          ...( appliedFilters.provider && { provider: appliedFilters.provider } ),
-          ...( appliedFilters.name && { name: appliedFilters.name } ),
-          ...( appliedFilters.startDate && {
+          ...(appliedFilters.status && { status: appliedFilters.status }),
+          ...(appliedFilters.provider && { provider: appliedFilters.provider }),
+          ...(appliedFilters.name && { name: appliedFilters.name }),
+          ...(appliedFilters.startDate && {
             startDate: appliedFilters.startDate,
-          } ),
-          ...( appliedFilters.endDate && { endDate: appliedFilters.endDate } ),
-          ...( appliedFilters.search && { search: appliedFilters.search } ),
+          }),
+          ...(appliedFilters.endDate && { endDate: appliedFilters.endDate }),
+          ...(appliedFilters.search && { search: appliedFilters.search }),
         }
-      } );
+      });
 
       const data = response.data; // Axios returns data in response.data
 
-      if ( data.statusCode === 200 )
-      {
-        setTickets( data.data.results );
-        setTotalPages( data.data.pages );
-        setTotalCount( data.data.count );
-      } else
-      {
-        setError( data.message || "Failed to fetch archived tickets" );
+      if (data.statusCode === 200) {
+        setTickets(data.data.results);
+        setTotalPages(data.data.pages);
+        setTotalCount(data.data.count);
+      } else {
+        setError(data.message || "Failed to fetch archived tickets");
       }
-    } catch ( err )
-    {
-      setError( "Error fetching archived tickets" );
-      console.error( "Error:", err );
-    } finally
-    {
-      setLoading( false );
+    } catch (err) {
+      setError("Error fetching archived tickets");
+      console.error("Error:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -197,7 +188,7 @@ const ArchivedTicketsPage = () => {
   const handleRestore = async (archiveId) => {
     try {
       const response = await axiosInstance.post(
-        `/restore-original-ticket/${ archiveId }`
+        `/restore-original-ticket/${archiveId}`
       );
       const data = response.data;
 
@@ -474,7 +465,7 @@ const ArchivedTicketsPage = () => {
                 </IconButton>
                 <input
                   type="text"
-                  placeholder="Search by Candidate Name or Archive Id..."
+                  placeholder="Search by Customer Name or Archive Id..."
                   style={{
                     flex: 1,
                     border: "none",
@@ -912,14 +903,14 @@ const ArchivedTicketsPage = () => {
                     <Avatar
                       alt={capitalizeFirstLetter(
                         selectedTicket.customerName.split(".")[1]?.trim() ||
-                          selectedTicket.customerName
-                            .split(" ")
-                            .slice(1)
-                            .join(" ")
+                        selectedTicket.customerName
+                          .split(" ")
+                          .slice(1)
+                          .join(" ")
                       )}
                       src={
                         Array.isArray(selectedTicket.customerProfileImage) &&
-                        selectedTicket.customerProfileImage.length > 0
+                          selectedTicket.customerProfileImage.length > 0
                           ? selectedTicket.customerProfileImage[0]
                           : undefined
                       }
@@ -936,10 +927,10 @@ const ArchivedTicketsPage = () => {
                     >
                       {capitalizeFirstLetter(
                         selectedTicket.customerName.split(".")[1]?.trim() ||
-                          selectedTicket.customerName
-                            .split(" ")
-                            .slice(1)
-                            .join(" ")
+                        selectedTicket.customerName
+                          .split(" ")
+                          .slice(1)
+                          .join(" ")
                       ).charAt(0)}
                     </Avatar>
                     <Box sx={{ flex: 1, minWidth: 0 }}>

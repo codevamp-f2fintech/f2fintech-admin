@@ -959,14 +959,14 @@ const Ticket = () => {
                 <Box
                   sx={{
                     width: "100%",
-                    borderRadius: 2,
+                    borderRadius: 1,
                     boxShadow: 2,
                   }}
                 >
                   <TableContainer
                     component={Paper}
                     sx={{
-                      borderRadius: 2,
+                      borderRadius: 1,
                       overflowX: "auto",
                       width: "100%",
                       maxWidth: "100vw",
@@ -983,13 +983,28 @@ const Ticket = () => {
                         "& .MuiTableCell-root": {
                           padding: { xs: "4px", sm: "6px", md: "8px" },
                         },
+                        "& .MuiTableCell-head": {
+                          padding: "10px 12px",
+                          position: "relative",
+                        },
+                        "& .MuiTableCell-head:not(:last-child)::after": {
+                          content: '""',
+                          position: "absolute",
+                          right: 0,
+                          top: "25%",
+                          bottom: "25%",
+                          width: "2px",
+                          backgroundColor: "rgba(255, 255, 255, 0.5)",
+                          boxShadow: "1px 0 4px rgba(0,0,0,0.3)",
+                          borderRadius: "2px",
+                        }
                       }}
                     >
                       <TableHead>
                         <TableRow sx={{ background: "#3f50b5" }}>
                           <TableCell
                             sx={{
-                              fontWeight: "bold",
+                              fontWeight: 600,
                               color: "white",
                               fontSize: {
                                 xs: "0.75rem",
@@ -1000,11 +1015,11 @@ const Ticket = () => {
                               minWidth: { xs: "60px", sm: "30px", md: "10px" },
                             }}
                           >
-                            S.no
+                            T.ID
                           </TableCell>
                           <TableCell
                             sx={{
-                              fontWeight: "bold",
+                              fontWeight: 600,
                               color: "white",
                               fontSize: "1rem",
                               wordWrap: "break-word",
@@ -1014,8 +1029,9 @@ const Ticket = () => {
                           </TableCell>
                           {userRole !== "sales" && (
                             <TableCell
+                              align="center"
                               sx={{
-                                fontWeight: "bold",
+                                fontWeight: 600,
                                 color: "white",
                                 fontSize: "1rem",
                                 wordWrap: "break-word",
@@ -1026,19 +1042,17 @@ const Ticket = () => {
                             </TableCell>
                           )}
                           {/* {userRole == "sales" && (
-                            <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Contact</TableCell>
+                            <TableCell sx={{ fontWeight: 600, color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Contact</TableCell>
                           )} */}
-                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Amount</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Provider</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Loan Type</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Lead Type</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Tenure</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Location</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Application Date</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Created At</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Disbursed At</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Approved At</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem", wordWrap: 'break-word', display: 'flex', alignItems: 'center', justifyContent: 'center', border: "none" }}>Actions</TableCell>
+                          <TableCell sx={{ fontWeight: 600, color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Amount</TableCell>
+                          <TableCell sx={{ fontWeight: 600, color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Provider</TableCell>
+                          <TableCell sx={{ fontWeight: 600, color: "white", fontSize: "1rem", wordWrap: 'break-word', minWidth: "130px", maxWidth: "160px" }}>Status</TableCell>
+                          <TableCell sx={{ fontWeight: 600, color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Loan Type</TableCell>
+                          <TableCell sx={{ fontWeight: 600, color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Lead Type</TableCell>
+                          <TableCell sx={{ fontWeight: 600, color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Tenure</TableCell>
+                          <TableCell sx={{ fontWeight: 600, color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Location</TableCell>
+                          <TableCell sx={{ fontWeight: 600, color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Created At</TableCell>
+                          <TableCell align="center" sx={{ fontWeight: 600, color: "white", fontSize: "1rem", wordWrap: 'break-word' }}>Actions</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -1065,6 +1079,7 @@ const Ticket = () => {
                   {ticket.results.map((ticket, index) => (
                     <ApplicationCard
                       key={index}
+                      mainIndex={index + 1}
                       customerApplication={ticket}
                       userRole={userRole}
                       handleStartClick={() =>

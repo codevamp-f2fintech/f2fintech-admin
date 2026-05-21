@@ -189,6 +189,7 @@ export function AppBarNav(): React.JSX.Element {
           top: 0,
           zIndex: "6",
           height: "60px",
+          borderRadius: 0,
         }}
       >
         <Toolbar sx={{ minHeight: "56px !important", height: "56px", alignItems: "center" }}>

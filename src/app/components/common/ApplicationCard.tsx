@@ -26,6 +26,7 @@ import {
   TableCell,
   TableRow,
   Modal,
+  Tooltip,
 } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -42,6 +43,9 @@ import {
   ExpandMore,
   ExpandLess,
   DeleteOutlined,
+  History,
+  OpenInNew,
+  CommentOutlined,
 } from "@mui/icons-material";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import BusinessIcon from '@mui/icons-material/Business';
@@ -165,6 +169,92 @@ function InfoChip({
         },
       }}
     />
+  );
+}
+
+function CardField({
+  label,
+  value,
+}: {
+  label: string;
+  value: React.ReactNode;
+}) {
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+      <Typography
+        variant="caption"
+        sx={{
+          fontWeight: 700,
+          color: '#4b5563',
+          fontSize: '0.68rem',
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
+          lineHeight: 1.2,
+        }}
+      >
+        {label}
+      </Typography>
+      <Typography
+        variant="body2"
+        sx={{
+          fontWeight: 400,
+          color: '#1e293b',
+          fontSize: '0.78rem',
+          mt: 0.2,
+          wordBreak: 'break-word',
+          lineHeight: 1.3,
+        }}
+      >
+        {value || "N/A"}
+      </Typography>
+    </Box>
+  );
+}
+
+function CardGroup({
+  title,
+  bgColor,
+  borderColor,
+  children,
+}: {
+  title: string;
+  bgColor: string;
+  borderColor: string;
+  children: React.ReactNode;
+}) {
+  const greyBorder = "rgba(0, 0, 0, 0.08)";
+  return (
+    <Box
+      sx={{
+        bgcolor: "transparent",
+        border: `1px solid ${greyBorder}`,
+        borderRadius: "8px",
+        p: 1.25,
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        gap: 1,
+      }}
+    >
+      <Typography
+        variant="caption"
+        sx={{
+          fontWeight: 850,
+          color: "#475569",
+          fontSize: "0.62rem",
+          textTransform: "uppercase",
+          letterSpacing: "0.08em",
+          borderBottom: `1px dashed ${greyBorder}`,
+          pb: 0.5,
+          mb: 0.25,
+        }}
+      >
+        {title}
+      </Typography>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+        {children}
+      </Box>
+    </Box>
   );
 }
 
@@ -555,9 +645,10 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 flexDirection: isMobile ? "row" : "row",
                 alignItems: isMobile ? "stretch" : "center",
                 p: 1,
-                backgroundColor: "#f5f8ff",
+                backgroundColor: "white",
                 color: "#1e3a5f",
                 borderBottom: "1px solid rgba(12,66,160,0.08)",
+                boxShadow: "inset 4px 0 0 0 rgba(12, 102, 228, 0.5)", // Gives it a slight primary color accent on the left
               }}
             >
               <ListItemAvatar sx={{ minWidth: isMobile ? "auto" : 60 }}>
@@ -571,8 +662,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   )}
                   src={customerApplication.customerProfileImage}
                   sx={{
-                    width: isMobile ? 40 : 32,
-                    height: isMobile ? 40 : 32,
+                    width: isMobile ? 48 : 48,
+                    height: isMobile ? 48 : 48,
                     background: "#1e3a5f",
                     color: "white",
                     fontSize: isMobile ? 16 : 20,
@@ -593,156 +684,104 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   textAlign: isMobile ? "center" : "left",
                 }}
                 primary={
-                  <Typography
-                    variant={isMobile ? "body1" : "subtitle1"}
-                    sx={{
-                      fontWeight: "semibold",
-                      fontSize: {
-                        xs: "0.75rem",
-                        sm: "0.875rem",
-                        md: ".5rem",
-                        lg: "1.125rem",
-                        xl: "1.25rem",
-                      },
-                      color: "#000",
-                      mb: 0.25,
-                      display: "flex",
-                      alignItems: "center",
-                      flexWrap: "wrap",
-                      gap: 1,
-                    }}
-                  >
-                    {customerApplication.customerName?.toUpperCase()}
-                    {(customerApplication.source === "website" || customerApplication.applicationSource === "website") && <DirectBadge />}
-                  </Typography>
+                  <Box sx={{ mb: 0.5 }}>
+                    <Typography
+                      variant={isMobile ? "body1" : "subtitle1"}
+                      sx={{
+                        fontWeight: "semibold",
+                        fontSize: {
+                          xs: "0.75rem",
+                          sm: "0.875rem",
+                          md: ".5rem",
+                          lg: "1.125rem",
+                          xl: "1.25rem",
+                        },
+                        color: "#000",
+                        mb: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                        gap: 1,
+                      }}
+                    >
+                      <span style={{ color: "#666", fontWeight: "bold" }}>T.ID: {customerApplication.ticketId || mainIndex}</span>
+                      {customerApplication.customerName?.toUpperCase()}
+                      {(customerApplication.source === "website" || customerApplication.applicationSource === "website") && <DirectBadge />}
+                    </Typography>
+                    {userRole !== "sales" && (
+                      <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: 500, display: "block" }}>
+                        {userRole === "admin" || customerApplication.ticketStatus !== "disbursed" ? customerApplication.customerEmail : "N/A"}
+                      </Typography>
+                    )}
+                  </Box>
                 }
                 secondary={
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: isMobile ? "column" : "row",
-                      gap: 0.5,
-                      flexWrap: "wrap",
-                      alignItems: isMobile ? "center" : "flex-start",
-                    }}
-                  >
-                    <InfoChip
-                      icon={<CurrencyRupeeIcon />}
-                      text={formatRupees(customerApplication.applicationAmount)}
-                      color="#0c66e4"
-                    />
-                    {customerApplication.applicationProvider && (
-                      <InfoChip
-                        icon={<AccountBalanceIcon />}
-                        text={customerApplication.applicationProvider}
-                        color="#0c66e4"
-                      />
-                    )}
-                    <InfoChip
-                      icon={<AccountBalanceIcon />}
-                      text={customerApplication?.loanType}
-                      color="#0c66e4"
-                    />
-                    <InfoChip
-                      icon={<BusinessIcon />}
-                      text={customerApplication?.leadType}
-                      color="#0c66e4"
-                    />
-                    <InfoChip
-                      icon={<AccessTimeRounded />}
-                      text={formatTenure(customerApplication.applicationTenure)}
-                      color="#0c66e4"
-                    />
-                    {/* <InfoChip
-                      icon={<AccessTimeRounded />}
-                      text={capitalizeFirstLetter( customerApplication.loan_category )}
-                      color="#0c66e4"
-                    /> */}
-                    {userRole !== "sales" && (
-                      <>
-                        {userRole === "admin" ||
-                          customerApplication.ticketStatus !== "disbursed" ? (
-                          <InfoChip
-                            icon={<MailRounded />}
-                            text={customerApplication.customerEmail}
-                            color="#33415c"
-                          />
-                        ) : (
-                          <InfoChip
-                            icon={<MailRounded />}
-                            text="N/A"
-                            color="#33415c"
-                          />
-                        )}
-                      </>
-                    )}
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mt: 0, mb: 0.5 }}>
+                    {/* Column 1: Financial & Basic */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                      <Typography variant="body2" sx={{ color: "#00796B", fontWeight: "medium" }}>
+                        <span style={{ fontWeight: 600, color: "#33415c" }}>Amount:</span> {formatRupees(customerApplication.applicationAmount)}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: "#6A0DAD", fontWeight: 600 }}>
+                        <span style={{ fontWeight: 600, color: "#33415c" }}>Provider:</span> {customerApplication.applicationProvider || "N/A"}
+                      </Typography>
+                    </Box>
 
-                    {customerApplication.customerLocation && (
-                      <InfoChip
-                        icon={<LocationOnRounded />}
-                        text={capitalizeFirstLetter(
-                          customerApplication.customerLocation
-                        )}
-                        color="#33415c"
-                      />
-                    )}
-                    {customerApplication.customerState && (
-                      <InfoChip
-                        icon={<LocationOnRounded />}
-                        text={capitalizeFirstLetter(
-                          customerApplication.customerState
-                        )}
-                        color="#33415c"
-                      />
-                    )}
-                    <InfoChip
-                      icon={<AccessTimeRounded />}
-                      text={
-                        customerApplication?.disbursedAt
-                          ? `Disbursed: ${new Date(customerApplication.disbursedAt).toLocaleDateString('en-IN', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                          })}`
-                          : "Not Disbursed"
-                      }
-                      color="#33415c"
-                    />
-                    <InfoChip
-                      icon={<AccessTimeRounded />}
-                      text={
-                        customerApplication?.approved_At
-                          ? `Approved: ${new Date(customerApplication.approved_At).toLocaleDateString('en-IN', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                          })}`
-                          : "Not Approved"
-                      }
-                      color="#33415c"
-                    />
-                    <InfoChip
-                      icon={<AccessTimeRounded />}
-                      text={
-                        customerApplication?.due_date
-                          ? `Expected: ${new Date(customerApplication.due_date).toLocaleDateString('en-IN', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                          })}`
-                          : "No Expected Date"
-                      }
-                      color={isOverdue ? "#D32F2F" : "#33415c"}
-                    />
-                    <Chip
-                      label={formattedCreatedAt}
-                      size="small"
-                      sx={{
-                        bgcolor: "rgba(255,255,255,0.2)",
-                        color: "#33415c",
-                        fontWeight: "bold",
-                      }}
-                    />
+                    {/* Column 2: Status & Dates */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <span style={{ fontWeight: 600, color: "#33415c", fontSize: '0.875rem' }}>Status:</span>
+                        <Chip
+                          label={customerApplication?.ticketStatus ? capitalizeFirstLetter(customerApplication.ticketStatus) : 'N/A'}
+                          size="small"
+                          sx={{
+                            bgcolor: "rgba(12, 102, 228, 0.1)",
+                            color: "#0c66e4",
+                            fontWeight: "bold",
+                            height: "20px",
+                            fontSize: "0.7rem",
+                          }}
+                        />
+                      </Box>
+                      {((customerApplication as any)?.approvedAt || customerApplication?.approved_At) && ((customerApplication as any)?.approvedAmount || customerApplication?.approved_Amount) ? (
+                        <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: 'medium', fontSize: "0.75rem" }}>
+                          <span style={{ fontWeight: 600 }}>Approved:</span> {new Date(((customerApplication as any).approvedAt || customerApplication.approved_At)!).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </Typography>
+                      ) : ((customerApplication as any)?.disbursedAt || customerApplication?.disbursed_At) && ((customerApplication as any)?.disbursedAmount || customerApplication?.disbursed_Amount) ? (
+                        <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: 'medium', fontSize: "0.75rem" }}>
+                          <span style={{ fontWeight: 600 }}>Disbursed:</span> {new Date(((customerApplication as any).disbursedAt || customerApplication.disbursed_At)!).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </Typography>
+                      ) : null}
+                    </Box>
+
+                    {/* Column 3: Loan Details */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                      <Typography variant="body2" sx={{ color: "#33415c" }}>
+                        <span style={{ fontWeight: 600 }}>Loan Type:</span> {capitalizeFirstLetter(customerApplication.loanType || "N/A")}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: "#33415c" }}>
+                        <span style={{ fontWeight: 600 }}>Lead Type:</span> {capitalizeFirstLetter(customerApplication.leadType || "N/A")}
+                      </Typography>
+                    </Box>
+
+                    {/* Column 4: Location & Tenure */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                      <Typography variant="body2" sx={{ color: "#33415c" }}>
+                        <span style={{ fontWeight: 600 }}>Tenure:</span> {formatTenure(customerApplication.applicationTenure)}
+                      </Typography>
+                      {(customerApplication.customerLocation || customerApplication.customerState) && (
+                        <Typography variant="body2" sx={{ color: "#33415c" }}>
+                          <span style={{ fontWeight: 600 }}>Loc:</span> {capitalizeFirstLetter(customerApplication.customerLocation || "")}{customerApplication.customerLocation && customerApplication.customerState ? ", " : ""}{capitalizeFirstLetter(customerApplication.customerState || "")}
+                        </Typography>
+                      )}
+                    </Box>
+
+                    {/* Column 5: Created At */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                      <Typography variant="body2" sx={{ color: "#33415c" }}>
+                        <span style={{ fontWeight: 600 }}>Created At:</span> {customerApplication?.createdAt || customerApplication?.applicationDate ? new Date(customerApplication.createdAt || customerApplication.applicationDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : "N/A"}
+                      </Typography>
+                    </Box>
                   </Box>
                 }
               />
@@ -751,30 +790,97 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               <Box
                 sx={{
                   display: "flex",
-                  flexDirection: isMobile ? "row" : "column",
-                  gap: 0.5,
+                  flexDirection: "row",
+                  gap: 1,
+                  flexWrap: "wrap",
                   alignItems: "center",
-                  mt: isMobile ? 0.5 : 0,
+                  mt: isMobile ? 1 : 0,
+                  pl: isMobile ? 0 : 2,
+                  borderLeft: isMobile ? "none" : "1px solid #eee",
                 }}
               >
                 {/* Delete Button */}
                 {(showDeleteButton ||
                   (userRole === "admin" && handleDeleteTicket)) && (
-                    <IconButton
+                    <Button
                       onClick={openConfirmDialog}
+                      startIcon={<DeleteOutline sx={{ fontSize: 18 }} />}
+                      size="small"
                       sx={{
+                        textTransform: 'none',
+                        borderRadius: 20,
+                        px: 1.5,
+                        py: 0.5,
+                        fontSize: '0.75rem',
+                        fontWeight: 'bold',
                         color: "#f44336",
-                        backgroundColor: "rgba(255,255,255,0.9)",
+                        bgcolor: "rgba(244, 67, 54, 0.08)",
                         "&:hover": {
-                          backgroundColor: "rgba(244, 67, 54, 0.1)",
+                          backgroundColor: "rgba(244, 67, 54, 0.15)",
                           color: "#d32f2f",
                         },
                       }}
-                      size="small"
                     >
-                      <DeleteOutline sx={{ fontSize: 16 }} />
-                    </IconButton>
+                      Delete
+                    </Button>
                   )}
+
+                {/* History Button (only for tickets) */}
+                {handleStartClick && customerApplication.ticketId && (
+                  <Tooltip title={showHistory ? "Close History" : "View History"}>
+                    <Button
+                      size="small"
+                      onClick={toggleHistory}
+                      startIcon={<History fontSize="small" />}
+                      sx={{
+                        textTransform: 'none',
+                        borderRadius: 20,
+                        px: 2,
+                        py: 0.5,
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        color: "#667eea",
+                        bgcolor: "rgba(102, 126, 234, 0.08)",
+                        "&:hover": {
+                          backgroundColor: "rgba(102, 126, 234, 0.15)",
+                          color: "#5a6fd8",
+                        },
+                      }}
+                    >
+                      {showHistory ? "Close History" : "History"}
+                    </Button>
+                  </Tooltip>
+                )}
+
+                {/* Visit Ticket Button */}
+                {handleStartClick && (
+                  <Tooltip title="Visit Ticket Details">
+                    <Button
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStartClick(customerApplication.ticketId);
+                      }}
+                      startIcon={<OpenInNew fontSize="small" />}
+                      sx={{
+                        textTransform: 'none',
+                        borderRadius: 20,
+                        px: 2,
+                        py: 0.5,
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        color: "#1976D2",
+                        bgcolor: "rgba(25, 118, 210, 0.08)",
+                        "&:hover": {
+                          backgroundColor: "rgba(25, 118, 210, 0.15)",
+                          color: "#1565C0",
+                        },
+                      }}
+                    >
+                      Visit
+                    </Button>
+                  </Tooltip>
+                )}
 
                 {/* Expand/Collapse Button */}
                 {!isApplication && (
@@ -1334,7 +1440,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
       >
         <Card
           sx={{
-            maxWidth: 345,
+            width: "100%",
+            maxWidth: 400,
             borderRadius: 4,
             overflow: "visible",
             position: "relative",
@@ -1414,17 +1521,13 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 variant="h5"
                 component="div"
                 sx={{
-                  mb: 1,
+                  mb: 0.5,
                   color: "black",
                   fontWeight: "bold",
                   whiteSpace: "normal",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
                   maxWidth: "100%",
                   textAlign: "center",
-                  fontSize: isTab ? "1rem" : "1rem",
-                  height: isMobile ? "7vh" : isIpad ? "7vh" : isTab ? "5vh" : "8vh",
-                  width: isMobile ? "80vw" : isTab ? "25vw" : "30vw",
+                  fontSize: "1.1rem",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -1435,6 +1538,29 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 {customerApplication.customerName?.toUpperCase()}
                 {(customerApplication.source === "website" || customerApplication.applicationSource === "website") && <DirectBadge />}
               </Typography>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                <Typography variant="subtitle2" sx={{ color: "#666", fontWeight: "bold" }}>
+                  T.ID: {customerApplication.ticketId || mainIndex}
+                </Typography>
+                {!isApplication && (
+                  <Chip
+                    label={customerApplication?.ticketStatus ? capitalizeFirstLetter(customerApplication.ticketStatus) : 'N/A'}
+                    size="small"
+                    sx={{
+                      bgcolor: "rgba(12, 102, 228, 0.1)",
+                      color: "#0c66e4",
+                      fontWeight: "bold",
+                      height: "20px",
+                      fontSize: "0.7rem",
+                    }}
+                  />
+                )}
+              </Box>
+              {userRole !== "sales" && (
+                <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: 500, mb: 1.5, display: "block" }}>
+                  {userRole === "admin" || customerApplication.ticketStatus !== "disbursed" ? customerApplication.customerEmail : "N/A"}
+                </Typography>
+              )}
               {/* Delete button for admin only */}
               {userRole === "admin" && handleDeleteTicket && (
                 <Button
@@ -1463,174 +1589,215 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   <DeleteOutlined fontSize="small" />
                 </Button>
               )}
-            </Box>
-
-            {!showHistory && !showComment ? (
+            </Box>            <Box
+              sx={{
+                bgcolor: "rgba(255,255,255,0.9)",
+                borderRadius: "10px 10px 0px 0px",
+                p: 2,
+                position: "relative",
+                width: "100%",
+                height: "320px",
+                overflow: "hidden",
+              }}
+            >
+              {/* DETAILS PANEL */}
               <Box
                 sx={{
-                  display: "flex",
-                  gap: isSalesUser ? 1 : 1.5,
-                  flexDirection: "column",
-                  bgcolor: "rgba(255,255,255,0.9)",
-                  borderRadius: "10px 10px 0px 0px",
-                  p: isSalesUser ? 1.5 : 2,
-                  height: isSalesUser
-                    ? isMobile
-                      ? "30vh"
-                      : isTab
-                        ? "28vh"
-                        : "40vh"
-                    : isMobile
-                      ? "42vh"
-                      : isTab
-                        ? "30vh"
-                        : "58vh",
+                  opacity: !showHistory && !showComment ? 1 : 0,
+                  transform: !showHistory && !showComment ? "translateY(0) scale(1)" : "translateY(15px) scale(0.95)",
+                  pointerEvents: !showHistory && !showComment ? "auto" : "none",
+                  transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+                  position: "absolute",
+                  top: 16,
+                  left: 16,
+                  right: 16,
+                  bottom: 16,
+                  overflowY: "auto",
+                  visibility: !showHistory && !showComment ? "visible" : "hidden",
+                  "&::-webkit-scrollbar": {
+                    width: "4px",
+                  },
+                  "&::-webkit-scrollbar-thumb": {
+                    bgcolor: "rgba(0,0,0,0.1)",
+                    borderRadius: "4px",
+                  },
                 }}
               >
-                {userRole !== "sales" && (
-                  <InfoRow
-                    icon={<MailRounded
-                      sx={{
-                        fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
-                      }} />}
-                    text={
-                      userRole === "admin" ||
-                        customerApplication.ticketStatus !== "disbursed"
-                        ? customerApplication.customerEmail
-                        : "N/A"
-                    }
-                  />
-                )}
+                <Grid container spacing={1}>
+                  {/* Row 1: Financials */}
+                  <Grid item xs={12}>
+                    <CardGroup
+                      title="Financials"
+                      bgColor="rgba(0, 121, 107, 0.03)"
+                      borderColor="rgba(0, 121, 107, 0.15)"
+                    >
+                      <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
+                        <Box sx={{ flex: 1 }}>
+                          <CardField
+                            label="Amount"
+                            value={
+                              <span style={{ color: "#00796B", fontWeight: 500 }}>
+                                {formatRupees(customerApplication.applicationAmount)}
+                              </span>
+                            }
+                          />
+                        </Box>
+                        <Box sx={{ flex: 1 }}>
+                          <CardField
+                            label="Provider"
+                            value={
+                              <span style={{ color: "#6A0DAD", fontWeight: 500 }}>
+                                {customerApplication.applicationProvider || "N/A"}
+                              </span>
+                            }
+                          />
+                        </Box>
+                      </Box>
+                    </CardGroup>
+                  </Grid>
 
-                <InfoRow
-                  icon={<CurrencyRupeeIcon
-                    sx={{
-                      fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
-                    }} />}
-                  text={formatRupees(customerApplication.applicationAmount)}
-                />
-                <InfoRow
-                  icon={<AccessTimeRounded
-                    sx={{
-                      fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
-                    }} />}
-                  text={formatTenure(customerApplication.applicationTenure)}
-                />
-                <InfoRow
-                  icon={<AccountBalanceIcon
-                    sx={{
-                      fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
-                    }} />}
-                  text={
-                    `${customerApplication.applicationProvider
-                      ? capitalizeFirstLetter(customerApplication.applicationProvider)
-                      : "No provider available"
-                    }${customerApplication.loanCategory ?
-                      `, ${capitalizeFirstLetter(customerApplication.loanCategory)}`
-                      : ""
-                    }`
-                  }
-                />
-                <InfoRow
-                  icon={<BusinessIcon
-                    sx={{
-                      fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
-                    }} />}
-                  text={
-                    customerApplication.loanType
-                      ? capitalizeFirstLetter(customerApplication.loanType)
-                      : "No lead type available"
-                  }
-                />
-                {(customerApplication.customerLocation || customerApplication.customerState) && (
-                  <InfoRow
-                    icon={<LocationOnRounded
-                      sx={{
-                        fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
-                      }} />}
-                    text={`${capitalizeFirstLetter(customerApplication.customerLocation || "")}${customerApplication.customerLocation && customerApplication.customerState ? ", " : ""
-                      }${capitalizeFirstLetter(customerApplication.customerState || "")}`}
-                  />
-                )}
+                  {/* Row 2: Loan Specifications & Tenure / Loc */}
+                  <Grid item xs={6}>
+                    <CardGroup
+                      title="Loan Specs"
+                      bgColor="rgba(106, 13, 173, 0.03)"
+                      borderColor="rgba(106, 13, 173, 0.15)"
+                    >
+                      <CardField
+                        label="Category"
+                        value={customerApplication.loanCategory ? capitalizeFirstLetter(customerApplication.loanCategory) : "N/A"}
+                      />
+                      <CardField
+                        label="Loan Type"
+                        value={customerApplication.loanType ? capitalizeFirstLetter(customerApplication.loanType) : "N/A"}
+                      />
+                      <CardField
+                        label="Lead Type"
+                        value={customerApplication.leadType ? capitalizeFirstLetter(customerApplication.leadType) : "N/A"}
+                      />
+                    </CardGroup>
+                  </Grid>
 
-                <InfoRow
-                  icon={<AccessTimeRounded sx={{
-                    fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
-                  }} />}
-                  text={
-                    customerApplication.disbursedAt
-                      ? `Disbursed At: ${new Date(customerApplication.disbursedAt).toLocaleDateString('en-IN', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric',
-                      })}`
-                      : "Not Disbursed"
-                  }
-                />
-                <InfoRow
-                  icon={<AccessTimeRounded sx={{
-                    fontSize: { xs: 16, sm: 18, md: 15 } // responsive icon size
-                  }} />}
-                  text={
-                    customerApplication.approved_At
-                      ? `Disbursed At: ${new Date(customerApplication.approved_At).toLocaleDateString('en-IN', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric',
-                      })}`
-                      : "Not Approved"
-                  }
-                />
-
-                {/* Existing Loans Display */}
-                {/* {(customerApplication.existingLoans || (customerApplication as any).existing_loans) && (
-                  <Box sx={{ mt: 1 }}>
-                    <Typography variant="caption" sx={{ fontWeight: 'bold', color: '#6E44FF', mb: 0.5, display: 'block' }}>
-                      Existing Loans
-                    </Typography>
-                    {(() => {
-                      try {
-                        const loans = JSON.parse(customerApplication.existingLoans || (customerApplication as any).existing_loans);
-                        if (Array.isArray(loans) && loans.length > 0) {
-                          return loans.map((loan, idx) => (
-                            <Typography key={idx} variant="caption" sx={{ display: 'block', color: '#333', ml: 1 }}>
-                              • {capitalizeFirstLetter(loan.which_loan || 'Loan')}: ₹{loan.loan_amount || loan.running_loan_amount || 'N/A'}
-                            </Typography>
-                          ));
+                  <Grid item xs={6}>
+                    <CardGroup
+                      title="Tenure & Loc"
+                      bgColor="rgba(71, 85, 105, 0.03)"
+                      borderColor="rgba(71, 85, 105, 0.15)"
+                    >
+                      <CardField
+                        label="Tenure"
+                        value={formatTenure(customerApplication.applicationTenure)}
+                      />
+                      <CardField
+                        label="Location"
+                        value={customerApplication.customerLocation || customerApplication.customerState
+                          ? `${capitalizeFirstLetter(customerApplication.customerLocation || "")}${customerApplication.customerLocation && customerApplication.customerState ? ", " : ""}${capitalizeFirstLetter(customerApplication.customerState || "")}`
+                          : "N/A"
                         }
-                      } catch (e) {
-                        return <Typography variant="caption" sx={{ color: '#666' }}>Error parsing loans</Typography>;
-                      }
-                      return null;
-                    })()}
-                  </Box>
-                )} */}
+                      />
+                    </CardGroup>
+                  </Grid>
+
+                  {/* Row 3: Status & Timeline */}
+                  <Grid item xs={12}>
+                    <CardGroup
+                      title="Timeline"
+                      bgColor="rgba(12, 102, 228, 0.03)"
+                      borderColor="rgba(12, 102, 228, 0.15)"
+                    >
+                      <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
+                        <Box sx={{ flex: 1 }}>
+                          <CardField
+                            label="Created At"
+                            value={
+                              customerApplication?.createdAt || customerApplication?.applicationDate
+                                ? new Date(customerApplication.createdAt || customerApplication.applicationDate).toLocaleDateString('en-IN', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  year: 'numeric',
+                                })
+                                : "N/A"
+                            }
+                          />
+                        </Box>
+                        {customerApplication?.ticketStatus === 'approved' && ((customerApplication as any)?.approvedAt || customerApplication?.approved_At) && (
+                          <Box sx={{ flex: 1 }}>
+                            <CardField
+                              label="Approved At"
+                              value={
+                                <>
+                                  {new Date(((customerApplication as any).approvedAt || customerApplication.approved_At)!).toLocaleDateString('en-IN', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric',
+                                  })}
+                                  {((customerApplication as any)?.approvedAmount || customerApplication?.approved_Amount) && (
+                                    <div style={{ fontSize: '0.72rem', color: '#666', fontWeight: 500, marginTop: '2px' }}>
+                                      {formatRupees(((customerApplication as any).approvedAmount || customerApplication.approved_Amount) as number)}
+                                    </div>
+                                  )}
+                                </>
+                              }
+                            />
+                          </Box>
+                        )}
+                        {customerApplication?.ticketStatus === 'disbursed' && ((customerApplication as any)?.disbursedAt || customerApplication?.disbursed_At) && (
+                          <Box sx={{ flex: 1 }}>
+                            <CardField
+                              label="Disbursed At"
+                              value={
+                                <>
+                                  {new Date(((customerApplication as any).disbursedAt || customerApplication.disbursed_At)!).toLocaleDateString('en-IN', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric',
+                                  })}
+                                  {((customerApplication as any)?.disbursedAmount || customerApplication?.disbursed_Amount) && (
+                                    <div style={{ fontSize: '0.72rem', color: '#666', fontWeight: 500, marginTop: '2px' }}>
+                                      {formatRupees(((customerApplication as any).disbursedAmount || customerApplication.disbursed_Amount) as number)}
+                                    </div>
+                                  )}
+                                </>
+                              }
+                            />
+                          </Box>
+                        )}
+                      </Box>
+                    </CardGroup>
+                  </Grid>
+                </Grid>
               </Box>
-            ) : showHistory ? (
+
+              {/* HISTORY PANEL */}
               <Box
                 sx={{
+                  opacity: showHistory ? 1 : 0,
+                  transform: showHistory ? "translateY(0) scale(1)" : "translateY(-15px) scale(0.95)",
+                  pointerEvents: showHistory ? "auto" : "none",
+                  transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+                  position: "absolute",
+                  top: 16,
+                  left: 16,
+                  right: 16,
+                  bottom: 16,
+                  visibility: showHistory ? "visible" : "hidden",
                   display: "flex",
                   flexDirection: "column",
                   gap: isSalesUser ? 1 : 1.5,
-                  bgcolor: "rgba(255,255,255,0.9)",
                   borderRadius: 2,
-                  p: isSalesUser ? 1.5 : 2,
-                  boxShadow: "inset 0 2px 4px rgba(0,0,0,0.1)",
-                  minHeight: isMobile ? "35vh" : isTab ? "20vh" : "40vh",
+                  boxShadow: "none",
                   overflowY: "scroll",
-                  height: isSalesUser
-                    ? isMobile
-                      ? "30vh"
-                      : isTab
-                        ? "28vh"
-                        : "35vh"
-                    : isMobile
-                      ? "42vh"
-                      : isTab
-                        ? "38vh"
-                        : "60vh",
+                  scrollbarWidth: "thin",
                   "&::-webkit-scrollbar": {
-                    display: "none",
+                    width: "6px",
+                  },
+                  "&::-webkit-scrollbar-track": {
+                    background: "#f1f1f1",
+                    borderRadius: "3px",
+                  },
+                  "&::-webkit-scrollbar-thumb": {
+                    background: "#888",
+                    borderRadius: "3px",
                   },
                 }}
               >
@@ -1671,19 +1838,37 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   </Typography>
                 )}
               </Box>
-            ) : showComment ? (
+
+              {/* COMMENTS PANEL */}
               <Box
                 sx={{
+                  opacity: showComment ? 1 : 0,
+                  transform: showComment ? "translateY(0) scale(1)" : "translateY(-15px) scale(0.95)",
+                  pointerEvents: showComment ? "auto" : "none",
+                  transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+                  position: "absolute",
+                  top: 16,
+                  left: 16,
+                  right: 16,
+                  bottom: 16,
+                  visibility: showComment ? "visible" : "hidden",
                   display: "flex",
                   flexDirection: "column",
                   gap: 1,
-                  bgcolor: "rgba(255,255,255,0.9)",
                   borderRadius: 2,
-                  p: 2,
-                  minHeight: isMobile ? "35vh" : isTab ? "20vh" : "40vh",
-                  maxHeight: isMobile ? "35vh" : isTab ? "20vh" : "20vh",
                   overflowY: "scroll",
-                  "&::-webkit-scrollbar": { display: "none" },
+                  scrollbarWidth: "thin",
+                  "&::-webkit-scrollbar": {
+                    width: "6px",
+                  },
+                  "&::-webkit-scrollbar-track": {
+                    background: "#f1f1f1",
+                    borderRadius: "3px",
+                  },
+                  "&::-webkit-scrollbar-thumb": {
+                    background: "#888",
+                    borderRadius: "3px",
+                  },
                 }}
               >
                 {commentData?.length > 0 ? (
@@ -1909,7 +2094,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   </Typography>
                 )}
               </Box>
-            ) : null}
+            </Box>
 
             {handleStartClick && customerApplication.ticketId ? (
               <Box
@@ -1926,94 +2111,80 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 {userRole !== "sales" && (
                   <Button
                     fullWidth
-                    position="fixed"
-                    variant="contained"
+                    size="small"
+                    startIcon={<OpenInNew fontSize="small" />}
                     sx={{
-                      py: 1.25,
-                      px: 2,
-                      height: "40px",
-                      borderRadius: "8px",
-                      bgcolor: "#0066cc",
-                      color: "white",
-                      fontWeight: 600,
-                      fontSize: "0.875rem",
                       textTransform: "none",
-                      boxShadow: "0 2px 8px rgba(0, 102, 204, 0.25)",
+                      borderRadius: 20,
+                      px: 2,
+                      py: 0.5,
+                      height: "36px",
+                      fontSize: "0.75rem",
+                      fontWeight: 600,
+                      color: "#1976D2",
+                      bgcolor: "rgba(25, 118, 210, 0.08)",
                       "&:hover": {
-                        bgcolor: "#0052a3",
-                        boxShadow: "0 4px 12px rgba(0, 102, 204, 0.35)",
-                        transform: "translateY(-1px)",
-                      },
-                      "&:active": {
-                        transform: "translateY(0px)",
+                        backgroundColor: "rgba(25, 118, 210, 0.15)",
+                        color: "#1565C0",
                       },
                       transition: "all 0.2s ease",
                     }}
-                    onClick={handleStartClick}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStartClick(customerApplication.ticketId);
+                    }}
                   >
-                    Visit Ticket
+                    Visit
                   </Button>
                 )}
                 <Button
                   fullWidth
-                  variant="outlined"
+                  size="small"
+                  startIcon={<History fontSize="small" />}
                   sx={{
-                    py: 1.25,
-                    px: 2,
-                    height: "40px",
-                    borderRadius: "8px",
-                    borderWidth: "1.5px",
-                    borderColor: "#d1d5db",
-                    color: "#4b5563",
-                    fontWeight: 500,
-                    fontSize: "0.875rem",
                     textTransform: "none",
-                    bgcolor: "white",
+                    borderRadius: 20,
+                    px: 2,
+                    py: 0.5,
+                    height: "36px",
+                    fontSize: "0.75rem",
+                    fontWeight: 600,
+                    color: "#667eea",
+                    bgcolor: "rgba(102, 126, 234, 0.08)",
                     "&:hover": {
-                      bgcolor: "#f9fafb",
-                      borderColor: "#0066cc",
-                      color: "#0066cc",
-                      transform: "translateY(-1px)",
-                    },
-                    "&:active": {
-                      transform: "translateY(0px)",
+                      backgroundColor: "rgba(102, 126, 234, 0.15)",
+                      color: "#5a6fd8",
                     },
                     transition: "all 0.2s ease",
                   }}
                   onClick={toggleHistory}
                 >
-                  {showHistory ? "Close History" : "Show History"}
+                  {showHistory ? "Close" : "History"}
                 </Button>
                 {userRole === "sales" && (
                   <Button
                     fullWidth
-                    variant="outlined"
+                    size="small"
+                    startIcon={<CommentOutlined fontSize="small" />}
                     sx={{
-                      py: 1.25,
-                      px: 2,
-                      height: "44px",
-                      borderRadius: "8px",
-                      borderWidth: "1.5px",
-                      borderColor: "#d1d5db",
-                      color: "#4b5563",
-                      fontWeight: 500,
-                      fontSize: "0.875rem",
                       textTransform: "none",
-                      bgcolor: "white",
+                      borderRadius: 20,
+                      px: 2,
+                      py: 0.5,
+                      height: "36px",
+                      fontSize: "0.75rem",
+                      fontWeight: 600,
+                      color: "#00796B",
+                      bgcolor: "rgba(0, 121, 107, 0.08)",
                       "&:hover": {
-                        bgcolor: "#f9fafb",
-                        borderColor: "#0066cc",
-                        color: "#0066cc",
-                        transform: "translateY(-1px)",
-                      },
-                      "&:active": {
-                        transform: "translateY(0px)",
+                        backgroundColor: "rgba(0, 121, 107, 0.15)",
+                        color: "#004d40",
                       },
                       transition: "all 0.2s ease",
                     }}
                     onClick={toggleComment}
                   >
-                    {showComment ? "Comments" : "Comments"}
+                    {showComment ? "Close" : "Comments"}
                   </Button>
                 )}
               </Box>
@@ -2161,7 +2332,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
         >
           <TableCell>
             <Typography variant="body2" sx={{ fontWeight: "bold", whiteSpace: isTab ? "normal" : "", }}>
-              {index}
+              {customerApplication.ticketId || index}
             </Typography>
           </TableCell>
 
@@ -2176,7 +2347,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
 
           {/* Email */}
           {userRole !== "sales" && (
-            <TableCell sx={{ minWidth: isMobile ? "45vw" : isTab ? "15vw" : "10vw", maxWidth: "15vw" }}>
+            <TableCell align="center" sx={{ minWidth: isMobile ? "45vw" : isTab ? "15vw" : "10vw", maxWidth: "15vw" }}>
               <Typography
                 variant="body2"
                 sx={{
@@ -2235,6 +2406,53 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
             </Typography>
           </TableCell>
 
+          {/* Ticket Status */}
+          {!isApplication && (
+            <TableCell sx={{ minWidth: "130px", maxWidth: "160px" }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                <Chip
+                  label={customerApplication?.ticketStatus ? capitalizeFirstLetter(customerApplication.ticketStatus) : 'N/A'}
+                  size="small"
+                  sx={{
+                    bgcolor: "rgba(12, 102, 228, 0.1)",
+                    color: "#0c66e4",
+                    fontWeight: "bold",
+                    width: 'fit-content',
+                    height: 'auto',
+                    whiteSpace: 'normal',
+                    "& .MuiChip-label": {
+                      whiteSpace: 'normal',
+                      wordBreak: 'break-word',
+                      py: 0.5,
+                    }
+                  }}
+                />
+
+                {customerApplication?.ticketStatus === 'approved' && ((customerApplication as any)?.approvedAt || customerApplication?.approved_At) && (
+                  <Typography variant="caption" sx={{ color: "text.secondary", mt: 0.5, fontWeight: 'medium' }}>
+                    {new Date(((customerApplication as any).approvedAt || customerApplication.approved_At)!).toLocaleDateString('en-IN', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                    {((customerApplication as any)?.approvedAmount || customerApplication?.approved_Amount) && ` • ${formatRupees(((customerApplication as any).approvedAmount || customerApplication.approved_Amount) as number)}`}
+                  </Typography>
+                )}
+
+                {customerApplication?.ticketStatus === 'disbursed' && ((customerApplication as any)?.disbursedAt || customerApplication?.disbursed_At) && (
+                  <Typography variant="caption" sx={{ color: "text.secondary", mt: 0.5, fontWeight: 'medium' }}>
+                    {new Date(((customerApplication as any).disbursedAt || customerApplication.disbursed_At)!).toLocaleDateString('en-IN', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                    {((customerApplication as any)?.disbursedAmount || customerApplication?.disbursed_Amount) && ` • ${formatRupees(((customerApplication as any).disbursedAmount || customerApplication.disbursed_Amount) as number)}`}
+                  </Typography>
+                )}
+              </Box>
+            </TableCell>
+          )}
+
           {/* Loan Category */}
           <TableCell>
             <Typography variant="body2">
@@ -2276,18 +2494,6 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
             </Typography>
           </TableCell>
 
-          {/* Application date */}
-          {!isApplication && <TableCell >
-            <Typography variant="body2">
-              {customerApplication?.applicationDate
-                ? new Date(customerApplication.applicationDate).toLocaleDateString('en-IN', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                })
-                : "N/A"}
-            </Typography>
-          </TableCell>}
 
           {/* Created At */}
           <TableCell>
@@ -2301,40 +2507,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 : "N/A"}
             </Typography>
           </TableCell>
-          {/* Disbursed At */}
-          {!isApplication &&
-            <TableCell>
-              <Typography variant="body2">
-                {customerApplication?.disbursedAt
-                  ? new Date(customerApplication.disbursedAt).toLocaleDateString('en-IN', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric',
-                  })
-                  : "Not Disbursed"}
-              </Typography>
-            </TableCell>
-          }
 
-          {/* Approved At */}
-          {!isApplication &&
-            <TableCell>
-              <Typography variant="body2">
-                {customerApplication?.approvedAt || customerApplication?.approved_At
-                  ? new Date((customerApplication.approvedAt || customerApplication.approved_At)!).toLocaleDateString('en-IN', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric',
-                  })
-                  : "Not Approved"}
-              </Typography>
-              {!(customerApplication?.approvedAt || customerApplication?.approved_At) && customerApplication?.due_date && (
-                <Typography variant="caption" sx={{ color: isOverdue ? "#D32F2F" : "text.secondary", display: 'block', mt: 0.5, fontWeight: isOverdue ? 'bold' : 'normal' }}>
-                  Expected: {new Date(customerApplication.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                </Typography>
-              )}
-            </TableCell>
-          }
 
           {/* Actions */}
           <TableCell>
@@ -2349,40 +2522,54 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               {/* Delete Button */}
               {(showDeleteButton ||
                 (userRole === "admin" && handleDeleteTicket)) && (
-                  <IconButton
+                  <Button
                     onClick={openConfirmDialog}
+                    startIcon={<DeleteOutline sx={{ fontSize: 18 }} />}
+                    size="small"
                     sx={{
+                      textTransform: 'none',
+                      borderRadius: 2,
+                      px: 1.5,
+                      py: 0.5,
+                      fontSize: '0.75rem',
+                      fontWeight: 'bold',
                       color: "#f44336",
+                      bgcolor: "rgba(244, 67, 54, 0.08)",
                       "&:hover": {
-                        backgroundColor: "rgba(244, 67, 54, 0.1)",
+                        backgroundColor: "rgba(244, 67, 54, 0.15)",
                         color: "#d32f2f",
                       },
                     }}
-                    size="small"
                   >
-                    <DeleteOutline sx={{ fontSize: 18 }} />
-                  </IconButton>
+                    Delete
+                  </Button>
                 )}
 
               {/* History Button (only for tickets) */}
               {handleStartClick && customerApplication.ticketId && (
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={toggleHistory}
-                  sx={{
-                    borderColor: "#667eea",
-                    color: "#667eea",
-                    "&:hover": {
-                      borderColor: "#5a6fd8",
-                      bgcolor: "rgba(102, 126, 234, 0.04)",
-                    },
-                    textTransform: "none",
-                    fontSize: "0.75rem",
-                  }}
-                >
-                  {showHistory ? "Close History" : "History"}
-                </Button>
+                <Tooltip title={showHistory ? "Close History" : "View History"}>
+                  <Button
+                    size="small"
+                    onClick={toggleHistory}
+                    startIcon={<History fontSize="small" />}
+                    sx={{
+                      textTransform: 'none',
+                      borderRadius: 2,
+                      px: 1.5,
+                      py: 0.5,
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      color: "#667eea",
+                      bgcolor: "rgba(102, 126, 234, 0.08)",
+                      "&:hover": {
+                        backgroundColor: "rgba(102, 126, 234, 0.15)",
+                        color: "#5a6fd8",
+                      },
+                    }}
+                  >
+                    {showHistory ? "Close History" : "History"}
+                  </Button>
+                </Tooltip>
               )}
 
               {/* Comments Button (only for tickets) */}
@@ -2390,18 +2577,22 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 customerApplication.ticketId &&
                 userRole === "sales" && (
                   <Button
-                    variant="outlined"
                     size="small"
                     onClick={toggleComment}
+                    startIcon={<CommentOutlined fontSize="small" />}
                     sx={{
-                      borderColor: "#667eea",
+                      textTransform: 'none',
+                      borderRadius: 2,
+                      px: 1.5,
+                      py: 0.5,
+                      fontSize: '0.75rem',
+                      fontWeight: 'bold',
                       color: "#667eea",
+                      bgcolor: "rgba(102, 126, 234, 0.08)",
                       "&:hover": {
-                        borderColor: "#5a6fd8",
-                        bgcolor: "rgba(102, 126, 234, 0.04)",
+                        backgroundColor: "rgba(102, 126, 234, 0.15)",
+                        color: "#5a6fd8",
                       },
-                      textTransform: "none",
-                      fontSize: "0.75rem",
                     }}
                   >
                     {showComment ? "Close Comments" : "Comments"}
@@ -2437,21 +2628,31 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               {handleStartClick &&
                 customerApplication.ticketId &&
                 userRole !== "sales" && (
-                  <Button
-                    variant="contained"
-                    size="small"
-                    onClick={() =>
-                      handleStartClick(customerApplication.ticketId)
-                    }
-                    sx={{
-                      bgcolor: "#1976D2",
-                      "&:hover": { bgcolor: "#1565C0" },
-                      textTransform: "none",
-                      fontSize: "0.75rem",
-                    }}
-                  >
-                    Visit
-                  </Button>
+                  <Tooltip title="Visit Ticket">
+                    <Button
+                      size="small"
+                      onClick={() =>
+                        handleStartClick(customerApplication.ticketId)
+                      }
+                      startIcon={<OpenInNew fontSize="small" />}
+                      sx={{
+                        textTransform: 'none',
+                        borderRadius: 2,
+                        px: 1.5,
+                        py: 0.5,
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        color: "#1976D2",
+                        bgcolor: "rgba(25, 118, 210, 0.08)",
+                        "&:hover": {
+                          backgroundColor: "rgba(25, 118, 210, 0.15)",
+                          color: "#1565C0",
+                        },
+                      }}
+                    >
+                      Visit
+                    </Button>
+                  </Tooltip>
                 )}
             </Box>
           </TableCell>
@@ -2468,7 +2669,25 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 >
                   History
                 </Typography>
-                <Box sx={{ maxHeight: "250px", overflowY: "auto", width: "100%" }}>
+                <Box
+                  sx={{
+                    maxHeight: "250px",
+                    overflowY: "scroll",
+                    width: "100%",
+                    scrollbarWidth: "thin",
+                    "&::-webkit-scrollbar": {
+                      width: "6px",
+                    },
+                    "&::-webkit-scrollbar-track": {
+                      background: "#f1f1f1",
+                      borderRadius: "3px",
+                    },
+                    "&::-webkit-scrollbar-thumb": {
+                      background: "#888",
+                      borderRadius: "3px",
+                    },
+                  }}
+                >
                   {historyData.length > 0 ? (
                     historyData.map((history, index) => (
                       <Box
@@ -2536,7 +2755,25 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 >
                   Comments
                 </Typography>
-                <Box sx={{ maxHeight: "250px", overflowY: "auto", width: "100%" }}>
+                <Box
+                  sx={{
+                    maxHeight: "250px",
+                    overflowY: "scroll",
+                    width: "100%",
+                    scrollbarWidth: "thin",
+                    "&::-webkit-scrollbar": {
+                      width: "6px",
+                    },
+                    "&::-webkit-scrollbar-track": {
+                      background: "#f1f1f1",
+                      borderRadius: "3px",
+                    },
+                    "&::-webkit-scrollbar-thumb": {
+                      background: "#888",
+                      borderRadius: "3px",
+                    },
+                  }}
+                >
                   {commentData?.length > 0 ? (
                     commentData.map((comment, idx) => (
                       <Box
