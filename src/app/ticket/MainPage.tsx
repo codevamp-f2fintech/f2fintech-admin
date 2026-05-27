@@ -687,27 +687,16 @@ const Ticket = () => {
       <Box
         sx={{
           display: "flex",
-          flexDirection: { xs: "column", md: "row" },
+          flexDirection: { xs: "column", xl: "row" },
           justifyContent: "space-between",
-          alignItems: { xs: "stretch", md: "center" },
-          gap: { xs: 1, sm: 1.5, md: 2 },
-          p: { xs: 1, sm: 1.5, md: 2 },
-          backgroundColor: "#cfd8dc",
-          borderRadius: { xs: 1, sm: 1.5, md: 2 },
-          boxShadow: 1,
-          width: { xs: "100%", sm: "98%", md: "100%" },
-          margin: { xs: "8px auto", sm: "12px auto", md: "0" },
-          marginTop: "0 !important",
+          alignItems: { xs: "stretch", xl: "center" },
+          gap: 2,
+          width: "100%",
+          mb: 2,
         }}
       >
         {/* Filter Panel Container */}
-        <Box
-          sx={{
-            display: "flex",
-            width: { xs: "100%", md: "80%" },
-            flexGrow: 1,
-          }}
-        >
+        <Box sx={{ flexGrow: 1, display: "flex", minWidth: 0 }}>
           <Box
             sx={{
               display: "flex",
@@ -743,71 +732,68 @@ const Ticket = () => {
             />
           </Box>
         </Box>
+
+        {/* Right Side Actions Container */}
         <Box
           sx={{
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
-            position: "relative",
-            ml: { xs: 0, sm: 1, md: 2 },
-            mt: { xs: 1, sm: 0 },
-            top: {
-              xs: 36,
-              md: "inherit",
-              sm: 40,
-            },
-            right: {
-              md: 25,
-              sm: -160,
-              xs: -40,
-            },
+            gap: 2,
+            alignSelf: { xs: "flex-end", xl: "center" },
+            flexShrink: 0,
           }}
         >
+          {/* Export / Download Button */}
           <Tooltip title="Download Report">
-            <Button
-              onClick={handleExportToExcel}
-              disabled={exportLoading}
-              sx={{
-                minWidth: { xs: "40px", sm: "44px", md: "48px" },
-                height: { xs: "40px", sm: "44px", md: "48px" },
-                background: "#3f50b5",
-                color: "#fff",
-                borderRadius: { xs: "8px", sm: "10px", md: "12px" },
-                boxShadow: "0 4px 10px rgba(63, 80, 181, 0.3)",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  background: "#303f9f",
-                  boxShadow: "0 6px 14px rgba(63, 80, 181, 0.5)",
-                  transform: "translateY(-2px)",
-                },
-                position: "absolute",
-              }}
-            >
-              {exportLoading ? (
-                <CircularProgress size={24} sx={{ color: "white" }} />
-              ) : (
-                <DownloadIcon />
-              )}
-            </Button>
+            <span>
+              <Button
+                variant="outlined"
+                onClick={handleExportToExcel}
+                disabled={exportLoading}
+                startIcon={
+                  exportLoading ? (
+                    <CircularProgress size={16} sx={{ color: "#3f50b5" }} />
+                  ) : (
+                    <DownloadIcon fontSize="small" />
+                  )
+                }
+                sx={{
+                  height: "48px",
+                  borderRadius: "16px",
+                  textTransform: "none",
+                  fontWeight: 600,
+                  px: 2.5,
+                  color: "#3f50b5",
+                  borderColor: "#c7d2fe",
+                  backgroundColor: "#fff",
+                  boxShadow: "0 2px 10px rgba(0,0,0,0.02)",
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    borderColor: "#818cf8",
+                    backgroundColor: "#eef2ff",
+                    transform: "translateY(-1px)",
+                  },
+                }}
+              >
+                Export
+              </Button>
+            </span>
           </Tooltip>
-        </Box>
-        {/* View Toggle Container */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            borderColor: "divider",
-            borderRadius: { xs: "8px", sm: "10px", md: "12px" },
-            p: { xs: 0.3, sm: 0.4, md: 0.5 },
-            backgroundColor: "background.default",
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
-            width: "fit-content",
-            height: { xs: "auto", md: "56px" },
-            alignSelf: { xs: "flex-end", md: "center" },
-            ml: { xs: 0, md: "auto" },
-            mt: { xs: 1, md: 0 },
-          }}
-        >
+
+          {/* View Toggle Container */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              backgroundColor: "#fff",
+              border: "1px solid #c7d2fe",
+              borderRadius: "16px",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.02)",
+              p: 0.5,
+              height: "48px",
+              boxSizing: "border-box",
+            }}
+          >
           <Tooltip title="Grid View">
             <IconButton
               onClick={() => {
@@ -910,14 +896,15 @@ const Ticket = () => {
           </Tooltip>
         </Box>
       </Box>
+    </Box>
 
       {/* Updated View Toggle Box with Session Storage */}
 
       <Box
         sx={{
           width: "100%",
-          minHeight: "90vh",
-          marginTop: "7vh",
+          minHeight: "60vh",
+          marginTop: "16px",
           display: "flex",
           justifyContent: "center",
           alignItems: "start",

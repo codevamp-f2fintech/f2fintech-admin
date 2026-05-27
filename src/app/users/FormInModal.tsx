@@ -217,13 +217,9 @@ const UserForm: React.FC<FormComponentProps> = ( {
 
       await UserAPI.create( payload );
       toastAndNavigate( dispatch, true, "success", "User Created Successfully" );
-      setTimeout( async () => {
+      setTimeout( () => {
         handleDialogClose();
-        const updatedUsers = await refetch();
-        if ( updatedUsers )
-        {
-          dispatch( setUsers( updatedUsers.data ) );
-        }
+        window.location.reload();
       }, 2200 );
     } catch ( error: any )
     {
@@ -286,13 +282,9 @@ const UserForm: React.FC<FormComponentProps> = ( {
       await UserAPI.updateUserProfile( payload );
       setLoading( false );
       toastAndNavigate( dispatch, true, "info", "Successfully Updated" );
-      setTimeout( async () => {
+      setTimeout( () => {
         handleDialogClose();
-        const updatedUsers = await refetch();
-        if ( updatedUsers )
-        {
-          dispatch( setUsers( updatedUsers.data ) );
-        }
+        window.location.reload();
       }, 2200 );
     } catch ( err: any )
     {
@@ -308,267 +300,396 @@ const UserForm: React.FC<FormComponentProps> = ( {
     }
   }, [ updatePassword ] );
 
+  const commonTextFieldStyles = {
+    "& .MuiOutlinedInput-root": {
+      backgroundColor: "#ffffff",
+      borderRadius: "12px",
+      color: "#0f172a",
+      transition: "all 0.2s ease",
+      alignItems: "center",
+      "& .MuiInputBase-input": {
+        paddingTop: "14px",
+        paddingBottom: "14px",
+        paddingLeft: "4px !important",
+        fontSize: "14px",
+        fontWeight: 500,
+        color: "#0f172a",
+      },
+      "& .MuiSelect-select": {
+        paddingTop: "14px",
+        paddingBottom: "14px",
+        paddingLeft: "4px !important",
+        fontSize: "14px",
+        fontWeight: 500,
+        display: "flex",
+        alignItems: "center",
+      },
+      "& .MuiOutlinedInput-notchedOutline": {
+        borderColor: "#cbd5e1",
+        borderWidth: "1px",
+        transition: "all 0.2s ease",
+      },
+      "&:hover .MuiOutlinedInput-notchedOutline": {
+        borderColor: "#94a3b8",
+      },
+      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+        borderColor: "#3949ab",
+        borderWidth: "2px",
+      },
+      "&.Mui-disabled .MuiOutlinedInput-notchedOutline": {
+        borderColor: "#e2e8f0",
+      },
+      "&.Mui-disabled": {
+        backgroundColor: "#f1f5f9 !important",
+      },
+    },
+    "& .MuiInputLabel-root": {
+      color: "#475569",
+      fontSize: "13px",
+      fontWeight: 500,
+      backgroundColor: "#ffffff",
+      px: 0.5,
+      "&.Mui-focused": {
+        color: "#3949ab !important",
+      },
+    },
+    "& .MuiInputAdornment-root": {
+      color: "#3949ab !important",
+      marginRight: "2px",
+      display: "flex",
+      alignItems: "center",
+      "& *": { color: "#3949ab !important" },
+    },
+    "& .MuiSelect-icon": {
+      color: "#64748b",
+    },
+  };
+
   return (
     <Dialog
       fullScreen={fullScreen}
       open={openDialog}
       onClose={handleDialogClose}
       aria-labelledby="responsive-dialog-title"
-      maxWidth="md"
+      maxWidth="sm"
+      PaperProps={{
+        sx: {
+          borderRadius: 3,
+          boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
+          width: "100%",
+          maxWidth: "600px",
+          overflow: "visible",
+          bgcolor: "#fff",
+        }
+      }}
     >
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          p: 2
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            p: 2,
-          }}
-        >
+      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+        {/* Header Banner */}
+        <Box sx={{ 
+          minHeight: "64px", 
+          bgcolor: "#3f50b5", 
+          position: "relative", 
+          borderTopLeftRadius: "12px", 
+          borderTopRightRadius: "12px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          px: 3,
+          py: 1
+        }}>
           <Typography
-            variant="h4"
-            gutterBottom
+            variant="h5"
+            sx={{
+              fontWeight: 800,
+              color: "#ffffff",
+              fontFamily: "'Inter', sans-serif",
+              fontSize: "22px"
+            }}
           >
             {title} User
           </Typography>
           {userId && (
             <Button
               type="button"
-              color={updatePassword ? "error" : "secondary"}
-              variant="contained"
+              variant="outlined"
               onClick={handleUpdatePassword}
+              sx={{
+                cursor: "pointer",
+                zIndex: 10,
+                borderRadius: "20px",
+                textTransform: "none",
+                fontWeight: 700,
+                fontSize: "13px",
+                padding: "6px 20px",
+                color: updatePassword ? "#ffcdd2" : "#ffffff",
+                bgcolor: updatePassword ? "rgba(244, 67, 54, 0.4)" : "rgba(255, 255, 255, 0.15)",
+                border: "none",
+                "&:hover": {
+                  bgcolor: updatePassword ? "rgba(244, 67, 54, 0.6)" : "rgba(255, 255, 255, 0.25)",
+                  border: "none",
+                }
+              }}
             >
-              {updatePassword ? "Cancel Update Password" : "Update Password"}
+              {updatePassword ? "Cancel Update" : "Update Password"}
             </Button>
           )}
         </Box>
-        <Formik
-          initialValues={formValues}
-          enableReinitialize
-          validationSchema={userValidation}
-          onSubmit={( values ) => {
-            values.id ? updateUser( values ) : createUser( values );
-          }}
-        >
-          {( {
-            values,
-            errors,
-            touched,
-            handleChange,
-            handleSubmit,
-            isSubmitting,
-            dirty,
-          } ) => (
 
-            <form onSubmit={handleSubmit}>
-              <Box
-                display="grid"
-                gap="30px"
-                gridTemplateColumns="repeat(2, minmax(0, 1fr))"
-              >
-                <Field
-                  as={TextField}
-                  autoFocus
-                  fullWidth
-                  label="*User Name"
-                  name="username"
-                  value={values.username}
-                  onChange={handleChange}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Person sx={{ color: "black" }} />
-                      </InputAdornment>
-                    ),
-                    style: { color: "black", fontSize: "15px" },
+        {/* Avatar - Only shown when editing */}
+        {title === "Edit" && (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: "-40px", mb: 1, zIndex: 2, pointerEvents: "none" }}>
+            <Box
+              sx={{
+                width: 80,
+                height: 80,
+                bgcolor: "#1e3a5f",
+                color: "white",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: "50%",
+                border: "4px solid #fff",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                pointerEvents: "auto"
+              }}
+            >
+              <SupervisorAccount sx={{ fontSize: 40 }} />
+            </Box>
+          </Box>
+        )}
+
+        <Box sx={{ p: 3, pt: title === "Create" ? 3 : 0 }}>
+
+          <Formik
+            initialValues={formValues}
+            enableReinitialize
+            validationSchema={userValidation}
+            onSubmit={( values ) => {
+              values.id ? updateUser( values ) : createUser( values );
+            }}
+          >
+            {( {
+              values,
+              errors,
+              touched,
+              handleChange,
+              handleSubmit,
+              isSubmitting,
+              dirty,
+            } ) => (
+
+              <form onSubmit={handleSubmit}>
+                <Box
+                  sx={{
+                    bgcolor: "#f8fafc",
+                    borderRadius: 2,
+                    p: 2.5,
+                    border: "1px solid #f1f5f9",
+                    mb: 2.5,
+                    display: "grid",
+                    gap: "20px",
+                    gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))"
                   }}
-                  InputLabelProps={{ style: { color: "black" } }}
-                  error={touched.username && Boolean( errors.username )}
-                  helperText={touched.username && errors.username}
-                />
-                <Field
-                  as={TextField}
-                  fullWidth
-                  label="*Email Address"
-                  name="email"
-                  value={values.email}
-                  onChange={handleChange}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Email sx={{ color: "black" }} />
-                      </InputAdornment>
-                    ),
-                    style: { color: "black", fontSize: "15px" },
-                  }}
-                  InputLabelProps={{ style: { color: "black" } }}
-                  error={touched.email && Boolean( errors.email )}
-                  helperText={touched.email && errors.email}
-                />
-                {( title === "Create" || updatePassword ) && (
+                >
                   <Field
                     as={TextField}
+                    autoFocus
                     fullWidth
-                    name="password"
-                    label="*Password"
-                    type={showPassword ? "text" : "password"}
-                    value={values.password}
+                    label="*User Name"
+                    name="username"
+                    value={values.username}
                     onChange={handleChange}
-                    inputRef={pwFieldRef}
+                    sx={commonTextFieldStyles}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <Lock sx={{ color: "black" }} />
+                          <Person />
                         </InputAdornment>
                       ),
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            sx={{ color: "black" }}
-                            aria-label="toggle password visibility"
-                            onClick={handleTogglePassword}
-                          >
-                            {showPassword ? <VisibilityOff /> : <Visibility />}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                      style: { color: "black", fontSize: "15px" },
                     }}
-                    InputLabelProps={{ style: { color: "black" } }}
-                    error={touched.password && Boolean( errors.password )}
-                    helperText={touched.password && errors.password}
+                    error={touched.username && Boolean( errors.username )}
+                    helperText={touched.username && errors.username}
                   />
-                )}
-                <Field
-                  as={TextField}
-                  select
-                  fullWidth
-                  label="Gender"
-                  name="gender"
-                  value={values.gender}
-                  onChange={handleChange}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Wc sx={{ color: "black" }} />
-                      </InputAdornment>
-                    ),
-                    style: { color: "black", fontSize: "15px" },
-                  }}
-                  InputLabelProps={{ style: { color: "black" } }}
-                  error={touched.gender && Boolean( errors.gender )}
-                  helperText={touched.gender && errors.gender}
-                >
-                  <MenuItem value="">
-                    <em>None</em>
-                  </MenuItem>
-                  <MenuItem value="male">Male</MenuItem>
-                  <MenuItem value="female">Female</MenuItem>
-                  <MenuItem value="other">Other</MenuItem>
-                </Field>
-                <Field
-                  as={TextField}
-                  select
-                  fullWidth
-                  label="Role"
-                  name="role"
-                  value={values.role}
-                  onChange={handleChange}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SupervisorAccount sx={{ color: "black" }} />
-                      </InputAdornment>
-                    ),
-                    style: { color: "black", fontSize: "15px" },
-                  }}
-                  InputLabelProps={{ style: { color: "black" } }}
-                  error={touched.role && Boolean( errors.role )}
-                  helperText={touched.role && errors.role}
-                >
-                  <MenuItem value="">
-                    <em>None</em>
-                  </MenuItem>
-                  {currentUserRole === "super admin" && ( <MenuItem value="admin">Admin</MenuItem> )}
-                  {currentUserRole === "admin" && ( <MenuItem value="sub admin">Sub Admin</MenuItem> )}
-                  {currentUserRole === "admin" && ( <MenuItem value="sales">Sales</MenuItem> )}
-                  {currentUserRole === "admin" && ( <MenuItem value="operations">Operations</MenuItem> )}
-                  {currentUserRole === "admin" && ( <MenuItem value="credit">Credit</MenuItem> )}
-                </Field>
-
-
-                {/* Company selection - only shown for super admin when creating new user */}
-                {/* {currentUserRole === 'super admin' && !userId && (
+                  <Field
+                    as={TextField}
+                    fullWidth
+                    label="*Email Address"
+                    name="email"
+                    value={values.email}
+                    onChange={handleChange}
+                    sx={commonTextFieldStyles}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Email />
+                        </InputAdornment>
+                      ),
+                    }}
+                    error={touched.email && Boolean( errors.email )}
+                    helperText={touched.email && errors.email}
+                  />
+                  {( title === "Create" || updatePassword ) && (
+                    <Field
+                      as={TextField}
+                      fullWidth
+                      name="password"
+                      label="*Password"
+                      type={showPassword ? "text" : "password"}
+                      value={values.password}
+                      onChange={handleChange}
+                      inputRef={pwFieldRef}
+                      sx={commonTextFieldStyles}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Lock />
+                          </InputAdornment>
+                        ),
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              aria-label="toggle password visibility"
+                              onClick={handleTogglePassword}
+                              sx={{ color: "#64748b" }}
+                            >
+                              {showPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                      error={touched.password && Boolean( errors.password )}
+                      helperText={touched.password && errors.password}
+                    />
+                  )}
                   <Field
                     as={TextField}
                     select
                     fullWidth
-                    label="*Company"
-                    name="companyId"
-                    value={values.companyId}
+                    label="Gender"
+                    name="gender"
+                    value={values.gender}
                     onChange={handleChange}
+                    sx={commonTextFieldStyles}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <Business sx={{ color: "black" }} />
+                          <Wc />
                         </InputAdornment>
                       ),
-                      style: { color: "black", fontSize: "15px" },
                     }}
-                    InputLabelProps={{ style: { color: "black" } }}
-                    error={touched.companyId && Boolean( errors.companyId )}
-                    helperText={touched.companyId && errors.companyId}
-                    disabled={loadingCompanies}
+                    error={touched.gender && Boolean( errors.gender )}
+                    helperText={touched.gender && errors.gender}
                   >
                     <MenuItem value="">
-                      <em>Select a company</em>
+                      <em>None</em>
                     </MenuItem>
-                    {loadingCompanies ? (
-                      <MenuItem disabled>Loading companies...</MenuItem>
-                    ) : (
-                      companies.map( ( company ) => (
-                        <MenuItem key={company.id} value={company.id.toString()}>
-                          {company.name}
-                        </MenuItem>
-                      ) )
-                    )}
+                    <MenuItem value="male">Male</MenuItem>
+                    <MenuItem value="female">Female</MenuItem>
+                    <MenuItem value="other">Other</MenuItem>
                   </Field>
-                )} */}
-              </Box>
-              <Box display="flex" justifyContent="center" p="20px" gap={2}>
-                <Button
-                  color="error"
-                  variant="contained"
-                  sx={{ flex: 1 }}
-                  onClick={handleDialogClose}
+                  <Field
+                    as={TextField}
+                    select
+                    fullWidth
+                    label="Role"
+                    name="role"
+                    value={values.role}
+                    onChange={handleChange}
+                    sx={commonTextFieldStyles}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SupervisorAccount />
+                        </InputAdornment>
+                      ),
+                    }}
+                    error={touched.role && Boolean( errors.role )}
+                    helperText={touched.role && errors.role}
+                  >
+                    <MenuItem value="">
+                      <em>None</em>
+                    </MenuItem>
+                    {currentUserRole === "super admin" && ( <MenuItem value="admin">Admin</MenuItem> )}
+                    {currentUserRole === "admin" && ( <MenuItem value="sub admin">Sub Admin</MenuItem> )}
+                    {currentUserRole === "admin" && ( <MenuItem value="sales">Sales</MenuItem> )}
+                    {currentUserRole === "admin" && ( <MenuItem value="operations">Operations</MenuItem> )}
+                    {currentUserRole === "admin" && ( <MenuItem value="credit">Credit</MenuItem> )}
+                  </Field>
+                </Box>
+                
+                {/* Action Footer matches ApplicationCard */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    gap: 2,
+                    pt: 2,
+                    borderTop: "1px solid #e8edf5",
+                    flexWrap: "wrap",
+                  }}
                 >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  sx={{ flex: 1 }}
-                  disabled={!dirty || isSubmitting || loading}
-                  color={title === "Edit" ? "info" : "success"}
-                  variant="contained"
-                >
-                  {loading ? "Processing..." : "Submit"}
-                </Button>
-              </Box>
-            </form>
-          )}
-        </Formik>
-        {loading ? <Loader /> : null}
-        <Toast
-          alerting={toast.toastAlert}
-          severity={toast.toastSeverity}
-          message={toast.toastMessage}
-        />
+                  <Button
+                    onClick={handleDialogClose}
+                    variant="outlined"
+                    sx={{
+                      flex: 1,
+                      textTransform: "none",
+                      borderRadius: "20px",
+                      py: 1,
+                      fontSize: "0.95rem",
+                      fontWeight: 700,
+                      color: "#f44336",
+                      bgcolor: "rgba(244, 67, 54, 0.08)",
+                      border: "none",
+                      "&:hover": {
+                        bgcolor: "rgba(244, 67, 54, 0.15)",
+                        color: "#d32f2f",
+                        border: "none",
+                      }
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={!dirty || isSubmitting || loading}
+                    variant="outlined"
+                    sx={{
+                      flex: 1,
+                      textTransform: "none",
+                      borderRadius: "20px",
+                      py: 1,
+                      fontSize: "0.95rem",
+                      fontWeight: 700,
+                      border: "none",
+                      color: (!dirty || isSubmitting || loading) ? "#94a3b8" : "#00796B",
+                      bgcolor: (!dirty || isSubmitting || loading) ? "#f1f5f9" : "rgba(0, 121, 107, 0.08)",
+                      "&:hover": {
+                        bgcolor: (!dirty || isSubmitting || loading) ? "#f1f5f9" : "rgba(0, 121, 107, 0.15)",
+                        color: (!dirty || isSubmitting || loading) ? "#94a3b8" : "#004d40",
+                        border: "none",
+                      },
+                      "&:disabled": {
+                        color: "#94a3b8",
+                        bgcolor: "#f1f5f9",
+                        border: "none",
+                      }
+                    }}
+                  >
+                    {loading ? "Processing..." : "Submit"}
+                  </Button>
+                </Box>
+              </form>
+            )}
+          </Formik>
+          {loading ? <Loader /> : null}
+          <Toast
+            alerting={toast.toastAlert}
+            severity={toast.toastSeverity}
+            message={toast.toastMessage}
+          />
+        </Box>
       </Box>
     </Dialog>
   );

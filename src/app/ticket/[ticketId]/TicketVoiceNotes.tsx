@@ -43,7 +43,7 @@ interface UploadProgress {
   [key: string]: number;
 }
 
-const TicketVoiceNotes = ({ isMobile, isTab, isIpad, ticketDetailData }) => {
+const TicketVoiceNotes = ({ isMobile, isTab, isIpad, ticketDetailData, onRequireExpectedDate }) => {
   const [selectedAudioFiles, setSelectedAudioFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<UploadProgress>({});
@@ -92,6 +92,12 @@ const TicketVoiceNotes = ({ isMobile, isTab, isIpad, ticketDetailData }) => {
       validFiles.push(file);
     });
     setSelectedAudioFiles((prev) => [...prev, ...validFiles]);
+  };
+
+  // Guard-aware click handler for audio file selection
+  const handleSelectAudioClick = () => {
+    if (onRequireExpectedDate && !onRequireExpectedDate()) return;
+    inputRef.current?.click();
   };
 
   // Remove selected file
@@ -337,10 +343,10 @@ const TicketVoiceNotes = ({ isMobile, isTab, isIpad, ticketDetailData }) => {
             <Box sx={{ mb: 2, display: "flex", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
               <Tooltip title="Select multiple audio files (Max 20MB each)">
                 <Button
-                  component="label"
                   variant="contained"
                   color="primary"
                   startIcon={<AttachFile />}
+                  onClick={handleSelectAudioClick}
                   sx={{
                     px: 3,
                   }}
@@ -353,6 +359,7 @@ const TicketVoiceNotes = ({ isMobile, isTab, isIpad, ticketDetailData }) => {
                     accept="audio/*"
                     multiple
                     onChange={handleFileChange}
+                    style={{ display: 'none' }}
                   />
                 </Button>
               </Tooltip>

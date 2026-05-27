@@ -141,6 +141,11 @@ const MainPage = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [openDialog, setOpenDialog] = useState<boolean>(false);
   const [activeSection, setActiveSection] = useState<string>("Comments");
+
+  // Expected Decision Date
+  const [expectedDecisionDate, setExpectedDecisionDate] = useState<string>("");
+  const [isExpectedDateSaved, setIsExpectedDateSaved] = useState<boolean>(false);
+  const [isSavingExpectedDate, setIsSavingExpectedDate] = useState<boolean>(false);
   const [selectedUser, setSelectedUser] = useState<User>();
   const getTodayLocalDate = () => {
     const today = new Date();
@@ -388,6 +393,17 @@ const MainPage = () => {
             setCaseType("");
           }
 
+          // Set expected decision date
+          if (data.due_date) {
+            setExpectedDecisionDate(
+              new Date(data.due_date).toISOString().split("T")[0]
+            );
+            setIsExpectedDateSaved(true);
+          } else {
+            setExpectedDecisionDate("");
+            setIsExpectedDateSaved(false);
+          }
+
           setLoading(false);
         }
       } catch (error) {
@@ -462,8 +478,51 @@ const MainPage = () => {
     }
   }, [ticketDetailData]);
 
+  /** Saves the expected decision date to the ticket. */
+  const handleSaveExpectedDecisionDate = async () => {
+    if (!expectedDecisionDate) {
+      toastAndNavigate(dispatch, true, "error", "Please select an expected decision date");
+      return;
+    }
+    setIsSavingExpectedDate(true);
+    try {
+      await modifyTicket(+ticketId, { due_date: expectedDecisionDate });
+      const loggedInUser = decodedToken()?.username;
+      await createTicketHistory({
+        ticket_id: ticketId,
+        action: `${loggedInUser} set the expected decision date to ${new Date(expectedDecisionDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}`,
+      });
+      setIsExpectedDateSaved(true);
+      toastAndNavigate(dispatch, true, "info", "Expected decision date saved successfully");
+    } catch {
+      toastAndNavigate(dispatch, true, "error", "Failed to save expected decision date");
+    } finally {
+      setIsSavingExpectedDate(false);
+    }
+  };
+
+  /** Guard: returns true if due_date is set, else shows a toast and returns false. */
+  const requireExpectedDate = (): boolean => {
+    if (!isExpectedDateSaved || !expectedDecisionDate) {
+      toastAndNavigate(
+        dispatch, true, "error",
+        "Please set an Expected Decision Date before performing any activity"
+      );
+      return false;
+    }
+    return true;
+  };
+
+  // Compute overdue flag for the expected decision date
+  const isExpectedDateOverdue = React.useMemo(() => {
+    if (!expectedDecisionDate || !isExpectedDateSaved) return false;
+    if (ticketDetailData?.approved_at) return false;
+    return new Date() > new Date(expectedDecisionDate);
+  }, [expectedDecisionDate, isExpectedDateSaved, ticketDetailData?.approved_at]);
+
   /** Called by the File Status <Select> onChange. Only sets pending state — no API calls yet. */
   const handleFileStatusChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+    if (!requireExpectedDate()) return;
     const newStatus = event.target.value as string;
     setPendingNewStatus(newStatus);
     setShowStatusCommentBox(true);
@@ -527,6 +586,7 @@ const MainPage = () => {
    * own submit handlers below).
    */
   const handleConfirmStatusChange = async () => {
+    if (!requireExpectedDate()) return;
     if (!statusChangeComment.trim()) {
       toastAndNavigate(dispatch, true, "error", "A comment is required to change the file status");
       return;
@@ -585,6 +645,7 @@ const MainPage = () => {
 
   // Combined handler for disbursed date, amount, and mandatory comment
   const handleCombinedDisbursementSubmit = async () => {
+    if (!requireExpectedDate()) return;
     if (!statusChangeComment.trim()) {
       toastAndNavigate(dispatch, true, "error", "A comment is required to change the file status");
       return;
@@ -680,6 +741,7 @@ const MainPage = () => {
 
   // Handler for approved date, amount, and mandatory comment
   const handleCombinedApprovalSubmit = async () => {
+    if (!requireExpectedDate()) return;
     if (!statusChangeComment.trim()) {
       toastAndNavigate(dispatch, true, "error", "A comment is required to change the file status");
       return;
@@ -758,6 +820,7 @@ const MainPage = () => {
   };
 
   const handleChangeLoanStatus = async (event: any) => {
+    if (!requireExpectedDate()) return;
     const oldStatus = newLoanStatus;
     const newStatus = event.target.value;
     setNewLoanStatus(newStatus);
@@ -817,6 +880,7 @@ const MainPage = () => {
 
   /** Confirms the forward — runs the API calls then saves the comment to ticket_activities. */
   const handleConfirmForward = async () => {
+    if (!requireExpectedDate()) return;
     if (!forwardComment.trim()) {
       toastAndNavigate(dispatch, true, "error", "A reason is required to forward the ticket");
       return;
@@ -952,6 +1016,9 @@ const MainPage = () => {
                         ticketDetailData?.customer_id ||
                         ticketDetailData?.customerId
                       }
+                      ticketId={ticketId}
+                      onRequireExpectedDate={requireExpectedDate}
+                      onCreateHistory={createTicketHistory}
                     />
                   </Grid>
                   <Grid item xs={12} lg={6}>
@@ -960,6 +1027,7 @@ const MainPage = () => {
                       isTab={isTablet}
                       isIpad={isIpad}
                       ticketDetailData={ticketDetailData}
+                      onRequireExpectedDate={requireExpectedDate}
                     />
                   </Grid>
                 </Grid>
@@ -1076,7 +1144,7 @@ const MainPage = () => {
 
               {/* Content Sections */}
               {activeSection === "Comments" && (
-                <Comments storedTicketId={ticketId} userData={userData} />
+                <Comments storedTicketId={ticketId} userData={userData} isExpectedDateSaved={isExpectedDateSaved} onRequireExpectedDate={requireExpectedDate} />
               )}
 
               {activeSection === "History" && (
@@ -1140,6 +1208,141 @@ const MainPage = () => {
                 scrollBehavior: 'smooth',
               }}
             >
+              {/* Expected Decision Date Section */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 1,
+                  p: { xs: 1.5, sm: 2 },
+                  borderRadius: { xs: 1.5, sm: 2 },
+                  bgcolor: isExpectedDateOverdue
+                    ? 'rgba(211, 47, 47, 0.04)'
+                    : isExpectedDateSaved
+                    ? 'rgba(21, 95, 204, 0.04)'
+                    : 'rgba(255, 152, 0, 0.06)',
+                  border: isExpectedDateOverdue
+                    ? '1px solid rgba(211, 47, 47, 0.3)'
+                    : isExpectedDateSaved
+                    ? '1px solid rgba(21, 95, 204, 0.2)'
+                    : '1.5px dashed rgba(255, 152, 0, 0.5)',
+                  mb: { xs: 1.5, sm: 2 },
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      color: isExpectedDateOverdue ? 'error.main' : isExpectedDateSaved ? '#155fcc' : '#e65100',
+                      fontSize: '0.72rem',
+                    }}
+                  >
+                    Expected Decision
+                    {!isExpectedDateSaved && (
+                      <Typography
+                        component="span"
+                        sx={{ color: 'error.main', fontSize: '0.85rem', ml: 0.3 }}
+                      >
+                        *
+                      </Typography>
+                    )}
+                  </Typography>
+                  {isExpectedDateSaved && (
+                    <Button
+                      size="small"
+                      variant="text"
+                      onClick={() => setIsExpectedDateSaved(false)}
+                      sx={{
+                        fontSize: '0.68rem',
+                        color: isExpectedDateOverdue ? 'error.main' : '#155fcc',
+                        textTransform: 'none',
+                        minWidth: 0,
+                        p: '2px 6px',
+                        '&:hover': { bgcolor: 'rgba(21,95,204,0.08)' },
+                      }}
+                    >
+                      Edit
+                    </Button>
+                  )}
+                </Box>
+
+                {isExpectedDateSaved ? (
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: '1rem',
+                      color: isExpectedDateOverdue ? 'error.main' : 'text.primary',
+                    }}
+                  >
+                    {expectedDecisionDate
+                      ? new Date(expectedDecisionDate).toLocaleDateString('en-IN', {
+                          day: '2-digit',
+                          month: 'long',
+                          year: 'numeric',
+                        })
+                      : '—'}
+                    {isExpectedDateOverdue && (
+                      <Typography
+                        component="span"
+                        sx={{ fontSize: '0.72rem', color: 'error.main', ml: 1, fontWeight: 600 }}
+                      >
+                        (Overdue)
+                      </Typography>
+                    )}
+                  </Typography>
+                ) : (
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <TextField
+                      type="date"
+                      size="small"
+                      value={expectedDecisionDate}
+                      onChange={(e) => setExpectedDecisionDate(e.target.value)}
+                      inputProps={{ min: new Date().toISOString().split('T')[0] }}
+                      sx={{
+                        flex: 1,
+                        '& .MuiOutlinedInput-root': {
+                          bgcolor: '#fff',
+                          fontSize: '0.85rem',
+                          borderRadius: 1.5,
+                        },
+                      }}
+                      InputLabelProps={{ shrink: true }}
+                    />
+                    <Button
+                      size="small"
+                      variant="contained"
+                      disabled={!expectedDecisionDate || isSavingExpectedDate}
+                      onClick={handleSaveExpectedDecisionDate}
+                      sx={{
+                        bgcolor: '#155fcc',
+                        fontSize: '0.75rem',
+                        textTransform: 'none',
+                        borderRadius: 1.5,
+                        px: 2,
+                        '&:hover': { bgcolor: '#104da8' },
+                        '&:disabled': { bgcolor: '#ccc', color: '#666' },
+                      }}
+                    >
+                      {isSavingExpectedDate ? 'Saving...' : 'Save'}
+                    </Button>
+                  </Box>
+                )}
+
+                {!isExpectedDateSaved && (
+                  <Typography
+                    variant="caption"
+                    sx={{ color: '#e65100', fontSize: '0.7rem', fontStyle: 'italic' }}
+                  >
+                    Required before any activity (commenting, status change, time logging)
+                  </Typography>
+                )}
+              </Box>
+
               {/* Forward Button */}
               <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
                 <Tooltip title="Forward this ticket to another user">
@@ -2341,7 +2544,10 @@ const MainPage = () => {
       </Container>
       <TrackingForm
         openDialog={openDialog}
-        setOpenDialog={setOpenDialog}
+        setOpenDialog={(val) => {
+          if (val && !requireExpectedDate()) return;
+          setOpenDialog(val);
+        }}
         ticketDetailData={workLog?.data}
         ticketId={ticketId}
         originalEstimate={ticketDetailData?.originalEstimate}

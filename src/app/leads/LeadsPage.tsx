@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Box,
@@ -40,47 +40,52 @@ import {
 } from "@phosphor-icons/react";
 import { Utility } from "@/utils";
 import { useGetLeads } from "@/hooks/leads";
-import { setLeads } from "@/redux/features/leadsSlice";
-import useIntersectionObserver from "@/hooks/IntersectionObserver";
+import { setLeads, resetLeads } from "@/redux/features/leadsSlice";
 import type { RootState, AppDispatch } from "@/redux/store";
-
-const INITIAL_VISIBLE_COUNT = 10;
-const LOAD_MORE_COUNT = 10;
-
-const EMPTY_ARRAY: any[] = [];
 
 const LeadsPage: React.FC = () => {
   const [view, setView] = useState<"table" | "card">("table");
   const [searchTerm, setSearchTerm] = useState("");
-  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [hasMoreData, setHasMoreData] = useState<boolean>(true);
   const dispatch = useDispatch<AppDispatch>();
-  const loadMoreRef = useRef<HTMLDivElement>(null);
-  const isIntersecting = useIntersectionObserver(loadMoreRef);
+  const { debounceScroll, capitalizeFirstLetter } = Utility();
+
+  const ITEMS_PER_PAGE = 10;
 
   const { leads: reduxLeads } = useSelector((state: RootState) => state.leads);
-  const { leads: swrLeads, isLoading, refetch } = useGetLeads(EMPTY_ARRAY, "get-all-leads");
-  const { capitalizeFirstLetter } = Utility();
+  const { leadsData, isLoading, refetch } = useGetLeads(currentPage, ITEMS_PER_PAGE, "get-all-leads");
 
   useEffect(() => {
-    if (swrLeads && Array.isArray(swrLeads) && swrLeads !== reduxLeads) {
-      dispatch(setLeads(swrLeads));
-    } else if (swrLeads && !Array.isArray(swrLeads)) {
-      if ((swrLeads as any).data && Array.isArray((swrLeads as any).data)) {
-        dispatch(setLeads((swrLeads as any).data));
-      } else {
-        dispatch(setLeads(EMPTY_ARRAY));
+    if (leadsData?.results?.length > 0) {
+      dispatch(setLeads({
+        ...leadsData,
+        currentPage,
+      }));
+      setHasMoreData(leadsData.results.length === ITEMS_PER_PAGE);
+    } else {
+      setHasMoreData(false);
+    }
+  }, [leadsData?.results, leadsData, currentPage, dispatch]);
+
+  const handleScroll = useCallback(
+    debounceScroll(() => {
+      const nearBottom =
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 400;
+      if (nearBottom && !isLoading && hasMoreData) {
+        setCurrentPage((prevPage) => prevPage + 1);
       }
-    }
-  }, [swrLeads, reduxLeads, dispatch]);
+    }, 200),
+    [isLoading, hasMoreData]
+  );
 
   useEffect(() => {
-    if (isIntersecting && !isLoading) {
-      setVisibleCount((prev) => prev + LOAD_MORE_COUNT);
-    }
-  }, [isIntersecting, isLoading]);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
 
   useEffect(() => {
-    setVisibleCount(INITIAL_VISIBLE_COUNT);
+    setCurrentPage(1);
   }, [searchTerm]);
 
   const handleViewChange = (
@@ -93,19 +98,13 @@ const LeadsPage: React.FC = () => {
   };
 
   const filteredLeads = useMemo(() => {
-    const leadsToFilter = Array.isArray(reduxLeads) ? reduxLeads : EMPTY_ARRAY;
+    const leadsToFilter = reduxLeads?.results || [];
     return leadsToFilter.filter((lead: any) =>
       lead.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.phone?.includes(searchTerm) ||
-      lead.loan_category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.product?.toLowerCase().includes(searchTerm.toLowerCase())
+      lead.contact?.includes(searchTerm) ||
+      lead.loan_category?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [reduxLeads, searchTerm]);
-
-  const displayedLeads = useMemo(() => {
-    return filteredLeads.slice(0, visibleCount);
-  }, [filteredLeads, visibleCount]);
 
   return (
     <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1600, margin: "0 auto", minHeight: "100vh" }}>
@@ -199,72 +198,98 @@ const LeadsPage: React.FC = () => {
       </Box>
 
       {/* Content Section */}
-      {isLoading ? (
+      {isLoading && filteredLeads.length === 0 ? (
         <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}>
           <CircularProgress size={60} thickness={4} />
         </Box>
       ) : filteredLeads.length === 0 ? (
         <Paper
+          elevation={0}
           sx={{
-            p: 8,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            p: 6,
             textAlign: "center",
-            borderRadius: 6,
-            bgcolor: "background.paper",
-            boxShadow: "0 10px 40px rgba(0,0,0,0.04)",
-            border: "1px dashed",
-            borderColor: "divider",
+            borderRadius: 2,
+            bgcolor: "white",
+            border: "1px solid #e2e8f0",
+            gap: 2,
           }}
         >
-          <Typography variant="h6" color="text.secondary">
-            No leads found matching your criteria.
+          <SearchIcon size={60} color="#94a3b8" weight="regular" />
+          <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 600 }}>
+            No leads found
           </Typography>
         </Paper>
       ) : view === "table" ? (
         <TableContainer
           component={Paper}
+          elevation={0}
           sx={{
-            borderRadius: 5,
-            boxShadow: "0 20px 60px rgba(0,0,0,0.05)",
+            borderRadius: 2,
             overflow: "hidden",
-            border: "1px solid",
-            borderColor: "divider",
+            border: "1px solid #e2e8f0",
           }}
         >
           <Table>
-            <TableHead sx={{ bgcolor: "grey.50" }}>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 700 }}>S.No.</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Contact Info</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Product/Category</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Loan Required</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Tenure</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Income</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Cibil Score</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Applied On</TableCell>
+            <TableHead>
+              <TableRow
+                sx={{
+                  backgroundColor: "#3949ab",
+                  "& th": {
+                    fontWeight: 600,
+                    color: "white",
+                    fontSize: "14px",
+                    borderRight: "1px solid rgba(255,255,255,0.2)",
+                    py: 2,
+                    "&:last-child": { borderRight: "none" }
+                  },
+                }}
+              >
+                <TableCell>S.No.</TableCell>
+                <TableCell>Name</TableCell>
+                <TableCell>Contact Info</TableCell>
+                <TableCell>Product</TableCell>
+                <TableCell>Provider</TableCell>
+                <TableCell>Amount</TableCell>
+                <TableCell>Tenure</TableCell>
+                <TableCell>Income</TableCell>
+                <TableCell>Cibil Score</TableCell>
+                <TableCell>Applied On</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {displayedLeads.map((lead: any, index: number) => (
+              {filteredLeads.map((lead: any, index: number) => (
                 <TableRow
                   key={lead.id}
                   hover
                   sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                 >
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>{capitalizeFirstLetter(lead.name || "N/A")}</TableCell>
-                  <TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: "#1e293b" }}>{index + 1}</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: "#1e293b", textTransform: "uppercase" }}>{lead.name || "N/A"}</TableCell>
+                  <TableCell sx={{ color: "#64748b" }}>
                     <Box>
-                      <Typography variant="body2">{lead.email || "N/A"}</Typography>
-                      <Typography variant="caption" color="text.secondary">{lead.phone || "N/A"}</Typography>
+                      <Typography variant="body2" sx={{ color: "#64748b" }}>{lead.email || "N/A"}</Typography>
+                      <Typography variant="caption" sx={{ color: "#64748b" }}>{lead.phone || "N/A"}</Typography>
                     </Box>
                   </TableCell>
-                  <TableCell>{lead.product || "N/A"}</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>₹{lead.requested_limit || 0}</TableCell>
-                  <TableCell>{`${lead.tenure_months} months` || "N/A"}</TableCell>
-                  <TableCell>₹{lead.verified_income || "N/A"}</TableCell>
-                  <TableCell>{lead.cibil_band || "N/A"}</TableCell>
-                  <TableCell>{lead.created_at ? new Date(lead.created_at).toLocaleDateString() : "N/A"}</TableCell>
+                  <TableCell sx={{ color: "#64748b" }}>{lead.loan_category || "N/A"}</TableCell>
+                  <TableCell>
+                    <Typography sx={{ color: "#7e22ce", fontWeight: 700, fontSize: "14px" }}>
+                      {lead.provider || "N/A"}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography sx={{ color: "#059669", fontWeight: 700, fontSize: "14px" }}>
+                      ₹{lead.amount || 0}
+                    </Typography>
+                  </TableCell>
+                  <TableCell sx={{ color: "#64748b" }}>{lead.tenure_months ? `${lead.tenure_months} months` : "N/A"}</TableCell>
+                  <TableCell sx={{ color: "#64748b" }}>₹{lead.income || "N/A"}</TableCell>
+                  <TableCell sx={{ color: "#64748b" }}>{lead.cibil || "N/A"}</TableCell>
+                  <TableCell sx={{ color: "#64748b" }}>{lead.created_at ? new Date(lead.created_at).toLocaleDateString() : "N/A"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -273,7 +298,7 @@ const LeadsPage: React.FC = () => {
       ) : (
         <>
           <Grid container spacing={3}>
-            {displayedLeads.map((lead: any) => (
+            {filteredLeads.map((lead: any) => (
               <Grid item xs={12} sm={6} lg={4} key={lead.id}>
                 <Card
                   sx={{
@@ -309,7 +334,7 @@ const LeadsPage: React.FC = () => {
                         </Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <Typography variant="caption" color="text.secondary">
-                            ID: #{lead.id}
+                            ID: {lead.id}
                           </Typography>
                           <Chip
                             label={lead.status || "Pending"}
@@ -334,12 +359,12 @@ const LeadsPage: React.FC = () => {
                       </Box>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <PhoneIcon size={18} color="#64748b" weight="bold" />
-                        <Typography variant="body2">{lead.phone || "N/A"}</Typography>
+                        <Typography variant="body2">{lead.contact || "N/A"}</Typography>
                       </Box>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <LoanIcon size={18} color="#64748b" weight="bold" />
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {lead.loan_category || lead.product || "N/A"} -
+                          {lead.loan_category || "N/A"} -
                           <Box component="span" sx={{ color: 'primary.main', ml: 0.5 }}>₹{lead.amount || 0}</Box>
                         </Typography>
                       </Box>
@@ -357,9 +382,8 @@ const LeadsPage: React.FC = () => {
           </Grid>
 
           {/* Load More Trigger */}
-          {visibleCount < filteredLeads.length && (
+          {isLoading && hasMoreData && filteredLeads.length > 0 && (
             <Box
-              ref={loadMoreRef}
               sx={{
                 display: "flex",
                 justifyContent: "center",

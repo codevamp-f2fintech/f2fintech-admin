@@ -24,6 +24,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Chip,
+  Menu,
 } from "@mui/material";
 import ApplicationCard from "../components/common/ApplicationCard";
 import Loader from "../components/common/Loader";
@@ -35,11 +37,12 @@ import {
 } from "@/redux/features/customerApplicationSlice";
 import { useGetCustomerApplications } from "@/hooks/customerApplication";
 import { Utility } from "@/utils";
-import { ClearRounded, SearchRounded } from "@mui/icons-material";
+import { ClearRounded, SearchRounded, PersonRounded, TrendingUpRounded } from "@mui/icons-material";
 import GridViewIcon from "@mui/icons-material/GridView";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import TableViewIcon from "@mui/icons-material/TableView";
 import { axiosInstance } from "../../apis/config/axiosConfig";
+import { fetcher } from "@/apis/apiClient";
 import { CompanyAPI } from "@/apis/CompanyAPI";
 import Toast from "../components/common/Toast";
 
@@ -109,7 +112,38 @@ const HomeContent: React.FC = () => {
   const isSuperAdmin = userRole === "super admin";
   const [refreshKey, setRefreshKey] = useState<number>(0);
 
-  const [companies, setCompanies] = useState([]);
+  const [userData, setUserData] = useState<any>([]);
+  const [selectedUser, setSelectedUser] = useState<any | null>(null);
+  const [userAnchorEl, setUserAnchorEl] = useState<null | HTMLElement>(null);
+
+  const effectiveSalesUserId = selectedUser ? selectedUser.id : salesUserId;
+
+  useEffect(() => {
+    // Fetch user data only if user is admin
+    const fetchUsers = async () => {
+      try {
+        const { data } = await fetcher(`get-users?page=${1}&limit=${500}`);
+        const sortedUsers = data?.results.sort((a: any, b: any) => {
+          if (a.role < b.role) return -1;
+          if (a.role > b.role) return 1;
+          return 0;
+        });
+
+        setUserData(
+          userRole === "admin" || userRole === "sub admin"
+            ? sortedUsers
+            : sortedUsers?.filter((user: any) => user.role === userRole)
+        );
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+    if (userRole === "admin" || userRole === "sub admin") {
+      fetchUsers();
+    }
+  }, [userRole]);
+
+  const [companies, setCompanies] = useState<any[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<string>(
     typeof window !== "undefined"
       ? localStorage.getItem("selectedCompanyId") || ""
@@ -188,7 +222,7 @@ const HomeContent: React.FC = () => {
     "get-customer-loan-applications",
     currentPage,
     ITEMS_PER_PAGE,
-    salesUserId,
+    effectiveSalesUserId,
     debouncedSearchTerm,
     selectedCompany,
     refreshKey
@@ -355,450 +389,584 @@ const HomeContent: React.FC = () => {
       <Box
         sx={{
           display: "flex",
-          flexDirection: { xs: "column", md: "row" },
+          flexDirection: { xs: "column", xl: "row" },
+          justifyContent: "space-between",
+          alignItems: { xs: "stretch", xl: "center" },
+          gap: 3,
           width: "100%",
-          alignItems: "center",
-          gap: { xs: 2, md: 0 },
+          mb: 2,
         }}
       >
-        <Box
-          sx={{
-            height: { xs: "6vh", md: "7vh" },
-            width: { xs: "100%", md: "22vw" },
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: "10px",
-            color: "#000",
-            "&:hover": { color: "#403d39" },
-            gap: 4,
-          }}
-        >
-          <Typography
-            variant="h6"
-            component="div"
+        {/* Left side: Title and Filters */}
+        <Box sx={{ flexGrow: 1, display: "flex", minWidth: 0 }}>
+          <Paper
+            elevation={0}
             sx={{
-              fontWeight: "semibold",
-              fontSize: { xs: "1.5rem", md: "1.7rem" },
-              whiteSpace: "nowrap",
+              display: "flex",
+              alignItems: "center",
+              backgroundColor: "#fff",
+              border: "1px solid #e2e8f0",
+              borderRadius: "16px",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.02)",
+              p: 1.5,
+              flexDirection: { xs: "column", sm: "column", md: "row" },
+              gap: 2.5,
+              width: "100%",
+              boxSizing: "border-box"
             }}
           >
-            Fresh Applications: {displayCount}
-          </Typography>
-          {/* Search field for mobile */}
-          <Box
-            sx={{
-              display: {
-                xs: "none",
-                sm: "flex",
-                md: "none",
-                xl: "none",
-                lg: "none",
-              },
-            }}
-          >
-            <TextField
-              label="Search by name, number or PAN..."
-              size="small"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchRounded sx={{ color: "action.active", mr: 1 }} />
-                  </InputAdornment>
-                ),
-                endAdornment: searchTerm && (
-                  <InputAdornment position="end">
-                    <IconButton size="small" onClick={() => setSearchTerm("")}>
-                      <ClearRounded sx={{ fontSize: 16 }} />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-                sx: {
-                  borderRadius: "100px",
-                  backgroundColor: "rgba(255, 255, 255, 0.9)",
-                  "& fieldset": { border: "none" },
-                  width: { xs: "100%", md: "15vw" },
+            <Typography
+              variant="h6"
+              component="div"
+              sx={{
+                fontWeight: 700,
+                fontSize: { xs: "1.3rem", md: "1.5rem" },
+                whiteSpace: "nowrap",
+                color: "#1a2340",
+              }}
+            >
+              Fresh Applications: {displayCount}
+            </Typography>
+
+            <Box sx={{ display: { xs: 'none', md: 'block' }, width: "1px", height: "32px", bgcolor: "#e2e8f0" }} />
+
+            {/* Search and Filters Row */}
+            <Box
+              sx={{
+                display: "flex",
+                gap: 1.5,
+                alignItems: "center",
+                flexWrap: "wrap",
+                flex: 1,
+                flexDirection: { xs: "column", sm: "column", md: "row" },
+                "& > *": {
+                  width: { xs: "100%", sm: "100%", md: "auto" },
                 },
               }}
-              InputLabelProps={{
-                style: { color: "#757575" },
-              }}
-            />
-          </Box>
+            >
+              {/* Search Panel */}
+              <TextField
+                size="small"
+                placeholder="Search by name, number or PAN"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                sx={{
+                  flex: 1,
+                  minWidth: { xs: "100%", sm: 250, md: 300 },
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "20px",
+                    backgroundColor: "#f8fafc",
+                    transition: "all 0.2s ease",
+                    "& fieldset": { border: "1px solid #e2e8f0" },
+                    "&:hover fieldset": { borderColor: "#cbd5e1" },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#3f50b5",
+                      borderWidth: "1px"
+                    },
+                    "&.Mui-focused": {
+                      backgroundColor: "#fff",
+                      boxShadow: "0 0 0 3px rgba(63,80,181,0.1)",
+                    }
+                  },
+                  "& .MuiOutlinedInput-input": {
+                    py: 1,
+                    fontSize: "0.85rem",
+                    fontWeight: 500,
+                    color: "#334155"
+                  }
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchRounded sx={{ fontSize: 20, color: "#94a3b8" }} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: searchTerm && (
+                    <InputAdornment position="end">
+                      <IconButton size="small" onClick={() => setSearchTerm("")}>
+                        <ClearRounded sx={{ fontSize: 16 }} />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+
+            {/* Vertical Divider if User Filter is visible */}
+            {(userRole === "admin" || userRole === "sub admin") && (
+              <Box sx={{ width: "1px", height: "24px", bgcolor: "#e2e8f0", ml: 0.5, mr: 0.5 }} />
+            )}
+
+            {/* User Filter (Admin only) */}
+            {(userRole === "admin" || userRole === "sub admin") && (
+              <Box>
+                <Tooltip title="Filter by user">
+                  <Chip
+                    icon={<PersonRounded sx={{ fontSize: 18 }} />}
+                    label={
+                      selectedUser
+                        ? (selectedUser.username || selectedUser.name || "Unknown")
+                        : "Select User"
+                    }
+                    onClick={(e) => setUserAnchorEl(e.currentTarget)}
+                    sx={{
+                      backgroundColor: selectedUser ? "#388e3c15" : "transparent",
+                      color: selectedUser ? "#388e3c" : "#475569",
+                      border: selectedUser ? "1px solid #388e3c30" : "1px solid transparent",
+                      borderRadius: "12px",
+                      height: "36px",
+                      fontWeight: 600,
+                      fontSize: "0.85rem",
+                      px: 0.5,
+                      "&:hover": { backgroundColor: selectedUser ? "#388e3c25" : "#f1f5f9" },
+                      "& .MuiChip-icon": { color: "inherit", ml: 1 },
+                      transition: "all 0.2s ease"
+                    }}
+                  />
+                </Tooltip>
+                <Menu
+                  anchorEl={userAnchorEl}
+                  open={Boolean(userAnchorEl)}
+                  onClose={() => setUserAnchorEl(null)}
+                  PaperProps={{
+                    sx: {
+                      mt: 1,
+                      boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+                      borderRadius: 2,
+                      maxHeight: 300,
+                    },
+                  }}
+                >
+                  <MenuItem
+                    onClick={() => {
+                      setSelectedUser(null);
+                      setUserAnchorEl(null);
+                    }}
+                    sx={{
+                      mx: 1,
+                      my: 0.5,
+                      borderRadius: "12px",
+                      minWidth: 280,
+                      fontWeight: 600,
+                      color: "#d32f2f"
+                    }}
+                  >
+                    Clear Selection
+                  </MenuItem>
+                  {(() => {
+                    const users = userData?.results || userData?.data || userData || [];
+                    // Only show sales users as requested
+                    const salesUsers = users.filter((u: any) => u.role?.toLowerCase() === "sales");
+
+                    if (!Array.isArray(salesUsers) || salesUsers.length === 0) {
+                      return (
+                        <MenuItem disabled sx={{ minWidth: 200 }}>
+                          No sales users available
+                        </MenuItem>
+                      );
+                    }
+
+                    return salesUsers.map((user: any) => (
+                      <MenuItem
+                        key={user.id || user.username}
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setUserAnchorEl(null);
+                        }}
+                        sx={{
+                          mx: 1,
+                          my: 0.5,
+                          borderRadius: "12px",
+                          border: "1px solid #388e3c40",
+                          bgcolor: "#388e3c15",
+                          "&:hover": {
+                            bgcolor: "#388e3c25",
+                          },
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          minWidth: 280,
+                          p: 1,
+                        }}
+                      >
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                          <Box
+                            sx={{
+                              bgcolor: "#fff",
+                              borderRadius: "50%",
+                              p: 0.5,
+                              display: "flex",
+                              color: "#388e3c",
+                            }}
+                          >
+                            <TrendingUpRounded sx={{ fontSize: 18 }} />
+                          </Box>
+                          <Typography sx={{ fontWeight: 500, color: "#334155" }}>
+                            {user.username || user.name || "Unknown User"}
+                          </Typography>
+                        </Box>
+                        <Chip
+                          label="Sales"
+                          size="small"
+                          sx={{
+                            bgcolor: "#fff",
+                            color: "#388e3c",
+                            fontWeight: 700,
+                            fontSize: "0.7rem",
+                            height: 22,
+                            textTransform: "capitalize",
+                            border: "1px solid #388e3c20"
+                          }}
+                        />
+                      </MenuItem>
+                    ));
+                  })()}
+                </Menu>
+              </Box>
+            )}
+            </Box>
+          </Paper>
         </Box>
 
-        {/* Right Side Controls */}
-        <Box
-          sx={{
-            height: { xs: "auto", md: "10vh" },
-            width: { xs: "100%", md: "70%" },
-            display: "flex",
-            flexDirection: { xs: "column", md: "row" },
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: { xs: 2, md: 0 },
-            ml: { xs: 0, md: "3vw" },
-          }}
-        >
-          {/* Search field for desktop */}
-          <Box
-            sx={{
-              display: {
-                xs: "flex",
-                sm: "none",
-                md: "flex",
-                xl: "flex",
-                lg: "flex",
-              },
-            }}
-          >
-            <TextField
-              label="Search by name, number or PAN..."
-              size="small"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchRounded sx={{ color: "action.active", mr: 1 }} />
-                  </InputAdornment>
-                ),
-                endAdornment: searchTerm && (
-                  <InputAdornment position="end">
-                    <IconButton size="small" onClick={() => setSearchTerm("")}>
-                      <ClearRounded sx={{ fontSize: 16 }} />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-                sx: {
-                  borderRadius: "100px",
-                  backgroundColor: "rgba(255, 255, 255, 0.9)",
-                  "& fieldset": { border: "none" },
-                  width: { xs: "100%", md: "15vw" },
-                },
+        {/* Right Side Actions Container */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap", flexShrink: 0, justifyContent: { xs: "flex-start", xl: "flex-end" } }}>
+          <Link href="/ticket" passHref>
+            <Button
+              variant="contained"
+              onClick={(e) => {
+                if (!validateCompanySelection()) {
+                  e.preventDefault();
+                }
               }}
-              InputLabelProps={{
-                style: { color: "#757575" },
+              sx={{
+                height: "48px",
+                borderRadius: "16px",
+                textTransform: "none",
+                fontWeight: 600,
+                px: 3,
+                bgcolor: "#3f50b5",
+                boxShadow: "0 4px 14px rgba(63,80,181,0.2)",
+                transition: "all 0.2s ease",
+                "&:hover": {
+                  bgcolor: "#303f9f",
+                  boxShadow: "0 6px 20px rgba(63,80,181,0.3)",
+                  transform: "translateY(-1px)",
+                }
               }}
-            />
-          </Box>
+            >
+              {userRole === "admin" || userRole === "sales" || userRole === "sub admin"
+                ? "Show Tickets"
+                : "Show My Tickets"}
+            </Button>
+          </Link>
 
+          {userRole === "sales" && (
+            <Link href="/home/create" passHref>
+              <Button
+                variant="outlined"
+                onClick={(e) => {
+                  if (!validateCompanySelection()) {
+                    e.preventDefault();
+                  } else {
+                    remLocalStorage("customerInfo");
+                  }
+                }}
+                sx={{
+                  height: "48px",
+                  borderRadius: "16px",
+                  textTransform: "none",
+                  fontWeight: 600,
+                  px: 3,
+                  borderColor: "#c7d2fe",
+                  color: "#3f50b5",
+                  bgcolor: "#fff",
+                  boxShadow: "0 2px 10px rgba(0,0,0,0.02)",
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    borderColor: "#818cf8",
+                    bgcolor: "#eef2ff",
+                    transform: "translateY(-1px)",
+                  }
+                }}
+              >
+                Create Application
+              </Button>
+            </Link>
+          )}
+
+          {/* View Toggles Container */}
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
-              gap: 2,
+              backgroundColor: "#fff",
+              border: "1px solid #c7d2fe",
+              borderRadius: "16px",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.02)",
+              p: 0.5,
+              height: "48px",
+              boxSizing: "border-box",
             }}
           >
-            {/* <FormControl
-              sx={{ minWidth: { xs: "100%", sm: 220 } }}
-              size="small"
-            >
-              <InputLabel id="company-select-label">
-                Company
-              </InputLabel>
-
-              <Select
-                labelId="company-select-label"
-                value={selectedCompany}
-                label="Company"
-                onChange={( e ) => {
-                  const value = e.target.value;
-                  setSelectedCompany( value );
-
-                  if ( !value )
-                  {
-                    // ALL companies
-                    localStorage.removeItem( "selectedCompanyId" );
-                  } else
-                  {
-                    localStorage.setItem( "selectedCompanyId", value );
-                    refetch();
-                  }
-                }}
-              >
-                {companies?.map( ( company: any, index: number ) => (
-                  <MenuItem
-                    key={company.id || `company-${ index }`}
-                    value={company.companyId ? company.companyId.toString() : ""}
-                  >
-                    {company.name}
-                  </MenuItem>
-                ) )}
-              </Select>
-            </FormControl> */}
-
-            <Link href="/ticket" passHref>
-              <Button
+            <Tooltip title="Grid View">
+              <IconButton
+                onClick={() => setToggleListView("grid")}
                 sx={{
-                  width: { xs: "100%", md: "auto" },
-                  fontSize: { xs: "0.7rem", md: "1rem" },
-                  bgcolor: "#0c66e4",
-                  color: "white",
-                  "&:hover": { bgcolor: "#0c66e4" },
-                  whiteSpace: "nowrap",
-                }}
-                variant="contained"
-                onClick={(e) => {
-                  // Prevent navigation if validation fails
-                  if (!validateCompanySelection()) {
-                    e.preventDefault();
-                  }
+                  color: toggleListView === "grid" ? "primary.main" : "action.disabled",
+                  backgroundColor: toggleListView === "grid" ? "action.selected" : "transparent",
+                  borderRadius: "8px",
+                  p: 1,
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    backgroundColor: toggleListView === "grid" ? "primary.light" : "action.hover",
+                  },
                 }}
               >
-                {userRole === "admin" || userRole === "sales" || userRole === "sub admin"
-                  ? "Show Tickets"
-                  : "Show My Tickets"}
-              </Button>
-            </Link>
+                <GridViewIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
 
-            {/* View toggle buttons */}
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                border: "2px solid #e0e0e0",
-                borderRadius: "8px",
-                padding: "3px",
-                backgroundColor: "#fafafa",
-                boxShadow: "0 1px 4px rgba(0, 0, 0, 0.08)",
-                width: "fit-content",
-                height: { md: "7vh", sm: "4vh", xs: "4.5vh" },
-              }}
-            >
-              <Tooltip title="Grid View">
-                <IconButton
-                  onClick={() => setToggleListView("grid")}
-                  sx={{
-                    color: toggleListView === "grid" ? "#1d86ff" : "#9e9e9e",
-                    backgroundColor:
-                      toggleListView === "grid" ? "#e3f2fd" : "transparent",
-                    borderRadius: "6px",
-                    margin: "2px",
-                  }}
-                >
-                  <GridViewIcon />
-                </IconButton>
-              </Tooltip>
+            <Tooltip title="List View">
+              <IconButton
+                onClick={() => setToggleListView("list")}
+                sx={{
+                  color: toggleListView === "list" ? "primary.main" : "action.disabled",
+                  backgroundColor: toggleListView === "list" ? "action.selected" : "transparent",
+                  borderRadius: "8px",
+                  p: 1,
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    backgroundColor: toggleListView === "list" ? "primary.light" : "action.hover",
+                  },
+                }}
+              >
+                <ViewListIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
 
-              <Tooltip title="List View">
-                <IconButton
-                  onClick={() => setToggleListView("list")}
-                  sx={{
-                    color: toggleListView === "list" ? "#1d86ff" : "#9e9e9e",
-                    backgroundColor:
-                      toggleListView === "list" ? "#e3f2fd" : "transparent",
-                    borderRadius: "6px",
-                    margin: "2px",
-                  }}
-                >
-                  <ViewListIcon />
-                </IconButton>
-              </Tooltip>
-
-              <Tooltip title="Table View">
-                <IconButton
-                  onClick={() => setToggleListView("table")}
-                  sx={{
-                    color: toggleListView === "table" ? "#1d86ff" : "#9e9e9e",
-                    backgroundColor:
-                      toggleListView === "table" ? "#e3f2fd" : "transparent",
-                    borderRadius: "6px",
-                    margin: "2px",
-                  }}
-                >
-                  <TableViewIcon />
-                </IconButton>
-              </Tooltip>
-            </Box>
-
-            {userRole === "sales" && (
-              <Link href="/home/create" passHref>
-                <Button
-                  sx={{
-                    width: { xs: "100%", md: "auto" },
-                    fontSize: { xs: "0.7rem", md: "1rem" },
-                    bgcolor: "#0c66e4",
-                    color: "white",
-                    "&:hover": { bgcolor: "#0c66e4" },
-                    whiteSpace: "nowrap",
-                  }}
-                  variant="contained"
-                  onClick={(e) => {
-                    // Validate company selection first & stop navigation
-                    if (!validateCompanySelection()) {
-                      e.preventDefault();
-                    } else {
-                      remLocalStorage("customerInfo");
-                    }
-                  }}
-                >
-                  Create Application
-                </Button>
-              </Link>
-            )}
+            <Tooltip title="Table View">
+              <IconButton
+                onClick={() => setToggleListView("table")}
+                sx={{
+                  color: toggleListView === "table" ? "primary.main" : "action.disabled",
+                  backgroundColor: toggleListView === "table" ? "action.selected" : "transparent",
+                  borderRadius: "8px",
+                  p: 1,
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    backgroundColor: toggleListView === "table" ? "primary.light" : "action.hover",
+                  },
+                }}
+              >
+                <TableViewIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
           </Box>
         </Box>
       </Box>
 
       <Box
         sx={{
-          minWidth: "80vw",
-          minHeight: "90vh",
-          marginTop: "7vh",
+          width: "100%",
+          minHeight: "60vh",
+          marginTop: "16px",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "start",
         }}
       >
-        {error && (
-          <Typography color="error" sx={{ textAlign: "center", mt: 2 }}>
-            Error loading applications: {error.message}
-          </Typography>
-        )}
+        <Box sx={{ width: "97%" }}>
+          {error && (
+            <Typography color="error" sx={{ textAlign: "center", mt: 2 }}>
+              Error loading applications: {error.message}
+            </Typography>
+          )}
 
-        {isSearching ? (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "100%",
-              height: "10vh",
-            }}
-          >
-            <Typography>Searching...</Typography>
-          </Box>
-        ) : !filteredCustomers?.length ? (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "100%",
-              height: "90vh",
-            }}
-          >
-            <Typography
+          {isSearching ? (
+            <Box
               sx={{
-                color: "black",
                 display: "flex",
-                mb: "20vh",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "100%",
+                height: "10vh",
               }}
             >
-              {searchTerm
-                ? "No applications match your search criteria"
-                : "No Applications Found..."}
-            </Typography>
-          </Box>
-        ) : (
-          <>
-            {toggleListView === "table" ? (
-              <TableContainer
-                component={Paper}
-                elevation={2}
+              <Typography>Searching...</Typography>
+            </Box>
+          ) : !filteredCustomers?.length ? (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "100%",
+                height: "90vh",
+              }}
+            >
+              <Typography
                 sx={{
-                  borderRadius: 2,
-                  overflowX: "auto",
-                  width: "100%",
-                  maxWidth: {
-                    xs: "90vw",
-                    md: "100vw",
-                    sm: "90vw",
-                    lg: "100vw",
-                  },
+                  color: "black",
+                  display: "flex",
+                  mb: "20vh",
                 }}
               >
-                <Table
+                {searchTerm
+                  ? "No applications match your search criteria"
+                  : "No Applications Found..."}
+              </Typography>
+            </Box>
+          ) : (
+            <>
+              {toggleListView === "table" ? (
+                <TableContainer
+                  component={Paper}
+                  elevation={2}
                   sx={{
-                    tableLayout: "auto",
-                    minWidth: { xs: 650, sm: 750, md: 900 },
-                    "& .MuiTableCell-root": {
-                      padding: { xs: "4px", sm: "6px", md: "8px" },
-                      fontSize: { xs: "0.75rem", sm: "0.875rem", md: "1rem" },
-                      wordWrap: "break-word",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      maxWidth: { xs: "80px", sm: "120px", md: "150px" },
+                    borderRadius: 2,
+                    overflowX: "auto",
+                    width: "100%",
+                    maxWidth: {
+                      xs: "90vw",
+                      md: "100vw",
+                      sm: "90vw",
+                      lg: "100vw",
                     },
                   }}
                 >
-                  <TableHead>
-                    <TableRow sx={{ background: "#3f50b5" }}>
-                      <TableCell
-                        sx={{
-                          fontWeight: "bold",
-                          color: "white",
-                          fontSize: {
-                            xs: "0.75rem",
-                            sm: "0.875rem",
-                            md: "1rem",
-                          },
-                          wordWrap: "break-word",
-                          minWidth: { xs: "60px", sm: "80px", md: "10px" },
-                        }}
-                      >
-                        S.no
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          fontWeight: "bold",
-                          color: "white",
-                          fontSize: {
-                            xs: "0.75rem",
-                            sm: "0.875rem",
-                            md: "1rem",
-                          },
-                          wordWrap: "break-word",
-                          minWidth: { xs: "60px", sm: "80px", md: "100px" },
-                        }}
-                      >
-                        Name
-                      </TableCell>
-                      {userRole !== "sales" && (
+                  <Table
+                    sx={{
+                      tableLayout: "auto",
+                      minWidth: { xs: 650, sm: 750, md: 900 },
+                      "& .MuiTableCell-root": {
+                        padding: { xs: "4px", sm: "6px", md: "8px" },
+                        fontSize: { xs: "0.75rem", sm: "0.875rem", md: "1rem" },
+                        wordWrap: "break-word",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        maxWidth: { xs: "80px", sm: "120px", md: "150px" },
+                      },
+                      "& .MuiTableCell-head": {
+                        padding: "10px 12px",
+                        position: "relative",
+                      },
+                      "& .MuiTableCell-head:not(:last-child)::after": {
+                        content: '""',
+                        position: "absolute",
+                        right: 0,
+                        top: "25%",
+                        bottom: "25%",
+                        width: "2px",
+                        backgroundColor: "rgba(255, 255, 255, 0.5)",
+                        boxShadow: "1px 0 4px rgba(0,0,0,0.3)",
+                        borderRadius: "2px",
+                      },
+                    }}
+                  >
+                    <TableHead>
+                      <TableRow sx={{ background: "#3f50b5" }}>
+                        {/* S.no */}
                         <TableCell
                           sx={{
-                            fontWeight: "bold",
+                            fontWeight: 600,
                             color: "white",
-                            fontSize: {
-                              xs: "0.75rem",
-                              sm: "0.875rem",
-                              md: "1rem",
-                            },
+                            fontSize: { xs: "0.75rem", sm: "0.875rem", md: "1rem" },
                             wordWrap: "break-word",
-                            minWidth: { xs: "80px", sm: "100px", md: "120px" },
+                            minWidth: { xs: "60px", sm: "30px", md: "10px" },
                           }}
                         >
-                          E-mail
+                          S.no
                         </TableCell>
-                      )}
-                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Amount</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Provider</TableCell>
-                      {/* <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Loan Category</TableCell> */}
-                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Loan Type</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Lead Type</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Tenure</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Location</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', color: "white", fontSize: "1rem,wordWrap: 'break-word'" }}>Application Date</TableCell>
-                      <TableRow sx={{
-                        background: "#3f50b5",
-                        '& td': { borderBottom: 'none' },
-                        borderBottom: 'none',
-                      }}>
-                        {userRole !== 'sales' ? (
-                          <TableCell sx={{
-                            fontWeight: 'bold',
+
+                        {/* Name */}
+                        <TableCell
+                          sx={{
+                            fontWeight: 600,
                             color: "white",
-                            fontSize: ".9rem",
-                            wordWrap: 'break-word',
-                            borderBottom: 'none',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', ml: "1.5vw"
-                          }}>Actions</TableCell>
-                        ) : null}
+                            fontSize: "1rem",
+                            wordWrap: "break-word",
+                          }}
+                        >
+                          Name
+                        </TableCell>
+
+                        {/* Email */}
+                        {userRole !== "sales" && (
+                          <TableCell
+                            align="center"
+                            sx={{
+                              fontWeight: 600,
+                              color: "white",
+                              fontSize: "1rem",
+                              wordWrap: "break-word",
+                              whiteSpace: "normal",
+                            }}
+                          >
+                            Email
+                          </TableCell>
+                        )}
+
+                        {/* Amount */}
+                        <TableCell sx={{ fontWeight: 600, color: "white", fontSize: "1rem", wordWrap: "break-word" }}>Amount</TableCell>
+
+                        {/* Provider */}
+                        <TableCell sx={{ fontWeight: 600, color: "white", fontSize: "1rem", wordWrap: "break-word" }}>Provider</TableCell>
+
+                        {/* Loan Type */}
+                        <TableCell sx={{ fontWeight: 600, color: "white", fontSize: "1rem", wordWrap: "break-word", whiteSpace: "normal" }}>Loan Type</TableCell>
+
+                        {/* Lead Type */}
+                        <TableCell sx={{ fontWeight: 600, color: "white", fontSize: "1rem", wordWrap: "break-word", whiteSpace: "normal" }}>Lead Type</TableCell>
+
+                        {/* Tenure */}
+                        <TableCell sx={{ fontWeight: 600, color: "white", fontSize: "1rem", wordWrap: "break-word" }}>Tenure</TableCell>
+
+                        {/* Location */}
+                        <TableCell sx={{ fontWeight: 600, color: "white", fontSize: "1rem", wordWrap: "break-word" }}>Location</TableCell>
+
+                        {/* Created At (was "Application Date") */}
+                        <TableCell sx={{ fontWeight: 600, color: "white", fontSize: "1rem", wordWrap: "break-word", whiteSpace: "normal" }}>Created At</TableCell>
+
+                        {/* Actions */}
+                        {userRole !== "sales" && (
+                          <TableCell align="center" sx={{ fontWeight: 600, color: "white", fontSize: "1rem", wordWrap: "break-word" }}>
+                            Actions
+                          </TableCell>
+                        )}
                       </TableRow>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
+                    </TableHead>
+                    <TableBody>
+                      {filteredCustomers.map((customerApplication, index) => (
+                        <ApplicationCard
+                          key={customerApplication.applicationId}
+                          customerApplication={customerApplication}
+                          mainIndex={index + 1}
+                          refetch={refetch}
+                          showDeleteButton={isAdmin || isSuperAdmin}
+                          onDelete={openDeleteDialog}
+                          isApplication={true}
+                          handleDeleteApplication={handleDeleteApplication}
+                          toggleListView={toggleListView}
+                          userRole={userRole}
+                          validateCompanyForCheckbox={validateCompanyForCheckbox}
+                        />
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : toggleListView === "list" ? (
+                // List View
+                <Paper
+                  elevation={0}
+                  sx={{
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "10px",
+                    overflow: "hidden",
+                    boxShadow: "0 1px 6px rgba(0,0,0,0.06)",
+                    width: "100%",
+                  }}
+                >
+                  <Grid container spacing={0}>
                     {filteredCustomers.map((customerApplication, index) => (
                       <ApplicationCard
                         key={customerApplication.applicationId}
@@ -814,43 +982,44 @@ const HomeContent: React.FC = () => {
                         validateCompanyForCheckbox={validateCompanyForCheckbox}
                       />
                     ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            ) : (
-              // List View - You can implement a different list component here
-              <Grid container spacing={2}>
-                {filteredCustomers.map((customerApplication, index) => (
-                  <ApplicationCard
-                    key={customerApplication.applicationId}
-                    customerApplication={customerApplication}
-                    mainIndex={index + 1}
-                    refetch={refetch}
-                    showDeleteButton={isAdmin || isSuperAdmin}
-                    onDelete={openDeleteDialog}
-                    isApplication={true}
-                    handleDeleteApplication={handleDeleteApplication}
-                    toggleListView={toggleListView}
-                    userRole={userRole}
-                  />
-                ))}
-              </Grid>
-            )}
+                  </Grid>
+                </Paper>
+              ) : (
+                // Grid View
+                <Grid container spacing={2} sx={{ width: "100%", mt: 1 }}>
+                  {filteredCustomers.map((customerApplication, index) => (
+                    <ApplicationCard
+                      key={customerApplication.applicationId}
+                      customerApplication={customerApplication}
+                      mainIndex={index + 1}
+                      refetch={refetch}
+                      showDeleteButton={isAdmin || isSuperAdmin}
+                      onDelete={openDeleteDialog}
+                      isApplication={true}
+                      handleDeleteApplication={handleDeleteApplication}
+                      toggleListView={toggleListView}
+                      userRole={userRole}
+                      validateCompanyForCheckbox={validateCompanyForCheckbox}
+                    />
+                  ))}
+                </Grid>
+              )}
 
-            {!hasMoreData && !swrLoading && (
-              <Typography
-                sx={{
-                  width: "100%",
-                  textAlign: "center",
-                  mt: 4,
-                  color: "black",
-                }}
-              >
-                No more applications to load...
-              </Typography>
-            )}
-          </>
-        )}
+              {!hasMoreData && !swrLoading && (
+                <Typography
+                  sx={{
+                    width: "100%",
+                    textAlign: "center",
+                    mt: 4,
+                    color: "black",
+                  }}
+                >
+                  No more applications to load...
+                </Typography>
+              )}
+            </>
+          )}
+        </Box>
       </Box>
       {(swrLoading || isDeleting) && <Loader />}
       <Toast

@@ -19,7 +19,10 @@ const TicketDocuments = ({
   isIpad,
   documents,
   customerId,
+  ticketId,
   onDocumentUploaded,
+  onRequireExpectedDate,
+  onCreateHistory,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [showAttachment, setShowAttachment] = useState({});
@@ -90,8 +93,20 @@ const TicketDocuments = ({
         await axiosInstance.post(`${process.env.NEXT_PUBLIC_WEB_URL}/create-document`, {
           document_url: attachmentUrl,
           customer_id: customerId,
-          type: "general document", // You can change this type as needed
+          type: "general document",
         });
+
+        // Create ticket history for the document upload
+        if (onCreateHistory && ticketId) {
+          try {
+            await onCreateHistory({
+              ticket_id: ticketId,
+              action: `${decodedToken()?.username} uploaded a document - ${file.name}`,
+            });
+          } catch (histErr) {
+            console.error("Error creating ticket history for document upload:", histErr);
+          }
+        }
 
         // Call callback to refresh documents list if provided
         if (onDocumentUploaded) {
@@ -113,6 +128,7 @@ const TicketDocuments = ({
 
   // Handler for button click to trigger file input
   const handleAddDocumentClick = () => {
+    if (onRequireExpectedDate && !onRequireExpectedDate()) return;
     document.getElementById("add-document-input").click();
   };
 

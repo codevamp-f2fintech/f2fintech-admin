@@ -23,9 +23,10 @@ export const useGetUsers = (
         `${pathKey}?page=${page}&limit=${limit}`,
         fetcher,
         {
-            fallbackData: initialData,
+            fallbackData: page === 1 ? initialData : undefined,
             refreshInterval: initialData ? 3600000 : 0, // 1 hour refresh if initialData exists
             revalidateOnFocus: false,
+            dedupingInterval: 1000,
         });
     const refetch = async () => {
         return await mutate(`${pathKey}?page=${page}&limit=${limit}`);
@@ -33,9 +34,11 @@ export const useGetUsers = (
 
     return {
         value: swrData || {
-            results: [],
-            count: 0,
-            pages: 0,
+            data: {
+              results: [],
+              count: 0,
+              pages: 0,
+            }
         },
         swrLoading: !error && !swrData && isValidating,
         error,

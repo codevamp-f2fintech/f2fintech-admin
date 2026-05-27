@@ -15,8 +15,8 @@ import { Utility } from "@/utils";
 // Validation schema
 const validationSchema = Yup.object({
   aadharFront: Yup.mixed().nullable().required("Aadhar Card Front is Required"),
-  aadharBack: Yup.mixed().nullable().required("Aadhar Card Back is Required"),
-  pancard: Yup.mixed().nullable().required("Pan Card is Required"),
+  aadharBack: Yup.mixed().nullable().nullable(),
+  pancard: Yup.mixed().nullable().nullable(),
   passportSizePhoto: Yup.mixed().nullable(),
 });
 
@@ -520,7 +520,7 @@ const Step4Form: React.FC<Step4FormProps> = ({
                 </Button>
                 <Button
                   color="primary"
-                  disabled={!dirty || isSubmitting || !previews.aadharFront || !previews.aadharBack || !previews.pancard}
+                  disabled={!dirty || isSubmitting || !previews.aadharFront}
                   type="submit"
                   variant="contained"
                   sx={{

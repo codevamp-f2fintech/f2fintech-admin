@@ -216,7 +216,7 @@ export function AppBarNav(): React.JSX.Element {
             <Stack sx={{ alignItems: "center" }} direction="row" spacing={2}>
               {/* Company Selector */}
               <Tooltip
-                title={disableAggregator ? "Aggregator cannot be changed here" : ""}
+                title={disableAggregator ? "Aggregator cannot be changed here" : "Change Aggregator"}
                 placement="bottom"
                 arrow
               >
@@ -270,7 +270,7 @@ export function AppBarNav(): React.JSX.Element {
 
               {/* Notification Bell */}
               {!isSales && (
-                <Tooltip title="New Applications">
+                <Tooltip title="Notifications" arrow placement="bottom">
                   <IconButton
                     aria-describedby={notifId}
                     onClick={handleNotifOpen}
@@ -526,17 +526,19 @@ export function AppBarNav(): React.JSX.Element {
                 </Popover>
               )}
 
-              <Avatar
-                onClick={userPopover.handleOpen}
-                ref={userPopover.anchorRef}
-                sx={{
-                  cursor: "pointer",
-                  height: 40,
-                  width: 40,
-                }}
-              >
-                {decodedToken()?.username?.charAt(0).toUpperCase()}
-              </Avatar>
+              <Tooltip title="User Profile" arrow placement="bottom">
+                <Avatar
+                  onClick={userPopover.handleOpen}
+                  ref={userPopover.anchorRef}
+                  sx={{
+                    cursor: "pointer",
+                    height: 40,
+                    width: 40,
+                  }}
+                >
+                  {decodedToken()?.username?.charAt(0).toUpperCase()}
+                </Avatar>
+              </Tooltip>
             </Stack>
           </Stack>
         </Toolbar>

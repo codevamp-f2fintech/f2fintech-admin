@@ -16,7 +16,6 @@ import {
   Tooltip,
   Avatar,
   CircularProgress,
-  Pagination,
   InputAdornment,
 } from "@mui/material";
 import {
@@ -35,7 +34,7 @@ import BusinessIcon from '@mui/icons-material/Business';
 import FormComponent from "./FormInModal";
 import type { AppDispatch, RootState } from "@/redux/store";
 import type { User, UserData } from "@/types/user";
-import { setUsers } from "@/redux/features/userSlice";
+import { setUsers, removeUser } from "@/redux/features/userSlice";
 import { useGetUsers } from "@/hooks/user";
 import { UserAPI } from "@/apis/UserAPI";
 import { Utility } from "@/utils";
@@ -49,41 +48,42 @@ interface UsersPageProps {
 
 const ITEMS_PER_PAGE = 10;
 
-const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
-  const [ openDialog, setOpenDialog ] = useState( false );
-  const [ updatePassword, setUpdatePassword ] = useState( false );
-  const [ selectedUserId, setSelectedUserId ] = useState<string | null>( null );
-  const [ searchTerm, setSearchTerm ] = useState<string>( "" );
-  const [ currentPage, setCurrentPage ] = useState<number>( 1 );
-  const [ showInactive, setShowInactive ] = useState<boolean>( false );
-  const [ inactiveUsers, setInactiveUsers ] = useState<User | null>( null );
-  const [ loadingInactive, setLoadingInactive ] = useState<boolean>( false );
-  const [ currentUserRole, setCurrentUserRole ] = useState<string>( "" );
-  const [ currentUserCompanyId, setCurrentUserCompanyId ] = useState<string>( "" );
-  const { user: reduxUsers, reduxLoading } = useSelector( ( state: RootState ) => state.user );
+const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
+  const [openDialog, setOpenDialog] = useState(false);
+  const [updatePassword, setUpdatePassword] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [hasMoreData, setHasMoreData] = useState<boolean>(true);
+  const [hasMoreInactiveData, setHasMoreInactiveData] = useState<boolean>(true);
+  const [showInactive, setShowInactive] = useState<boolean>(false);
+  const [inactiveUsers, setInactiveUsers] = useState<any>(null);
+  const [loadingInactive, setLoadingInactive] = useState<boolean>(false);
+  const [currentUserRole, setCurrentUserRole] = useState<string>("");
+  const [currentUserCompanyId, setCurrentUserCompanyId] = useState<string>("");
+  const { user: reduxUsers, reduxLoading } = useSelector((state: RootState) => state.user);
 
-  const { toast } = useSelector( ( state: RootState ) => state.toast );
-  const [ companyId, setCompanyId ] = useState<string | null>( null );
+  const { toast } = useSelector((state: RootState) => state.toast);
+  const [companyId, setCompanyId] = useState<string | null>(null);
 
   const dispatch: AppDispatch = useDispatch();
-  const { capitalizeFirstLetter, toastAndNavigate } = Utility();
+  const { capitalizeFirstLetter, toastAndNavigate, debounceScroll } = Utility();
 
   // Initialize user role and company ID
-  useEffect( () => {
+  useEffect(() => {
     const role = getUserRole();
     const companyId = getCompanyId();
-    setCurrentUserRole( role || "" );
+    setCurrentUserRole(role || "");
     // setCurrentUserCompanyId( companyId || "" );
-    setCompanyId( companyId );
-  }, [] );
+    setCompanyId(companyId);
+  }, []);
 
   // Initialize Redux with initial data
-  useEffect( () => {
-    if ( initialData?.data?.results && companyId )
-    {
-      dispatch( setUsers( initialData.data ) );
+  useEffect(() => {
+    if (initialData?.data?.results && companyId) {
+      dispatch(setUsers({ ...initialData.data, currentPage: 1 }));
     }
-  }, [ initialData?.data?.results, companyId, dispatch ] );
+  }, [initialData?.data?.results, companyId, dispatch]);
 
 
 
@@ -100,52 +100,78 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
   );
 
   // Update Redux when SWR data changes
-  useEffect( () => {
-    if ( data?.data?.results )
-    {
-      dispatch( setUsers( data.data ) );
+  useEffect(() => {
+    if (data?.data?.results?.length > 0) {
+      dispatch(setUsers({ ...data.data, currentPage }));
+      setHasMoreData(data.data.results.length === ITEMS_PER_PAGE);
+    } else if (data?.data) {
+      setHasMoreData(false);
     }
-  }, [ data?.data?.results, dispatch ] );
+  }, [data?.data?.results, data, currentPage, dispatch]);
+
+  const handleScroll = useCallback(
+    debounceScroll(() => {
+      const nearBottom =
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 400;
+
+      if (nearBottom) {
+        if (showInactive) {
+          if (!loadingInactive && hasMoreInactiveData) {
+            setCurrentPage((prevPage) => prevPage + 1);
+          }
+        } else {
+          if (!swrLoading && hasMoreData) {
+            setCurrentPage((prevPage) => prevPage + 1);
+          }
+        }
+      }
+    }, 200),
+    [swrLoading, loadingInactive, hasMoreData, hasMoreInactiveData, showInactive]
+  );
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   // Get current users to display based on toggle state
-  const currentUsersData = useMemo( () => {
-    if ( showInactive )
-    {
+  const currentUsersData = useMemo(() => {
+    if (showInactive) {
       return inactiveUsers?.data?.results || [];
     }
     return reduxUsers?.results || initialData?.data?.results || [];
-  }, [ showInactive, inactiveUsers, reduxUsers, initialData?.data?.results ] );
+  }, [showInactive, inactiveUsers, reduxUsers, initialData?.data?.results]);
 
   // Fixed role filtering
-  const filteredUsersByRole = useMemo( () => {
-    console.log( "Current Users Data for filtering:", currentUsersData );
+  const filteredUsersByRole = useMemo(() => {
+    console.log("Current Users Data for filtering:", currentUsersData);
 
-    if ( !currentUsersData || !Array.isArray( currentUsersData ) || currentUsersData.length === 0 )
-    {
+    if (!currentUsersData || !Array.isArray(currentUsersData) || currentUsersData.length === 0) {
       return [];
     }
 
-    return currentUsersData.filter( ( user: UserData ) => {
+    return currentUsersData.filter((user: UserData) => {
       // Ensure user has required properties
-      if ( !user || !user.role ) return false;
+      if (!user || !user.role) return false;
 
       // Super Admin can only see Admin users
-      if ( currentUserRole === 'super admin' )
-      {
+      if (currentUserRole === 'super admin') {
         return user.role === 'admin';
       }
 
       // Admin can see all users of their company except Super Admin
-      if ( currentUserRole === 'admin' )
-      {
+      if (currentUserRole === 'admin') {
         // const isSameCompany = user.companyId?.toString() === currentUserCompanyId;
         const isNotSuperAdmin = user.role !== 'super admin';
         // return isSameCompany && isNotSuperAdmin;
       }
 
       // Sub Admin can see all users of their company except Super Admin
-      if ( currentUserRole === 'sub admin' )
-      {
+      if (currentUserRole === 'sub admin') {
         const isSameCompany = user.companyId?.toString() === currentUserCompanyId;
         const isNotSuperAdmin = user.role !== 'super admin';
         return isSameCompany && isNotSuperAdmin;
@@ -153,15 +179,14 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
 
       // Default: show all users (for other roles)
       return true;
-    } );
-  }, [ currentUsersData, currentUserRole, currentUserCompanyId ] );
+    });
+  }, [currentUsersData, currentUserRole, currentUserCompanyId]);
 
 
   // Function to fetch inactive users
-  const fetchInactiveUsers = useCallback( async () => {
-    try
-    {
-      setLoadingInactive( true );
+  const fetchInactiveUsers = useCallback(async () => {
+    try {
+      setLoadingInactive(true);
       const { getCookies } = Utility();
       const cookieStore = getCookies() as {
         token?: string;
@@ -175,71 +200,70 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
         currentPage,
         ITEMS_PER_PAGE,
       ); // You'll need to add this method
-      setInactiveUsers( response.data );
-    } catch ( err: any )
-    {
+
+      if (currentPage === 1) {
+        setInactiveUsers(response.data);
+      } else {
+        setInactiveUsers((prev: any) => ({
+          ...response.data,
+          results: [...(prev?.results || []), ...(response.data.results || [])]
+        }));
+      }
+      setHasMoreInactiveData(response.data.results.length === ITEMS_PER_PAGE);
+    } catch (err: any) {
       const errorMessage =
         err?.response?.data?.message ||
         "Error fetching inactive users. Please Try Again";
-      toastAndNavigate( dispatch, true, "error", errorMessage );
-    } finally
-    {
-      setLoadingInactive( false );
+      toastAndNavigate(dispatch, true, "error", errorMessage);
+    } finally {
+      setLoadingInactive(false);
     }
-  }, [ currentPage, dispatch, toastAndNavigate ] );
+  }, [currentPage, dispatch, toastAndNavigate]);
 
   // Handle toggle between active and inactive users
-  const handleToggleUsers = useCallback( async () => {
-    if ( !showInactive )
-    {
+  const handleToggleUsers = useCallback(async () => {
+    if (!showInactive) {
       // Switching to inactive users
       await fetchInactiveUsers();
     }
-    setShowInactive( !showInactive );
-    setSearchTerm( "" ); // Clear search when toggling
-    setCurrentPage( 1 ); // Reset to first page
-  }, [ showInactive, fetchInactiveUsers ] );
+    setShowInactive(!showInactive);
+    setSearchTerm(""); // Clear search when toggling
+    setCurrentPage(1); // Reset to first page
+  }, [showInactive, fetchInactiveUsers]);
 
 
 
-  const filteredUsers = useMemo( () => {
-    return filteredUsersByRole.filter( ( val: any ) =>
-      val.username?.toLowerCase().includes( searchTerm.toLowerCase() )
+  const filteredUsers = useMemo(() => {
+    return filteredUsersByRole.filter((val: any) =>
+      val.username?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [ searchTerm, filteredUsersByRole ] );
+  }, [searchTerm, filteredUsersByRole]);
 
-  const handleUserDelete = useCallback( async ( id: string | number ) => {
-    try
-    {
-      await UserAPI.updateUserProfile( { id, status: "inactive" } );
-      const updatedUsers = await refetch();
-      if ( updatedUsers )
-      {
-        dispatch( setUsers( updatedUsers.data ) );
-        toastAndNavigate(
-          dispatch,
-          true,
-          "success",
-          "User Deleted Successfully",
-          null,
-          null,
-          true
-        );
-      }
-    } catch ( err: any )
-    {
+  const handleUserDelete = useCallback(async (id: string | number) => {
+    try {
+      await UserAPI.updateUserProfile({ id, status: "inactive" });
+      dispatch(removeUser(id));
+      toastAndNavigate(
+        dispatch,
+        true,
+        "success",
+        "User Deleted Successfully",
+        null,
+        null,
+        true
+      );
+    } catch (err: any) {
       const errorMessage =
         err?.response?.data?.message || "Error Occurred. Please Try Again";
-      toastAndNavigate( dispatch, true, "error", errorMessage );
+      toastAndNavigate(dispatch, true, "error", errorMessage);
     }
-  }, [] );
+  }, []);
 
   // Function to restore inactive user
   const handleUserRestore = useCallback(
-    async ( id: string | number ) => {
-      try
-      {
-        await UserAPI.updateUserProfile( { id, status: "active" } );
+    async (id: string | number) => {
+      try {
+        await UserAPI.updateUserProfile({ id, status: "active" });
         // Refresh inactive users list
         await fetchInactiveUsers();
         toastAndNavigate(
@@ -251,8 +275,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
           null,
           true
         );
-      } catch ( err: any )
-      {
+      } catch (err: any) {
         const errorMessage =
           err?.response?.data?.message ||
           "Error restoring user. Please Try Again";
@@ -267,29 +290,21 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
         );
       }
     },
-    [ fetchInactiveUsers, dispatch, toastAndNavigate ]
+    [fetchInactiveUsers, dispatch, toastAndNavigate]
   );
 
-  const handleOpenDialog = ( userId: string | null = null ) => {
-    setSelectedUserId( userId );
-    setUpdatePassword( false );
-    setOpenDialog( !openDialog );
-  };
-
-  const handlePageChange = (
-    event: React.ChangeEvent<unknown>,
-    page: number
-  ) => {
-    setCurrentPage( page );
+  const handleOpenDialog = (userId: string | null = null) => {
+    setSelectedUserId(userId);
+    setUpdatePassword(false);
+    setOpenDialog(!openDialog);
   };
 
   // Effect to refetch inactive users when page changes and showing inactive users
-  useEffect( () => {
-    if ( showInactive && currentPage > 1 )
-    {
+  useEffect(() => {
+    if (showInactive && currentPage > 1) {
       fetchInactiveUsers();
     }
-  }, [ currentPage, showInactive, fetchInactiveUsers ] );
+  }, [currentPage, showInactive, fetchInactiveUsers]);
 
   return (
     <Box
@@ -317,7 +332,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
             variant="outlined"
             size="small"
             value={searchTerm}
-            onChange={( e ) => setSearchTerm( e.target.value )}
+            onChange={(e) => setSearchTerm(e.target.value)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -326,7 +341,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
               ),
               endAdornment: searchTerm && (
                 <InputAdornment position="end">
-                  <IconButton size="small" onClick={() => setSearchTerm( "" )}>
+                  <IconButton size="small" onClick={() => setSearchTerm("")}>
                     <ClearRounded sx={{ fontSize: 16 }} />
                   </IconButton>
                 </InputAdornment>
@@ -362,7 +377,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
               <Button
                 variant="contained"
                 startIcon={<PersonAddRounded />}
-                onClick={() => handleOpenDialog( null )}
+                onClick={() => handleOpenDialog(null)}
                 sx={{
                   borderRadius: "100px",
                   px: { xs: 2, sm: 3 }, // smaller padding on mobile
@@ -428,7 +443,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
         {/* User Grid */}
         <Grid container spacing={3}>
           {filteredUsers.length > 0 &&
-            filteredUsers.map( ( user: UserData, index: number ) => (
+            filteredUsers.map((user: UserData, index: number) => (
               <Grid item xs={12} md={6} key={index}>
                 <Card
                   sx={{
@@ -460,7 +475,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
                           variant="h5"
                           sx={{ color: "black", fontWeight: 600, mb: 1 }}
                         >
-                          {capitalizeFirstLetter( user.username )}
+                          {capitalizeFirstLetter(user.username)}
                           {showInactive && (
                             <Chip
                               label="Inactive"
@@ -555,7 +570,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
                           icon={
                             <PersonRounded sx={{ color: "#fff !important" }} />
                           }
-                          label={capitalizeFirstLetter( user.gender )}
+                          label={capitalizeFirstLetter(user.gender)}
                           sx={{
                             bgcolor: "#0c66e4",
                             color: "#fff",
@@ -581,7 +596,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
                           height: 48,
                         }}
                       >
-                        {user.username.charAt( 0 )}
+                        {user.username.charAt(0)}
                       </Avatar>
                       <Box sx={{ display: "flex", gap: 1 }}>
                         {showInactive ? (
@@ -593,7 +608,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
                                 bgcolor: "#28a745",
                                 "&:hover": { bgcolor: "#218838" },
                               }}
-                              onClick={() => handleUserRestore( user.id )}
+                              onClick={() => handleUserRestore(user.id)}
                             >
                               <PersonAddRounded />
                             </IconButton>
@@ -608,7 +623,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
                                   bgcolor: "#adb5bd",
                                   "&:hover": { bgcolor: "#33415c" },
                                 }}
-                                onClick={() => handleOpenDialog( user.id )}
+                                onClick={() => handleOpenDialog(user.id)}
                               >
                                 <EditRounded />
                               </IconButton>
@@ -621,7 +636,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
                                   bgcolor: "#adb5bd",
                                   "&:hover": { bgcolor: "#33415c" },
                                 }}
-                                onClick={() => handleUserDelete( user.id )}
+                                onClick={() => handleUserDelete(user.id)}
                               >
                                 <DeleteRounded />
                               </IconButton>
@@ -633,7 +648,7 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
                   </CardContent>
                 </Card>
               </Grid>
-            ) )}
+            ))}
         </Grid>
 
         {/* Show message when no users found */}
@@ -652,27 +667,24 @@ const UsersPage: React.FC<UsersPageProps> = ( { initialData } ) => {
           </Box>
         )}
 
-        {/* Pagination */}
-        {filteredUsers.length > 0 && (
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-            <Pagination
-              count={
-                showInactive
-                  ? inactiveUsers?.pages || 1
-                  : data?.pages || initialData?.pages || 1
-              }
-              page={currentPage}
-              onChange={handlePageChange}
-              color="primary"
-              variant="outlined"
-            />
+        {/* Load More Trigger */}
+        {(showInactive ? (loadingInactive && hasMoreInactiveData && filteredUsers.length > 0) : (swrLoading && hasMoreData && filteredUsers.length > 0)) && (
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              py: 4,
+              mt: 2,
+            }}
+          >
+            <CircularProgress size={32} thickness={4} color="primary" />
           </Box>
         )}
       </Container>
 
-      {reduxLoading || swrLoading || loadingInactive ? (
-        <Box display="flex" justifyContent="center" mb={2}>
-          <CircularProgress />
+      {(reduxLoading || (swrLoading && filteredUsers.length === 0) || (loadingInactive && filteredUsers.length === 0)) ? (
+        <Box display="flex" justifyContent="center" py={10} mb={2}>
+          <CircularProgress size={60} thickness={4} />
         </Box>
       ) : null}
 

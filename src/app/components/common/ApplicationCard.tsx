@@ -7,6 +7,7 @@ import {
   Avatar,
   Box,
   Checkbox,
+  Fade,
   Chip,
   useMediaQuery,
   DialogTitle,
@@ -28,9 +29,6 @@ import {
   Modal,
   Tooltip,
 } from "@mui/material";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
 import {
   MailRounded,
@@ -46,6 +44,7 @@ import {
   History,
   OpenInNew,
   CommentOutlined,
+  WarningAmber,
 } from "@mui/icons-material";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import BusinessIcon from '@mui/icons-material/Business';
@@ -303,10 +302,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
   const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false);
   const [expanded, setExpanded] = useState<boolean>(false);
 
-  const [showPickupModal, setShowPickupModal] = useState<boolean>(false);
-  const [pickupDate, setPickupDate] = useState<Dayjs | null>(dayjs().add(2, 'day'));
   const [isPickingUp, setIsPickingUp] = useState<boolean>(false);
-  const [pickupEvent, setPickupEvent] = useState<React.MouseEvent | undefined>(undefined);
 
   const dispatch: AppDispatch = useDispatch();
   const { toastAndNavigate } = Utility();
@@ -451,41 +447,13 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
     }
   }, [showComment, customerApplication?.ticketId]);
 
-  const handleCheckboxClick = (e?: React.MouseEvent) => {
-    // Validate company selection
-    if (validateCompanyForCheckbox && !validateCompanyForCheckbox()) {
-      e?.preventDefault();
-      e?.stopPropagation();
-      return;
-    }
-    setPickupEvent(e);
-    setPickupDate(dayjs().add(2, 'day'));
-    setShowPickupModal(true);
-  };
-
   const confirmPickup = async () => {
-    if (!pickupDate) {
-      toastAndNavigate(
-        dispatch,
-        true,
-        "error",
-        "Please select an expected decision date.",
-        null,
-        null,
-        true
-      );
-      return;
-    }
-
     setIsPickingUp(true);
     try {
-      const userInfo = decodedToken();
-
       const ticketResponse = await createTicket({
         customer_application_id: customerApplication.applicationId,
         user_id: decodedToken()?.id,
         status: "operations",
-        due_date: pickupDate.toISOString(),
       });
 
       if (ticketResponse?.statusCode === 409) {
@@ -507,13 +475,22 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
           is_picked: 1,
         });
         dispatch(resetCustomerApplications(customerApplication.applicationId));
-        setShowPickupModal(false);
       }
     } catch (error) {
       console.log("Error in checkbox change:", error);
     } finally {
       setIsPickingUp(false);
     }
+  };
+
+  const handleCheckboxClick = (e?: React.MouseEvent) => {
+    // Validate company selection
+    if (validateCompanyForCheckbox && !validateCompanyForCheckbox()) {
+      e?.preventDefault();
+      e?.stopPropagation();
+      return;
+    }
+    confirmPickup();
   };
 
   useEffect(() => {
@@ -610,568 +587,578 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
 
     return (
       <>
-        <Grid item xs={20} key={customerApplication.customerId}>
-          <Paper
-            elevation={2}
+        <Grid item xs={12} key={customerApplication.customerId}>
+          <Box
             sx={{
-              borderRadius: 2,
-              overflow: "hidden",
-              height: {
-                xs: "14vh",
-                sm: "inherit",
-                md: "inherit",
-              },
-              mb: 1,
-              transition: "all 0.3s ease",
-              "&:hover": {
-                boxShadow: 4,
-                transform: "translateY(-2px)",
-              },
-              overflowY: { xs: "scroll", sm: "visible" },
-              scrollbarWidth: { xs: "thin", sm: "none" },
-              "&::-webkit-scrollbar": {
-                width: "6px",
-                display: { xs: "block", sm: "none" },
-              },
-              "&::-webkit-scrollbar-thumb": {
-                backgroundColor: "rgba(0,0,0,0.2)",
-                borderRadius: "3px",
-              },
-              WebkitOverflowScrolling: { xs: "touch", sm: "auto" },
+              display: "flex",
+              alignItems: "center",
+              px: 2,
+              py: 1.2,
+              gap: 2,
+              backgroundColor: "#fff",
+              borderBottom: "1px solid #edf0f7",
+              borderLeft: "3px solid #3f50b5",
+              transition: "background-color 0.15s ease",
+              "&:hover": { backgroundColor: "#f8f9fd" },
+              minHeight: "56px",
             }}
           >
-            <ListItem
+            {/* Avatar */}
+            <Avatar
+              alt={capitalizeFirstLetter(
+                customerApplication.customerName.split(".")[1]?.trim() ||
+                customerApplication.customerName.split(" ").slice(1).join(" ")
+              )}
+              src={customerApplication.customerProfileImage}
               sx={{
-                flexDirection: isMobile ? "row" : "row",
-                alignItems: isMobile ? "stretch" : "center",
-                p: 1,
-                backgroundColor: "white",
-                color: "#1e3a5f",
-                borderBottom: "1px solid rgba(12,66,160,0.08)",
-                boxShadow: "inset 4px 0 0 0 rgba(12, 102, 228, 0.5)", // Gives it a slight primary color accent on the left
+                width: 38,
+                height: 38,
+                background: "#3f50b5",
+                color: "white",
+                fontSize: 14,
+                fontWeight: 700,
+                flexShrink: 0,
               }}
-            >
-              <ListItemAvatar sx={{ minWidth: isMobile ? "auto" : 60 }}>
-                <Avatar
-                  alt={capitalizeFirstLetter(
-                    customerApplication.customerName.split(".")[1]?.trim() ||
-                    customerApplication.customerName
-                      .split(" ")
-                      .slice(1)
-                      .join(" ")
-                  )}
-                  src={customerApplication.customerProfileImage}
-                  sx={{
-                    width: isMobile ? 48 : 48,
-                    height: isMobile ? 48 : 48,
-                    background: "#1e3a5f",
-                    color: "white",
-                    fontSize: isMobile ? 16 : 20,
-                    fontWeight: "bold",
-                    border: "2px solid white",
-                    boxShadow: "0 2px 8px rgba(12,66,160,0.2)",
-                    mx: isMobile ? "auto" : 0,
-                    mb: isMobile ? 0.25 : 0,
-                  }}
-                />
-              </ListItemAvatar>
+            />
 
-              {/* Main Content */}
-              <ListItemText
+            {/* Name + Email + T.ID block */}
+            <Box sx={{ minWidth: "160px", maxWidth: "200px", flexShrink: 0 }}>
+              <Typography
                 sx={{
-                  flex: 1,
-                  ml: isMobile ? 0 : 1,
-                  textAlign: isMobile ? "center" : "left",
-                }}
-                primary={
-                  <Box sx={{ mb: 0.5 }}>
-                    <Typography
-                      variant={isMobile ? "body1" : "subtitle1"}
-                      sx={{
-                        fontWeight: "semibold",
-                        fontSize: {
-                          xs: "0.75rem",
-                          sm: "0.875rem",
-                          md: ".5rem",
-                          lg: "1.125rem",
-                          xl: "1.25rem",
-                        },
-                        color: "#000",
-                        mb: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        flexWrap: "wrap",
-                        gap: 1,
-                      }}
-                    >
-                      <span style={{ color: "#666", fontWeight: "bold" }}>T.ID: {customerApplication.ticketId || mainIndex}</span>
-                      {customerApplication.customerName?.toUpperCase()}
-                      {(customerApplication.source === "website" || customerApplication.applicationSource === "website") && <DirectBadge />}
-                    </Typography>
-                    {userRole !== "sales" && (
-                      <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: 500, display: "block" }}>
-                        {userRole === "admin" || customerApplication.ticketStatus !== "disbursed" ? customerApplication.customerEmail : "N/A"}
-                      </Typography>
-                    )}
-                  </Box>
-                }
-                secondary={
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mt: 0, mb: 0.5 }}>
-                    {/* Column 1: Financial & Basic */}
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                      <Typography variant="body2" sx={{ color: "#00796B", fontWeight: "medium" }}>
-                        <span style={{ fontWeight: 600, color: "#33415c" }}>Amount:</span> {formatRupees(customerApplication.applicationAmount)}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: "#6A0DAD", fontWeight: 600 }}>
-                        <span style={{ fontWeight: 600, color: "#33415c" }}>Provider:</span> {customerApplication.applicationProvider || "N/A"}
-                      </Typography>
-                    </Box>
-
-                    {/* Column 2: Status & Dates */}
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <span style={{ fontWeight: 600, color: "#33415c", fontSize: '0.875rem' }}>Status:</span>
-                        <Chip
-                          label={customerApplication?.ticketStatus ? capitalizeFirstLetter(customerApplication.ticketStatus) : 'N/A'}
-                          size="small"
-                          sx={{
-                            bgcolor: "rgba(12, 102, 228, 0.1)",
-                            color: "#0c66e4",
-                            fontWeight: "bold",
-                            height: "20px",
-                            fontSize: "0.7rem",
-                          }}
-                        />
-                      </Box>
-                      {((customerApplication as any)?.approvedAt || customerApplication?.approved_At) && ((customerApplication as any)?.approvedAmount || customerApplication?.approved_Amount) ? (
-                        <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: 'medium', fontSize: "0.75rem" }}>
-                          <span style={{ fontWeight: 600 }}>Approved:</span> {new Date(((customerApplication as any).approvedAt || customerApplication.approved_At)!).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                        </Typography>
-                      ) : ((customerApplication as any)?.disbursedAt || customerApplication?.disbursed_At) && ((customerApplication as any)?.disbursedAmount || customerApplication?.disbursed_Amount) ? (
-                        <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: 'medium', fontSize: "0.75rem" }}>
-                          <span style={{ fontWeight: 600 }}>Disbursed:</span> {new Date(((customerApplication as any).disbursedAt || customerApplication.disbursed_At)!).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                        </Typography>
-                      ) : null}
-                    </Box>
-
-                    {/* Column 3: Loan Details */}
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                      <Typography variant="body2" sx={{ color: "#33415c" }}>
-                        <span style={{ fontWeight: 600 }}>Loan Type:</span> {capitalizeFirstLetter(customerApplication.loanType || "N/A")}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: "#33415c" }}>
-                        <span style={{ fontWeight: 600 }}>Lead Type:</span> {capitalizeFirstLetter(customerApplication.leadType || "N/A")}
-                      </Typography>
-                    </Box>
-
-                    {/* Column 4: Location & Tenure */}
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                      <Typography variant="body2" sx={{ color: "#33415c" }}>
-                        <span style={{ fontWeight: 600 }}>Tenure:</span> {formatTenure(customerApplication.applicationTenure)}
-                      </Typography>
-                      {(customerApplication.customerLocation || customerApplication.customerState) && (
-                        <Typography variant="body2" sx={{ color: "#33415c" }}>
-                          <span style={{ fontWeight: 600 }}>Loc:</span> {capitalizeFirstLetter(customerApplication.customerLocation || "")}{customerApplication.customerLocation && customerApplication.customerState ? ", " : ""}{capitalizeFirstLetter(customerApplication.customerState || "")}
-                        </Typography>
-                      )}
-                    </Box>
-
-                    {/* Column 5: Created At */}
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                      <Typography variant="body2" sx={{ color: "#33415c" }}>
-                        <span style={{ fontWeight: 600 }}>Created At:</span> {customerApplication?.createdAt || customerApplication?.applicationDate ? new Date(customerApplication.createdAt || customerApplication.applicationDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : "N/A"}
-                      </Typography>
-                    </Box>
-                  </Box>
-                }
-              />
-
-              {/* Action Buttons */}
-              <Box
-                sx={{
+                  fontSize: "0.82rem",
+                  fontWeight: 700,
+                  color: "#1a2340",
+                  lineHeight: 1.2,
                   display: "flex",
-                  flexDirection: "row",
-                  gap: 1,
-                  flexWrap: "wrap",
                   alignItems: "center",
-                  mt: isMobile ? 1 : 0,
-                  pl: isMobile ? 0 : 2,
-                  borderLeft: isMobile ? "none" : "1px solid #eee",
+                  gap: 0.5,
+                  flexWrap: "wrap",
                 }}
               >
-                {/* Delete Button */}
-                {(showDeleteButton ||
-                  (userRole === "admin" && handleDeleteTicket)) && (
-                    <Button
-                      onClick={openConfirmDialog}
-                      startIcon={<DeleteOutline sx={{ fontSize: 18 }} />}
+                {customerApplication.customerName?.toUpperCase()}
+                {(customerApplication.source === "website" || customerApplication.applicationSource === "website") && <DirectBadge />}
+              </Typography>
+
+              {userRole !== "sales" && (
+                <Typography sx={{ fontSize: "0.72rem", color: "#8892a4", mt: 0.2, lineHeight: 1 }}>
+                  {userRole === "admin" || customerApplication.ticketStatus !== "disbursed"
+                    ? customerApplication.customerEmail
+                    : "N/A"}
+                </Typography>
+              )}
+
+              <Typography sx={{ fontSize: "0.72rem", color: "#8892a4", mt: 0.2, lineHeight: 1, fontWeight: 600 }}>
+                {isApplication ? `S.No: ${mainIndex}` : `T.ID: ${customerApplication.ticketId || mainIndex}`}
+              </Typography>
+            </Box>
+
+            {/* Divider */}
+            <Box sx={{ width: "1px", height: "32px", bgcolor: "#e8edf5", flexShrink: 0 }} />
+
+            {/* Data fields — inline, compact */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2.5, flex: 1, flexWrap: "wrap" }}>
+
+              {/* Amount */}
+              <Box>
+                <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 600, lineHeight: 1, mb: 0.3 }}>Amount</Typography>
+                <Typography sx={{ fontSize: "0.8rem", fontWeight: 700, color: "#00796B", lineHeight: 1 }}>
+                  {formatRupees(customerApplication.applicationAmount)}
+                </Typography>
+              </Box>
+
+              <Box sx={{ width: "1px", height: "28px", bgcolor: "#e8edf5", flexShrink: 0 }} />
+
+              {/* Provider */}
+              <Box>
+                <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 600, lineHeight: 1, mb: 0.3 }}>Provider</Typography>
+                <Typography sx={{ fontSize: "0.8rem", fontWeight: 600, color: "#6A0DAD", lineHeight: 1 }}>
+                  {customerApplication.applicationProvider || "N/A"}
+                </Typography>
+              </Box>
+
+              <Box sx={{ width: "1px", height: "28px", bgcolor: "#e8edf5", flexShrink: 0 }} />
+
+              {/* Loan Type */}
+              <Box>
+                <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 600, lineHeight: 1, mb: 0.3 }}>Loan Type</Typography>
+                <Typography sx={{ fontSize: "0.8rem", color: "#1a2340", lineHeight: 1 }}>
+                  {capitalizeFirstLetter(customerApplication.loanType || "N/A")}
+                </Typography>
+              </Box>
+
+              <Box sx={{ width: "1px", height: "28px", bgcolor: "#e8edf5", flexShrink: 0 }} />
+
+              {/* Lead Type */}
+              <Box>
+                <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 600, lineHeight: 1, mb: 0.3 }}>Lead Type</Typography>
+                <Typography sx={{ fontSize: "0.8rem", color: "#1a2340", lineHeight: 1 }}>
+                  {capitalizeFirstLetter(customerApplication.leadType || "N/A")}
+                </Typography>
+              </Box>
+
+              <Box sx={{ width: "1px", height: "28px", bgcolor: "#e8edf5", flexShrink: 0 }} />
+
+              {/* Tenure */}
+              <Box>
+                <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 600, lineHeight: 1, mb: 0.3 }}>Tenure</Typography>
+                <Typography sx={{ fontSize: "0.8rem", color: "#1a2340", lineHeight: 1 }}>
+                  {formatTenure(customerApplication.applicationTenure)}
+                </Typography>
+              </Box>
+
+              <Box sx={{ width: "1px", height: "28px", bgcolor: "#e8edf5", flexShrink: 0 }} />
+
+              {/* Location */}
+              {(customerApplication.customerLocation || customerApplication.customerState) && (
+                <Box>
+                  <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 600, lineHeight: 1, mb: 0.3 }}>Location</Typography>
+                  <Typography sx={{ fontSize: "0.8rem", color: "#1a2340", lineHeight: 1 }}>
+                    {capitalizeFirstLetter(customerApplication.customerLocation || "")}
+                    {customerApplication.customerLocation && customerApplication.customerState ? ", " : ""}
+                    {capitalizeFirstLetter(customerApplication.customerState || "")}
+                  </Typography>
+                </Box>
+              )}
+
+              <Box sx={{ width: "1px", height: "28px", bgcolor: "#e8edf5", flexShrink: 0 }} />
+
+              {/* Created At */}
+              <Box>
+                <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 600, lineHeight: 1, mb: 0.3 }}>Created At</Typography>
+                <Typography sx={{ fontSize: "0.8rem", color: "#1a2340", lineHeight: 1 }}>
+                  {customerApplication?.createdAt || customerApplication?.applicationDate
+                    ? new Date(customerApplication.createdAt || customerApplication.applicationDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+                    : "N/A"}
+                </Typography>
+              </Box>
+
+              {/* Ticket status — only for ticket view */}
+              {!isApplication && (
+                <>
+                  <Box sx={{ width: "1px", height: "28px", bgcolor: "#e8edf5", flexShrink: 0 }} />
+                  <Box>
+                    <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 600, lineHeight: 1, mb: 0.3 }}>Status</Typography>
+                    <Chip
+                      label={customerApplication?.ticketStatus ? capitalizeFirstLetter(customerApplication.ticketStatus) : "N/A"}
                       size="small"
-                      sx={{
-                        textTransform: 'none',
-                        borderRadius: 20,
-                        px: 1.5,
-                        py: 0.5,
-                        fontSize: '0.75rem',
-                        fontWeight: 'bold',
-                        color: "#f44336",
-                        bgcolor: "rgba(244, 67, 54, 0.08)",
-                        "&:hover": {
-                          backgroundColor: "rgba(244, 67, 54, 0.15)",
-                          color: "#d32f2f",
-                        },
-                      }}
-                    >
-                      Delete
-                    </Button>
+                      sx={{ bgcolor: "rgba(12, 102, 228, 0.08)", color: "#0c66e4", fontWeight: 700, height: "20px", fontSize: "0.68rem" }}
+                    />
+
+                    {/* Status Sub-details (Date & Amount) */}
+                    {customerApplication?.ticketStatus === 'approved' && ((customerApplication as any)?.approvedAt || customerApplication?.approved_At) && (
+                      <Typography sx={{ fontSize: "0.6rem", color: "#8892a4", mt: 0.4, fontWeight: 600, lineHeight: 1 }}>
+                        {new Date(((customerApplication as any).approvedAt || customerApplication.approved_At)!).toLocaleDateString('en-IN', {
+                          day: '2-digit', month: 'short', year: 'numeric',
+                        })}
+                        {((customerApplication as any)?.approvedAmount || customerApplication?.approved_Amount) && ` • ${formatRupees(((customerApplication as any).approvedAmount || customerApplication.approved_Amount) as number)}`}
+                      </Typography>
+                    )}
+
+                    {customerApplication?.ticketStatus === 'disbursed' && ((customerApplication as any)?.disbursedAt || customerApplication?.disbursed_At) && (
+                      <Typography sx={{ fontSize: "0.6rem", color: "#8892a4", mt: 0.4, fontWeight: 600, lineHeight: 1 }}>
+                        {new Date(((customerApplication as any).disbursedAt || customerApplication.disbursed_At)!).toLocaleDateString('en-IN', {
+                          day: '2-digit', month: 'short', year: 'numeric',
+                        })}
+                        {((customerApplication as any)?.disbursedAmount || customerApplication?.disbursed_Amount) && ` • ${formatRupees(((customerApplication as any).disbursedAmount || customerApplication.disbursed_Amount) as number)}`}
+                      </Typography>
+                    )}
+                  </Box>
+                </>
+              )}
+            </Box>
+
+            {/* Action Buttons — vertical stack with dividers, pinned right */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexShrink: 0, ml: "auto" }}>
+
+              {(showDeleteButton || (userRole === "admin" && handleDeleteTicket) || (handleStartClick && customerApplication.ticketId) || handleStartClick) && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "stretch",
+                    border: "1px solid #e8edf5",
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                    minWidth: "64px",
+                  }}
+                >
+                  {/* Top Row: Delete & History */}
+                  <Box sx={{ display: "flex", flexDirection: "row", alignItems: "stretch", justifyContent: "center" }}>
+                    {/* Delete */}
+                    {!isApplication && (showDeleteButton || (userRole === "admin" && handleDeleteTicket)) && (
+                      <Tooltip title="Delete" placement="top" arrow>
+                        <IconButton
+                          onClick={openConfirmDialog}
+                          size="small"
+                          sx={{
+                            color: "#e53935",
+                            borderRadius: 0,
+                            py: 0.5,
+                            flex: 1,
+                            "&:hover": { bgcolor: "rgba(229, 57, 53, 0.07)", color: "#c62828" },
+                            transition: "all 0.15s ease",
+                          }}
+                        >
+                          <DeleteOutline sx={{ fontSize: 15 }} />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+
+                    {/* Vertical Divider between Delete and History */}
+                    {!isApplication && (showDeleteButton || (userRole === "admin" && handleDeleteTicket)) && handleStartClick && customerApplication.ticketId && (
+                      <Box sx={{ width: "1px", bgcolor: "#e8edf5", flexShrink: 0 }} />
+                    )}
+
+                    {/* History */}
+                    {handleStartClick && customerApplication.ticketId && (
+                      <Tooltip title={showHistory ? "Close History" : "History"} placement="top" arrow>
+                        <IconButton
+                          size="small"
+                          onClick={toggleHistory}
+                          sx={{
+                            color: "#667eea",
+                            borderRadius: 0,
+                            py: 0.5,
+                            flex: 1,
+                            "&:hover": { bgcolor: "rgba(102, 126, 234, 0.07)", color: "#5a6fd8" },
+                            transition: "all 0.15s ease",
+                          }}
+                        >
+                          <History sx={{ fontSize: 15 }} />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                  </Box>
+
+                  {/* Horizontal Divider between Top Row and Visit */}
+                  {((!isApplication && (showDeleteButton || (userRole === "admin" && handleDeleteTicket))) || (handleStartClick && customerApplication.ticketId)) && handleStartClick && (
+                    <Box sx={{ height: "1px", bgcolor: "#e8edf5", flexShrink: 0 }} />
                   )}
 
-                {/* History Button (only for tickets) */}
-                {handleStartClick && customerApplication.ticketId && (
-                  <Tooltip title={showHistory ? "Close History" : "View History"}>
-                    <Button
-                      size="small"
-                      onClick={toggleHistory}
-                      startIcon={<History fontSize="small" />}
-                      sx={{
-                        textTransform: 'none',
-                        borderRadius: 20,
-                        px: 2,
-                        py: 0.5,
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        color: "#667eea",
-                        bgcolor: "rgba(102, 126, 234, 0.08)",
-                        "&:hover": {
-                          backgroundColor: "rgba(102, 126, 234, 0.15)",
-                          color: "#5a6fd8",
-                        },
-                      }}
-                    >
-                      {showHistory ? "Close History" : "History"}
-                    </Button>
-                  </Tooltip>
-                )}
-
-                {/* Visit Ticket Button */}
-                {handleStartClick && (
-                  <Tooltip title="Visit Ticket Details">
-                    <Button
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleStartClick(customerApplication.ticketId);
-                      }}
-                      startIcon={<OpenInNew fontSize="small" />}
-                      sx={{
-                        textTransform: 'none',
-                        borderRadius: 20,
-                        px: 2,
-                        py: 0.5,
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        color: "#1976D2",
-                        bgcolor: "rgba(25, 118, 210, 0.08)",
-                        "&:hover": {
-                          backgroundColor: "rgba(25, 118, 210, 0.15)",
-                          color: "#1565C0",
-                        },
-                      }}
-                    >
-                      Visit
-                    </Button>
-                  </Tooltip>
-                )}
-
-                {/* Expand/Collapse Button */}
-                {!isApplication && (
-                  <IconButton
-                    onClick={toggleExpanded}
-                    sx={{
-                      color: "white",
-                      backgroundColor: "rgba(255,255,255,0.1)",
-                      "&:hover": {
-                        backgroundColor: "rgba(255,255,255,0.2)",
-                      },
-                    }}
-                    size="small"
-                  >
-                    {expanded ? (
-                      <ExpandLess sx={{ fontSize: 18 }} />
-                    ) : (
-                      <ExpandMore sx={{ fontSize: 18 }} />
-                    )}
-                  </IconButton>
-                )}
-
-                {/* Pick Checkbox */}
-                {decodedToken()?.role !== "sales" && !handleStartClick && (
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    <Typography
-                      variant="caption"
-                      sx={{ mr: 0.5, color: "white", fontWeight: "bold" }}
-                    >
-                      Pick
-                    </Typography>
-                    <Checkbox
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCheckboxClick(e);
-                      }}
-                      size="small"
-                      sx={{
-                        color: toggleListView === "table" ? "#666" : toggleListView === "list" ? "white" : "black",
-                        "&.Mui-checked": {
-                          color: "#FFD93D",
-                        },
-                      }}
-                    />
-                  </Box>
-                )}
-              </Box>
-            </ListItem>
-
-            {/* Expanded Details */}
-            <Collapse in={expanded} timeout="auto" unmountOnExit>
-              <Box sx={{ p: 1, bgcolor: "#c4d5eb" }}>
-                {!showHistory && !showComment ? (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 1,
-                    }}
-                  ></Box>
-                ) : showHistory ? (
-                  <Box>
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ color: "#333", mb: 1 }}
-                    >
-                      History
-                    </Typography>
-                    <Box
-                      sx={{
-                        maxHeight: "120px",
-                        overflowY: "auto",
-                        "&::-webkit-scrollbar": {
-                          width: "6px",
-                        },
-                        "&::-webkit-scrollbar-track": {
-                          background: "#f1f1f1",
-                          borderRadius: "3px",
-                        },
-                        "&::-webkit-scrollbar-thumb": {
-                          background: "#888",
-                          borderRadius: "3px",
-                        },
-                      }}
-                    >
-                      {historyData.length > 0 ? (
-                        historyData.map((history, index) => (
-                          <Box
-                            key={index}
-                            sx={{
-                              display: "flex",
-                              flexDirection: "column",
-                              mb: 1,
-                              p: 1,
-                              bgcolor: "#f5f5f5",
-                              borderRadius: 1,
-                            }}
-                          >
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                color: "black",
-                                fontWeight: "medium",
-                                mb: 0.25,
-                              }}
-                            >
-                              <strong>
-                                {capitalizeFirstLetter(
-                                  history.action.split(" ")[0]
-                                )}
-                              </strong>
-                              {` ${history.action.substring(
-                                history.action.indexOf(" ") + 1
-                              )}`}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              sx={{ color: "#1976d2" }}
-                            >
-                              {new Date(history.created_at).toLocaleDateString(
-                                "en-IN",
-                                {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric",
-                                }
-                              )}{" "}
-                              ({calculateDaysAgo(history.created_at)} days ago)
-                            </Typography>
-                          </Box>
-                        ))
-                      ) : (
-                        <Typography variant="body2" sx={{ color: "#666" }}>
-                          No history data available.
-                        </Typography>
-                      )}
-                    </Box>
-                  </Box>
-                ) : showComment ? (
-                  // Enhanced Comment Data Section with Image Preview
-                  <Box>
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ color: "#333", mb: 1 }}
-                    >
-                      Comments
-                    </Typography>
-                    <Box
-                      sx={{
-                        maxHeight: "200px",
-                        overflowY: "auto",
-                        "&::-webkit-scrollbar": {
-                          width: "6px",
-                        },
-                        "&::-webkit-scrollbar-track": {
-                          background: "#f1f1f1",
-                          borderRadius: "3px",
-                        },
-                        "&::-webkit-scrollbar-thumb": {
-                          background: "#888",
-                          borderRadius: "3px",
-                        },
-                      }}
-                    >
-                      {commentData?.length > 0 ? (
-                        commentData.map((comment, idx) => (
-                          <Box
-                            key={idx}
-                            sx={{
-                              display: "flex",
-                              flexDirection: "column",
-                              mb: 1,
-                              p: 1,
-                              bgcolor: "#f5f5f5",
-                              borderRadius: 1,
-                            }}
-                          >
-                            {/* User Name */}
-                            <Typography
-                              variant="subtitle2"
-                              sx={{
-                                fontWeight: "bold",
-                                color: "black",
-                                mb: 0.25,
-                              }}
-                            >
-                              {capitalizeFirstLetter(
-                                comment?.user?.username || "Anonymous"
-                              )}
-                            </Typography>
-
-                            {/* Comment Text */}
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                color: "black",
-                                fontStyle: "normal",
-                                mb: 0.5,
-                              }}
-                            >
-                              {capitalizeFirstLetter(comment.comment)}
-                            </Typography>
-
-                            {/* Attachment Section */}
-                            {comment.attachment && (
-                              <Box sx={{ mb: 0.5 }}>
-                                <Button
-                                  onClick={() =>
-                                    toggleAttachment(
-                                      comment.id,
-                                      comment.attachment
-                                    )
-                                  }
-                                  variant="contained"
-                                  size="small"
-                                  sx={{
-                                    textTransform: "none",
-                                    bgcolor: "#0c66e4",
-                                    color: "white",
-                                    fontSize: "0.7rem",
-                                    padding: "3px 6px",
-                                    minHeight: "auto",
-                                    "&:hover": {
-                                      bgcolor: "#085cb8",
-                                    },
-                                  }}
-                                >
-                                  {isExcelAttachment(comment.attachment)
-                                    ? "Open Excel File"
-                                    : isPdfAttachment(comment.attachment)
-                                      ? "Open PDF"
-                                      : showAttachment[comment.id]
-                                        ? "Hide Attachment"
-                                        : "View Attachment"}
-                                </Button>
-                              </Box>
-                            )}
-
-                            {/* Meta Info */}
-                            <Typography
-                              variant="caption"
-                              sx={{ color: "#1976d2" }}
-                            >
-                              {new Date(comment.created_at).toLocaleDateString(
-                                "en-IN",
-                                {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric",
-                                }
-                              )}{" "}
-                              ({calculateDaysAgo(comment.created_at)} days ago)
-                            </Typography>
-                          </Box>
-                        ))
-                      ) : (
-                        <Typography variant="body2" sx={{ color: "#666" }}>
-                          No comments available.
-                        </Typography>
-                      )}
-                    </Box>
-                  </Box>
-                ) : null}
-
-                {/* Action Buttons */}
-                {handleStartClick && customerApplication.ticketId && (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      gap: 1,
-                      mt: 1,
-                      flexDirection: isMobile ? "column" : "row",
-                    }}
-                  >
-                    {userRole !== "sales" && (
+                  {/* Visit */}
+                  {handleStartClick && (
+                    <Tooltip title="Visit Ticket" placement="bottom" arrow>
                       <Button
-                        variant="contained"
-                        onClick={handleStartClick}
+                        size="small"
+                        onClick={(e) => { e.stopPropagation(); handleStartClick(customerApplication.ticketId); }}
+                        endIcon={<OpenInNew sx={{ fontSize: 11 }} />}
                         sx={{
-                          bgcolor: "#0c66e4",
-                          "&:hover": {
-                            bgcolor: "#0c66e4",
-                          },
+                          textTransform: "none",
+                          fontSize: "0.65rem",
+                          fontWeight: 600,
+                          color: "#1976D2",
+                          px: 1,
+                          py: 0.5,
+                          minWidth: 0,
+                          lineHeight: 1,
+                          borderRadius: 0,
+                          bgcolor: "transparent",
+                          "&:hover": { bgcolor: "rgba(25, 118, 210, 0.07)" },
+                          transition: "all 0.15s ease",
                         }}
                       >
-                        Visit Ticket
+                        Visit
                       </Button>
+                    </Tooltip>
+                  )}
+                </Box>
+              )}
+
+              {/* Pick Pill (application only) */}
+              {decodedToken()?.role !== "sales" && !handleStartClick && (
+                <Tooltip
+                  title="Assign to yourself" arrow placement="top"
+                  slotProps={{
+                    tooltip: { sx: { bgcolor: "#3f50b5", fontSize: "0.72rem", fontWeight: 600, px: 1.5, py: 0.5, borderRadius: "8px", boxShadow: "0 4px 12px rgba(63,80,181,0.35)" } },
+                    arrow: { sx: { color: "#3f50b5" } },
+                  }}
+                >
+                  <Box
+                    onClick={(e) => { e.stopPropagation(); handleCheckboxClick(e); }}
+                    sx={{
+                      display: "inline-flex", alignItems: "center", gap: 0.5,
+                      px: 1.4, py: 0.5, borderRadius: "20px",
+                      border: "1.5px solid #3f50b5",
+                      backgroundColor: "rgba(63, 80, 181, 0.06)",
+                      cursor: "pointer", transition: "all 0.2s ease", userSelect: "none",
+                      "&:hover": { backgroundColor: "rgba(63, 80, 181, 0.14)", boxShadow: "0 0 0 3px rgba(63,80,181,0.18)" },
+                      "&:active": { transform: "scale(0.96)" },
+                    }}
+                  >
+                    <Checkbox
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => { e.stopPropagation(); handleCheckboxClick(e as any); }}
+                      size="small"
+                      sx={{ p: 0, color: "#3f50b5", "&.Mui-checked": { color: "#3f50b5" } }}
+                    />
+                    <Typography sx={{ fontWeight: 700, fontSize: "0.75rem", color: "#3f50b5", letterSpacing: "0.03em" }}>
+                      Pick
+                    </Typography>
+                  </Box>
+                </Tooltip>
+              )}
+            </Box>
+          </Box>
+
+
+
+          {/* Expanded Details */}
+          <Collapse in={expanded} timeout="auto" unmountOnExit>
+            <Box sx={{ p: 1, bgcolor: "#c4d5eb" }}>
+              {!showHistory && !showComment ? (
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 1,
+                  }}
+                ></Box>
+              ) : showHistory ? (
+                <Box>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ color: "#333", mb: 1 }}
+                  >
+                    History
+                  </Typography>
+                  <Box
+                    sx={{
+                      maxHeight: "120px",
+                      overflowY: "auto",
+                      "&::-webkit-scrollbar": {
+                        width: "6px",
+                      },
+                      "&::-webkit-scrollbar-track": {
+                        background: "#f1f1f1",
+                        borderRadius: "3px",
+                      },
+                      "&::-webkit-scrollbar-thumb": {
+                        background: "#888",
+                        borderRadius: "3px",
+                      },
+                    }}
+                  >
+                    {historyData.length > 0 ? (
+                      historyData.map((history, index) => (
+                        <Box
+                          key={index}
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            mb: 1,
+                            p: 1,
+                            bgcolor: "#f5f5f5",
+                            borderRadius: 1,
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: "black",
+                              fontWeight: "medium",
+                              mb: 0.25,
+                            }}
+                          >
+                            <strong>
+                              {capitalizeFirstLetter(
+                                history.action.split(" ")[0]
+                              )}
+                            </strong>
+                            {` ${history.action.substring(
+                              history.action.indexOf(" ") + 1
+                            )}`}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            sx={{ color: "#1976d2" }}
+                          >
+                            {new Date(history.created_at).toLocaleDateString(
+                              "en-IN",
+                              {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              }
+                            )}{" "}
+                            ({calculateDaysAgo(history.created_at)} days ago)
+                          </Typography>
+                        </Box>
+                      ))
+                    ) : (
+                      <Typography variant="body2" sx={{ color: "#666" }}>
+                        No history data available.
+                      </Typography>
                     )}
+                  </Box>
+                </Box>
+              ) : showComment ? (
+                // Enhanced Comment Data Section with Image Preview
+                <Box>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ color: "#333", mb: 1 }}
+                  >
+                    Comments
+                  </Typography>
+                  <Box
+                    sx={{
+                      maxHeight: "200px",
+                      overflowY: "auto",
+                      "&::-webkit-scrollbar": {
+                        width: "6px",
+                      },
+                      "&::-webkit-scrollbar-track": {
+                        background: "#f1f1f1",
+                        borderRadius: "3px",
+                      },
+                      "&::-webkit-scrollbar-thumb": {
+                        background: "#888",
+                        borderRadius: "3px",
+                      },
+                    }}
+                  >
+                    {commentData?.length > 0 ? (
+                      commentData.map((comment, idx) => (
+                        <Box
+                          key={idx}
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            mb: 1,
+                            p: 1,
+                            bgcolor: "#f5f5f5",
+                            borderRadius: 1,
+                          }}
+                        >
+                          {/* User Name */}
+                          <Typography
+                            variant="subtitle2"
+                            sx={{
+                              fontWeight: "bold",
+                              color: "black",
+                              mb: 0.25,
+                            }}
+                          >
+                            {capitalizeFirstLetter(
+                              comment?.user?.username || "Anonymous"
+                            )}
+                          </Typography>
+
+                          {/* Comment Text */}
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: "black",
+                              fontStyle: "normal",
+                              mb: 0.5,
+                            }}
+                          >
+                            {capitalizeFirstLetter(comment.comment)}
+                          </Typography>
+
+                          {/* Attachment Section */}
+                          {comment.attachment && (
+                            <Box sx={{ mb: 0.5 }}>
+                              <Button
+                                onClick={() =>
+                                  toggleAttachment(
+                                    comment.id,
+                                    comment.attachment
+                                  )
+                                }
+                                variant="contained"
+                                size="small"
+                                sx={{
+                                  textTransform: "none",
+                                  bgcolor: "#0c66e4",
+                                  color: "white",
+                                  fontSize: "0.7rem",
+                                  padding: "3px 6px",
+                                  minHeight: "auto",
+                                  "&:hover": {
+                                    bgcolor: "#085cb8",
+                                  },
+                                }}
+                              >
+                                {isExcelAttachment(comment.attachment)
+                                  ? "Open Excel File"
+                                  : isPdfAttachment(comment.attachment)
+                                    ? "Open PDF"
+                                    : showAttachment[comment.id]
+                                      ? "Hide Attachment"
+                                      : "View Attachment"}
+                              </Button>
+                            </Box>
+                          )}
+
+                          {/* Meta Info */}
+                          <Typography
+                            variant="caption"
+                            sx={{ color: "#1976d2" }}
+                          >
+                            {new Date(comment.created_at).toLocaleDateString(
+                              "en-IN",
+                              {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              }
+                            )}{" "}
+                            ({calculateDaysAgo(comment.created_at)} days ago)
+                          </Typography>
+                        </Box>
+                      ))
+                    ) : (
+                      <Typography variant="body2" sx={{ color: "#666" }}>
+                        No comments available.
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+              ) : null}
+
+              {/* Action Buttons */}
+              {handleStartClick && customerApplication.ticketId && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 1,
+                    mt: 1,
+                    flexDirection: isMobile ? "column" : "row",
+                  }}
+                >
+                  {userRole !== "sales" && (
+                    <Button
+                      variant="contained"
+                      onClick={handleStartClick}
+                      sx={{
+                        bgcolor: "#0c66e4",
+                        "&:hover": {
+                          bgcolor: "#0c66e4",
+                        },
+                      }}
+                    >
+                      Visit Ticket
+                    </Button>
+                  )}
+                  <Button
+                    variant="outlined"
+                    onClick={toggleHistory}
+                    sx={{
+                      borderColor: "#667eea",
+                      color: "#667eea",
+                      "&:hover": {
+                        borderColor: "#5a6fd8",
+                        bgcolor: "rgba(102, 126, 234, 0.04)",
+                      },
+                    }}
+                  >
+                    {showHistory ? "Close History" : "Show History"}
+                  </Button>
+                  {userRole === "sales" && (
                     <Button
                       variant="outlined"
-                      onClick={toggleHistory}
+                      onClick={toggleComment}
                       sx={{
                         borderColor: "#667eea",
                         color: "#667eea",
@@ -1181,29 +1168,13 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                         },
                       }}
                     >
-                      {showHistory ? "Close History" : "Show History"}
+                      {showComment ? "Close Comments" : "Comments"}
                     </Button>
-                    {userRole === "sales" && (
-                      <Button
-                        variant="outlined"
-                        onClick={toggleComment}
-                        sx={{
-                          borderColor: "#667eea",
-                          color: "#667eea",
-                          "&:hover": {
-                            borderColor: "#5a6fd8",
-                            bgcolor: "rgba(102, 126, 234, 0.04)",
-                          },
-                        }}
-                      >
-                        {showComment ? "Close Comments" : "Comments"}
-                      </Button>
-                    )}
-                  </Box>
-                )}
-              </Box>
-            </Collapse>
-          </Paper>
+                  )}
+                </Box>
+              )}
+            </Box>
+          </Collapse>
         </Grid>
 
         {Object.keys(showAttachment).some((key) => showAttachment[key]) &&
@@ -1441,797 +1412,396 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
         <Card
           sx={{
             width: "100%",
-            maxWidth: 400,
-            borderRadius: 4,
-            overflow: "visible",
+            borderRadius: 3,
+            overflow: "hidden",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
+            border: "1px solid #e8edf5",
+            bgcolor: "#fff",
+            display: "flex",
+            flexDirection: "column",
             position: "relative",
-            boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
-            backgroundImage: "linear-gradient(135deg, #fff 0%, #fff 100%)",
-            backgroundBlendMode: "multiply, screen, normal",
-            pt: isMobile ? 3 : isTab ? 4 : 5,
-            minHeight: isMobile ? "220px" : isTab ? "280px" : "320px",
             height: "auto",
             mt: 5,
+            transition: "all 0.2s ease",
+            "&:hover": { boxShadow: "0 8px 30px rgba(0,0,0,0.12)" },
           }}
         >
-          {/* Delete Button */}
-          {showDeleteButton && (
-            <IconButton
-              onClick={openConfirmDialog}
-              sx={{
-                position: "absolute",
-                top: 8,
-                right: 8,
-                color: "",
-                backgroundColor: "#adb5bd",
-                "&:hover": {
-                  backgroundColor: "#adb5bd",
-                  color: "#d32f2f",
-                },
-                zIndex: 1,
-              }}
-              size="small"
-            >
-              <DeleteOutline fontSize="small" />
-            </IconButton>
-          )}
-          <CardContent sx={{ pt: 0, pb: 3 }}>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                mb: 2,
-              }}
-            >
+          {/* Header Banner */}
+          <Box sx={{ height: "40px", bgcolor: "#3f50b5", position: "relative", borderTopLeftRadius: 12, borderTopRightRadius: 12 }} />
+
+          <Box sx={{ px: 2.5, pb: 0, display: "flex", flexDirection: "column", flex: 1 }}>
+            {/* Avatar */}
+            <Box sx={{ display: "flex", justifyContent: "center", mt: "-40px", mb: 1.5, zIndex: 2 }}>
               <Avatar
                 alt={capitalizeFirstLetter(
                   customerApplication.customerName.split(".")[1]?.trim() ||
-                  customerApplication.customerName
-                    .split(" ")
-                    .slice(1)
-                    .join(" ")
+                  customerApplication.customerName.split(" ").slice(1).join(" ")
                 )}
                 src={customerApplication.customerProfileImage}
                 sx={{
                   width: 80,
                   height: 80,
-                  background: "#1e3a5f",
+                  bgcolor: "#1e3a5f",
                   color: "white",
-                  fontSize: 36,
+                  fontSize: 32,
                   fontWeight: "bold",
-                  position: "absolute",
-                  top: -40,
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  border: "4px solid white",
-                  boxShadow: "0 4px 10px rgba(12,66,160,0.3)",
+                  border: "4px solid #fff",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                 }}
               />
             </Box>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                p: .5,
-              }}
-            >
+
+            {/* Profile Info */}
+            <Box sx={{ textAlign: "center", mb: 2.5 }}>
               <Typography
-                variant="h5"
-                component="div"
                 sx={{
+                  fontWeight: 800,
+                  fontSize: "1.15rem",
+                  color: "#1a2340",
+                  lineHeight: 1.2,
                   mb: 0.5,
-                  color: "black",
-                  fontWeight: "bold",
-                  whiteSpace: "normal",
-                  maxWidth: "100%",
-                  textAlign: "center",
-                  fontSize: "1.1rem",
                   display: "flex",
-                  alignItems: "center",
                   justifyContent: "center",
+                  alignItems: "center",
+                  gap: 0.5,
                   flexWrap: "wrap",
-                  gap: 1,
                 }}
               >
                 {customerApplication.customerName?.toUpperCase()}
                 {(customerApplication.source === "website" || customerApplication.applicationSource === "website") && <DirectBadge />}
               </Typography>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
-                <Typography variant="subtitle2" sx={{ color: "#666", fontWeight: "bold" }}>
-                  T.ID: {customerApplication.ticketId || mainIndex}
+
+              {userRole !== "sales" && (
+                <Typography sx={{ fontSize: "0.8rem", color: "#64748b", fontWeight: 500, mb: 1 }}>
+                  {userRole === "admin" || customerApplication.ticketStatus !== "disbursed" ? customerApplication.customerEmail : "N/A"}
                 </Typography>
-                {!isApplication && (
+              )}
+
+              {isApplication ? (
+                <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", mt: 0.5 }}>
+                  <Typography sx={{ fontSize: "0.8rem", color: "#475569", fontWeight: 700 }}>
+                    S.No: {mainIndex}
+                  </Typography>
+                </Box>
+              ) : (
+                <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 1.5, mt: 0.5 }}>
+                  <Typography sx={{ fontSize: "0.8rem", color: "#475569", fontWeight: 700 }}>
+                    T.ID: {customerApplication.ticketId || mainIndex}
+                  </Typography>
                   <Chip
                     label={customerApplication?.ticketStatus ? capitalizeFirstLetter(customerApplication.ticketStatus) : 'N/A'}
                     size="small"
                     sx={{
-                      bgcolor: "rgba(12, 102, 228, 0.1)",
+                      bgcolor: "rgba(12, 102, 228, 0.08)",
                       color: "#0c66e4",
-                      fontWeight: "bold",
-                      height: "20px",
-                      fontSize: "0.7rem",
+                      fontWeight: 700,
+                      height: "22px",
+                      fontSize: "0.72rem",
                     }}
                   />
-                )}
-              </Box>
-              {userRole !== "sales" && (
-                <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: 500, mb: 1.5, display: "block" }}>
-                  {userRole === "admin" || customerApplication.ticketStatus !== "disbursed" ? customerApplication.customerEmail : "N/A"}
-                </Typography>
+                </Box>
               )}
-              {/* Delete button for admin only */}
-              {userRole === "admin" && handleDeleteTicket && (
-                <Button
-                  variant="contained"
-                  sx={{
-                    position: "absolute",
-                    top: { xs: "1vh", sm: "2vh", md: "2.5vh" },
-                    ml: { xs: "40vw", sm: "25vw", md: "17vw" },
-                    width: { xs: "15%", sm: "12%", md: "10%" },
-                    borderRadius: "50px",
-                    backgroundColor: "transparent",
-                    color: "#e5383b",
-                    boxShadow: "none",
-                    minWidth: "auto",
-                    padding: { xs: "6px", sm: "8px", md: "10px" },
-                    "&:hover": {
-                      bgcolor: "#cc0000",
-                      color: "white",
-                    },
-                    "& .MuiButton-startIcon": {
-                      margin: { xs: 0, sm: 0, md: 0 },
-                    },
-                  }}
-                  onClick={openConfirmDialog}
-                >
-                  <DeleteOutlined fontSize="small" />
-                </Button>
-              )}
-            </Box>            <Box
-              sx={{
-                bgcolor: "rgba(255,255,255,0.9)",
-                borderRadius: "10px 10px 0px 0px",
-                p: 2,
-                position: "relative",
-                width: "100%",
-                height: "320px",
-                overflow: "hidden",
-              }}
-            >
+            </Box>
+
+            {/* Smooth Transition Panels (Overlap via CSS Grid) */}
+            <Box sx={{ display: "grid", mb: 2 }}>
+
               {/* DETAILS PANEL */}
               <Box
                 sx={{
+                  gridArea: "1 / 1",
                   opacity: !showHistory && !showComment ? 1 : 0,
-                  transform: !showHistory && !showComment ? "translateY(0) scale(1)" : "translateY(15px) scale(0.95)",
+                  transform: !showHistory && !showComment ? "rotateY(0deg) scale(1)" : "rotateY(10deg) scale(0.95)",
                   pointerEvents: !showHistory && !showComment ? "auto" : "none",
-                  transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
-                  position: "absolute",
-                  top: 16,
-                  left: 16,
-                  right: 16,
-                  bottom: 16,
-                  overflowY: "auto",
+                  transition: "all 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
                   visibility: !showHistory && !showComment ? "visible" : "hidden",
-                  "&::-webkit-scrollbar": {
-                    width: "4px",
-                  },
-                  "&::-webkit-scrollbar-thumb": {
-                    bgcolor: "rgba(0,0,0,0.1)",
-                    borderRadius: "4px",
-                  },
+                  bgcolor: "#f8fafc", borderRadius: 2, p: 2, border: "1px solid #f1f5f9"
                 }}
               >
-                <Grid container spacing={1}>
-                  {/* Row 1: Financials */}
-                  <Grid item xs={12}>
-                    <CardGroup
-                      title="Financials"
-                      bgColor="rgba(0, 121, 107, 0.03)"
-                      borderColor="rgba(0, 121, 107, 0.15)"
-                    >
-                      <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
-                        <Box sx={{ flex: 1 }}>
-                          <CardField
-                            label="Amount"
-                            value={
-                              <span style={{ color: "#00796B", fontWeight: 500 }}>
-                                {formatRupees(customerApplication.applicationAmount)}
-                              </span>
-                            }
-                          />
-                        </Box>
-                        <Box sx={{ flex: 1 }}>
-                          <CardField
-                            label="Provider"
-                            value={
-                              <span style={{ color: "#6A0DAD", fontWeight: 500 }}>
-                                {customerApplication.applicationProvider || "N/A"}
-                              </span>
-                            }
-                          />
-                        </Box>
-                      </Box>
-                    </CardGroup>
-                  </Grid>
-
-                  {/* Row 2: Loan Specifications & Tenure / Loc */}
+                <Grid container spacing={2}>
+                  {/* Financials Row */}
                   <Grid item xs={6}>
-                    <CardGroup
-                      title="Loan Specs"
-                      bgColor="rgba(106, 13, 173, 0.03)"
-                      borderColor="rgba(106, 13, 173, 0.15)"
-                    >
-                      <CardField
-                        label="Category"
-                        value={customerApplication.loanCategory ? capitalizeFirstLetter(customerApplication.loanCategory) : "N/A"}
-                      />
-                      <CardField
-                        label="Loan Type"
-                        value={customerApplication.loanType ? capitalizeFirstLetter(customerApplication.loanType) : "N/A"}
-                      />
-                      <CardField
-                        label="Lead Type"
-                        value={customerApplication.leadType ? capitalizeFirstLetter(customerApplication.leadType) : "N/A"}
-                      />
-                    </CardGroup>
+                    <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.3, letterSpacing: "0.03em" }}>AMOUNT</Typography>
+                    <Typography sx={{ fontSize: "0.9rem", fontWeight: 800, color: "#00796B" }}>
+                      {formatRupees(customerApplication.applicationAmount)}
+                    </Typography>
                   </Grid>
-
                   <Grid item xs={6}>
-                    <CardGroup
-                      title="Tenure & Loc"
-                      bgColor="rgba(71, 85, 105, 0.03)"
-                      borderColor="rgba(71, 85, 105, 0.15)"
-                    >
-                      <CardField
-                        label="Tenure"
-                        value={formatTenure(customerApplication.applicationTenure)}
-                      />
-                      <CardField
-                        label="Location"
-                        value={customerApplication.customerLocation || customerApplication.customerState
-                          ? `${capitalizeFirstLetter(customerApplication.customerLocation || "")}${customerApplication.customerLocation && customerApplication.customerState ? ", " : ""}${capitalizeFirstLetter(customerApplication.customerState || "")}`
-                          : "N/A"
-                        }
-                      />
-                    </CardGroup>
+                    <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.3, letterSpacing: "0.03em" }}>PROVIDER</Typography>
+                    <Typography sx={{ fontSize: "0.85rem", fontWeight: 700, color: "#6A0DAD" }}>
+                      {customerApplication.applicationProvider || "N/A"}
+                    </Typography>
                   </Grid>
 
-                  {/* Row 3: Status & Timeline */}
-                  <Grid item xs={12}>
-                    <CardGroup
-                      title="Timeline"
-                      bgColor="rgba(12, 102, 228, 0.03)"
-                      borderColor="rgba(12, 102, 228, 0.15)"
-                    >
-                      <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
-                        <Box sx={{ flex: 1 }}>
-                          <CardField
-                            label="Created At"
-                            value={
-                              customerApplication?.createdAt || customerApplication?.applicationDate
-                                ? new Date(customerApplication.createdAt || customerApplication.applicationDate).toLocaleDateString('en-IN', {
-                                  day: '2-digit',
-                                  month: 'short',
-                                  year: 'numeric',
-                                })
-                                : "N/A"
-                            }
-                          />
-                        </Box>
-                        {customerApplication?.ticketStatus === 'approved' && ((customerApplication as any)?.approvedAt || customerApplication?.approved_At) && (
-                          <Box sx={{ flex: 1 }}>
-                            <CardField
-                              label="Approved At"
-                              value={
-                                <>
-                                  {new Date(((customerApplication as any).approvedAt || customerApplication.approved_At)!).toLocaleDateString('en-IN', {
-                                    day: '2-digit',
-                                    month: 'short',
-                                    year: 'numeric',
-                                  })}
-                                  {((customerApplication as any)?.approvedAmount || customerApplication?.approved_Amount) && (
-                                    <div style={{ fontSize: '0.72rem', color: '#666', fontWeight: 500, marginTop: '2px' }}>
-                                      {formatRupees(((customerApplication as any).approvedAmount || customerApplication.approved_Amount) as number)}
-                                    </div>
-                                  )}
-                                </>
-                              }
-                            />
-                          </Box>
-                        )}
-                        {customerApplication?.ticketStatus === 'disbursed' && ((customerApplication as any)?.disbursedAt || customerApplication?.disbursed_At) && (
-                          <Box sx={{ flex: 1 }}>
-                            <CardField
-                              label="Disbursed At"
-                              value={
-                                <>
-                                  {new Date(((customerApplication as any).disbursedAt || customerApplication.disbursed_At)!).toLocaleDateString('en-IN', {
-                                    day: '2-digit',
-                                    month: 'short',
-                                    year: 'numeric',
-                                  })}
-                                  {((customerApplication as any)?.disbursedAmount || customerApplication?.disbursed_Amount) && (
-                                    <div style={{ fontSize: '0.72rem', color: '#666', fontWeight: 500, marginTop: '2px' }}>
-                                      {formatRupees(((customerApplication as any).disbursedAmount || customerApplication.disbursed_Amount) as number)}
-                                    </div>
-                                  )}
-                                </>
-                              }
-                            />
-                          </Box>
-                        )}
-                      </Box>
-                    </CardGroup>
+                  {/* Specs Row */}
+                  <Grid item xs={6}>
+                    <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.3, letterSpacing: "0.03em", mt: 1 }}>LOAN TYPE</Typography>
+                    <Typography sx={{ fontSize: "0.85rem", color: "#334155", fontWeight: 600 }}>
+                      {capitalizeFirstLetter(customerApplication.loanType || "N/A")}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.3, letterSpacing: "0.03em", mt: 1 }}>LEAD TYPE</Typography>
+                    <Typography sx={{ fontSize: "0.85rem", color: "#334155", fontWeight: 600 }}>
+                      {capitalizeFirstLetter(customerApplication.leadType || "N/A")}
+                    </Typography>
+                  </Grid>
+
+                  {/* Location Row */}
+                  <Grid item xs={6}>
+                    <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.3, letterSpacing: "0.03em", mt: 1 }}>TENURE</Typography>
+                    <Typography sx={{ fontSize: "0.85rem", color: "#334155", fontWeight: 600 }}>
+                      {formatTenure(customerApplication.applicationTenure)}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.3, letterSpacing: "0.03em", mt: 1 }}>LOCATION</Typography>
+                    <Typography sx={{ fontSize: "0.85rem", color: "#334155", fontWeight: 600, lineHeight: 1.2 }}>
+                      {customerApplication.customerLocation || customerApplication.customerState
+                        ? `${capitalizeFirstLetter(customerApplication.customerLocation || "")}${customerApplication.customerLocation && customerApplication.customerState ? ", " : ""}${capitalizeFirstLetter(customerApplication.customerState || "")}`
+                        : "N/A"}
+                    </Typography>
                   </Grid>
                 </Grid>
+
+                {/* Timeline / Dates */}
+                <Box sx={{ mt: 2.5, pt: 1.5, borderTop: "1px solid #e2e8f0", display: "flex", flexWrap: "wrap", gap: 3, justifyContent: "space-between", alignItems: "flex-end" }}>
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
+                    <Box>
+                      <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.2 }}>CREATED AT</Typography>
+                      <Typography sx={{ fontSize: "0.8rem", color: "#334155", fontWeight: 600 }}>
+                        {customerApplication?.createdAt || customerApplication?.applicationDate
+                          ? new Date(customerApplication.createdAt || customerApplication.applicationDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                          : "N/A"}
+                      </Typography>
+                    </Box>
+                    {customerApplication?.ticketStatus === 'approved' && ((customerApplication as any)?.approvedAt || customerApplication?.approved_At) && (
+                      <Box>
+                        <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.2 }}>APPROVED</Typography>
+                        <Typography sx={{ fontSize: "0.8rem", color: "#334155", fontWeight: 600 }}>
+                          {new Date(((customerApplication as any).approvedAt || customerApplication.approved_At)!).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          {((customerApplication as any)?.approvedAmount || customerApplication?.approved_Amount) && ` • ${formatRupees(((customerApplication as any).approvedAmount || customerApplication.approved_Amount) as number)}`}
+                        </Typography>
+                      </Box>
+                    )}
+                    {customerApplication?.ticketStatus === 'disbursed' && ((customerApplication as any)?.disbursedAt || customerApplication?.disbursed_At) && (
+                      <Box>
+                        <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.2 }}>DISBURSED</Typography>
+                        <Typography sx={{ fontSize: "0.8rem", color: "#334155", fontWeight: 600 }}>
+                          {new Date(((customerApplication as any).disbursedAt || customerApplication.disbursed_At)!).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          {((customerApplication as any)?.disbursedAmount || customerApplication?.disbursed_Amount) && ` • ${formatRupees(((customerApplication as any).disbursedAmount || customerApplication.disbursed_Amount) as number)}`}
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
+
+                  {/* Pick Application Button in Timeline Row */}
+                  {isApplication && decodedToken()?.role !== "sales" && (
+                    <Tooltip
+                      title="Assign to yourself" arrow placement="top"
+                      slotProps={{
+                        tooltip: { sx: { bgcolor: "#3f50b5", fontSize: "0.72rem", fontWeight: 600, px: 1.5, py: 0.5, borderRadius: "8px", boxShadow: "0 4px 12px rgba(63,80,181,0.35)" } },
+                        arrow: { sx: { color: "#3f50b5" } },
+                      }}
+                    >
+                      <Box
+                        onClick={(e) => { e.stopPropagation(); handleCheckboxClick(e); }}
+                        sx={{
+                          display: "inline-flex", alignItems: "center", gap: 0.5, px: 1.5, py: 0.5, borderRadius: "20px",
+                          border: "1.5px solid #3f50b5", backgroundColor: "rgba(63, 80, 181, 0.06)",
+                          cursor: "pointer", transition: "all 0.2s ease", userSelect: "none",
+                          "&:hover": { backgroundColor: "rgba(63, 80, 181, 0.14)", boxShadow: "0 0 0 3px rgba(63,80,181,0.18)" },
+                          "&:active": { transform: "scale(0.96)" },
+                        }}
+                      >
+                        <Checkbox
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => { e.stopPropagation(); handleCheckboxClick(e as any); }}
+                          size="small"
+                          sx={{ p: 0, color: "#3f50b5", "&.Mui-checked": { color: "#3f50b5" } }}
+                        />
+                        <Typography sx={{ fontWeight: 700, fontSize: "0.75rem", color: "#3f50b5", letterSpacing: "0.03em" }}>
+                          Pick
+                        </Typography>
+                      </Box>
+                    </Tooltip>
+                  )}
+                </Box>
               </Box>
 
               {/* HISTORY PANEL */}
               <Box
                 sx={{
+                  gridArea: "1 / 1",
                   opacity: showHistory ? 1 : 0,
-                  transform: showHistory ? "translateY(0) scale(1)" : "translateY(-15px) scale(0.95)",
+                  transform: showHistory ? "rotateY(0deg) scale(1)" : "rotateY(-10deg) scale(0.95)",
                   pointerEvents: showHistory ? "auto" : "none",
-                  transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
-                  position: "absolute",
-                  top: 16,
-                  left: 16,
-                  right: 16,
-                  bottom: 16,
+                  transition: "all 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
                   visibility: showHistory ? "visible" : "hidden",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: isSalesUser ? 1 : 1.5,
-                  borderRadius: 2,
-                  boxShadow: "none",
-                  overflowY: "scroll",
-                  scrollbarWidth: "thin",
-                  "&::-webkit-scrollbar": {
-                    width: "6px",
-                  },
-                  "&::-webkit-scrollbar-track": {
-                    background: "#f1f1f1",
-                    borderRadius: "3px",
-                  },
-                  "&::-webkit-scrollbar-thumb": {
-                    background: "#888",
-                    borderRadius: "3px",
-                  },
+                  bgcolor: "#f8fafc", borderRadius: 2, p: 2, border: "1px solid #e8edf5", maxHeight: "300px", overflowY: "auto"
                 }}
               >
+                <Typography sx={{ fontSize: "0.75rem", fontWeight: 800, color: "#667eea", mb: 2, letterSpacing: "0.05em" }}>TICKET HISTORY</Typography>
                 {historyData.length > 0 ? (
                   historyData.map((history, index) => (
-                    <Box
-                      key={index}
-                      sx={{ display: "flex", flexDirection: "column", mb: 2 }}
-                    >
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "black", fontStyle: "normal", mb: 1 }}
-                      >
-                        <strong>
-                          {capitalizeFirstLetter(history.action.split(" ")[0])}
-                        </strong>
-                        {` ${history.action.substring(
-                          history.action.indexOf(" ") + 1
-                        )}`}
+                    <Box key={index} sx={{ display: "flex", flexDirection: "column", mb: 2, pb: 2, borderBottom: index < historyData.length - 1 ? "1px solid #f1f5f9" : "none" }}>
+                      <Typography variant="body2" sx={{ color: "#1a2340", fontWeight: 500, mb: 0.5, lineHeight: 1.3 }}>
+                        <strong>{capitalizeFirstLetter(history.action.split(" ")[0])}</strong>
+                        {` ${history.action.substring(history.action.indexOf(" ") + 1)}`}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: "blue" }}>
-                        Created At:{" "}
-                        {new Date(history.created_at).toLocaleDateString(
-                          "en-IN",
-                          {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          }
-                        )}{" "}
-                        ({calculateDaysAgo(history.created_at)} days ago)
+                      <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 500 }}>
+                        {new Date(history.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: '2-digit', minute: '2-digit' })}
+                        {" • "}{calculateDaysAgo(history.created_at)} days ago
                       </Typography>
                     </Box>
                   ))
                 ) : (
-                  <Typography variant="body2" sx={{ color: "#333" }}>
-                    No history data available.
-                  </Typography>
+                  <Typography variant="body2" sx={{ color: "#64748b" }}>No history data available.</Typography>
                 )}
               </Box>
 
               {/* COMMENTS PANEL */}
               <Box
                 sx={{
+                  gridArea: "1 / 1",
                   opacity: showComment ? 1 : 0,
-                  transform: showComment ? "translateY(0) scale(1)" : "translateY(-15px) scale(0.95)",
+                  transform: showComment ? "rotateY(0deg) scale(1)" : "rotateY(-10deg) scale(0.95)",
                   pointerEvents: showComment ? "auto" : "none",
-                  transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
-                  position: "absolute",
-                  top: 16,
-                  left: 16,
-                  right: 16,
-                  bottom: 16,
+                  transition: "all 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
                   visibility: showComment ? "visible" : "hidden",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 1,
-                  borderRadius: 2,
-                  overflowY: "scroll",
-                  scrollbarWidth: "thin",
-                  "&::-webkit-scrollbar": {
-                    width: "6px",
-                  },
-                  "&::-webkit-scrollbar-track": {
-                    background: "#f1f1f1",
-                    borderRadius: "3px",
-                  },
-                  "&::-webkit-scrollbar-thumb": {
-                    background: "#888",
-                    borderRadius: "3px",
-                  },
+                  bgcolor: "#f8fafc", borderRadius: 2, p: 2, border: "1px solid #e8edf5", maxHeight: "300px", overflowY: "auto"
                 }}
               >
+                <Typography sx={{ fontSize: "0.75rem", fontWeight: 800, color: "#00796B", mb: 2, letterSpacing: "0.05em" }}>COMMENTS</Typography>
                 {commentData?.length > 0 ? (
                   commentData.map((comment, idx) => (
-                    <Box
-                      key={idx}
-                      sx={{ display: "flex", flexDirection: "column", mb: 2 }}
-                    >
-                      {/* User Name */}
-                      <Typography
-                        variant="subtitle2"
-                        sx={{ fontWeight: "bold", color: "black" }}
-                      >
-                        {capitalizeFirstLetter(
-                          comment?.user?.username || "Anonymous"
-                        )}
+                    <Box key={idx} sx={{ display: "flex", flexDirection: "column", mb: 2, pb: 2, borderBottom: idx < commentData.length - 1 ? "1px solid #f1f5f9" : "none" }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#1a2340", mb: 0.5 }}>
+                        {capitalizeFirstLetter(comment?.user?.username || "Anonymous")}
                       </Typography>
-
-                      {/* Comment Text */}
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "black", fontStyle: "normal", mb: 1 }}
-                      >
+                      <Typography variant="body2" sx={{ color: "#334155", mb: 1, lineHeight: 1.4 }}>
                         {capitalizeFirstLetter(comment.comment)}
                       </Typography>
 
-                      {/* Attachment Section */}
-                      {comment.attachment && (
-                        <Box sx={{ mb: 1 }}>
+                      {/* Condensed Meta/Attachment view */}
+                      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 500 }}>
+                          {new Date(comment.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                        </Typography>
+
+                        {comment.attachment && (
                           <Button
-                            onClick={() =>
-                              toggleAttachment(comment.id, comment.attachment)
-                            }
-                            variant="contained"
+                            onClick={() => toggleAttachment(comment.id, comment.attachment)}
                             size="small"
-                            sx={{
-                              textTransform: "none",
-                              bgcolor: "#0c66e4",
-                              color: "white",
-                              fontSize: "0.75rem",
-                              padding: "4px 8px",
-                              "&:hover": {
-                                bgcolor: "#085cb8",
-                                color: "white",
-                              },
-                            }}
+                            sx={{ textTransform: "none", fontSize: "0.7rem", fontWeight: 600, bgcolor: "rgba(12, 102, 228, 0.1)", color: "#0c66e4", py: 0.2, px: 1, borderRadius: 1 }}
                           >
-                            {isExcelAttachment(comment.attachment)
-                              ? "Open Excel File"
-                              : isPdfAttachment(comment.attachment)
-                                ? "Open PDF"
-                                : showAttachment[comment.id]
-                                  ? "Hide Attachment"
-                                  : "View Attachment"}
+                            {isExcelAttachment(comment.attachment) ? "View Excel" : isPdfAttachment(comment.attachment) ? "View PDF" : "View File"}
                           </Button>
+                        )}
+                      </Box>
 
-                          {/* Image/PDF Preview Modal */}
-                          {!isExcelAttachment(comment.attachment) &&
-                            !isPdfAttachment(comment.attachment) &&
-                            showAttachment[comment.id] && (
-                              <>
-                                {/* Backdrop */}
-                                <Box
-                                  sx={{
-                                    position: "fixed",
-                                    top: 0,
-                                    left: 0,
-                                    width: "100vw",
-                                    height: "100vh",
-                                    backgroundColor: "rgba(0, 0, 0, 0.8)",
-                                    zIndex: 999,
-                                  }}
-                                  onClick={() =>
-                                    toggleAttachment(
-                                      comment.id,
-                                      comment.attachment
-                                    )
-                                  }
-                                />
-
-                                {/* Modal Content */}
-                                <Box
-                                  sx={{
-                                    position: "fixed",
-                                    top: "50%",
-                                    left: "50%",
-                                    transform: "translate(-50%, -50%)",
-                                    zIndex: 1000,
-                                    backgroundColor: "white",
-                                    borderRadius: "8px",
-                                    boxShadow:
-                                      "0px 4px 20px rgba(0, 0, 0, 0.3)",
-                                    padding: 2,
-                                    textAlign: "center",
-                                    height: isMobile
-                                      ? "80vh"
-                                      : isTab
-                                        ? "80vh"
-                                        : "85vh",
-                                    width: isMobile
-                                      ? "95vw"
-                                      : isTab
-                                        ? "85vw"
-                                        : "80vw",
-                                    maxHeight: "90vh",
-                                    maxWidth: "90vw",
-                                    display: "flex",
-                                    flexDirection: "column",
-                                  }}
-                                >
-                                  {/* Header with close button */}
-                                  <Box
-                                    sx={{
-                                      display: "flex",
-                                      justifyContent: "space-between",
-                                      alignItems: "center",
-                                      mb: 2,
-                                      borderBottom: "1px solid #eee",
-                                      pb: 1,
-                                    }}
-                                  >
-                                    <Typography
-                                      variant="h6"
-                                      sx={{ color: "black" }}
-                                    >
-                                      Attachment Preview
-                                    </Typography>
-                                    <Button
-                                      onClick={() =>
-                                        toggleAttachment(
-                                          comment.id,
-                                          comment.attachment
-                                        )
-                                      }
-                                      variant="contained"
-                                      size="small"
-                                      sx={{
-                                        minWidth: "auto",
-                                        padding: "4px 8px",
-                                        bgcolor: "#f06292",
-                                        color: "white",
-                                        "&:hover": {
-                                          bgcolor: "red",
-                                        },
-                                      }}
-                                    >
-                                      ✕
-                                    </Button>
-                                  </Box>
-
-                                  {/* Image Display */}
-                                  <Box
-                                    sx={{
-                                      flex: 1,
-                                      display: "flex",
-                                      justifyContent: "center",
-                                      alignItems: "center",
-                                      overflow: "hidden",
-                                      borderRadius: "4px",
-                                    }}
-                                  >
-                                    <img
-                                      src={comment.attachment}
-                                      alt="Attachment Preview"
-                                      style={{
-                                        maxHeight: "100%",
-                                        maxWidth: "100%",
-                                        objectFit: "contain",
-                                        borderRadius: "4px",
-                                      }}
-                                      onError={(e) => {
-                                        e.target.style.display = "none";
-                                        e.target.nextSibling.style.display =
-                                          "block";
-                                      }}
-                                    />
-                                    <Box
-                                      sx={{
-                                        display: "none",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        height: "200px",
-                                        color: "#666",
-                                        flexDirection: "column",
-                                      }}
-                                    >
-                                      <Typography>
-                                        Unable to preview this file
-                                      </Typography>
-                                      <Button
-                                        href={comment.attachment}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        sx={{ mt: 1 }}
-                                      >
-                                        Download File
-                                      </Button>
-                                    </Box>
-                                  </Box>
-                                </Box>
-                              </>
-                            )}
-                        </Box>
+                      {/* Image/PDF Preview Modal (Kept unchanged) */}
+                      {!isExcelAttachment(comment.attachment) && !isPdfAttachment(comment.attachment) && showAttachment[comment.id] && (
+                        <>
+                          <Box sx={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", backgroundColor: "rgba(0, 0, 0, 0.8)", zIndex: 999 }} onClick={() => toggleAttachment(comment.id, comment.attachment)} />
+                          <Box sx={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 1000, backgroundColor: "white", borderRadius: "8px", boxShadow: "0px 4px 20px rgba(0,0,0,0.3)", padding: 2, textAlign: "center", height: isMobile ? "80vh" : "85vh", width: isMobile ? "95vw" : "80vw", maxHeight: "90vh", maxWidth: "90vw", display: "flex", flexDirection: "column" }}>
+                            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2, borderBottom: "1px solid #eee", pb: 1 }}>
+                              <Typography variant="h6" sx={{ color: "black" }}>Attachment Preview</Typography>
+                              <Button onClick={() => toggleAttachment(comment.id, comment.attachment)} variant="contained" size="small" sx={{ minWidth: "auto", padding: "4px 8px", bgcolor: "#f06292", color: "white", "&:hover": { bgcolor: "red" } }}>✕</Button>
+                            </Box>
+                            <Box sx={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center", overflow: "hidden", borderRadius: "4px" }}>
+                              <img src={comment.attachment} alt="Attachment Preview" style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain", borderRadius: "4px" }} onError={(e) => { e.target.style.display = "none"; e.target.nextSibling.style.display = "block"; }} />
+                              <Box sx={{ display: "none", alignItems: "center", justifyContent: "center", height: "200px", color: "#666", flexDirection: "column" }}>
+                                <Typography>Unable to preview this file</Typography>
+                                <Button href={comment.attachment} target="_blank" rel="noopener noreferrer" sx={{ mt: 1 }}>Download File</Button>
+                              </Box>
+                            </Box>
+                          </Box>
+                        </>
                       )}
-
-                      {/* Meta Info */}
-                      <Typography variant="caption" sx={{ color: "blue" }}>
-                        {new Date(comment.created_at).toLocaleDateString(
-                          "en-IN",
-                          {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          }
-                        )}{" "}
-                        ({calculateDaysAgo(comment.created_at)} days ago)
-                      </Typography>
                     </Box>
                   ))
                 ) : (
-                  <Typography variant="body2" sx={{ color: "#333" }}>
-                    No comments available.
-                  </Typography>
+                  <Typography variant="body2" sx={{ color: "#64748b" }}>No comments available.</Typography>
                 )}
               </Box>
             </Box>
+          </Box>
 
-            {handleStartClick && customerApplication.ticketId ? (
-              <Box
-                sx={{
-                  display: "flex",
-                  gap: 1.5,
-                  p: 1.5,
-                  borderRadius: "0px 0px 12px 12px",
-                  borderTop: "1px solid #e5e7eb",
-                  bgcolor: "#ffffff",
-                  boxShadow: "0 -2px 10px rgba(0, 0, 0, 0.05)",
-                }}
-              >
-                {userRole !== "sales" && (
-                  <Button
-                    fullWidth
-                    size="small"
-                    startIcon={<OpenInNew fontSize="small" />}
-                    sx={{
-                      textTransform: "none",
-                      borderRadius: 20,
-                      px: 2,
-                      py: 0.5,
-                      height: "36px",
-                      fontSize: "0.75rem",
-                      fontWeight: 600,
-                      color: "#1976D2",
-                      bgcolor: "rgba(25, 118, 210, 0.08)",
-                      "&:hover": {
-                        backgroundColor: "rgba(25, 118, 210, 0.15)",
-                        color: "#1565C0",
-                      },
-                      transition: "all 0.2s ease",
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleStartClick(customerApplication.ticketId);
-                    }}
-                  >
-                    Visit
-                  </Button>
-                )}
+          {/* Unified Action Footer - Hidden for Applications */}
+          {!isApplication && (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 1.5,
+                p: 2,
+                borderTop: "1px solid #e8edf5",
+                bgcolor: "#ffffff",
+                flexWrap: "wrap",
+              }}
+            >
+              {/* Delete Button inside Footer */}
+              {(showDeleteButton || (userRole === "admin" && handleDeleteTicket)) && (
                 <Button
-                  fullWidth
                   size="small"
-                  startIcon={<History fontSize="small" />}
+                  startIcon={<DeleteOutline fontSize="small" />}
                   sx={{
-                    textTransform: "none",
-                    borderRadius: 20,
-                    px: 2,
-                    py: 0.5,
-                    height: "36px",
-                    fontSize: "0.75rem",
-                    fontWeight: 600,
-                    color: "#667eea",
-                    bgcolor: "rgba(102, 126, 234, 0.08)",
-                    "&:hover": {
-                      backgroundColor: "rgba(102, 126, 234, 0.15)",
-                      color: "#5a6fd8",
-                    },
-                    transition: "all 0.2s ease",
+                    flex: 1, textTransform: "none", borderRadius: 2, py: 0.8, fontSize: "0.8rem", fontWeight: 700,
+                    color: "#f44336", bgcolor: "rgba(244, 67, 54, 0.08)", "&:hover": { bgcolor: "rgba(244, 67, 54, 0.15)", color: "#d32f2f" },
                   }}
-                  onClick={toggleHistory}
+                  onClick={openConfirmDialog}
                 >
-                  {showHistory ? "Close" : "History"}
+                  Delete
                 </Button>
-                {userRole === "sales" && (
-                  <Button
-                    fullWidth
-                    size="small"
-                    startIcon={<CommentOutlined fontSize="small" />}
-                    sx={{
-                      textTransform: "none",
-                      borderRadius: 20,
-                      px: 2,
-                      py: 0.5,
-                      height: "36px",
-                      fontSize: "0.75rem",
-                      fontWeight: 600,
-                      color: "#00796B",
-                      bgcolor: "rgba(0, 121, 107, 0.08)",
-                      "&:hover": {
-                        backgroundColor: "rgba(0, 121, 107, 0.15)",
-                        color: "#004d40",
-                      },
-                      transition: "all 0.2s ease",
-                    }}
-                    onClick={toggleComment}
-                  >
-                    {showComment ? "Close" : "Comments"}
-                  </Button>
-                )}
-              </Box>
-            ) : (
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  mt: 3,
-                }}
-              >
-                <Chip
-                  label={formattedCreatedAt}
-                  size="small"
-                  sx={{
-                    bgcolor: "rgba(255,255,255,0.9)",
-                    fontWeight: "bold",
-                    "& .MuiChip-label": { color: "#6E44FF" },
-                  }}
-                />
-                {decodedToken()?.role === "sales" ? null : (
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    <Typography
-                      variant="body2"
-                      sx={{ mr: 1, color: "white", fontWeight: "bold" }}
-                    >
-                      Pick
-                    </Typography>
-                    <Checkbox
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCheckboxClick(e);
-                      }}
+              )}
+
+              {handleStartClick && customerApplication.ticketId && (
+                <>
+                  {userRole !== "sales" && (
+                    <Button
                       size="small"
+                      startIcon={<OpenInNew fontSize="small" />}
                       sx={{
-                        color: toggleListView === "table" ? "#666" : toggleListView === "list" ? "white" : "black",
-                        "&.Mui-checked": {
-                          color: "#FFD93D",
-                        },
+                        flex: 1, textTransform: "none", borderRadius: 2, py: 0.8, fontSize: "0.8rem", fontWeight: 700,
+                        color: "#1976D2", bgcolor: "rgba(25, 118, 210, 0.08)", "&:hover": { bgcolor: "rgba(25, 118, 210, 0.15)", color: "#1565C0" },
                       }}
-                    />
-                  </Box>
-                )}
-              </Box>
-            )}
-          </CardContent>
+                      onClick={(e) => { e.stopPropagation(); handleStartClick(customerApplication.ticketId); }}
+                    >
+                      Visit
+                    </Button>
+                  )}
+                  <Button
+                    size="small"
+                    startIcon={<History fontSize="small" />}
+                    sx={{
+                      flex: 1, textTransform: "none", borderRadius: 2, py: 0.8, fontSize: "0.8rem", fontWeight: 700,
+                      color: showHistory ? "#fff" : "#667eea", bgcolor: showHistory ? "#667eea" : "rgba(102, 126, 234, 0.08)",
+                      "&:hover": { bgcolor: showHistory ? "#5a6fd8" : "rgba(102, 126, 234, 0.15)" },
+                    }}
+                    onClick={toggleHistory}
+                  >
+                    {showHistory ? "Close" : "History"}
+                  </Button>
+                  {userRole === "sales" && (
+                    <Button
+                      size="small"
+                      startIcon={<CommentOutlined fontSize="small" />}
+                      sx={{
+                        flex: 1, textTransform: "none", borderRadius: 2, py: 0.8, fontSize: "0.8rem", fontWeight: 700,
+                        color: showComment ? "#fff" : "#00796B", bgcolor: showComment ? "#00796B" : "rgba(0, 121, 107, 0.08)",
+                        "&:hover": { bgcolor: showComment ? "#004d40" : "rgba(0, 121, 107, 0.15)" },
+                      }}
+                      onClick={toggleComment}
+                    >
+                      {showComment ? "Close" : "Comments"}
+                    </Button>
+                  )}
+                </>
+              )}
+            </Box>
+          )}
         </Card>
       </Grid>
     );
@@ -2520,29 +2090,31 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               }}
             >
               {/* Delete Button */}
-              {(showDeleteButton ||
+              {!isApplication && (showDeleteButton ||
                 (userRole === "admin" && handleDeleteTicket)) && (
-                  <Button
-                    onClick={openConfirmDialog}
-                    startIcon={<DeleteOutline sx={{ fontSize: 18 }} />}
-                    size="small"
-                    sx={{
-                      textTransform: 'none',
-                      borderRadius: 2,
-                      px: 1.5,
-                      py: 0.5,
-                      fontSize: '0.75rem',
-                      fontWeight: 'bold',
-                      color: "#f44336",
-                      bgcolor: "rgba(244, 67, 54, 0.08)",
-                      "&:hover": {
-                        backgroundColor: "rgba(244, 67, 54, 0.15)",
-                        color: "#d32f2f",
-                      },
-                    }}
-                  >
-                    Delete
-                  </Button>
+                  <Tooltip title="Delete">
+                    <Button
+                      onClick={openConfirmDialog}
+                      startIcon={userRole === "admin" ? undefined : <DeleteOutline sx={{ fontSize: 18 }} />}
+                      size="small"
+                      sx={{
+                        textTransform: 'none',
+                        borderRadius: 2,
+                        px: 1.5,
+                        py: 0.5,
+                        fontSize: '0.75rem',
+                        fontWeight: 'bold',
+                        color: "#f44336",
+                        bgcolor: "rgba(244, 67, 54, 0.08)",
+                        "&:hover": {
+                          backgroundColor: "rgba(244, 67, 54, 0.15)",
+                          color: "#d32f2f",
+                        },
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  </Tooltip>
                 )}
 
               {/* History Button (only for tickets) */}
@@ -2551,7 +2123,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   <Button
                     size="small"
                     onClick={toggleHistory}
-                    startIcon={<History fontSize="small" />}
+                    startIcon={userRole === "admin" ? undefined : <History fontSize="small" />}
                     sx={{
                       textTransform: 'none',
                       borderRadius: 2,
@@ -2579,7 +2151,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   <Button
                     size="small"
                     onClick={toggleComment}
-                    startIcon={<CommentOutlined fontSize="small" />}
+                    startIcon={userRole === "admin" ? undefined : <CommentOutlined fontSize="small" />}
                     sx={{
                       textTransform: 'none',
                       borderRadius: 2,
@@ -2599,30 +2171,87 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   </Button>
                 )}
 
-              {/* Pick Checkbox */}
+              {/* Pick Checkbox — elegant pill button */}
               {decodedToken()?.role !== "sales" && !handleStartClick && (
-                <Box sx={{ display: "flex", alignItems: "center" }}>
-                  <Typography
-                    variant="caption"
-                    sx={{ mr: 0.5, fontWeight: "bold" }}
-                  >
-                    Pick
-                  </Typography>
-                  <Checkbox
+                <Tooltip
+                  title="Assign to yourself"
+                  arrow
+                  placement="top"
+                  slotProps={{
+                    tooltip: {
+                      sx: {
+                        bgcolor: "#3f50b5",
+                        fontSize: "0.75rem",
+                        fontWeight: 600,
+                        letterSpacing: "0.02em",
+                        px: 1.5,
+                        py: 0.6,
+                        borderRadius: "8px",
+                        boxShadow: "0 4px 12px rgba(63, 80, 181, 0.4)",
+                      },
+                    },
+                    arrow: {
+                      sx: { color: "#3f50b5" },
+                    },
+                  }}
+                >
+                  <Box
                     onClick={(e) => {
                       e.stopPropagation();
                       handleCheckboxClick(e);
                     }}
-                    size="small"
                     sx={{
-                      color: toggleListView === "table" ? "#666" : toggleListView === "list" ? "white" : "black",
-                      "&.Mui-checked": {
-                        color: "#FFD93D",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                      px: 1.5,
+                      py: 0.6,
+                      borderRadius: "20px",
+                      border: "1.5px solid #3f50b5",
+                      backgroundColor: "rgba(63, 80, 181, 0.06)",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      userSelect: "none",
+                      "&:hover": {
+                        backgroundColor: "rgba(63, 80, 181, 0.15)",
+                        boxShadow: "0 0 0 3px rgba(63, 80, 181, 0.2)",
+                        borderColor: "#3f50b5",
+                      },
+                      "&:active": {
+                        transform: "scale(0.96)",
                       },
                     }}
-                  />
-                </Box>
+                  >
+                    <Checkbox
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        handleCheckboxClick(e as any);
+                      }}
+                      size="small"
+                      sx={{
+                        p: 0,
+                        color: "#3f50b5",
+                        "&.Mui-checked": {
+                          color: "#3f50b5",
+                        },
+                      }}
+                    />
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontWeight: 700,
+                        fontSize: "0.78rem",
+                        color: "#3f50b5",
+                        letterSpacing: "0.03em",
+                      }}
+                    >
+                      Pick
+                    </Typography>
+                  </Box>
+                </Tooltip>
               )}
+
 
               {/* Visit Ticket Button (if applicable) */}
               {handleStartClick &&
@@ -2634,7 +2263,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                       onClick={() =>
                         handleStartClick(customerApplication.ticketId)
                       }
-                      startIcon={<OpenInNew fontSize="small" />}
+                      startIcon={userRole === "admin" ? undefined : <OpenInNew fontSize="small" />}
                       sx={{
                         textTransform: 'none',
                         borderRadius: 2,
@@ -2979,175 +2608,181 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
         <TableView index={mainIndex} />
       )}
 
-      <Dialog
+      <Modal
+        closeAfterTransition
         open={openDeleteDialog}
         onClose={closeConfirmDialog}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-        sx={{
-          borderRadius: "20px",
-          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
-          padding: "20px",
-        }}
+        aria-labelledby="delete-ticket-modal"
       >
-        <DialogTitle
-          id="alert-dialog-title"
-          sx={{
-            backgroundImage: `
-    linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
-  `,
-            backgroundBlendMode: "multiply, screen, normal",
-            color: "white",
-            padding: "20px",
-            borderRadius: "1px 1px 0 0",
-            fontWeight: "bold",
-            textAlign: "center",
-            fontSize: "1.25rem",
-          }}
-        >
-          Confirm Ticket Deletion
-        </DialogTitle>
-        <DialogContent
-          sx={{
-            padding: "20px",
-            backgroundColor: "#f9f9f9",
-            borderRadius: "8px",
-            marginBottom: "16px",
-            fontSize: "1rem",
-            lineHeight: "1.5",
-            bgcolor: "lightcyan",
-          }}
-        >
-          <DialogContentText
-            id="alert-dialog-description"
+        <Fade in={openDeleteDialog}>
+          <Paper
             sx={{
-              fontSize: "0.9rem",
-              color: "#555",
-              marginBottom: "20px",
-              textAlign: "center",
-              padding: "2rem",
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '90%',
+              maxWidth: 400,
+              borderRadius: 3,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+              bgcolor: 'background.paper',
+              outline: 'none',
+              overflow: 'hidden',
             }}
           >
-            Are you sure you want to delete this ticket? This action cannot be
-            undone.
-          </DialogContentText>
+            <Box
+              sx={{
+                p: 2,
+                background: "#3f50b5",
+                color: 'primary.contrastText',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <WarningAmber sx={{ color: '#fff', fontSize: 28 }} />
+                <Typography variant="h6" sx={{ color: '#fff', fontWeight: 600, fontFamily: "'Inter', sans-serif" }}>
+                  Confirm Ticket Deletion
+                </Typography>
+              </Box>
+              <IconButton
+                onClick={closeConfirmDialog}
+                sx={{
+                  color: '#fff',
+                  '&:hover': {
+                    bgcolor: 'rgba(255,255,255,0.1)',
+                  },
+                }}
+              >
+                <Close />
+              </IconButton>
+            </Box>
 
-          <TextField
-            fullWidth
-            multiline
-            rows={3}
-            variant="outlined"
-            label="Reason for deletion"
-            value={deleteReason}
-            onChange={(e) => setDeleteReason(e.target.value)}
-            sx={{
-              mt: 2,
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": {
-                  borderColor: "#6E44FF",
-                },
-                "&:hover fieldset": {
-                  borderColor: "#6E44FF",
-                },
-              },
-            }}
-            required
-          />
-        </DialogContent>
-        <DialogActions
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            padding: "10px",
-            bgcolor: "lightcyan",
-          }}
-        >
-          <Button
-            onClick={closeConfirmDialog}
-            color="primary"
-            variant="outlined"
-            sx={{
-              backgroundColor: "#f0f0f0",
-              color: "#333",
-              padding: "10px 20px",
-              borderRadius: "8px",
-              fontWeight: "bold",
-              "&:hover": {
-                backgroundColor: "#ddd",
-              },
-            }}
-            startIcon={<Close />}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={confirmDelete}
-            color="error"
-            variant="contained"
-            disabled={!deleteReason.trim()}
-            sx={{
-              backgroundColor: "#FF3B30",
-              color: "white",
-              padding: "10px 20px",
-              borderRadius: "8px",
-              fontWeight: "bold",
-              "&:hover": {
-                backgroundColor: "#D32F2F",
-              },
-              "&:disabled": {
-                backgroundColor: "#cccccc",
-                color: "#666666",
-              },
-            }}
-            startIcon={<DeleteForever />}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+            <Box sx={{ p: 3, bgcolor: "#f5f8ff", textAlign: 'center' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  mb: 2,
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(255, 59, 48, 0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '3px solid rgba(255, 59, 48, 0.2)',
+                  }}
+                >
+                  <DeleteForever
+                    sx={{
+                      fontSize: '2rem',
+                      color: '#FF3B30',
+                    }}
+                  />
+                </Box>
+              </Box>
 
-      {/* Expected Decision Date Pickup Modal */}
-      <Dialog
-        open={showPickupModal}
-        onClose={() => !isPickingUp && setShowPickupModal(false)}
-        maxWidth="sm"
-        fullWidth
-        onClick={(e) => e.stopPropagation()} // Prevent card expansion
-      >
-        <DialogTitle sx={{ fontWeight: "bold" }}>Set Expected Decision Date</DialogTitle>
-        <DialogContent>
-          <DialogContentText sx={{ mb: 2 }}>
-            Please confirm the expected decision date for this application.
-          </DialogContentText>
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DatePicker
-              label="Expected Decision Date"
-              value={pickupDate}
-              onChange={(newValue) => setPickupDate(newValue)}
-              minDate={dayjs()}
-              sx={{ width: "100%", mt: 1 }}
-              format="DD/MM/YYYY"
-            />
-          </LocalizationProvider>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => setShowPickupModal(false)}
-            color="inherit"
-            disabled={isPickingUp}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={confirmPickup}
-            variant="contained"
-            disabled={!pickupDate || isPickingUp}
-            sx={{ bgcolor: "#0c66e4", "&:hover": { bgcolor: "#0052cc" } }}
-          >
-            {isPickingUp ? "Confirming..." : "Confirm"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+              <Typography
+                variant="body1"
+                sx={{
+                  color: '#4a5568',
+                  mb: 2,
+                  fontFamily: "'Inter', sans-serif"
+                }}
+              >
+                Are you sure you want to delete this ticket? This action cannot be undone.
+              </Typography>
+
+              <TextField
+                fullWidth
+                multiline
+                rows={3}
+                variant="outlined"
+                label="Reason for deletion *"
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+                sx={{
+                  mt: 1,
+                  textAlign: 'left',
+                  '& .MuiOutlinedInput-root': {
+                    bgcolor: '#ffffff',
+                    borderRadius: 2,
+                    '& fieldset': {
+                      borderColor: '#c4d5eb',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#3f50b5',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#3f50b5',
+                      borderWidth: 2,
+                    },
+                  },
+                }}
+              />
+
+              <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  onClick={closeConfirmDialog}
+                  sx={{
+                    borderRadius: 2,
+                    py: 1.2,
+                    textTransform: 'none',
+                    fontSize: '0.95rem',
+                    fontWeight: 600,
+                    borderWidth: 1.5,
+                    color: '#1e3a5f',
+                    borderColor: '#c4d5eb',
+                    fontFamily: "'Inter', sans-serif",
+                    '&:hover': {
+                      borderWidth: 1.5,
+                      bgcolor: 'rgba(196, 213, 235, 0.2)',
+                      borderColor: '#1e3a5f',
+                    },
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  onClick={confirmDelete}
+                  disabled={!deleteReason.trim()}
+                  startIcon={<DeleteForever />}
+                  sx={{
+                    borderRadius: 2,
+                    py: 1.2,
+                    textTransform: 'none',
+                    fontSize: '0.95rem',
+                    fontWeight: 600,
+                    fontFamily: "'Inter', sans-serif",
+                    background: '#FF3B30',
+                    boxShadow: '0 4px 12px rgba(255, 59, 48, 0.25)',
+                    '&:hover': {
+                      background: '#D32F2F',
+                      boxShadow: '0 6px 16px rgba(255, 59, 48, 0.4)',
+                    },
+                    '&:disabled': {
+                      backgroundColor: '#ffcdd2',
+                      color: '#f8f9fa',
+                    },
+                  }}
+                >
+                  Delete
+                </Button>
+              </Box>
+            </Box>
+          </Paper>
+        </Fade>
+      </Modal>
     </>
   );
 };

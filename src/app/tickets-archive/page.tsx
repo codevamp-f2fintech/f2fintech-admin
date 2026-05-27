@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import _ from "lodash";
 import {
   Search as SearchIcon,
   Close as CloseIcon,
@@ -36,6 +37,7 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  Divider,
   List,
   ListItem,
   ListItemIcon,
@@ -65,6 +67,7 @@ const ArchivedTicketsPage = () => {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [openModal, setOpenModal] = useState(false);
   const [users, setUsers] = useState([]);
+  const [tempSearchValue, setTempSearchValue] = useState("");
 
   // Filters
   const [filters, setFilters] = useState({
@@ -76,6 +79,20 @@ const ArchivedTicketsPage = () => {
     userId: "",
     search: "",
   });
+
+  const debouncedSearch = useCallback(
+    _.debounce((value) => {
+      setFilters((prev) => ({ ...prev, search: value }));
+      setCurrentPage(1);
+    }, 800),
+    []
+  );
+
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [debouncedSearch]);
 
   const capitalizeFirstLetter = (string) => {
     if (!string) return "";
@@ -474,17 +491,17 @@ const ArchivedTicketsPage = () => {
                     fontSize: "14px",
                     backgroundColor: "transparent",
                   }}
-                  value={filters.search || ""}
-                  onChange={(e) =>
-                    setFilters({
-                      ...filters,
-                      search: e.target.value,
-                    })
-                  }
+                  value={tempSearchValue}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setTempSearchValue(value);
+                    debouncedSearch(value);
+                  }}
                 />
-                {filters.search && (
+                {(tempSearchValue || filters.search) && (
                   <IconButton
                     onClick={() => {
+                      setTempSearchValue("");
                       setFilters({ ...filters, search: "" });
                       fetchArchivedTickets(1, { ...filters, search: "" });
                     }}
@@ -499,58 +516,10 @@ const ArchivedTicketsPage = () => {
           </Box>
         </Box>
 
-        {/* Stats Cards */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={4}>
-            <Card sx={{ borderRadius: "20px" }}>
-              <CardContent sx={{ borderRadius: "20px" }}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    p: 2,
-                    borderRadius: 2,
-                    boxShadow: 1,
-                    backgroundImage: "linear-gradient(#c4d5eb, #c4d5eb)",
-                  }}
-                >
-                  <div>
-                    <Typography variant="body2" color="text.secondary">
-                      Total Archived
-                    </Typography>
-                    <Typography
-                      variant="h5"
-                      component="div"
-                      sx={{ fontWeight: "bold" }}
-                    >
-                      {totalCount}
-                    </Typography>
-                  </div>
-                  <Avatar sx={{ bgcolor: "grey.100" }}>
-                    <UserIcon color="action" />
-                  </Avatar>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+
 
         {/* Tickets Table/Cards */}
-        <Paper elevation={3} sx={{ borderRadius: 2, overflow: "hidden" }}>
-          <Box
-            sx={{
-              p: 2,
-              borderBottom: 1,
-              borderColor: "divider",
-              backgroundImage: "linear-gradient(#c4d5eb, #c4d5eb)",
-            }}
-          >
-            <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
-              Archived Tickets
-            </Typography>
-          </Box>
-
+        <Paper elevation={0} sx={{ borderRadius: 2, overflow: "hidden", border: "1px solid #e2e8f0" }}>
           {loading ? (
             <Box
               sx={{
@@ -602,21 +571,28 @@ const ArchivedTicketsPage = () => {
               ) : (
                 // Table view for desktop
                 <Box sx={{ overflowX: "auto" }}>
-                  <Table sx={{ minWidth: 900 }}>
+                  <Table sx={{ minWidth: 1000 }}>
                     <TableHead>
                       <TableRow
                         sx={{
-                          backgroundColor: (theme) =>
-                            theme.palette.mode === "light"
-                              ? "grey.100"
-                              : "background.default",
-                          "& th": { fontWeight: 600 },
+                          backgroundColor: "#3949ab",
+                          "& th": {
+                            fontWeight: 600,
+                            color: "white",
+                            fontSize: "14px",
+                            borderRight: "1px solid rgba(255,255,255,0.2)",
+                            py: 2,
+                            "&:last-child": { borderRight: "none" }
+                          },
                         }}
                       >
-                        <TableCell>Archive ID</TableCell>
-                        <TableCell>Archived By</TableCell>
-                        <TableCell>Customer</TableCell>
-                        <TableCell>Application</TableCell>
+                        <TableCell>A.ID</TableCell>
+                        <TableCell>Customer Name</TableCell>
+                        <TableCell>Email</TableCell>
+                        <TableCell>Amount</TableCell>
+                        <TableCell>Provider</TableCell>
+                        <TableCell>Status</TableCell>
+                        <TableCell>Tenure</TableCell>
                         <TableCell>Archived Date</TableCell>
                         <TableCell align="center">Actions</TableCell>
                       </TableRow>
@@ -628,118 +604,78 @@ const ArchivedTicketsPage = () => {
                           hover
                           sx={{ "&:last-child td": { borderBottom: 0 } }}
                         >
-                          <TableCell>
-                            <Chip
-                              label={`#${ticket.archiveId}`}
-                              size="small"
-                              variant="outlined"
-                            />
+                          <TableCell sx={{ fontWeight: 700, color: "#1e293b" }}>
+                            {ticket.archiveId}
+                          </TableCell>
+                          <TableCell sx={{ fontWeight: 700, color: "#1e293b", textTransform: "uppercase" }}>
+                            {ticket.customerName}
+                          </TableCell>
+                          <TableCell sx={{ color: "#64748b" }}>
+                            {ticket.customerEmail}
                           </TableCell>
                           <TableCell>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1.5,
-                              }}
-                            >
-                              <Avatar
-                                sx={{
-                                  width: 32,
-                                  height: 32,
-                                  bgcolor: "primary.main",
-                                  fontSize: 14,
-                                }}
-                              >
-                                {getUsernameById(ticket.archiveBy)
-                                  .charAt(0)
-                                  .toUpperCase()}
-                              </Avatar>
-                              <Typography variant="body2">
-                                {getUsernameById(ticket.archiveBy)}
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                          <TableCell>
-                            <Box>
-                              <Typography variant="subtitle2" fontWeight={500}>
-                                {ticket.customerName}
-                              </Typography>
-                              <Box sx={{ display: "flex", gap: 1.5, mt: 0.5 }}>
-                                <Tooltip title="Phone">
-                                  <Chip
-                                    icon={<PhoneIcon fontSize="small" />}
-                                    label={ticket.customerContact}
-                                    size="small"
-                                    variant="outlined"
-                                  />
-                                </Tooltip>
-                                <Tooltip title="Email">
-                                  <Chip
-                                    icon={<MailIcon fontSize="small" />}
-                                    label={ticket.customerEmail}
-                                    size="small"
-                                    variant="outlined"
-                                    sx={{
-                                      maxWidth: 150,
-                                      "& .MuiChip-label": {
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
-                                      },
-                                    }}
-                                  />
-                                </Tooltip>
-                              </Box>
-                            </Box>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="subtitle2" fontWeight={500}>
+                            <Typography sx={{ color: "#059669", fontWeight: 700, fontSize: "14px" }}>
                               {formatAmount(ticket.applicationAmount)}
                             </Typography>
-                            <Box sx={{ display: "flex", gap: 1.5, mt: 0.5 }}>
-                              <Chip
-                                label={`${ticket.applicationTenure} yrs`}
-                                size="small"
-                              />
-                              <Chip
-                                label={ticket.applicationProvider}
-                                size="small"
-                                color="secondary"
-                              />
-                            </Box>
                           </TableCell>
                           <TableCell>
-                            <Typography variant="subtitle2">
-                              {formatDate(ticket.archivedAt)}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              Created: {formatDate(ticket.createdAt)}
+                            <Typography sx={{ color: "#7e22ce", fontWeight: 700, fontSize: "14px" }}>
+                              {ticket.applicationProvider}
                             </Typography>
                           </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={ticket.ticketStatus}
+                              size="small"
+                              sx={{
+                                bgcolor: "rgba(57, 73, 171, 0.1)",
+                                color: "#3949ab",
+                                fontWeight: 600,
+                                borderRadius: "8px"
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell sx={{ color: "#64748b" }}>
+                            {ticket.applicationTenure} {ticket.applicationTenure > 10 ? 'months' : 'years'}
+                          </TableCell>
+                          <TableCell sx={{ color: "#64748b" }}>
+                            {formatDate(ticket.archivedAt).split(',').slice(0, 2).join(',')}
+                          </TableCell>
                           <TableCell align="center">
-                            <ButtonGroup variant="text" size="small">
-                              <Tooltip title="Restore">
-                                <IconButton
-                                  onClick={() =>
-                                    handleRestore(ticket.archiveId)
-                                  }
-                                  color="success"
-                                >
-                                  <RotateIcon />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="View Details">
-                                <IconButton
-                                  onClick={() => handleViewDetails(ticket)}
-                                  color="primary"
-                                >
-                                  <EyeIcon />
-                                </IconButton>
-                              </Tooltip>
-                            </ButtonGroup>
+                            <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
+                              <Button
+                                size="small"
+                                onClick={() => handleRestore(ticket.archiveId)}
+                                sx={{
+                                  textTransform: "none",
+                                  fontWeight: 600,
+                                  borderRadius: "20px",
+                                  color: "#f44336",
+                                  bgcolor: "rgba(244, 67, 54, 0.1)",
+                                  "&:hover": { bgcolor: "rgba(244, 67, 54, 0.2)" },
+                                  minWidth: "70px",
+                                  py: 0.2
+                                }}
+                              >
+                                Restore
+                              </Button>
+                              <Button
+                                size="small"
+                                onClick={() => handleViewDetails(ticket)}
+                                sx={{
+                                  textTransform: "none",
+                                  fontWeight: 600,
+                                  borderRadius: "20px",
+                                  color: "#3949ab",
+                                  bgcolor: "rgba(57, 73, 171, 0.1)",
+                                  "&:hover": { bgcolor: "rgba(57, 73, 171, 0.2)" },
+                                  minWidth: "70px",
+                                  py: 0.2
+                                }}
+                              >
+                                View
+                              </Button>
+                            </Box>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -823,8 +759,8 @@ const ArchivedTicketsPage = () => {
         >
           <DialogTitle
             sx={{
-              backgroundColor: "#c4d5eb",
-              color: "black",
+              backgroundColor: "#3949ab",
+              color: "white",
               py: 2,
               px: 3,
               display: "flex",
@@ -835,7 +771,8 @@ const ArchivedTicketsPage = () => {
             <Box display="flex" alignItems="center">
               <Avatar
                 sx={{
-                  bgcolor: "#aaa",
+                  bgcolor: "rgba(255,255,255,0.2)",
+                  color: "white",
                   mr: 2,
                   width: 40,
                   height: 40,
@@ -844,22 +781,19 @@ const ArchivedTicketsPage = () => {
                 <UserIcon fontSize="small" />
               </Avatar>
               <Box>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, color: "white" }}>
                   Ticket #{selectedTicket.archiveId}
                 </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                <Typography variant="body2" sx={{ opacity: 0.9, color: "rgba(255,255,255,0.8)" }}>
                   {selectedTicket.customerName}'s Application
                 </Typography>
               </Box>
             </Box>
-            <IconButton onClick={handleCloseModal} sx={{ color: "red" }}>
-              <CloseIcon />
-            </IconButton>
           </DialogTitle>
 
           <DialogContent
             dividers
-            sx={{ p: 0, maxHeight: "calc(100vh - 200px)", overflowY: "auto" }}
+            sx={{ p: 0, overflowY: "auto" }}
           >
             <Grid container>
               {/* Left Section - Customer Info */}
@@ -876,10 +810,10 @@ const ArchivedTicketsPage = () => {
                 }}
               >
                 <Typography
-                  variant="subtitle1"
+                  variant="subtitle2"
                   sx={{
                     fontWeight: 600,
-                    mb: 2,
+                    mb: 1.5,
                     color: "primary.main",
                     display: "flex",
                     alignItems: "center",
@@ -901,28 +835,14 @@ const ArchivedTicketsPage = () => {
                 >
                   <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                     <Avatar
-                      alt={capitalizeFirstLetter(
-                        selectedTicket.customerName.split(".")[1]?.trim() ||
-                        selectedTicket.customerName
-                          .split(" ")
-                          .slice(1)
-                          .join(" ")
-                      )}
-                      src={
-                        Array.isArray(selectedTicket.customerProfileImage) &&
-                          selectedTicket.customerProfileImage.length > 0
-                          ? selectedTicket.customerProfileImage[0]
-                          : undefined
-                      }
                       sx={{
                         bgcolor: "#aaa",
                         color: "white",
                         mr: 2,
-                        width: 48,
-                        height: 48,
-                        fontSize: 20,
+                        width: 40,
+                        height: 40,
+                        fontSize: 18,
                         fontWeight: "bold",
-                        border: "1px solid rgba(255,255,255,0.3)",
                       }}
                     >
                       {capitalizeFirstLetter(
@@ -941,55 +861,30 @@ const ArchivedTicketsPage = () => {
                       >
                         {selectedTicket.customerName}
                       </Typography>
-                      <Chip
-                        label={selectedTicket.ticketStatus}
-                        color={getStatusColor(selectedTicket.ticketStatus)}
-                        size="small"
-                        sx={{ mt: 0.5 }}
-                      />
                     </Box>
                   </Box>
 
-                  <List dense sx={{ py: 0 }}>
-                    <ListItem sx={{ px: 0, py: 1 }}>
-                      <ListItemIcon sx={{ minWidth: 36 }}>
-                        <PhoneIcon fontSize="small" color="action" />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={
-                          selectedTicket.customerContact || "Not provided"
-                        }
-                        primaryTypographyProps={{ variant: "body2" }}
-                        secondary="Contact"
-                        secondaryTypographyProps={{ variant: "caption" }}
-                      />
-                    </ListItem>
-                    <ListItem sx={{ px: 0, py: 1 }}>
-                      <ListItemIcon sx={{ minWidth: 36 }}>
-                        <MailIcon fontSize="small" color="action" />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={selectedTicket.customerEmail || "Not provided"}
-                        primaryTypographyProps={{
-                          variant: "body2",
-                          sx: {
-                            wordBreak: "break-word",
-                            overflowWrap: "break-word",
-                          },
-                        }}
-                        secondary="Email"
-                        secondaryTypographyProps={{ variant: "caption" }}
-                      />
-                    </ListItem>
-                  </List>
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                      <PhoneIcon fontSize="small" color="action" />
+                      <Typography variant="body2">
+                        {selectedTicket.customerContact || "Not provided"}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                      <MailIcon fontSize="small" color="action" />
+                      <Typography variant="body2" sx={{ wordBreak: "break-all" }}>
+                        {selectedTicket.customerEmail || "Not provided"}
+                      </Typography>
+                    </Box>
+                  </Box>
                 </Box>
 
-                {/* Timeline Section */}
                 <Typography
-                  variant="subtitle1"
+                  variant="subtitle2"
                   sx={{
                     fontWeight: 600,
-                    mb: 2,
+                    mb: 1.5,
                     color: "primary.main",
                     display: "flex",
                     alignItems: "center",
@@ -1006,56 +901,39 @@ const ArchivedTicketsPage = () => {
                     borderRadius: 2,
                     p: 2,
                     boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.05)",
+                    display: "flex",
+                    gap: 3
                   }}
                 >
-                  <List dense sx={{ py: 0 }}>
-                    <ListItem sx={{ px: 0, py: 1 }}>
-                      <ListItemIcon sx={{ minWidth: 36 }}>
-                        <Box
-                          sx={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: "50%",
-                            backgroundColor: "success.main",
-                          }}
-                        />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={formatDate(selectedTicket.createdAt)}
-                        primaryTypographyProps={{ variant: "body2" }}
-                        secondary="Created"
-                        secondaryTypographyProps={{ variant: "caption" }}
-                      />
-                    </ListItem>
-                    <ListItem sx={{ px: 0, py: 1 }}>
-                      <ListItemIcon sx={{ minWidth: 36 }}>
-                        <Box
-                          sx={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: "50%",
-                            backgroundColor: "warning.main",
-                          }}
-                        />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={formatDate(selectedTicket.archivedAt)}
-                        primaryTypographyProps={{ variant: "body2" }}
-                        secondary="Archived"
-                        secondaryTypographyProps={{ variant: "caption" }}
-                      />
-                    </ListItem>
-                  </List>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      Created At
+                    </Typography>
+                    <Typography variant="body2" fontWeight={500}>
+                      {formatDate(selectedTicket.createdAt).split(',').slice(0, 2).join(',')}
+                    </Typography>
+                  </Box>
+                  
+                  <Divider orientation="vertical" flexItem sx={{ my: 0.5, borderColor: "rgba(0,0,0,0.12)" }} />
+                  
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      Archived At
+                    </Typography>
+                    <Typography variant="body2" fontWeight={500}>
+                      {formatDate(selectedTicket.archivedAt).split(',').slice(0, 2).join(',')}
+                    </Typography>
+                  </Box>
                 </Box>
               </Grid>
 
               {/* Right Section - Application Details */}
-              <Grid item xs={12} md={7} sx={{ p: { xs: 2, sm: 3 } }}>
+              <Grid item xs={12} md={7} sx={{ p: { xs: 2, sm: 3 }, backgroundColor: "grey.50" }}>
                 <Typography
-                  variant="subtitle1"
+                  variant="subtitle2"
                   sx={{
                     fontWeight: 600,
-                    mb: 3,
+                    mb: 1.5,
                     color: "primary.main",
                     display: "flex",
                     alignItems: "center",
@@ -1066,122 +944,76 @@ const ArchivedTicketsPage = () => {
                   Application Details
                 </Typography>
 
-                <Grid container spacing={2} sx={{ mb: 3 }}>
-                  <Grid item xs={6}>
-                    <Card variant="outlined" sx={{ borderRadius: 2 }}>
-                      <CardContent sx={{ p: 2 }}>
-                        <Typography variant="caption" color="text.secondary">
-                          Loan Amount
-                        </Typography>
-                        <Typography
-                          variant={isMobile ? "body1" : "h6"}
-                          sx={{ fontWeight: 600 }}
-                        >
-                          {formatAmount(selectedTicket.applicationAmount)}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Card variant="outlined" sx={{ borderRadius: 2 }}>
-                      <CardContent sx={{ p: 2 }}>
-                        <Typography variant="caption" color="text.secondary">
-                          Tenure
-                        </Typography>
-                        <Typography
-                          variant={isMobile ? "body1" : "h6"}
-                          sx={{ fontWeight: 600 }}
-                        >
-                          {selectedTicket.applicationTenure} years
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                </Grid>
-
-                <Card variant="outlined" sx={{ borderRadius: 2, mb: 3 }}>
-                  <CardContent sx={{ p: 2 }}>
-                    <Typography variant="caption" color="text.secondary">
-                      Provider
-                    </Typography>
-                    <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
-                      <Avatar
-                        sx={{
-                          bgcolor: "secondary.light",
-                          color: "secondary.main",
-                          mr: 2,
-                          width: 36,
-                          height: 36,
-                        }}
-                      >
-                        <BuildingIcon fontSize="small" />
-                      </Avatar>
-                      <Typography
-                        variant="body1"
-                        sx={{ fontWeight: 500, wordBreak: "break-word" }}
-                      >
+                <Box
+                  sx={{
+                    backgroundColor: "white",
+                    borderRadius: 2,
+                    p: 2,
+                    boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.05)",
+                    mb: 3,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                      rowGap: 2,
+                      columnGap: { xs: 2, sm: 2.5 },
+                    }}
+                  >
+                    <Box sx={{ flexShrink: 0 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        Amount
+                      </Typography>
+                      <Typography variant="body2" fontWeight={600} noWrap>
+                        {formatAmount(selectedTicket.applicationAmount)}
+                      </Typography>
+                    </Box>
+                    <Divider orientation="vertical" flexItem sx={{ my: 0.5, borderColor: "rgba(0,0,0,0.12)" }} />
+                    <Box sx={{ flexShrink: 0 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        Tenure
+                      </Typography>
+                      <Typography variant="body2" fontWeight={600} noWrap>
+                        {selectedTicket.applicationTenure} yrs
+                      </Typography>
+                    </Box>
+                    <Divider orientation="vertical" flexItem sx={{ my: 0.5, borderColor: "rgba(0,0,0,0.12)" }} />
+                    <Box sx={{ flexShrink: 0 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        Provider
+                      </Typography>
+                      <Typography variant="body2" fontWeight={600} noWrap>
                         {selectedTicket.applicationProvider}
                       </Typography>
                     </Box>
-                  </CardContent>
-                </Card>
-
-                {/* Archived By User Section */}
-                <Typography
-                  variant="subtitle1"
-                  sx={{
-                    fontWeight: 600,
-                    mb: 2,
-                    color: "primary.main",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                  }}
-                >
-                  <UserIcon fontSize="small" />
-                  Archived By
-                </Typography>
-
-                <Box
-                  sx={{
-                    backgroundColor: "grey.50",
-                    borderRadius: 2,
-                    p: 2,
-                    boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.05)",
-                    mb: 3,
-                  }}
-                >
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    <Avatar
-                      sx={{
-                        bgcolor: "#aaa",
-                        mr: 2,
-                        width: 36,
-                        height: 36,
-                        fontSize: 16,
-                      }}
-                    >
-                      {getUsernameById(selectedTicket.archiveBy)
-                        .charAt(0)
-                        .toUpperCase()}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="body1" fontWeight="medium">
-                        {getUsernameById(selectedTicket.archiveBy)}
+                    <Divider orientation="vertical" flexItem sx={{ my: 0.5, borderColor: "rgba(0,0,0,0.12)" }} />
+                    <Box sx={{ flexShrink: 0 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        Status
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        ID: #{selectedTicket.archiveBy || "System"}
-                      </Typography>
+                      <Box sx={{ mt: 0.5 }}>
+                        <Chip
+                          label={selectedTicket.ticketStatus}
+                          color={getStatusColor(selectedTicket.ticketStatus)}
+                          size="small"
+                          sx={{ 
+                            height: 22, 
+                            fontSize: "0.75rem",
+                            "& .MuiChip-label": { px: 1 } 
+                          }}
+                        />
+                      </Box>
                     </Box>
                   </Box>
                 </Box>
 
-                {/* Reason for Archiving */}
                 <Typography
-                  variant="subtitle1"
+                  variant="subtitle2"
                   sx={{
                     fontWeight: 600,
-                    mb: 2,
+                    mb: 1.5,
                     color: "primary.main",
                     display: "flex",
                     alignItems: "center",
@@ -1189,60 +1021,77 @@ const ArchivedTicketsPage = () => {
                   }}
                 >
                   <UserIcon fontSize="small" />
-                  Reason for Archiving
+                  Archive Information
                 </Typography>
 
                 <Box
                   sx={{
-                    backgroundColor: "grey.50",
+                    backgroundColor: "white",
                     borderRadius: 2,
                     p: 2,
                     boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.05)",
-                    mb: 3,
                   }}
                 >
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    <Box>
-                      <Typography variant="body1" fontWeight="medium">
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "flex-start",
+                      flexWrap: "wrap",
+                      rowGap: 2,
+                      columnGap: { xs: 2, sm: 3 },
+                    }}
+                  >
+                    <Box sx={{ flexShrink: 0 }}>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Archived By
+                      </Typography>
+                      <Box sx={{ display: "flex", alignItems: "center", mt: 0.5 }}>
+                        <Avatar
+                          sx={{
+                            width: 20,
+                            height: 20,
+                            fontSize: 10,
+                            mr: 1,
+                            bgcolor: "#3949ab",
+                          }}
+                        >
+                          {getUsernameById(selectedTicket.archiveBy)
+                            .charAt(0)
+                            .toUpperCase()}
+                        </Avatar>
+                        <Typography variant="body2" fontWeight={500}>
+                          {getUsernameById(selectedTicket.archiveBy)}
+                        </Typography>
+                      </Box>
+                    </Box>
+                    
+                    <Divider orientation="vertical" flexItem sx={{ my: 0.5, borderColor: "rgba(0,0,0,0.12)" }} />
+
+                    <Box sx={{ flexShrink: 0 }}>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Reason
+                      </Typography>
+                      <Typography variant="body2" fontWeight={500} sx={{ mt: 0.5 }}>
                         {selectedTicket.reason}
                       </Typography>
                     </Box>
+
+                    {selectedTicket.additionalNotes && (
+                      <>
+                        <Divider orientation="vertical" flexItem sx={{ my: 0.5, borderColor: "rgba(0,0,0,0.12)" }} />
+                        <Box sx={{ flexShrink: 0 }}>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            Additional Notes
+                          </Typography>
+                          <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: "pre-line" }}>
+                            {selectedTicket.additionalNotes}
+                          </Typography>
+                        </Box>
+                      </>
+                    )}
                   </Box>
                 </Box>
-
-                {/* Additional Notes */}
-                {selectedTicket.additionalNotes && (
-                  <Box>
-                    <Typography
-                      variant="subtitle1"
-                      sx={{
-                        fontWeight: 600,
-                        mb: 1,
-                        color: "primary.main",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                      }}
-                    >
-                      <Typography fontSize="small">📝</Typography>
-                      Additional Notes
-                    </Typography>
-                    <Card variant="outlined" sx={{ borderRadius: 2 }}>
-                      <CardContent sx={{ p: 2 }}>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            whiteSpace: "pre-line",
-                            wordBreak: "break-word",
-                            overflowWrap: "break-word",
-                          }}
-                        >
-                          {selectedTicket.additionalNotes}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  </Box>
-                )}
               </Grid>
             </Grid>
           </DialogContent>
@@ -1272,11 +1121,12 @@ const ArchivedTicketsPage = () => {
                 handleCloseModal();
               }}
               variant="contained"
-              color="success"
               startIcon={<RotateIcon />}
               sx={{
                 borderRadius: 2,
                 width: { xs: "100%", sm: "auto" },
+                backgroundColor: "#3949ab",
+                "&:hover": { backgroundColor: "#2c387e" }
               }}
             >
               Restore Ticket

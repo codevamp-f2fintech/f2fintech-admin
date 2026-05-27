@@ -1,18 +1,17 @@
 import React from 'react';
 import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogContentText,
-    DialogActions,
-    Button,
     Box,
-    Typography,
+    Button,
+    Fade,
     IconButton,
+    Modal,
+    Paper,
+    Typography,
+    CircularProgress
 } from '@mui/material';
 import {
-    Close,
-    DeleteForever,
+    Close as CloseIcon,
+    DeleteForever as DeleteIcon,
     WarningAmber,
 } from '@mui/icons-material';
 
@@ -29,7 +28,7 @@ interface DeleteModalProps {
     showWarningIcon?: boolean;
 }
 
-const DeleteModal: React.FC<DeleteModalProps> = ( {
+const DeleteModal: React.FC<DeleteModalProps> = ({
     open,
     onClose,
     onConfirm,
@@ -40,219 +39,173 @@ const DeleteModal: React.FC<DeleteModalProps> = ( {
     cancelText = "Cancel",
     isLoading = false,
     showWarningIcon = true,
-} ) => {
-    const handleConfirm = () => {
-        onConfirm();
-    };
-
+}) => {
     return (
-        <Dialog
+        <Modal
+            closeAfterTransition
             open={open}
             onClose={onClose}
-            maxWidth="sm"
-            fullWidth
-            PaperProps={{
-                sx: {
-                    borderRadius: '20px',
-                    boxShadow: '0px 10px 30px rgba(0, 0, 0, 0.2)',
-                    overflow: 'hidden',
-                },
-            }}
+            aria-labelledby="delete-confirmation-modal"
         >
-            {/* Header */}
-            <DialogTitle
-                sx={{
-                    backgroundImage: `
-            linear-gradient(64.5deg, rgba(245,116,185,1) 14.7%, rgba(89,97,223,1) 88.7%)
-          `,
-                    backgroundBlendMode: 'multiply, screen, normal',
-                    color: 'white',
-                    padding: '24px',
-                    fontWeight: 'bold',
-                    textAlign: 'center',
-                    fontSize: '1.25rem',
-                    position: 'relative',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    minHeight: '64px',
-                }}
-            >
-                {showWarningIcon && (
-                    <WarningAmber
-                        sx={{
-                            mr: 1,
-                            fontSize: '1.5rem',
-                            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
-                        }}
-                    />
-                )}
-                {title}
-                <IconButton
-                    onClick={onClose}
+            <Fade in={open}>
+                <Paper
                     sx={{
                         position: 'absolute',
-                        right: 8,
-                        top: 8,
-                        color: 'white',
-                        '&:hover': {
-                            backgroundColor: 'rgba(255,255,255,0.1)',
-                        },
-                    }}
-                >
-                    <Close />
-                </IconButton>
-            </DialogTitle>
-
-            {/* Content */}
-            <DialogContent
-                sx={{
-                    padding: '32px 24px',
-                    backgroundColor: '#f8f9fa',
-                    textAlign: 'center',
-                }}
-            >
-                {/* Warning Icon */}
-                <Box
-                    sx={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        mb: 2,
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: '90%',
+                        maxWidth: 400,
+                        borderRadius: 3,
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                        bgcolor: 'background.paper',
+                        outline: 'none',
+                        overflow: 'hidden',
                     }}
                 >
                     <Box
                         sx={{
-                            width: 80,
-                            height: 80,
-                            borderRadius: '50%',
-                            backgroundColor: 'rgba(255, 59, 48, 0.1)',
+                            p: 2,
+                            background: "#3f50b5",
+                            color: 'primary.contrastText',
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'center',
-                            border: '3px solid rgba(255, 59, 48, 0.2)',
+                            justifyContent: 'space-between',
                         }}
                     >
-                        <DeleteForever
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {showWarningIcon && <WarningAmber sx={{ color: '#fff', fontSize: 28 }} />}
+                            <Typography variant="h6" sx={{ color: '#fff', fontWeight: 600, fontFamily: "'Inter', sans-serif" }}>
+                                {title}
+                            </Typography>
+                        </Box>
+                        <IconButton
+                            onClick={onClose}
+                            disabled={isLoading}
                             sx={{
-                                fontSize: '2.5rem',
-                                color: '#FF3B30',
+                                color: '#fff',
+                                '&:hover': {
+                                    bgcolor: 'rgba(255,255,255,0.1)',
+                                },
                             }}
-                        />
+                        >
+                            <CloseIcon />
+                        </IconButton>
                     </Box>
-                </Box>
 
-                {/* Item Name */}
-                {itemName && (
-                    <Typography
-                        variant="h6"
-                        sx={{
-                            fontWeight: 'bold',
-                            color: '#333',
-                            mb: 1,
-                            fontSize: '1.1rem',
-                        }}
-                    >
-                        "{itemName}"
-                    </Typography>
-                )}
+                    {/* Content */}
+                    <Box sx={{ p: 3, bgcolor: "#f5f8ff", textAlign: 'center' }}>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                mb: 2,
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    width: 64,
+                                    height: 64,
+                                    borderRadius: '50%',
+                                    backgroundColor: 'rgba(255, 59, 48, 0.1)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    border: '3px solid rgba(255, 59, 48, 0.2)',
+                                }}
+                            >
+                                <DeleteIcon
+                                    sx={{
+                                        fontSize: '2rem',
+                                        color: '#FF3B30',
+                                    }}
+                                />
+                            </Box>
+                        </Box>
 
-                {/* Message */}
-                <DialogContentText
-                    sx={{
-                        fontSize: '1rem',
-                        color: '#666',
-                        lineHeight: '1.6',
-                        maxWidth: '400px',
-                        margin: '0 auto',
-                    }}
-                >
-                    {message}
-                </DialogContentText>
+                        {itemName && (
+                            <Typography
+                                variant="h6"
+                                sx={{
+                                    fontWeight: 700,
+                                    color: '#1e3a5f',
+                                    mb: 1,
+                                    fontSize: '1.1rem',
+                                    fontFamily: "'Inter', sans-serif"
+                                }}
+                            >
+                                "{itemName}"
+                            </Typography>
+                        )}
 
-                {/* Warning Note */}
-                <Box
-                    sx={{
-                        mt: 3,
-                        p: 2,
-                        backgroundColor: '#fff3cd',
-                        borderRadius: '8px',
-                        border: '1px solid #ffeaa7',
-                    }}
-                >
-                    <Typography
-                        variant="body2"
-                        sx={{
-                            color: '#856404',
-                            fontWeight: 'medium',
-                            fontSize: '0.9rem',
-                        }}
-                    >
-                        ⚠️ This action is permanent and cannot be undone
-                    </Typography>
-                </Box>
-            </DialogContent>
+                        <Typography
+                            variant="body1"
+                            sx={{
+                                color: '#4a5568',
+                                mb: 2,
+                                fontFamily: "'Inter', sans-serif"
+                            }}
+                        >
+                            {message}
+                        </Typography>
 
-            {/* Actions */}
-            <DialogActions
-                sx={{
-                    padding: '24px',
-                    backgroundColor: '#f8f9fa',
-                    justifyContent: 'center',
-                    gap: 2,
-                }}
-            >
-                <Button
-                    onClick={onClose}
-                    variant="outlined"
-                    disabled={isLoading}
-                    sx={{
-                        minWidth: '120px',
-                        padding: '12px 24px',
-                        borderRadius: '10px',
-                        fontWeight: 'bold',
-                        textTransform: 'none',
-                        fontSize: '1rem',
-                        color: '#6c757d',
-                        borderColor: '#dee2e6',
-                        backgroundColor: 'white',
-                        '&:hover': {
-                            backgroundColor: '#f8f9fa',
-                            borderColor: '#adb5bd',
-                        },
-                    }}
-                    startIcon={<Close />}
-                >
-                    {cancelText}
-                </Button>
-
-                <Button
-                    onClick={handleConfirm}
-                    variant="contained"
-                    disabled={isLoading}
-                    sx={{
-                        minWidth: '120px',
-                        padding: '12px 24px',
-                        borderRadius: '10px',
-                        fontWeight: 'bold',
-                        textTransform: 'none',
-                        fontSize: '1rem',
-                        backgroundColor: '#FF3B30',
-                        boxShadow: '0 4px 12px rgba(255, 59, 48, 0.3)',
-                        '&:hover': {
-                            backgroundColor: '#D32F2F',
-                            boxShadow: '0 6px 16px rgba(255, 59, 48, 0.4)',
-                        },
-                        '&:disabled': {
-                            backgroundColor: '#ffcdd2',
-                            color: '#f8f9fa',
-                        },
-                    }}
-                    startIcon={!isLoading && <DeleteForever />}
-                >
-                    {isLoading ? 'Deleting...' : confirmText}
-                </Button>
-            </DialogActions>
-        </Dialog>
+                        <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+                            <Button
+                                fullWidth
+                                variant="outlined"
+                                onClick={onClose}
+                                disabled={isLoading}
+                                sx={{
+                                    borderRadius: 2,
+                                    py: 1.2,
+                                    textTransform: 'none',
+                                    fontSize: '0.95rem',
+                                    fontWeight: 600,
+                                    borderWidth: 1.5,
+                                    color: '#1e3a5f',
+                                    borderColor: '#c4d5eb',
+                                    fontFamily: "'Inter', sans-serif",
+                                    '&:hover': {
+                                        borderWidth: 1.5,
+                                        bgcolor: 'rgba(196, 213, 235, 0.2)',
+                                        borderColor: '#1e3a5f',
+                                    },
+                                }}
+                            >
+                                {cancelText}
+                            </Button>
+                            <Button
+                                fullWidth
+                                variant="contained"
+                                onClick={onConfirm}
+                                disabled={isLoading}
+                                startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <DeleteIcon />}
+                                sx={{
+                                    borderRadius: 2,
+                                    py: 1.2,
+                                    textTransform: 'none',
+                                    fontSize: '0.95rem',
+                                    fontWeight: 600,
+                                    fontFamily: "'Inter', sans-serif",
+                                    background: '#FF3B30',
+                                    boxShadow: '0 4px 12px rgba(255, 59, 48, 0.25)',
+                                    '&:hover': {
+                                        background: '#D32F2F',
+                                        boxShadow: '0 6px 16px rgba(255, 59, 48, 0.4)',
+                                    },
+                                    '&:disabled': {
+                                        backgroundColor: '#ffcdd2',
+                                        color: '#f8f9fa',
+                                    },
+                                }}
+                            >
+                                {isLoading ? 'Deleting...' : confirmText}
+                            </Button>
+                        </Box>
+                    </Box>
+                </Paper>
+            </Fade>
+        </Modal>
     );
 };
 

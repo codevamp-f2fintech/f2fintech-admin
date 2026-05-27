@@ -235,14 +235,15 @@ const LoanProviderPage = () => {
             onClick={() => router.push( "/loan-provider/create" )}
             sx={{
               borderRadius: "100px",
-              px: 3,
+              px: { xs: 2, sm: 3 },
               textTransform: "none",
               fontWeight: 600,
               boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-              bgcolor: "#f06292",
+              bgcolor: "#0c66e4",
               color: "white",
+              width: { xs: "100%", sm: "auto" },
               "&:hover": {
-                bgcolor: "#9D50BB",
+                bgcolor: "#0c66e4",
                 color: "white",
               },
             }}
@@ -255,153 +256,182 @@ const LoanProviderPage = () => {
         {filteredLoanProviders.length > 0 ? (
           <Grid container spacing={3}>
             {filteredLoanProviders.map( ( provider ) => (
-              <Grid item xs={12} md={6} key={provider.id}>
+              <Grid item xs={12} sm={6} md={4} lg={4} key={provider.id}>
                 <Card
                   sx={{
                     borderRadius: 4,
-                    boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
                     transition: "all 0.3s ease",
                     "&:hover": {
                       transform: "translateY(-4px)",
-                      boxShadow: "0 12px 24px rgba(0,0,0,0.15)",
+                      boxShadow: "0 14px 40px rgba(0,0,0,0.12)",
                     },
                     position: "relative",
                     width: "100%",
-                    maxWidth: {
-                      xs: "100%",
-                      sm: "500px",
-                      md: "700px",
-                      lg: "900px",
-                    },
-                    margin: "auto",
+                    overflow: "hidden",
+                    border: "1px solid #f1f5f9",
                   }}
                 >
-                  {/* Delete Button */}
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      top: 8,
-                      right: 8,
-                      zIndex: 1,
-                    }}
-                  >
-                    <IconButton
-                      size="small"
-                      onClick={() => handleDeleteClick( provider )}
-                      sx={{
-                        bgcolor: "rgba(255, 255, 255, 0.9)",
-                        "&:hover": { bgcolor: "rgba(255, 255, 255, 1)" },
-                      }}
-                    >
-                      <DeleteRounded />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() =>
-                        router.push( `/loan-provider/edit/${ provider.id }` )
-                      }
-                      sx={{
-                        bgcolor: "rgba(255, 255, 255, 0.9)",
-                        "&:hover": { bgcolor: "rgba(255, 255, 255, 1)" },
-                      }}
-                    >
-                      <EditRounded />
-                    </IconButton>
-                  </Box>
+                  {/* Top Banner */}
+                  <Box sx={{ height: "48px", bgcolor: "#3949ab", width: "100%" }} />
 
-                  <CardContent
-                    sx={{
-                      p: { xs: 2, sm: 3 },
-                      minHeight: { xs: "auto", md: "30vh" },
-                    }}
-                  >
+                  {/* Avatar Image */}
+                  <Box sx={{ display: "flex", justifyContent: "center", mt: "-32px" }}>
                     <Box
                       sx={{
+                        width: 64,
+                        height: 64,
+                        borderRadius: "50%",
+                        bgcolor: "#1e293b",
+                        border: "3px solid white",
                         display: "flex",
-                        flexDirection: { xs: "column", md: "row" },
-                        justifyContent: "space-between",
-                        alignItems: { xs: "center", md: "start" },
-                        gap: { xs: 2, md: 0 },
-                        mb: 0,
+                        justifyContent: "center",
+                        alignItems: "center",
+                        overflow: "hidden",
+                        boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
                       }}
                     >
-                      {/* Image */}
-                      <Box
-                        sx={{
-                          width: { xs: "100%", md: "50%" },
-                          height: { xs: "200px", md: "28vh" },
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          backgroundColor: "#fff",
-                          borderRadius: "12px",
-                          overflow: "hidden",
-                        }}
-                      >
+                      {provider.home_image ? (
                         <img
                           src={provider.home_image}
                           alt="Home"
-                          style={{
-                            maxWidth: "100%",
-                            maxHeight: "100%",
-                            objectFit: "contain",
-                          }}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
                         />
-                      </Box>
+                      ) : (
+                        <Typography sx={{ color: "white", fontWeight: 700, fontSize: "24px" }}>
+                          {provider.title?.charAt(0)?.toUpperCase()}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
 
-                      {/* Text */}
-                      <Box
+                  <CardContent sx={{ p: 2, pt: 1.5, pb: "16px !important" }}>
+                    {/* Title & Location */}
+                    <Box sx={{ textAlign: "center", mb: 2 }}>
+                      <Typography variant="h6" sx={{ color: "#1e293b", fontWeight: 800, textTransform: "uppercase", fontSize: "14px", letterSpacing: "0.5px" }}>
+                        {provider.title}
+                      </Typography>
+                      <Typography sx={{ color: "#64748b", fontSize: "12px", mt: 0.5 }}>
+                        {provider.country}
+                      </Typography>
+                    </Box>
+
+                    {/* Information Grid Container */}
+                    <Box sx={{ bgcolor: "#f8fafc", borderRadius: 2, p: 2, mb: 2, border: "1px solid #f1f5f9" }}>
+                      <Grid container spacing={1.5}>
+                        
+                        {/* Min/Max Amount */}
+                        <Grid item xs={6}>
+                          <Typography sx={{ color: "#94a3b8", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", mb: 0.2 }}>
+                            Amount Range
+                          </Typography>
+                          <Typography sx={{ color: "#059669", fontWeight: 700, fontSize: "13px" }}>
+                            ₹{provider.min_amount?.toLocaleString() || 0} - ₹{provider.max_amount?.toLocaleString() || 0}
+                          </Typography>
+                        </Grid>
+                        
+                        {/* Interest Rate */}
+                        <Grid item xs={6}>
+                          <Typography sx={{ color: "#94a3b8", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", mb: 0.2 }}>
+                            Interest Rate
+                          </Typography>
+                          <Typography sx={{ color: "#1e293b", fontWeight: 700, fontSize: "13px" }}>
+                            {provider.interest_rate}%
+                          </Typography>
+                        </Grid>
+                        
+                        {/* Max Tenure */}
+                        <Grid item xs={6}>
+                          <Typography sx={{ color: "#94a3b8", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", mb: 0.2 }}>
+                            Max Tenure
+                          </Typography>
+                          <Typography sx={{ color: "#1e293b", fontWeight: 700, fontSize: "13px" }}>
+                            {provider.max_tenure} years
+                          </Typography>
+                        </Grid>
+                        
+                        {/* Charges */}
+                        <Grid item xs={6}>
+                          <Typography sx={{ color: "#94a3b8", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", mb: 0.2 }}>
+                            Charges
+                          </Typography>
+                          <Typography sx={{ color: "#1e293b", fontWeight: 700, fontSize: "13px" }}>
+                            {provider.charges || "N/A"}
+                          </Typography>
+                        </Grid>
+
+                        {/* Minimum KYC */}
+                        <Grid item xs={6}>
+                          <Typography sx={{ color: "#94a3b8", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", mb: 0.2 }}>
+                            Min. KYC
+                          </Typography>
+                          <Typography sx={{ color: "#1e293b", fontWeight: 700, fontSize: "13px" }}>
+                            {provider.minimum_kyc || "N/A"}
+                          </Typography>
+                        </Grid>
+
+                        {/* Documents */}
+                        <Grid item xs={6}>
+                          <Typography sx={{ color: "#94a3b8", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", mb: 0.2 }}>
+                            Documents
+                          </Typography>
+                          <Typography sx={{ color: "#1e293b", fontWeight: 700, fontSize: "13px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {provider.document_required || "N/A"}
+                          </Typography>
+                        </Grid>
+                        
+                        {/* Divider & Dates */}
+                        <Grid item xs={12}>
+                          <Box sx={{ borderTop: "1px solid #e2e8f0", my: 0.5 }} />
+                        </Grid>
+
+                        <Grid item xs={12}>
+                          <Typography sx={{ color: "#94a3b8", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", mb: 0.2 }}>
+                            Created At
+                          </Typography>
+                          <Typography sx={{ color: "#1e293b", fontWeight: 700, fontSize: "13px" }}>
+                            {provider.created_at ? new Date(provider.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "N/A"}
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </Box>
+
+                    {/* Actions Footer */}
+                    <Box sx={{ display: "flex", gap: 1.5 }}>
+                      <Button
+                        fullWidth
+                        size="small"
+                        onClick={() => handleDeleteClick(provider)}
+                        startIcon={<DeleteRounded sx={{ fontSize: "16px !important" }} />}
                         sx={{
-                          width: { xs: "100%", md: "60%" },
-                          paddingLeft: { xs: 0, md: 2 },
-                          marginTop: { xs: 0, md: 3 },
+                          textTransform: "none",
+                          fontWeight: 700,
+                          borderRadius: "20px",
+                          py: 0.5,
+                          color: "#f44336",
+                          bgcolor: "rgba(244, 67, 54, 0.08)",
+                          "&:hover": { bgcolor: "rgba(244, 67, 54, 0.15)" },
                         }}
                       >
-                        <Typography
-                          variant="h5"
-                          sx={{
-                            color: "black",
-                            fontWeight: 600,
-                            mb: 1,
-                            textAlign: { xs: "center", md: "left" },
-                          }}
-                        >
-                          {provider.title}
-                        </Typography>
-
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 1,
-                            mb: 1,
-                            justifyContent: { xs: "center", md: "flex-start" },
-                          }}
-                        >
-                          <PublicIcon sx={{ color: "blue", fontSize: 18 }} />
-                          <Typography
-                            sx={{ color: "black", fontSize: "0.9rem" }}
-                          >
-                            {provider.country}
-                          </Typography>
-                        </Box>
-
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 1,
-                            justifyContent: { xs: "center", md: "flex-start" },
-                          }}
-                        >
-                          <PublicIcon sx={{ color: "blue", fontSize: 18 }} />
-                          <Typography
-                            sx={{ color: "black", fontSize: "0.9rem" }}
-                          >
-                            {provider.short_description}
-                          </Typography>
-                        </Box>
-                      </Box>
+                        Delete
+                      </Button>
+                      <Button
+                        fullWidth
+                        size="small"
+                        onClick={() => router.push(`/loan-provider/edit/${provider.id}`)}
+                        startIcon={<EditRounded sx={{ fontSize: "16px !important" }} />}
+                        sx={{
+                          textTransform: "none",
+                          fontWeight: 700,
+                          borderRadius: "20px",
+                          py: 0.5,
+                          color: "#3949ab",
+                          bgcolor: "rgba(57, 73, 171, 0.08)",
+                          "&:hover": { bgcolor: "rgba(57, 73, 171, 0.15)" },
+                        }}
+                      >
+                        Edit
+                      </Button>
                     </Box>
                   </CardContent>
                 </Card>

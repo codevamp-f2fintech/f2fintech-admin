@@ -38,9 +38,11 @@ const ITEMS_PER_PAGE = 3;
 interface CommentsProps {
   storedTicketId: string | string[];
   userData: User;
+  isExpectedDateSaved?: boolean;
+  onRequireExpectedDate?: () => boolean;
 }
 
-const Comments = ({ storedTicketId, userData }: CommentsProps) => {
+const Comments = ({ storedTicketId, userData, isExpectedDateSaved = true, onRequireExpectedDate }: CommentsProps) => {
   const [newComment, setNewComment] = useState<string>("");
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editedComment, setEditedComment] = useState<string | undefined>("");
@@ -111,6 +113,7 @@ const Comments = ({ storedTicketId, userData }: CommentsProps) => {
   };
 
   const handleCreateComment = useCallback(async () => {
+    if (onRequireExpectedDate && !onRequireExpectedDate()) return;
     if (!newComment.trim()) return;
 
     try {

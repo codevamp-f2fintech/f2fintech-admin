@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -37,45 +37,56 @@ import {
 } from "@phosphor-icons/react";
 import { useDispatch, useSelector } from "react-redux";
 import { useGetQueries } from "@/hooks/queries";
-import { setQueries } from "@/redux/features/queriesSlice";
+import { setQueries, resetQueries } from "@/redux/features/queriesSlice";
 import type { RootState, AppDispatch } from "@/redux/store";
-import useIntersectionObserver from "@/hooks/IntersectionObserver";
+import { Utility } from "@/utils";
 
 const INITIAL_VISIBLE_COUNT = 10;
 const LOAD_MORE_COUNT = 10;
 
-const EMPTY_ARRAY: any[] = [];
-
 const QueriesPage: React.FC = () => {
   const [view, setView] = useState<"table" | "card">("table");
   const [searchTerm, setSearchTerm] = useState("");
-  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [hasMoreData, setHasMoreData] = useState<boolean>(true);
   const dispatch = useDispatch<AppDispatch>();
-  const loadMoreRef = useRef<HTMLDivElement>(null);
-  const isIntersecting = useIntersectionObserver(loadMoreRef);
+  const { debounceScroll } = Utility();
+
+  const ITEMS_PER_PAGE = 10;
 
   const { queries: reduxQueries } = useSelector((state: RootState) => state.queries);
-  const { queries: swrQueries, isLoading, refetch } = useGetQueries(EMPTY_ARRAY, "get-all-queries");
+  const { queriesData, isLoading, refetch } = useGetQueries(currentPage, ITEMS_PER_PAGE, "get-all-queries");
 
   useEffect(() => {
-    if (swrQueries && Array.isArray(swrQueries) && swrQueries !== reduxQueries) {
-      dispatch(setQueries(swrQueries));
-    } else if (swrQueries && !Array.isArray(swrQueries)) {
-      // Handle nested data if necessary
-      if ((swrQueries as any).data && Array.isArray((swrQueries as any).data)) {
-        dispatch(setQueries((swrQueries as any).data));
+    if (queriesData?.results?.length > 0) {
+      dispatch(setQueries({
+        ...queriesData,
+        currentPage,
+      }));
+      setHasMoreData(queriesData.results.length === ITEMS_PER_PAGE);
+    } else {
+      setHasMoreData(false);
+    }
+  }, [queriesData?.results, queriesData, currentPage, dispatch]);
+
+  const handleScroll = useCallback(
+    debounceScroll(() => {
+      const nearBottom =
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 400;
+      if (nearBottom && !isLoading && hasMoreData) {
+        setCurrentPage((prevPage) => prevPage + 1);
       }
-    }
-  }, [swrQueries, reduxQueries, dispatch]);
+    }, 200),
+    [isLoading, hasMoreData]
+  );
 
   useEffect(() => {
-    if (isIntersecting && !isLoading) {
-      setVisibleCount((prev) => prev + LOAD_MORE_COUNT);
-    }
-  }, [isIntersecting, isLoading]);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
 
   useEffect(() => {
-    setVisibleCount(INITIAL_VISIBLE_COUNT);
+    setCurrentPage(1);
   }, [searchTerm]);
 
   const handleViewChange = (
@@ -88,7 +99,7 @@ const QueriesPage: React.FC = () => {
   };
 
   const filteredQueries = useMemo(() => {
-    const queriesToFilter = Array.isArray(reduxQueries) ? reduxQueries : EMPTY_ARRAY;
+    const queriesToFilter = reduxQueries?.results || [];
     return queriesToFilter.filter((query: any) =>
       query.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       query.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -96,10 +107,6 @@ const QueriesPage: React.FC = () => {
       query.query_type?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [reduxQueries, searchTerm]);
-
-  const displayedQueries = useMemo(() => {
-    return filteredQueries.slice(0, visibleCount);
-  }, [filteredQueries, visibleCount]);
 
   return (
     <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1600, margin: "0 auto" }}>
@@ -193,68 +200,86 @@ const QueriesPage: React.FC = () => {
       </Box>
 
       {/* Content Section */}
-      {isLoading ? (
+      {isLoading && filteredQueries.length === 0 ? (
         <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}>
           <CircularProgress size={60} thickness={4} />
         </Box>
       ) : filteredQueries.length === 0 ? (
         <Paper
+          elevation={0}
           sx={{
-            p: 8,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            p: 6,
             textAlign: "center",
-            borderRadius: 6,
-            bgcolor: "background.paper",
-            boxShadow: "0 10px 40px rgba(0,0,0,0.04)",
+            borderRadius: 2,
+            bgcolor: "white",
+            border: "1px solid #e2e8f0",
+            gap: 2,
           }}
         >
-          <Typography variant="h6" color="text.secondary">
-            No queries found matching your criteria.
+          <SearchIcon size={60} color="#94a3b8" weight="regular" />
+          <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 600 }}>
+            No queries found
           </Typography>
         </Paper>
       ) : view === "table" ? (
         <TableContainer
           component={Paper}
+          elevation={0}
           sx={{
-            borderRadius: 5,
-            boxShadow: "0 20px 60px rgba(0,0,0,0.05)",
+            borderRadius: 2,
             overflow: "hidden",
-            border: "1px solid",
-            borderColor: "divider",
+            border: "1px solid #e2e8f0",
           }}
         >
           <Table>
-            <TableHead sx={{ bgcolor: "grey.50" }}>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 700 }}>S.No.</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Contact Info</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Query Type</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Date</TableCell>
+            <TableHead>
+              <TableRow
+                sx={{
+                  backgroundColor: "#3949ab",
+                  "& th": {
+                    fontWeight: 600,
+                    color: "white",
+                    fontSize: "14px",
+                    borderRight: "1px solid rgba(255,255,255,0.2)",
+                    py: 2,
+                    "&:last-child": { borderRight: "none" }
+                  },
+                }}
+              >
+                <TableCell>S.No.</TableCell>
+                <TableCell>Name</TableCell>
+                <TableCell>Contact Info</TableCell>
+                <TableCell>Query Type</TableCell>
+                <TableCell>Date</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {displayedQueries.map((query: any, index: number) => (
+              {filteredQueries.map((query: any, index: number) => (
                 <TableRow
                   key={query.id}
                   hover
                   sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                 >
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell sx={{ fontWeight: 600, textTransform: "capitalize" }}>{query.name}</TableCell>
-                  <TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: "#1e293b" }}>{index + 1}</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: "#1e293b", textTransform: "uppercase" }}>{query.name}</TableCell>
+                  <TableCell sx={{ color: "#64748b" }}>
                     <Box>
-                      <Typography variant="body2">{query.email}</Typography>
-                      <Typography variant="caption" color="text.secondary">{query.number}</Typography>
+                      <Typography variant="body2" sx={{ color: "#64748b" }}>{query.email}</Typography>
+                      <Typography variant="caption" sx={{ color: "#64748b" }}>{query.number}</Typography>
                     </Box>
                   </TableCell>
                   <TableCell>
                     <Chip
                       label={query.query_type || "General"}
                       size="small"
-                      sx={{ fontWeight: 600, bgcolor: 'primary.50', color: 'primary.main' }}
+                      sx={{ fontWeight: 600, bgcolor: 'rgba(57, 73, 171, 0.1)', color: '#3949ab', borderRadius: '8px' }}
                     />
                   </TableCell>
-                  <TableCell>{query.created_at ? new Date(query.created_at).toLocaleDateString() : "N/A"}</TableCell>
+                  <TableCell sx={{ color: "#64748b" }}>{query.created_at ? new Date(query.created_at).toLocaleDateString() : "N/A"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -263,7 +288,7 @@ const QueriesPage: React.FC = () => {
       ) : (
         <>
           <Grid container spacing={3}>
-            {displayedQueries.map((query: any) => (
+            {filteredQueries.map((query: any) => (
               <Grid item xs={12} sm={6} lg={4} key={query.id}>
                 <Card
                   sx={{
@@ -296,7 +321,7 @@ const QueriesPage: React.FC = () => {
                           {query.name}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          ID: #{query.id}
+                          ID: {query.id}
                         </Typography>
                       </Box>
                     </Box>
@@ -328,22 +353,21 @@ const QueriesPage: React.FC = () => {
               </Grid>
             ))}
           </Grid>
-
-          {/* Load More Trigger */}
-          {visibleCount < filteredQueries.length && (
-            <Box
-              ref={loadMoreRef}
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                py: 4,
-                mt: 2,
-              }}
-            >
-              <CircularProgress size={32} thickness={4} color="primary" />
-            </Box>
-          )}
         </>
+      )}
+
+      {/* Load More Trigger (Works for both Table and Card views) */}
+      {isLoading && hasMoreData && filteredQueries.length > 0 && (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            py: 4,
+            mt: 2,
+          }}
+        >
+          <CircularProgress size={32} thickness={4} color="primary" />
+        </Box>
       )}
     </Box>
   );
