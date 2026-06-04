@@ -1858,6 +1858,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
                       { value: "salaried", label: "Salaried" },
                       { value: "business", label: "Business" },
                       { value: "professional", label: "Professional" },
+                      { value: "self_employed", label: "Self Employed" },
                     ].map((emp) => (
                       <MenuItem key={emp.value} value={emp.value} sx={{ display: "flex", justifyContent: "space-between" }}>
                         {emp.label}

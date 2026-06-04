@@ -46,7 +46,7 @@ import { fetcher } from "@/apis/apiClient";
 import { CompanyAPI } from "@/apis/CompanyAPI";
 import Toast from "../components/common/Toast";
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 15;
 
 const HomeContent: React.FC = () => {
   const router = useRouter();
@@ -263,8 +263,8 @@ const HomeContent: React.FC = () => {
       }
       setHasMoreData(false);
     }
-  // dataFingerprint detects genuine dataset changes even when length is identical;
-  // startDate/endDate deliberately excluded — they change before SWR has new data.
+    // dataFingerprint detects genuine dataset changes even when length is identical;
+    // startDate/endDate deliberately excluded — they change before SWR has new data.
   }, [dataFingerprint, currentPage, debouncedSearchTerm]);
 
 
@@ -506,185 +506,192 @@ const HomeContent: React.FC = () => {
                 }}
               />
 
-            {/* Vertical Divider if User Filter is visible */}
-            {(userRole === "admin" || userRole === "sub admin") && (
-              <Box sx={{ width: "1px", height: "24px", bgcolor: "#e2e8f0", ml: 0.5, mr: 0.5 }} />
-            )}
+              {/* Vertical Divider if User Filter is visible */}
+              {(userRole === "admin" || userRole === "sub admin") && (
+                <Box sx={{ width: "1px", height: "24px", bgcolor: "#e2e8f0", ml: 0.5, mr: 0.5 }} />
+              )}
 
-            {/* User Filter (Admin only) */}
-            {(userRole === "admin" || userRole === "sub admin") && (
-              <Box>
-                <Tooltip title="Filter by user">
-                  <Chip
-                    icon={<PersonRounded sx={{ fontSize: 18 }} />}
-                    label={
-                      selectedUser
-                        ? (selectedUser.username || selectedUser.name || "Unknown")
-                        : "Select User"
-                    }
-                    onClick={(e) => setUserAnchorEl(e.currentTarget)}
-                    sx={{
-                      backgroundColor: selectedUser ? "#388e3c15" : "transparent",
-                      color: selectedUser ? "#388e3c" : "#475569",
-                      border: selectedUser ? "1px solid #388e3c30" : "1px solid transparent",
-                      borderRadius: "12px",
-                      height: "36px",
-                      fontWeight: 600,
-                      fontSize: "0.85rem",
-                      px: 0.5,
-                      "&:hover": { backgroundColor: selectedUser ? "#388e3c25" : "#f1f5f9" },
-                      "& .MuiChip-icon": { color: "inherit", ml: 1 },
-                      transition: "all 0.2s ease"
-                    }}
-                  />
-                </Tooltip>
-                <Menu
-                  anchorEl={userAnchorEl}
-                  open={Boolean(userAnchorEl)}
-                  onClose={() => setUserAnchorEl(null)}
-                  PaperProps={{
-                    sx: {
-                      mt: 1,
-                      boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-                      borderRadius: 2,
-                      maxHeight: 300,
-                    },
-                  }}
-                >
-                  <MenuItem
-                    onClick={() => {
-                      setSelectedUser(null);
-                      setUserAnchorEl(null);
-                    }}
-                    sx={{
-                      mx: 1,
-                      my: 0.5,
-                      borderRadius: "12px",
-                      minWidth: 280,
-                      fontWeight: 600,
-                      color: "#d32f2f"
+              {/* User Filter (Admin only) */}
+              {(userRole === "admin" || userRole === "sub admin") && (
+                <Box>
+                  <Tooltip title="Filter by user">
+                    <Chip
+                      icon={<PersonRounded sx={{ fontSize: 18 }} />}
+                      label={
+                        selectedUser
+                          ? (selectedUser.username || selectedUser.name || "Unknown")
+                          : "Select User"
+                      }
+                      onClick={(e) => setUserAnchorEl(e.currentTarget)}
+                      sx={{
+                        backgroundColor: selectedUser ? "#388e3c15" : "transparent",
+                        color: selectedUser ? "#388e3c" : "#475569",
+                        border: selectedUser ? "1px solid #388e3c30" : "1px solid transparent",
+                        borderRadius: "12px",
+                        height: "36px",
+                        fontWeight: 600,
+                        fontSize: "0.85rem",
+                        px: 0.5,
+                        "&:hover": { backgroundColor: selectedUser ? "#388e3c25" : "#f1f5f9" },
+                        "& .MuiChip-icon": { color: "inherit", ml: 1 },
+                        transition: "all 0.2s ease"
+                      }}
+                    />
+                  </Tooltip>
+                  <Menu
+                    anchorEl={userAnchorEl}
+                    open={Boolean(userAnchorEl)}
+                    onClose={() => setUserAnchorEl(null)}
+                    PaperProps={{
+                      sx: {
+                        mt: 1,
+                        boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+                        borderRadius: 2,
+                        maxHeight: 300,
+                      },
                     }}
                   >
-                    Clear Selection
-                  </MenuItem>
-                  {(() => {
-                    const users = userData?.results || userData?.data || userData || [];
-                    // Only show sales users as requested
-                    const salesUsers = users.filter((u: any) => u.role?.toLowerCase() === "sales");
+                    <MenuItem
+                      onClick={() => {
+                        setSelectedUser(null);
+                        setUserAnchorEl(null);
+                      }}
+                      sx={{
+                        mx: 1,
+                        my: 0.5,
+                        borderRadius: "12px",
+                        minWidth: 280,
+                        fontWeight: 600,
+                        color: "#d32f2f"
+                      }}
+                    >
+                      Clear Selection
+                    </MenuItem>
+                    {(() => {
+                      const users = userData?.results || userData?.data || userData || [];
+                      // Only show sales users as requested
+                      const salesUsers = users.filter((u: any) => u.role?.toLowerCase() === "sales");
 
-                    if (!Array.isArray(salesUsers) || salesUsers.length === 0) {
-                      return (
-                        <MenuItem disabled sx={{ minWidth: 200 }}>
-                          No sales users available
-                        </MenuItem>
-                      );
-                    }
+                      if (!Array.isArray(salesUsers) || salesUsers.length === 0) {
+                        return (
+                          <MenuItem disabled sx={{ minWidth: 200 }}>
+                            No sales users available
+                          </MenuItem>
+                        );
+                      }
 
-                    return salesUsers.map((user: any) => (
-                      <MenuItem
-                        key={user.id || user.username}
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setUserAnchorEl(null);
-                        }}
-                        sx={{
-                          mx: 1,
-                          my: 0.5,
-                          borderRadius: "12px",
-                          border: "1px solid #388e3c40",
-                          bgcolor: "#388e3c15",
-                          "&:hover": {
-                            bgcolor: "#388e3c25",
-                          },
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          minWidth: 280,
-                          p: 1,
-                        }}
-                      >
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                          <Box
+                      return salesUsers.map((user: any) => (
+                        <MenuItem
+                          key={user.id || user.username}
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setUserAnchorEl(null);
+                          }}
+                          sx={{
+                            mx: 1,
+                            my: 0.5,
+                            borderRadius: "12px",
+                            border: "1px solid #388e3c40",
+                            bgcolor: "#388e3c15",
+                            "&:hover": {
+                              bgcolor: "#388e3c25",
+                            },
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            minWidth: 280,
+                            p: 1,
+                          }}
+                        >
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                            <Box
+                              sx={{
+                                bgcolor: "#fff",
+                                borderRadius: "50%",
+                                p: 0.5,
+                                display: "flex",
+                                color: "#388e3c",
+                              }}
+                            >
+                              <TrendingUpRounded sx={{ fontSize: 18 }} />
+                            </Box>
+                            <Typography sx={{ fontWeight: 500, color: "#334155" }}>
+                              {user.username || user.name || "Unknown User"}
+                            </Typography>
+                          </Box>
+                          <Chip
+                            label="Sales"
+                            size="small"
                             sx={{
                               bgcolor: "#fff",
-                              borderRadius: "50%",
-                              p: 0.5,
-                              display: "flex",
                               color: "#388e3c",
+                              fontWeight: 700,
+                              fontSize: "0.7rem",
+                              height: 22,
+                              textTransform: "capitalize",
+                              border: "1px solid #388e3c20"
                             }}
-                          >
-                            <TrendingUpRounded sx={{ fontSize: 18 }} />
-                          </Box>
-                          <Typography sx={{ fontWeight: 500, color: "#334155" }}>
-                            {user.username || user.name || "Unknown User"}
-                          </Typography>
-                        </Box>
-                        <Chip
-                          label="Sales"
-                          size="small"
-                          sx={{
-                            bgcolor: "#fff",
-                            color: "#388e3c",
-                            fontWeight: 700,
-                            fontSize: "0.7rem",
-                            height: 22,
-                            textTransform: "capitalize",
-                            border: "1px solid #388e3c20"
-                          }}
-                        />
-                      </MenuItem>
-                    ));
-                  })()}
-                </Menu>
-              </Box>
-            )}
-
-            {/* Active Date Range Chip — shown when navigated from dashboard with a date/month filter */}
-            {(startDate || endDate) && (
-              <>
-                <Box sx={{ width: "1px", height: "24px", bgcolor: "#e2e8f0", ml: 0.5, mr: 0.5 }} />
-                <Tooltip title="Active date filter — click × to clear">
-                  <Chip
-                    icon={<CalendarMonthRounded sx={{ fontSize: 18 }} />}
-                    label={(() => {
-                      if (startDate && endDate) {
-                        const s = new Date(startDate);
-                        const e = new Date(endDate);
-                        if (s.toDateString() === e.toDateString()) {
-                          return s.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-                        }
-                        if (s.getMonth() === e.getMonth() && s.getFullYear() === e.getFullYear()) {
-                          return s.toLocaleString("default", { month: "long", year: "numeric" });
-                        }
-                        return `${s.toLocaleDateString("en-IN", { day: "numeric", month: "short" })} – ${e.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`;
-                      }
-                      return startDate || endDate || "";
+                          />
+                        </MenuItem>
+                      ));
                     })()}
-                    onDelete={() => {
-                      setStartDate(null);
-                      setEndDate(null);
-                      setCurrentPage(1);
-                      // Restore scrolling — don't reset the store here; the
-                      // data useEffect will replace it when new SWR data arrives.
-                      setHasMoreData(true);
-                    }}
-                    sx={{
-                      backgroundColor: "#e0e7ff",
-                      color: "#3730a3",
-                      border: "1px solid #c7d2fe",
-                      borderRadius: "12px",
-                      height: "36px",
-                      fontWeight: 600,
-                      fontSize: "0.8rem",
-                      px: 0.5,
-                      "& .MuiChip-deleteIcon": { color: "#4f46e5", "&:hover": { color: "#312e81" } },
-                      "& .MuiChip-icon": { color: "inherit", ml: 1 },
-                      transition: "all 0.2s ease"
-                    }}
-                  />
-                </Tooltip>
-              </>
-            )}
+                  </Menu>
+                </Box>
+              )}
+
+              {/* Active Date Range Chip — shown when navigated from dashboard with a date/month filter */}
+              {(startDate || endDate) && (
+                <>
+                  <Box sx={{ width: "1px", height: "24px", bgcolor: "#e2e8f0", ml: 0.5, mr: 0.5 }} />
+                  <Tooltip title="Active date filter — click × to clear">
+                    <Chip
+                      icon={<CalendarMonthRounded sx={{ fontSize: 18 }} />}
+                      label={(() => {
+                        if (startDate && endDate) {
+                          const s = new Date(startDate);
+                          const e = new Date(endDate);
+                          if (s.toDateString() === e.toDateString()) {
+                            return s.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+                          }
+                          if (s.getMonth() === e.getMonth() && s.getFullYear() === e.getFullYear()) {
+                            return s.toLocaleString("default", { month: "long", year: "numeric" });
+                          }
+                          return `${s.toLocaleDateString("en-IN", { day: "numeric", month: "short" })} – ${e.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`;
+                        }
+                        return startDate || endDate || "";
+                      })()}
+                      onDelete={() => {
+                        setStartDate(null);
+                        setEndDate(null);
+                        setCurrentPage(1);
+                        // Restore scrolling — don't reset the store here; the
+                        // data useEffect will replace it when new SWR data arrives.
+                        setHasMoreData(true);
+
+                        // Clear URL parameters so a refresh doesn't bring the dates back
+                        const params = new URLSearchParams(searchParams.toString());
+                        params.delete("startDate");
+                        params.delete("endDate");
+                        params.delete("month");
+                        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+                      }}
+                      sx={{
+                        backgroundColor: "#e0e7ff",
+                        color: "#3730a3",
+                        border: "1px solid #c7d2fe",
+                        borderRadius: "12px",
+                        height: "36px",
+                        fontWeight: 600,
+                        fontSize: "0.8rem",
+                        px: 0.5,
+                        "& .MuiChip-deleteIcon": { color: "#4f46e5", "&:hover": { color: "#312e81" } },
+                        "& .MuiChip-icon": { color: "inherit", ml: 1 },
+                        transition: "all 0.2s ease"
+                      }}
+                    />
+                  </Tooltip>
+                </>
+              )}
             </Box>
           </Paper>
         </Box>

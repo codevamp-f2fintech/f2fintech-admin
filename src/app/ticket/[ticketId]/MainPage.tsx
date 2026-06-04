@@ -1219,13 +1219,13 @@ const MainPage = () => {
                   bgcolor: isExpectedDateOverdue
                     ? 'rgba(211, 47, 47, 0.04)'
                     : isExpectedDateSaved
-                    ? 'rgba(21, 95, 204, 0.04)'
-                    : 'rgba(255, 152, 0, 0.06)',
+                      ? 'rgba(21, 95, 204, 0.04)'
+                      : 'rgba(255, 152, 0, 0.06)',
                   border: isExpectedDateOverdue
                     ? '1px solid rgba(211, 47, 47, 0.3)'
                     : isExpectedDateSaved
-                    ? '1px solid rgba(21, 95, 204, 0.2)'
-                    : '1.5px dashed rgba(255, 152, 0, 0.5)',
+                      ? '1px solid rgba(21, 95, 204, 0.2)'
+                      : '1.5px dashed rgba(255, 152, 0, 0.5)',
                   mb: { xs: 1.5, sm: 2 },
                   transition: 'all 0.3s ease',
                 }}
@@ -1281,10 +1281,10 @@ const MainPage = () => {
                   >
                     {expectedDecisionDate
                       ? new Date(expectedDecisionDate).toLocaleDateString('en-IN', {
-                          day: '2-digit',
-                          month: 'long',
-                          year: 'numeric',
-                        })
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric',
+                      })
                       : '—'}
                     {isExpectedDateOverdue && (
                       <Typography
@@ -1785,7 +1785,6 @@ const MainPage = () => {
                       {/* Amount Field */}
                       <TextField
                         fullWidth
-                        type="number"
                         label="Amount"
                         value={formatDisplayAmount(approvedAmount)}
                         placeholder="Enter amount"
