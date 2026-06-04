@@ -37,7 +37,7 @@ import {
 } from "@/redux/features/customerApplicationSlice";
 import { useGetCustomerApplications } from "@/hooks/customerApplication";
 import { Utility } from "@/utils";
-import { ClearRounded, SearchRounded, PersonRounded, TrendingUpRounded } from "@mui/icons-material";
+import { ClearRounded, SearchRounded, PersonRounded, TrendingUpRounded, CalendarMonthRounded } from "@mui/icons-material";
 import GridViewIcon from "@mui/icons-material/GridView";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import TableViewIcon from "@mui/icons-material/TableView";
@@ -59,6 +59,11 @@ const HomeContent: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [hasMoreData, setHasMoreData] = useState<boolean>(true);
   const [isSearching, setIsSearching] = useState<boolean>(false);
+
+  // Date range filter — initialised from URL so dashboard card click pre-filters the list
+  const [startDate, setStartDate] = useState<string | null>(searchParams.get("startDate") || null);
+  const [endDate, setEndDate] = useState<string | null>(searchParams.get("endDate") || null);
+
   const [deleteDialog, setDeleteDialog] = useState({
     open: false,
     applicationId: null,
@@ -162,11 +167,13 @@ const HomeContent: React.FC = () => {
       setCurrentPage(1);
       setHasMoreData(true);
 
-      // Clear search term if any
+      // Clear search & date filters when company changes
       if (searchTerm) {
         setSearchTerm("");
         setDebouncedSearchTerm("");
       }
+      setStartDate(null);
+      setEndDate(null);
 
       // Increment refresh key to force SWR to refetch
       setRefreshKey(prev => prev + 1);
@@ -224,9 +231,15 @@ const HomeContent: React.FC = () => {
     ITEMS_PER_PAGE,
     effectiveSalesUserId,
     debouncedSearchTerm,
-    selectedCompany,
-    refreshKey
+    startDate,     // formattedStartDate
+    endDate,       // formattedEndDate
+    refreshKey,
+    undefined,     // source
   );
+
+  // A fingerprint that changes whenever SWR actually returns a *different* dataset,
+  // even if the number of items happens to be the same (e.g. date-filtered vs unfiltered).
+  const dataFingerprint = `${data?.count ?? ''}|${data?.results?.[0]?.applicationId ?? ''}|${data?.results?.length ?? ''}`;
 
   // Fetch and update state with new data
   useEffect(() => {
@@ -250,7 +263,9 @@ const HomeContent: React.FC = () => {
       }
       setHasMoreData(false);
     }
-  }, [data?.results?.length, currentPage, debouncedSearchTerm, selectedCompany]);
+  // dataFingerprint detects genuine dataset changes even when length is identical;
+  // startDate/endDate deliberately excluded — they change before SWR has new data.
+  }, [dataFingerprint, currentPage, debouncedSearchTerm]);
 
 
   // Handle infinite scrolling
@@ -622,6 +637,53 @@ const HomeContent: React.FC = () => {
                   })()}
                 </Menu>
               </Box>
+            )}
+
+            {/* Active Date Range Chip — shown when navigated from dashboard with a date/month filter */}
+            {(startDate || endDate) && (
+              <>
+                <Box sx={{ width: "1px", height: "24px", bgcolor: "#e2e8f0", ml: 0.5, mr: 0.5 }} />
+                <Tooltip title="Active date filter — click × to clear">
+                  <Chip
+                    icon={<CalendarMonthRounded sx={{ fontSize: 18 }} />}
+                    label={(() => {
+                      if (startDate && endDate) {
+                        const s = new Date(startDate);
+                        const e = new Date(endDate);
+                        if (s.toDateString() === e.toDateString()) {
+                          return s.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+                        }
+                        if (s.getMonth() === e.getMonth() && s.getFullYear() === e.getFullYear()) {
+                          return s.toLocaleString("default", { month: "long", year: "numeric" });
+                        }
+                        return `${s.toLocaleDateString("en-IN", { day: "numeric", month: "short" })} – ${e.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`;
+                      }
+                      return startDate || endDate || "";
+                    })()}
+                    onDelete={() => {
+                      setStartDate(null);
+                      setEndDate(null);
+                      setCurrentPage(1);
+                      // Restore scrolling — don't reset the store here; the
+                      // data useEffect will replace it when new SWR data arrives.
+                      setHasMoreData(true);
+                    }}
+                    sx={{
+                      backgroundColor: "#e0e7ff",
+                      color: "#3730a3",
+                      border: "1px solid #c7d2fe",
+                      borderRadius: "12px",
+                      height: "36px",
+                      fontWeight: 600,
+                      fontSize: "0.8rem",
+                      px: 0.5,
+                      "& .MuiChip-deleteIcon": { color: "#4f46e5", "&:hover": { color: "#312e81" } },
+                      "& .MuiChip-icon": { color: "inherit", ml: 1 },
+                      transition: "all 0.2s ease"
+                    }}
+                  />
+                </Tooltip>
+              </>
             )}
             </Box>
           </Paper>

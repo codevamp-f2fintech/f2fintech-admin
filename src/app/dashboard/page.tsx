@@ -319,7 +319,8 @@ function SubAdminDashboard() {
   const userToken = (cookies as any).token;
   const { id, role, companyId } = decodedToken(userToken?.value);
 
-  const [date, setDate] = useState<string | null>(null);
+  const todayDate = new Date().toLocaleDateString("en-CA");
+  const [date, setDate] = useState<string | null>(todayDate);
   const [selectedMonth, setSelectedMonth] = useState<string>("");
 
   const [counts, setCounts] = useState<{ [key: string]: number }>({});
@@ -346,10 +347,7 @@ function SubAdminDashboard() {
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    const now = new Date();
-    setDate(now.toLocaleDateString("en-CA"));
-  }, []);
+
 
   const formatDateTime = (date: Date) => {
     return date.toLocaleString("en-US", {
@@ -395,10 +393,24 @@ function SubAdminDashboard() {
 
   const getLink = (status: string) => {
     const base = `/ticket?status=${encodeURIComponent(status)}`;
+
     if (selectedMonth) {
-      // Dummy logic for link generation to avoid importing large utility methods here.
-      // The original code used getFirstDayOfMonth, but we can just pass the month parameter for standard query usage
-      return `${base}&month=${encodeURIComponent(selectedMonth)}`;
+      // Compute first and last day of the selected month
+      const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      const monthIndex = monthNames.indexOf(selectedMonth);
+      const year = new Date().getFullYear();
+      const pad = (n: number) => String(n).padStart(2, "0");
+      const firstDay = `${year}-${pad(monthIndex + 1)}-01`;
+      // Last day: day 0 of next month = last day of current month
+      const lastDate = new Date(year, monthIndex + 1, 0);
+      const lastDay = `${year}-${pad(monthIndex + 1)}-${pad(lastDate.getDate())}`;
+      return `${base}&month=${encodeURIComponent(selectedMonth)}&startDate=${firstDay}&endDate=${lastDay}`;
+    }
+
+    // When a specific date is selected, pass it as both startDate and endDate
+    // so the ticket page filters exactly that day's tickets
+    if (date) {
+      return `${base}&startDate=${date}&endDate=${date}`;
     }
     return base;
   };
@@ -447,7 +459,11 @@ function SubAdminDashboard() {
           <StatCard title="Total Applications" value={totalApps || 0} icon={ArchiveIcon} color="#1de9b6" link="#" tooltip="Total count of all applications (showing all time)" />
         </Grid>
         <Grid item xs={12} sm={6} md={4} lg={4}>
-          <StatCard title="Fresh Applications" value={newApps.count || 0} icon={FiberNewIcon} color="#00e5ff" link="/" tooltip="New fresh applications" />
+          <StatCard title="Fresh Applications" value={newApps.count || 0} icon={FiberNewIcon} color="#00e5ff"
+            link={getLink('fresh-applications')
+              .replace('/ticket?status=fresh-applications&', '/home?')
+              .replace('/ticket?status=fresh-applications', '/home')}
+            tooltip="New fresh applications" />
         </Grid>
         <Grid item xs={12} sm={6} md={4} lg={4}>
           <StatCard title="Total Tickets" value={counts['total'] || 0} icon={FilterListRounded} color="#cddc39" link={getLink('all')} tooltip="Total tickets in system" />
@@ -713,6 +729,18 @@ export default function Page(): React.JSX.Element {
     }
   };
 
+  // Helper: build ticket page link respecting the active date or month filter
+  const getAdminLink = (status: string) => {
+    const base = `/ticket?status=${encodeURIComponent(status)}`;
+    if (selectedMonth) {
+      return `${base}&month=${encodeURIComponent(selectedMonth)}&startDate=${getFirstDayOfMonth(selectedMonth)}&endDate=${getLastDayOfMonth(selectedMonth)}`;
+    }
+    if (date) {
+      return `${base}&startDate=${date}&endDate=${date}`;
+    }
+    return base;
+  };
+
   const dashboardItems = [
     {
       icon: ArchiveIcon,
@@ -732,7 +760,9 @@ export default function Page(): React.JSX.Element {
       iconBgColor: "#00e5ff",
       count: allCounts?.totalNewApplications?.count,
       amount: allCounts?.totalNewApplications?.amount,
-      link: "/",
+      link: getAdminLink("fresh-applications")
+        .replace("/ticket?status=fresh-applications&", "/home?")
+        .replace("/ticket?status=fresh-applications", "/home"),
     },
     {
       icon: FilterListRounded,
@@ -741,14 +771,7 @@ export default function Page(): React.JSX.Element {
       color: "#f5f7fa",
       iconBgColor: "#cddc39",
       count: allCounts?.totalTickets,
-      link: `/ticket?status=all${selectedMonth
-        ? `&month=${encodeURIComponent(
-          selectedMonth
-        )}&startDate=${getFirstDayOfMonth(
-          selectedMonth
-        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
-        : ""
-        }`,
+      link: getAdminLink("all"),
     },
     {
       icon: WorkHistoryIcon,
@@ -757,14 +780,7 @@ export default function Page(): React.JSX.Element {
       color: "#f5f7fa",
       iconBgColor: "#8bc34a",
       count: allCounts?.totalUnderCreditReview,
-      link: `/ticket?status=${decodeURIComponent("under credit review")}${selectedMonth
-        ? `&month=${encodeURIComponent(
-          selectedMonth
-        )}&startDate=${getFirstDayOfMonth(
-          selectedMonth
-        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
-        : ""
-        }`,
+      link: getAdminLink("under credit review"),
     },
     {
       icon: LoginRounded,
@@ -773,14 +789,7 @@ export default function Page(): React.JSX.Element {
       color: "#f5f7fa",
       iconBgColor: "#ffa726",
       count: allCounts?.totalOperations,
-      link: `/ticket?status=${decodeURIComponent("operations")}${selectedMonth
-        ? `&month=${encodeURIComponent(
-          selectedMonth
-        )}&startDate=${getFirstDayOfMonth(
-          selectedMonth
-        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
-        : ""
-        }`,
+      link: getAdminLink("operations"),
     },
     {
       icon: PendingActionsIcon,
@@ -789,14 +798,7 @@ export default function Page(): React.JSX.Element {
       color: "#f5f7fa",
       iconBgColor: "#ff7043",
       count: allCounts?.totalPendencyInFile,
-      link: `/ticket?status=${decodeURIComponent("pendency in file")}${selectedMonth
-        ? `&month=${encodeURIComponent(
-          selectedMonth
-        )}&startDate=${getFirstDayOfMonth(
-          selectedMonth
-        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
-        : ""
-        }`,
+      link: getAdminLink("pendency in file"),
     },
     {
       icon: SendRounded,
@@ -805,14 +807,7 @@ export default function Page(): React.JSX.Element {
       color: "#f5f7fa",
       iconBgColor: "#827717",
       count: allCounts?.totalFileSendToBanker,
-      link: `/ticket?status=${decodeURIComponent("file send to banker")}${selectedMonth
-        ? `&month=${encodeURIComponent(
-          selectedMonth
-        )}&startDate=${getFirstDayOfMonth(
-          selectedMonth
-        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
-        : ""
-        }`,
+      link: getAdminLink("file send to banker"),
     },
     {
       icon: PauseCircleOutlineRounded,
@@ -821,14 +816,7 @@ export default function Page(): React.JSX.Element {
       color: "#f5f7fa",
       iconBgColor: "#1a237e",
       count: allCounts?.totalHold,
-      link: `/ticket?status=${decodeURIComponent("hold")}${selectedMonth
-        ? `&month=${encodeURIComponent(
-          selectedMonth
-        )}&startDate=${getFirstDayOfMonth(
-          selectedMonth
-        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
-        : ""
-        }`,
+      link: getAdminLink("hold"),
     },
     {
       icon: ThumbUpRounded,
@@ -837,14 +825,7 @@ export default function Page(): React.JSX.Element {
       color: "#f5f7fa",
       iconBgColor: "#26c6da",
       count: allCounts?.totalToBeApproved,
-      link: `/ticket?status=${decodeURIComponent("to be approved")}${selectedMonth
-        ? `&month=${encodeURIComponent(
-          selectedMonth
-        )}&startDate=${getFirstDayOfMonth(
-          selectedMonth
-        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
-        : ""
-        }`,
+      link: getAdminLink("to be approved"),
     },
     {
       icon: ForwardRounded,
@@ -853,14 +834,7 @@ export default function Page(): React.JSX.Element {
       color: "#f5f7fa",
       iconBgColor: "#a5d6a7",
       count: allCounts?.totalToBeDisbursed,
-      link: `/ticket?status=${decodeURIComponent("to be disbursed")}${selectedMonth
-        ? `&month=${encodeURIComponent(
-          selectedMonth
-        )}&startDate=${getFirstDayOfMonth(
-          selectedMonth
-        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
-        : ""
-        }`,
+      link: getAdminLink("to be disbursed"),
     },
     {
       icon: AccountBalanceRounded,
@@ -870,14 +844,7 @@ export default function Page(): React.JSX.Element {
       iconBgColor: "#69f0ae",
       count: allCounts?.totalApproved?.count,
       amount: allCounts?.totalApproved?.amount,
-      link: `/ticket?status=${decodeURIComponent("approved")}${selectedMonth
-        ? `&month=${encodeURIComponent(
-          selectedMonth
-        )}&startDate=${getFirstDayOfMonth(
-          selectedMonth
-        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
-        : ""
-        }`,
+      link: getAdminLink("approved"),
     },
     {
       icon: ReportRounded,
@@ -887,14 +854,7 @@ export default function Page(): React.JSX.Element {
       iconBgColor: "#ff9800",
       count: allCounts?.totalDisbursed?.count,
       amount: allCounts?.totalDisbursed?.amount,
-      link: `/ticket?status=${decodeURIComponent("disbursed")}${selectedMonth
-        ? `&month=${encodeURIComponent(
-          selectedMonth
-        )}&startDate=${getFirstDayOfMonth(
-          selectedMonth
-        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
-        : ""
-        }`,
+      link: getAdminLink("disbursed"),
     },
     {
       icon: SendTimeExtensionIcon,
@@ -903,14 +863,7 @@ export default function Page(): React.JSX.Element {
       color: "#f5f7fa",
       iconBgColor: "#795548",
       count: allCounts?.totalCarryForward,
-      link: `/ticket?status=${decodeURIComponent("carry forward")}${selectedMonth
-        ? `&month=${encodeURIComponent(
-          selectedMonth
-        )}&startDate=${getFirstDayOfMonth(
-          selectedMonth
-        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
-        : ""
-        }`,
+      link: getAdminLink("carry forward"),
     },
     {
       icon: CancelRounded,
@@ -919,14 +872,7 @@ export default function Page(): React.JSX.Element {
       color: "#f5f7fa",
       iconBgColor: "#dd2c00",
       count: allCounts?.totalRejected,
-      link: `/ticket?status=${decodeURIComponent("rejected")}${selectedMonth
-        ? `&month=${encodeURIComponent(
-          selectedMonth
-        )}&startDate=${getFirstDayOfMonth(
-          selectedMonth
-        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
-        : ""
-        }`,
+      link: getAdminLink("rejected"),
     },
     {
       icon: DeleteForeverRounded,
@@ -935,14 +881,7 @@ export default function Page(): React.JSX.Element {
       color: "#f5f7fa",
       iconBgColor: "#ff6e40",
       count: allCounts?.totalDrop,
-      link: `/ticket?status=${decodeURIComponent("drop")}${selectedMonth
-        ? `&month=${encodeURIComponent(
-          selectedMonth
-        )}&startDate=${getFirstDayOfMonth(
-          selectedMonth
-        )}&endDate=${getLastDayOfMonth(selectedMonth)}`
-        : ""
-        }`,
+      link: getAdminLink("drop"),
     },
     {
       icon: SendRounded,

@@ -446,8 +446,29 @@ const Ticket = () => {
     // Set all filters from URL
     setSortBy(queryStatus || (userRole === "credit" ? "forwarded" : "all"));
     setLoanProvider(queryProvider || "all");
-    setStartDate(queryStartDate || null);
-    setEndDate(queryEndDate || null);
+
+    // If startDate/endDate are in the URL, use them directly.
+    // If only month is provided (e.g., from old dashboard links), derive the
+    // date range from the month name so the ticket page filter pre-fills correctly.
+    if (queryStartDate || queryEndDate) {
+      setStartDate(queryStartDate || null);
+      setEndDate(queryEndDate || null);
+    } else if (queryMonth) {
+      const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      const monthIndex = monthNames.indexOf(queryMonth);
+      if (monthIndex !== -1) {
+        const year = new Date().getFullYear();
+        const pad = (n: number) => String(n).padStart(2, "0");
+        const firstDay = `${year}-${pad(monthIndex + 1)}-01`;
+        const lastDate = new Date(year, monthIndex + 1, 0);
+        const lastDay = `${year}-${pad(monthIndex + 1)}-${pad(lastDate.getDate())}`;
+        setStartDate(firstDay);
+        setEndDate(lastDay);
+      }
+    } else {
+      setStartDate(null);
+      setEndDate(null);
+    }
 
     // Set user (only for admin)
     if (queryUserId && userRole === "admin" && userData) {
