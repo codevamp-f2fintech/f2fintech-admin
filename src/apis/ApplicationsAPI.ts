@@ -23,4 +23,15 @@ export const ApplicationsAPI = {
       return [];
     }
   },
+  
+  /** Get a single new application for notifications */
+  getApplicationById: async (id: number): Promise<NewApplication | null> => {
+    try {
+      const response = await axiosInstance.get(`application/new-application/${id}`);
+      return response.data?.data ?? null;
+    } catch (error) {
+      console.error(`Failed to fetch application ${id}:`, error);
+      return null;
+    }
+  },
 };

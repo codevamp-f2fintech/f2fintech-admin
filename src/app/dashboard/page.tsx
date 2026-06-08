@@ -317,7 +317,7 @@ function SubAdminDashboard() {
   const { decodedToken, getCookies } = Utility();
   const cookies = getCookies();
   const userToken = (cookies as any).token;
-  const { id, role, companyId } = decodedToken(userToken?.value);
+  const { id, role, companyId, username, name } = decodedToken(userToken?.value) || {};
 
   const todayDate = new Date().toLocaleDateString("en-CA");
   const [date, setDate] = useState<string | null>(todayDate);
@@ -355,6 +355,15 @@ function SubAdminDashboard() {
       hour: "2-digit", minute: "2-digit", second: "2-digit",
     });
   };
+
+  const getGreeting = () => {
+    const hour = currentDateTime.getHours();
+    if (hour < 12) return "Good Morning!";
+    if (hour < 16) return "Good Afternoon!";
+    return "Good Evening!";
+  };
+  const rawName = name || username || "User";
+  const displayName = rawName ? rawName.charAt(0).toUpperCase() + rawName.slice(1) : "";
 
   const handleMonthChange = (e: any) => {
     let newMonth = e.target.value;
@@ -420,8 +429,8 @@ function SubAdminDashboard() {
       {/* Top Filter Bar */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
         <Box>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b' }}>
-            Sub Admin Overview
+          <Typography variant="h4" sx={{ fontWeight: 800, color: '#0d1b54', letterSpacing: '-0.5px' }}>
+            {getGreeting()} {displayName}
           </Typography>
           <Typography variant="body2" sx={{ color: '#64748b', mt: 0.5 }}>
             {formatDateTime(currentDateTime)}
@@ -550,7 +559,7 @@ export default function Page(): React.JSX.Element {
   const { decodedToken, getCookies } = Utility();
   const cookies = getCookies();
   const userToken = (cookies as any).token;
-  const { id, role, companyId } = decodedToken(userToken?.value);
+  const { id, role, companyId, username, name } = decodedToken(userToken?.value) || {};
 
   if (role === 'sub admin') {
     return <SubAdminDashboard />;
@@ -605,6 +614,15 @@ export default function Page(): React.JSX.Element {
       second: "2-digit",
     });
   };
+
+  const getGreeting = () => {
+    const hour = currentDateTime.getHours();
+    if (hour < 12) return "Good Morning!";
+    if (hour < 16) return "Good Afternoon!";
+    return "Good Evening!";
+  };
+  const rawName = name || username || "User";
+  const displayName = rawName ? rawName.charAt(0).toUpperCase() + rawName.slice(1) : "";
 
   const handleMonthChange = (e) => {
     let newMonth = e.target.value;
@@ -993,27 +1011,12 @@ export default function Page(): React.JSX.Element {
               minWidth: { xs: "100%", sm: 250, md: 300 },
             }}
           >
-            <Box
-              component="span"
-              sx={{
-                fontSize: { xs: "1rem", sm: "1.1rem", md: "1.2rem" },
-                fontWeight: "bold",
-                color: "#3f51b5",
-                wordBreak: "break-word",
-              }}
-            >
-              {formatDateTime(currentDateTime).split(",")[0]},{" "}
-              {formatDateTime(currentDateTime).split(",")[1]}
-            </Box>
-            <Box
-              component="span"
-              sx={{
-                fontSize: "0.9rem",
-                color: "#607d8b",
-              }}
-            >
-              {formatDateTime(currentDateTime).split(",")[2]}
-            </Box>
+            <Typography variant="h4" sx={{ fontWeight: 800, color: '#0d1b54', letterSpacing: '-0.5px' }}>
+              {getGreeting()} {displayName}
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#64748b', mt: 0.5 }}>
+              {formatDateTime(currentDateTime)}
+            </Typography>
           </Box>
 
           <Box

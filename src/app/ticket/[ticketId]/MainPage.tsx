@@ -613,7 +613,10 @@ const MainPage = () => {
         }
       }
       // 2. Update ticket status
-      const updatePayload: Record<string, unknown> = { status: newStatus };
+      const updatePayload: Record<string, unknown> = { 
+        status: newStatus,
+        actorName: decodedToken()?.username || 'A user'
+      };
       if (caseType) updatePayload.case_type = caseType;
       await modifyTicket(+ticketId, updatePayload);
       // 3. Ticket history
@@ -683,6 +686,7 @@ const MainPage = () => {
         status: "disbursed",
         disbursed_at: disbursedDate,
         disbursed_amount: parseFloat(disbursedAmount),
+        actorName: decodedToken()?.username || 'A user'
       };
       if (cashbackAmount && parseFloat(cashbackAmount) >= 0)
         updatePayload.cashback_amount = parseFloat(cashbackAmount);
@@ -779,6 +783,7 @@ const MainPage = () => {
         status: "approved",
         approved_at: approvedDate,
         approved_amount: parseFloat(approvedAmount),
+        actorName: decodedToken()?.username || 'A user'
       };
       if (caseType) updatePayload.case_type = caseType;
       if (fixedCommissionPercentage && parseFloat(fixedCommissionPercentage) >= 0)

@@ -17,6 +17,8 @@ import Chip from "@mui/material/Chip";
 import Button from "@mui/material/Button";
 import { Bell as BellIcon } from "@phosphor-icons/react/dist/ssr/Bell";
 import { List as ListIcon } from "@phosphor-icons/react/dist/ssr/List";
+import { Clock as ClockIcon } from "@phosphor-icons/react/dist/ssr/Clock";
+import { X as CloseIcon } from "@phosphor-icons/react/dist/ssr/X";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
@@ -29,25 +31,29 @@ import { Utility } from "@/utils";
 import { usePopover } from "@/hooks/use-popover";
 import { CompanyAPI } from "@/apis/CompanyAPI";
 import { ApplicationsAPI, NewApplication } from "@/apis/ApplicationsAPI";
+import { NotificationsAPI, AdminNotification } from "@/apis/NotificationsAPI";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 
 const SEEN_APPLICATIONS_KEY = "seenApplicationIds";
 
-function getSeenIds(): Set<number> {
+function getSeenIds(): Set<string> {
   if (typeof window === "undefined") return new Set();
   try {
     const raw = localStorage.getItem(SEEN_APPLICATIONS_KEY);
-    return raw ? new Set(JSON.parse(raw) as number[]) : new Set();
+    return raw ? new Set(JSON.parse(raw) as string[]) : new Set();
   } catch {
     return new Set();
   }
 }
 
-function saveSeenIds(ids: Set<number>) {
+function saveSeenIds(ids: Set<string>) {
   if (typeof window === "undefined") return;
   localStorage.setItem(SEEN_APPLICATIONS_KEY, JSON.stringify(Array.from(ids)));
 }
+export type UnifiedNotification =
+  | { type: 'application'; data: NewApplication; id: string; date: number }
+  | { type: 'ticket'; data: AdminNotification; id: string; date: number };
 
 export function AppBarNav(): React.JSX.Element {
   const [openNav, setOpenNav] = React.useState<boolean>(false);
@@ -57,10 +63,11 @@ export function AppBarNav(): React.JSX.Element {
   const [isMounted, setIsMounted] = useState(false);
 
   // Notification state
-  const [newApplications, setNewApplications] = useState<NewApplication[]>([]);
-  const [seenIds, setSeenIds] = useState<Set<number>>(new Set());
+  const [notifications, setNotifications] = useState<UnifiedNotification[]>([]);
+  const [seenIds, setSeenIds] = useState<Set<string>>(new Set());
   const [notifAnchorEl, setNotifAnchorEl] = useState<HTMLButtonElement | null>(null);
   const notifOpenRef = useRef(false);
+  const [page, setPage] = useState(1);
 
   const router = useRouter();
 
@@ -99,20 +106,49 @@ export function AppBarNav(): React.JSX.Element {
     fetchCompanies();
   }, [fetchCompanies]);
 
-  // Fetch new applications for notifications
-  const fetchNewApplications = useCallback(async () => {
+  // Fetch unified notifications
+  const fetchNotifications = useCallback(async () => {
     try {
-      const apps = await ApplicationsAPI.getNewApplications(15);
-      setNewApplications(apps);
+      const [apps, tickets] = await Promise.all([
+        ApplicationsAPI.getNewApplications(50),
+        NotificationsAPI.getAdminNotifications(50)
+      ]);
+
+      const unified: UnifiedNotification[] = [
+        ...(Array.isArray(apps) ? apps : []).map(app => ({
+          type: 'application' as const,
+          data: app,
+          id: `app_${app.applicationId}`,
+          date: new Date(app.applicationDate).getTime()
+        })),
+        ...(Array.isArray(tickets) ? tickets : []).map(ticket => ({
+          type: 'ticket' as const,
+          data: ticket,
+          id: `ticket_${ticket.id}`,
+          date: new Date(ticket.created_at).getTime()
+        }))
+      ];
+
+      console.log('Fetched Apps:', apps);
+      console.log('Fetched Tickets:', tickets);
+      console.log('Unified Notifications:', unified);
+
+      // Sort by date descending
+      unified.sort((a, b) => {
+        const dateA = isNaN(a.date) ? 0 : a.date;
+        const dateB = isNaN(b.date) ? 0 : b.date;
+        return dateB - dateA;
+      });
+      setNotifications(unified);
     } catch (error) {
-      console.error("Failed to fetch new applications for notifications", error);
+      console.error("Failed to fetch notifications", error);
     }
   }, []);
 
   useEffect(() => {
     if (isSales) return;
 
-    fetchNewApplications();
+    fetchNotifications();
 
     // Connect to the Express server (port 8080) where applications are created
     const webUrl =
@@ -123,17 +159,61 @@ export function AppBarNav(): React.JSX.Element {
       console.log("Connected to WebSocket notifications server on port 8080");
     });
 
-    socket.on("new-application", () => {
-      fetchNewApplications();
+    socket.on("new-application", async (payload: { applicationId: number }) => {
+      if (!payload || !payload.applicationId) return;
+      try {
+        const newApp = await ApplicationsAPI.getApplicationById(payload.applicationId);
+        if (newApp) {
+          setNotifications((prev) => {
+            const newNotif: UnifiedNotification = {
+              type: 'application',
+              data: newApp,
+              id: `app_${newApp.applicationId}`,
+              date: new Date(newApp.applicationDate).getTime()
+            };
+            if (prev.some(n => n.id === newNotif.id)) return prev;
+            return [newNotif, ...prev].sort((a, b) => b.date - a.date);
+          });
+          setPage(1);
+        }
+      } catch (error) {
+        console.error("Error fetching new application for socket event:", error);
+      }
+    });
+
+    socket.on("ticket-status-changed", async (payload: { notificationId: number, ticketId: number }) => {
+      if (!payload || !payload.notificationId) return;
+      try {
+        const ticketNotif = await NotificationsAPI.getNotificationById(payload.notificationId);
+        if (ticketNotif) {
+          setNotifications((prev) => {
+            const newNotif: UnifiedNotification = {
+              type: 'ticket',
+              data: ticketNotif,
+              id: `ticket_${ticketNotif.id}`,
+              date: new Date(ticketNotif.created_at).getTime()
+            };
+            if (prev.some(n => n.id === newNotif.id)) return prev;
+            return [newNotif, ...prev].sort((a, b) => b.date - a.date);
+          });
+          setPage(1);
+        }
+      } catch (error) {
+        console.error("Error fetching ticket notification for socket event:", error);
+      }
     });
 
     return () => {
       socket.disconnect();
     };
-  }, [fetchNewApplications, isSales]);
+  }, [fetchNotifications, isSales]);
 
 
-  const unreadCount = newApplications.filter((app) => !seenIds.has(app.applicationId)).length;
+  const unreadCount = notifications.filter((n) => !seenIds.has(n.id)).length;
+  
+  const ITEMS_PER_PAGE = 10;
+  const totalPages = Math.max(1, Math.ceil(notifications.length / ITEMS_PER_PAGE));
+  const paginatedNotifications = notifications.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   const handleNotifOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
     setNotifAnchorEl(event.currentTarget);
@@ -147,7 +227,7 @@ export function AppBarNav(): React.JSX.Element {
 
   const handleMarkAllRead = () => {
     const updated = new Set(seenIds);
-    newApplications.forEach((app) => updated.add(app.applicationId));
+    notifications.forEach((n) => updated.add(n.id));
     setSeenIds(updated);
     saveSeenIds(updated);
   };
@@ -169,6 +249,14 @@ export function AppBarNav(): React.JSX.Element {
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
     return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  };
+
+  const formatDateTime = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleString("en-IN", { 
+      day: "numeric", month: "short", year: "numeric",
+      hour: "2-digit", minute: "2-digit", hour12: true
+    });
   };
 
   if (pathname === "/login") return <></>;
@@ -314,7 +402,7 @@ export function AppBarNav(): React.JSX.Element {
                   slotProps={{
                     paper: {
                       sx: {
-                        width: 360,
+                        width: 440,
                         maxHeight: 480,
                         borderRadius: "12px",
                         boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
@@ -325,60 +413,81 @@ export function AppBarNav(): React.JSX.Element {
                     },
                   }}
                 >
-                  {/* Header */}
                   <Box
                     sx={{
                       px: 2,
-                      py: 1.5,
+                      py: 2,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
-                      background: "#3f50b5",
-                      color: "white",
+                      background: "white",
+                      color: "black",
+                      borderTopLeftRadius: "12px",
+                      borderTopRightRadius: "12px",
                     }}
                   >
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <BellIcon size={18} />
-                      <Typography fontWeight={700} fontSize="0.95rem">
-                        New Applications
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: 36,
+                          height: 36,
+                          borderRadius: "8px",
+                          backgroundColor: "#e3f2fd",
+                          color: "#1976d2",
+                        }}
+                      >
+                        <BellIcon size={20} weight="fill" />
+                      </Box>
+                      <Typography fontWeight={600} fontSize="1.1rem" sx={{ color: "#1e293b" }}>
+                        Notifications
                       </Typography>
                       {unreadCount > 0 && (
                         <Chip
                           label={`${unreadCount} new`}
                           size="small"
                           sx={{
-                            backgroundColor: "#e53935",
+                            backgroundColor: "#ef4444",
                             color: "white",
-                            fontWeight: 700,
-                            fontSize: "0.65rem",
-                            height: "20px",
+                            fontWeight: 600,
+                            fontSize: "0.7rem",
+                            height: "22px",
                           }}
                         />
                       )}
                     </Stack>
-                    {unreadCount > 0 && (
-                      <Button
-                        size="small"
-                        onClick={handleMarkAllRead}
-                        sx={{
-                          color: "rgba(255,255,255,0.85)",
-                          fontSize: "0.7rem",
-                          textTransform: "none",
-                          p: "2px 8px",
-                          minWidth: "auto",
-                          "&:hover": { color: "white", background: "rgba(255,255,255,0.1)" },
-                        }}
-                      >
-                        ✓ Mark all read
-                      </Button>
-                    )}
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      {unreadCount > 0 && (
+                        <Button
+                          size="small"
+                          onClick={handleMarkAllRead}
+                          disableRipple
+                          sx={{
+                            color: "#1e293b",
+                            fontSize: "0.85rem",
+                            textTransform: "none",
+                            fontWeight: 500,
+                            p: 0,
+                            minWidth: "auto",
+                            "&:hover": { background: "transparent", textDecoration: "underline" },
+                          }}
+                        >
+                          ✓ Mark all
+                        </Button>
+                      )}
+                      <IconButton onClick={handleNotifClose} size="small" sx={{ p: 0.5, color: "#64748b" }}>
+                        <CloseIcon size={18} />
+                      </IconButton>
+                    </Stack>
                   </Box>
 
                   <Divider />
 
                   {/* Application List */}
                   <Box sx={{ overflowY: "auto", flex: 1 }}>
-                    {newApplications.length === 0 ? (
+                    {notifications.length === 0 ? (
                       <Box
                         sx={{
                           display: "flex",
@@ -391,134 +500,200 @@ export function AppBarNav(): React.JSX.Element {
                       >
                         <BellIcon size={36} color="#bdbdbd" />
                         <Typography color="text.secondary" fontSize="0.85rem">
-                          No new applications
+                          No new notifications
                         </Typography>
                       </Box>
                     ) : (
-                      newApplications.map((app, index) => {
-                        const isUnread = !seenIds.has(app.applicationId);
-                        return (
-                          <React.Fragment key={app.applicationId}>
+                      paginatedNotifications.map((notif, index) => {
+                        const isUnread = !seenIds.has(notif.id);
+                        
+                        if (notif.type === 'application') {
+                          const app = notif.data;
+                          return (
+                            <React.Fragment key={notif.id}>
                             <Box
                               onClick={() => {
                                 // mark this one as seen
                                 const updated = new Set(seenIds);
-                                updated.add(app.applicationId);
+                                updated.add(notif.id);
                                 setSeenIds(updated);
                                 saveSeenIds(updated);
                                 handleNotifClose();
                                 router.push(`/?search=${app.applicationNo}`);
                               }}
                               sx={{
-                                px: 2,
-                                py: 1.5,
+                                px: 3,
+                                py: 2,
                                 cursor: "pointer",
                                 display: "flex",
-                                gap: 1.5,
-                                alignItems: "flex-start",
-                                backgroundColor: isUnread ? "rgba(25, 118, 210, 0.05)" : "transparent",
+                                flexDirection: "column",
+                                gap: 0.8,
+                                backgroundColor: isUnread ? "#f4f8fb" : "white",
+                                borderLeft: isUnread ? "4px solid #3b82f6" : "4px solid transparent",
                                 transition: "background 0.15s",
                                 "&:hover": {
-                                  backgroundColor: "rgba(25, 118, 210, 0.1)",
+                                  backgroundColor: "#f1f5f9",
                                 },
                               }}
                             >
-                              {/* Unread dot */}
-                              <Box
-                                sx={{
-                                  mt: "6px",
-                                  width: 8,
-                                  height: 8,
-                                  borderRadius: "50%",
-                                  backgroundColor: isUnread ? "#e53935" : "transparent",
-                                  flexShrink: 0,
-                                }}
-                              />
-                              <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", width: "100%" }}>
                                 <Typography
-                                  fontWeight={isUnread ? 700 : 500}
-                                  fontSize="0.85rem"
-                                  noWrap
-                                  sx={{ color: "#1a1a2e" }}
+                                  fontWeight={isUnread ? 600 : 500}
+                                  fontSize="0.9rem"
+                                  sx={{ color: "#1e293b" }}
                                 >
-                                  {app.customerName}
+                                  New Application Received
                                 </Typography>
-                                <Stack direction="row" spacing={1} alignItems="center" mt={0.3}>
-                                  <Typography fontSize="0.75rem" color="text.secondary">
-                                    {formatAmount(app.amount)}
-                                  </Typography>
-                                  <Typography fontSize="0.75rem" color="text.secondary">
-                                    •
-                                  </Typography>
-                                  <Typography
-                                    fontSize="0.62rem"
+                                {isUnread && (
+                                  <Box
                                     sx={{
-                                      backgroundColor: "#e3f2fd",
-                                      color: "#1565c0",
-                                      px: 0.8,
-                                      py: 0.1,
-                                      borderRadius: "4px",
-                                      textTransform: "capitalize",
-                                      fontWeight: 600,
-                                      whiteSpace: "nowrap",
+                                      mt: "4px",
+                                      width: 8,
+                                      height: 8,
+                                      borderRadius: "50%",
+                                      backgroundColor: "#3b82f6", // Blue dot on right
+                                      flexShrink: 0,
                                     }}
-                                  >
-                                    {app.loanType}
-                                  </Typography>
-                                  <Typography
-                                    fontSize="0.62rem"
-                                    sx={{
-                                      backgroundColor: "#e3f2fd",
-                                      color: "#1565c0",
-                                      px: 0.8,
-                                      py: 0.1,
-                                      borderRadius: "4px",
-                                      textTransform: "capitalize",
-                                      fontWeight: 400,
-                                      whiteSpace: "nowrap",
-                                    }}
-                                  >
-                                    {app.provider}
-                                  </Typography>
-                                </Stack>
-                                <Typography fontSize="0.72rem" color="text.secondary" mt={0.3}>
+                                  />
+                                )}
+                              </Box>
+
+                              <Typography fontSize="0.85rem" sx={{ color: "#64748b", lineHeight: 1.4 }}>
+                                Application <strong>#{app.applicationNo}</strong> for <strong>{app.customerName}</strong> has been submitted for a <strong>{formatAmount(app.amount)}</strong> <strong>{app.loanType}</strong> via <strong>{app.provider || "Unknown"}</strong>.
+                              </Typography>
+                              
+                              <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.5 }}>
+                                <ClockIcon size={14} color="#94a3b8" />
+                                <Typography fontSize="0.75rem" sx={{ color: "#94a3b8" }}>
                                   {formatDate(app.applicationDate)}
                                 </Typography>
-                              </Box>
+                              </Stack>
                             </Box>
-                            {index < newApplications.length - 1 && <Divider sx={{ mx: 2 }} />}
+                            {index < paginatedNotifications.length - 1 && <Divider />}
                           </React.Fragment>
                         );
+                        } else {
+                          // Ticket
+                          const ticket = notif.data;
+                          return (
+                            <React.Fragment key={notif.id}>
+                              <Box
+                                onClick={() => {
+                                  const updated = new Set(seenIds);
+                                  updated.add(notif.id);
+                                  setSeenIds(updated);
+                                  saveSeenIds(updated);
+                                  handleNotifClose();
+                                  router.push(`/ticket/${ticket.ticket_id}`);
+                                }}
+                                sx={{
+                                  px: 3,
+                                  py: 2,
+                                  cursor: "pointer",
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: 0.8,
+                                  backgroundColor: isUnread ? "#f0fdf4" : "white",
+                                  borderLeft: isUnread ? "4px solid #22c55e" : "4px solid transparent",
+                                  transition: "background 0.15s",
+                                  "&:hover": {
+                                    backgroundColor: "#dcfce7",
+                                  },
+                                }}
+                              >
+                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", width: "100%" }}>
+                                  <Typography
+                                    fontWeight={isUnread ? 600 : 500}
+                                    fontSize="0.9rem"
+                                    sx={{ color: "#1e293b" }}
+                                  >
+                                    {ticket.title || 'Ticket Update'}
+                                  </Typography>
+                                  {isUnread && (
+                                    <Box
+                                      sx={{
+                                        mt: "4px",
+                                        width: 8,
+                                        height: 8,
+                                        borderRadius: "50%",
+                                        backgroundColor: "#22c55e", // Green dot on right
+                                        flexShrink: 0,
+                                      }}
+                                    />
+                                  )}
+                                </Box>
+  
+                                <Typography fontSize="0.85rem" sx={{ color: "#64748b", lineHeight: 1.4 }}>
+                                  {(() => {
+                                    const match = ticket.message.match(/Ticket #(\d+) for (.+?) has been updated to (.+?)(?: by (.+))?$/);
+                                    if (match) {
+                                      const customerName = match[2];
+                                      const actor = match[4];
+                                      return (
+                                        <>
+                                          Ticket <strong>#{ticket.ticket_id}</strong> for <strong>{customerName}</strong> was moved from <strong>{ticket.old_status}</strong> to <strong>{ticket.new_status}</strong>
+                                          {actor && <span> by <strong>{actor}</strong></span>}.
+                                        </>
+                                      );
+                                    }
+                                    return ticket.message;
+                                  })()}
+                                </Typography>
+                                
+                                <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.5 }}>
+                                  <ClockIcon size={14} color="#94a3b8" />
+                                  <Typography fontSize="0.75rem" sx={{ color: "#94a3b8" }}>
+                                    {formatDateTime(ticket.created_at)}
+                                  </Typography>
+                                </Stack>
+                              </Box>
+                              {index < paginatedNotifications.length - 1 && <Divider />}
+                            </React.Fragment>
+                          );
+                        }
                       })
                     )}
                   </Box>
 
                   {/* Footer */}
-                  {newApplications.length > 0 && (
+                  {notifications.length > 0 && (
                     <>
                       <Divider />
                       <Box
                         sx={{
                           px: 2,
                           py: 1,
-                          textAlign: "center",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
                           background: "#f8f9fa",
                         }}
                       >
                         <Button
                           size="small"
+                          disabled={page === 1}
+                          onClick={() => setPage(p => p - 1)}
+                          sx={{ textTransform: "none", fontSize: "0.75rem", minWidth: "auto", px: 1, visibility: totalPages > 1 ? "visible" : "hidden" }}
+                        >
+                          ← Prev
+                        </Button>
+                        <Button
+                          size="small"
                           onClick={() => {
                             handleNotifClose();
-                            router.push("/");
+                            // Or go to a unified notifications page
                           }}
-                          sx={{
-                            fontSize: "0.78rem",
-                            textTransform: "none",
-                            color: "#1976d2",
-                            fontWeight: 600,
-                          }}
+                          sx={{ color: "#3b82f6", fontSize: "0.8rem", textTransform: "none", fontWeight: 600, visibility: "hidden" }}
                         >
-                          View all applications →
+                          View all notifications →
+                        </Button>
+                        <Button
+                          size="small"
+                          disabled={page === totalPages}
+                          onClick={() => setPage(p => p + 1)}
+                          sx={{ textTransform: "none", fontSize: "0.75rem", minWidth: "auto", px: 1, visibility: totalPages > 1 ? "visible" : "hidden" }}
+                        >
+                          Next →
                         </Button>
                       </Box>
                     </>

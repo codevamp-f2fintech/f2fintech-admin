@@ -234,12 +234,13 @@ const Ticket = () => {
 
       // Format the exported data
       const formattedData = exportData.data.results.map((t, index) => ({
-        "S.No": index + 1,
         "Ticket ID": t?.ticketId || "-",
         Name: t?.customerName || "-",
         Email: t?.customerEmail || "-",
         Amount: t?.applicationAmount || "-",
         Provider: t?.applicationProvider || "-",
+        "Loan Type": t?.loanType || "-",
+        "Lead Type": t?.leadType || "-",
         Tenure: t?.applicationTenure
           ? `${t.applicationTenure} ${t.applicationTenure > 1 ? "Years" : "Year"
           }`
@@ -292,31 +293,13 @@ const Ticket = () => {
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Tickets");
 
-      const excelBuffer = XLSX.write(workbook, {
-        bookType: "xlsx",
-        type: "array",
-      });
-
-      const data = new Blob([excelBuffer], {
-        type: "application/octet-stream",
-      });
       const fileName = `Tickets_${currentUserRole}_${userName.replace(
         /\s+/g,
         "_"
       )}_${new Date().toISOString().slice(0, 10)}.xlsx`;
 
-      // Use saveAs and wait for it to complete
-      await new Promise<void>((resolve, reject) => {
-        try {
-          saveAs(data, fileName);
-          // Add a small delay to ensure the file is fully downloaded
-          setTimeout(() => {
-            resolve();
-          }, 500);
-        } catch (error) {
-          reject(error);
-        }
-      });
+      // Use the built-in XLSX method to trigger the download seamlessly
+      XLSX.writeFile(workbook, fileName);
 
       // Stop loading after successful download
       setExportLoading(false);
