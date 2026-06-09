@@ -5,52 +5,47 @@ import { creator, fetcher, modifier } from '@/apis/apiClient';
 import { User, UserData } from '@/types/user';
 
 /**
- * Hook for fetching users with SWR (stale-while-revalidate) strategy.
- * 
- * @param initialData - The initial data to be used before SWR fetches fresh data.
- * @param pathKey - The API path key used by SWR to fetch user data.
- * @param page
- * @param limit
- * @returns An object containing the fetched users, loading state, error state and refetch function.
+ * Hook for fetching users with SWR.
+ * Pure client-side, no SSR initialData complexity.
  */
 export const useGetUsers = (
-    initialData: User | null,
     pathKey: string,
     page: number = 1,
-    limit: number = 6,
+    limit: number = 10,
+    status: string = 'active',
+    search: string = '',
 ) => {
-    const { data: swrData, error, isValidating } = useSWR<User | null>(
-        `${pathKey}?page=${page}&limit=${limit}`,
+    const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
+    const fullPath = `${pathKey}?page=${page}&limit=${limit}&status=${status}${searchParam}`;
+
+    const { data: swrData, error, isValidating, isLoading } = useSWR<User | null>(
+        fullPath,
         fetcher,
         {
-            fallbackData: page === 1 ? initialData : undefined,
-            refreshInterval: initialData ? 3600000 : 0, // 1 hour refresh if initialData exists
             revalidateOnFocus: false,
             dedupingInterval: 1000,
         });
+
     const refetch = async () => {
-        return await mutate(`${pathKey}?page=${page}&limit=${limit}`);
+        return await mutate(fullPath);
     };
 
     return {
         value: swrData || {
             data: {
-              results: [],
-              count: 0,
-              pages: 0,
+                results: [],
+                count: 0,
+                pages: 0,
             }
         },
-        swrLoading: !error && !swrData && isValidating,
+        swrLoading: isLoading || isValidating || (!swrData && !error),
         error,
-        refetch
+        refetch,
     };
 };
 
 /**
  * Hook for creating a new user.
- * 
- * @param pathKey - The API path key used to create a new user.
- * @returns An object containing the loading state, error state, and the createUser function.
  */
 export const useCreateUser = (pathKey: string) => {
     const [loading, setLoading] = useState(false);
@@ -73,9 +68,6 @@ export const useCreateUser = (pathKey: string) => {
 
 /**
  * Hook for modifying an existing user.
- * 
- * @param pathKey - The API path key used to modify a user.
- * @returns An object containing loading state, error state, and the modifyUser function.
  */
 export const useModifyUser = (pathKey: string) => {
     const [loading, setLoading] = useState(false);

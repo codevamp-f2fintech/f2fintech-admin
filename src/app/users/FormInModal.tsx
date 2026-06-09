@@ -12,9 +12,6 @@ import {
   Box,
   useMediaQuery,
   Dialog,
-  FormControl,
-  InputLabel,
-  Select,
 } from "@mui/material";
 import {
   Person,
@@ -24,281 +21,186 @@ import {
   VisibilityOff,
   Wc,
   SupervisorAccount,
-  Business
+  Phone,
+  Badge,
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 
 import Toast from "../components/common/Toast";
 import Loader from "../components/common/Loader";
-import userValidation from "./Validation.jsx";
+import UserSchema, { EditUserSchema } from "./Validation.jsx";
 
 import type { AppDispatch, RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import { UserAPI } from "@/apis/UserAPI";
 import { Utility } from "@/utils";
-import { User } from "@/types/user";
-import { getCompanyId, getUserRole } from "@/utils/cookies";
+import { getUserRole } from "@/utils/cookies";
 
 interface UserFormValues {
   username: string;
   email: string;
   password: string;
+  confirmPassword: string;
+  designation: string;
+  number: string;
   gender: string;
   role: string;
+  status: string;
   id?: string | number;
-  // companyId?: string;
-}
-
-interface Company {
-  id: number;
-  name: string;
-  email: string;
-  // companyId: string;
 }
 
 interface FormComponentProps {
   openDialog: boolean;
-  setOpenDialog: ( value: boolean ) => void;
+  setOpenDialog: (value: boolean) => void;
   updatePassword: boolean;
-  setUpdatePassword: ( value: boolean ) => void;
+  setUpdatePassword: (value: boolean) => void;
   userId: string | null;
   refetch: () => Promise<any>;
-  setUsers: ( users: User ) => void;
 }
 
-const initialValues: UserFormValues = {
+const CREATE_INITIAL_VALUES: UserFormValues = {
   username: "",
   email: "",
   password: "",
+  confirmPassword: "",
+  designation: "",
+  number: "",
   gender: "",
   role: "",
-  // companyId: "",
+  status: "active",
 };
 
-const UserForm: React.FC<FormComponentProps> = ( {
+const UserForm: React.FC<FormComponentProps> = ({
   openDialog,
   setOpenDialog,
   updatePassword,
   setUpdatePassword,
   userId,
   refetch,
-  setUsers
-} ) => {
-  const [ title, setTitle ] = useState<"Create" | "Edit">( "Create" );
-  const [ loading, setLoading ] = useState<boolean>( false );
-  const [ formValues, setFormValues ] = useState<UserFormValues>( initialValues );
-  const [ showPassword, setShowPassword ] = useState<boolean>( false );
-  const [ companies, setCompanies ] = useState<Company[]>( [] );
-  const [ loadingCompanies, setLoadingCompanies ] = useState<boolean>( false );
-  const pwFieldRef = useRef<HTMLInputElement | null>( null );
-  const [ currentUserRole, setCurrentUserRole ] = useState<string>( "" );
-  console.log( "Current formValues:", formValues );
+}) => {
+  const [title, setTitle] = useState<"Create" | "Edit">("Create");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [formValues, setFormValues] = useState<UserFormValues>(CREATE_INITIAL_VALUES);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
+  const pwFieldRef = useRef<HTMLInputElement | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<string>("");
 
   const theme = useTheme();
-  const fullScreen = useMediaQuery( theme.breakpoints.down( "md" ) );
+  const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
   const dispatch: AppDispatch = useDispatch();
-  const { toast } = useSelector( ( state: RootState ) => state.toast );
+  const { toast } = useSelector((state: RootState) => state.toast);
   const { toastAndNavigate } = Utility();
-  const isMobile = useMediaQuery( "(max-width:480px)" );
+  const isMobile = useMediaQuery("(max-width:480px)");
 
-  // Fetch companies when form opens (only for super admin creating users)
-  const fetchCompanies = useCallback( async () => {
-    if ( currentUserRole === 'super admin' && openDialog && !userId )
-    {
-      try
-      {
-        setLoadingCompanies( true );
-        const response = await UserAPI.getAllCompanies( 1, 100 );
-        if ( response.data?.data?.results )
-        {
-          setCompanies( response.data.data.results );
-        }
-      } catch ( error: any )
-      {
-        console.error( "Error fetching companies:", error );
-        toastAndNavigate( dispatch, true, "error", "Failed to load companies" );
-      } finally
-      {
-        setLoadingCompanies( false );
-      }
-    }
-  }, [ currentUserRole, openDialog, userId, dispatch, toastAndNavigate ] );
+  const handleTogglePassword = useCallback(() => {
+    setShowPassword((prev) => !prev);
+  }, []);
 
-  useEffect( () => {
-    const loadCompanies = async () => {
-      if ( currentUserRole === "super admin" && openDialog && !userId )
-      {
-        try
-        {
-          setLoadingCompanies( true );
-          const response = await UserAPI.getAllCompanies( 1, 100 );
-
-          const companyList = response?.data?.data?.results || [];
-          setCompanies( companyList );
-        } catch ( error )
-        {
-          toastAndNavigate( dispatch, true, "error", "Failed to load companies" );
-        } finally
-        {
-          setLoadingCompanies( false );
-        }
-      }
-    };
-
-    loadCompanies();
-  }, [ openDialog, currentUserRole, userId ] );
-
-
-  const handleTogglePassword = useCallback( () => {
-    setShowPassword( ( prev ) => !prev );
-  }, [] );
+  const handleToggleConfirmPassword = useCallback(() => {
+    setShowConfirmPassword((prev) => !prev);
+  }, []);
 
   const handleDialogClose = () => {
-    setOpenDialog( false );
+    setOpenDialog(false);
   };
 
   // Initialize user role on component mount
-  useEffect( () => {
+  useEffect(() => {
     const role = getUserRole();
-    setCurrentUserRole( role || "" );
-  }, [] );
+    setCurrentUserRole(role || "");
+  }, []);
 
-  const handleUpdatePassword = useCallback( () => {
-    if ( !updatePassword )
-    {
-      setFormValues( ( prev ) => ( {
-        ...prev,
-        password: "",
-      } ) );
+  const handleUpdatePassword = useCallback(() => {
+    if (!updatePassword) {
+      setFormValues((prev) => ({ ...prev, password: "", confirmPassword: "" }));
       pwFieldRef?.current?.focus();
     }
-    setUpdatePassword( !updatePassword );
-  }, [ updatePassword ] );
+    setUpdatePassword(!updatePassword);
+  }, [updatePassword]);
 
-  const createUser = useCallback( async ( values: UserFormValues ) => {
-    setLoading( true );
-    try
-    {
-      // Get companyId - different logic based on user role
-      let companyIdToUse: string;
+  // Load existing data or set defaults
+  useEffect(() => {
+    if (userId) {
+      setTitle("Edit");
+      populateUserData(userId);
+    } else {
+      setFormValues({
+        ...CREATE_INITIAL_VALUES,
+        role: currentUserRole === "admin" ? "sub admin" : "",
+      });
+      setTitle("Create");
+    }
+  }, [userId, openDialog, currentUserRole]);
 
-      if ( currentUserRole === 'super admin' )
-      // {
-      //   // Super admin selects company from dropdown
-      //   if ( !values.companyId )
-      //   {
-      //     toastAndNavigate( dispatch, true, "error", "Please select a company" );
-      //     setLoading( false );
-      //     return;
-      //   }
-      //   companyIdToUse = values.companyId;
-      // } else
-      {
-        // Other admins/users use their own company
-        const companyId = getCompanyId();
-        if ( !companyId )
-        {
-          toastAndNavigate( dispatch, true, "error", "Company ID not found" );
-          setLoading( false );
-          return;
-        }
-        companyIdToUse = companyId;
-      }
+  const populateUserData = useCallback(async (id: string | number) => {
+    setLoading(true);
+    try {
+      const response = await UserAPI.getUserProfile(id);
+      const data = response.data?.data || {};
+      // Merge with safe defaults so confirmPassword doesn't break Formik
+      setFormValues({
+        ...CREATE_INITIAL_VALUES,
+        ...data,
+        password: "",         // clear for security — edit shows blank unless "Update Password" clicked
+        confirmPassword: "",
+      });
+    } catch (err: any) {
+      toastAndNavigate(dispatch, true, "error", err?.response?.data?.msg || "An Error Occurred");
+      setTimeout(() => handleDialogClose(), 2200);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-      // Include companyId in the payload
+  const createUser = useCallback(async (values: UserFormValues) => {
+    setLoading(true);
+    try {
       const payload = {
         username: values.username,
         email: values.email,
         password: values.password,
+        designation: values.designation,
+        number: values.number,
         gender: values.gender,
         role: values.role,
-        // companyId is NOT included here
+        status: "active",
       };
-
-      await UserAPI.create( payload );
-      toastAndNavigate( dispatch, true, "success", "User Created Successfully" );
-      setTimeout( () => {
+      await UserAPI.create(payload);
+      toastAndNavigate(dispatch, true, "success", "User Created Successfully");
+      setTimeout(() => {
         handleDialogClose();
         window.location.reload();
-      }, 2200 );
-    } catch ( error: any )
-    {
-      const errorMessage = error?.response?.data?.message || "Error creating user, please try again.";
-      toastAndNavigate( dispatch, true, "error", errorMessage );
-      setTimeout( () => {
-        handleDialogClose();
-      }, 2200 );
-    } finally
-    {
-      setLoading( false );
+      }, 2200);
+    } catch (error: any) {
+      toastAndNavigate(dispatch, true, "error", error?.response?.data?.message || "Error creating user, please try again.");
+      setTimeout(() => handleDialogClose(), 2200);
+    } finally {
+      setLoading(false);
     }
-  }, [ currentUserRole ] );
+  }, [dispatch, toastAndNavigate]);
 
-  useEffect( () => {
-    if ( userId )
-    {
-      setTitle( "Edit" );
-      populateUserData( userId );
-    } else
-    {
-      // When creating new user, set default role based on current user
-      const defaultValues = {
-        ...initialValues,
-        role: currentUserRole === "admin" ? "sub admin" : ""
-      };
-      setFormValues( defaultValues );
-      setTitle( "Create" );
-    }
-  }, [ userId, openDialog, currentUserRole ] );
-
-  const populateUserData = useCallback( async ( id: string | number ) => {
-    setLoading( true );
-    try
-    {
-      const response = await UserAPI.getUserProfile( id );
-      setFormValues( response.data?.data );
-    } catch ( err: any )
-    {
-      const errorMessage = err?.response?.data?.msg || "An Error Occurred";
-      toastAndNavigate( dispatch, true, "error", errorMessage );
-      setTimeout( () => {
-        handleDialogClose();
-      }, 2200 );
-    } finally
-    {
-      setLoading( false );
-    }
-  }, [] );
-
-  const updateUser = useCallback( async ( values: any ) => {
-    setLoading( true );
-    try
-    {
+  const updateUser = useCallback(async (values: any) => {
+    setLoading(true);
+    try {
       const payload = { ...values };
-      if ( !updatePassword )
-      {
+      if (!updatePassword) {
         delete payload.password;
       }
-      await UserAPI.updateUserProfile( payload );
-      setLoading( false );
-      toastAndNavigate( dispatch, true, "info", "Successfully Updated" );
-      setTimeout( () => {
+      delete payload.confirmPassword; // never send to backend
+      await UserAPI.updateUserProfile(payload);
+      toastAndNavigate(dispatch, true, "info", "Successfully Updated");
+      setTimeout(() => {
         handleDialogClose();
         window.location.reload();
-      }, 2200 );
-    } catch ( err: any )
-    {
-      setLoading( false );
-      const errorMessage = err?.response?.data?.message || "Error Occurred. Please Try Again";
-      toastAndNavigate( dispatch, true, "error", errorMessage );
-      setTimeout( () => {
-        handleDialogClose();
-      }, 2200 );
-    } finally
-    {
-      setLoading( false );
+      }, 2200);
+    } catch (err: any) {
+      toastAndNavigate(dispatch, true, "error", err?.response?.data?.message || "Error Occurred. Please Try Again");
+      setTimeout(() => handleDialogClose(), 2200);
+    } finally {
+      setLoading(false);
     }
-  }, [ updatePassword ] );
+  }, [updatePassword]);
 
   const commonTextFieldStyles = {
     "& .MuiOutlinedInput-root": {
@@ -329,19 +231,10 @@ const UserForm: React.FC<FormComponentProps> = ( {
         borderWidth: "1px",
         transition: "all 0.2s ease",
       },
-      "&:hover .MuiOutlinedInput-notchedOutline": {
-        borderColor: "#94a3b8",
-      },
-      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-        borderColor: "#3949ab",
-        borderWidth: "2px",
-      },
-      "&.Mui-disabled .MuiOutlinedInput-notchedOutline": {
-        borderColor: "#e2e8f0",
-      },
-      "&.Mui-disabled": {
-        backgroundColor: "#f1f5f9 !important",
-      },
+      "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#94a3b8" },
+      "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#3949ab", borderWidth: "2px" },
+      "&.Mui-disabled .MuiOutlinedInput-notchedOutline": { borderColor: "#e2e8f0" },
+      "&.Mui-disabled": { backgroundColor: "#f1f5f9 !important" },
     },
     "& .MuiInputLabel-root": {
       color: "#475569",
@@ -349,9 +242,7 @@ const UserForm: React.FC<FormComponentProps> = ( {
       fontWeight: 500,
       backgroundColor: "#ffffff",
       px: 0.5,
-      "&.Mui-focused": {
-        color: "#3949ab !important",
-      },
+      "&.Mui-focused": { color: "#3949ab !important" },
     },
     "& .MuiInputAdornment-root": {
       color: "#3949ab !important",
@@ -360,9 +251,7 @@ const UserForm: React.FC<FormComponentProps> = ( {
       alignItems: "center",
       "& *": { color: "#3949ab !important" },
     },
-    "& .MuiSelect-icon": {
-      color: "#64748b",
-    },
+    "& .MuiSelect-icon": { color: "#64748b" },
   };
 
   return (
@@ -370,40 +259,42 @@ const UserForm: React.FC<FormComponentProps> = ( {
       fullScreen={fullScreen}
       open={openDialog}
       onClose={handleDialogClose}
-      aria-labelledby="responsive-dialog-title"
+      aria-labelledby="user-form-dialog"
       maxWidth="sm"
       PaperProps={{
         sx: {
           borderRadius: 3,
           boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
           width: "100%",
-          maxWidth: "600px",
+          maxWidth: "640px",
           overflow: "visible",
           bgcolor: "#fff",
-        }
+        },
       }}
     >
-      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ display: "flex", flexDirection: "column" }}>
         {/* Header Banner */}
-        <Box sx={{ 
-          minHeight: "64px", 
-          bgcolor: "#3f50b5", 
-          position: "relative", 
-          borderTopLeftRadius: "12px", 
-          borderTopRightRadius: "12px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          px: 3,
-          py: 1
-        }}>
+        <Box
+          sx={{
+            minHeight: "64px",
+            bgcolor: "#3f50b5",
+            position: "relative",
+            borderTopLeftRadius: "12px",
+            borderTopRightRadius: "12px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            px: 3,
+            py: 1,
+          }}
+        >
           <Typography
             variant="h5"
             sx={{
               fontWeight: 800,
               color: "#ffffff",
               fontFamily: "'Inter', sans-serif",
-              fontSize: "22px"
+              fontSize: "22px",
             }}
           >
             {title} User
@@ -427,7 +318,7 @@ const UserForm: React.FC<FormComponentProps> = ( {
                 "&:hover": {
                   bgcolor: updatePassword ? "rgba(244, 67, 54, 0.6)" : "rgba(255, 255, 255, 0.25)",
                   border: "none",
-                }
+                },
               }}
             >
               {updatePassword ? "Cancel Update" : "Update Password"}
@@ -435,7 +326,7 @@ const UserForm: React.FC<FormComponentProps> = ( {
           )}
         </Box>
 
-        {/* Avatar - Only shown when editing */}
+        {/* Avatar — Edit only */}
         {title === "Edit" && (
           <Box sx={{ display: "flex", justifyContent: "center", mt: "-40px", mb: 1, zIndex: 2, pointerEvents: "none" }}>
             <Box
@@ -450,7 +341,7 @@ const UserForm: React.FC<FormComponentProps> = ( {
                 borderRadius: "50%",
                 border: "4px solid #fff",
                 boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                pointerEvents: "auto"
+                pointerEvents: "auto",
               }}
             >
               <SupervisorAccount sx={{ fontSize: 40 }} />
@@ -459,25 +350,15 @@ const UserForm: React.FC<FormComponentProps> = ( {
         )}
 
         <Box sx={{ p: 3, pt: title === "Create" ? 3 : 0 }}>
-
           <Formik
             initialValues={formValues}
             enableReinitialize
-            validationSchema={userValidation}
-            onSubmit={( values ) => {
-              values.id ? updateUser( values ) : createUser( values );
+            validationSchema={title === "Create" || updatePassword ? UserSchema : EditUserSchema}
+            onSubmit={(values) => {
+              values.id ? updateUser(values) : createUser(values);
             }}
           >
-            {( {
-              values,
-              errors,
-              touched,
-              handleChange,
-              handleSubmit,
-              isSubmitting,
-              dirty,
-            } ) => (
-
+            {({ values, errors, touched, handleChange, handleSubmit, isSubmitting, dirty }) => (
               <form onSubmit={handleSubmit}>
                 <Box
                   sx={{
@@ -488,28 +369,29 @@ const UserForm: React.FC<FormComponentProps> = ( {
                     mb: 2.5,
                     display: "grid",
                     gap: "20px",
-                    gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))"
+                    gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))",
                   }}
                 >
+                  {/* Username */}
                   <Field
                     as={TextField}
                     autoFocus
                     fullWidth
-                    label="*User Name"
+                    label="*Username"
                     name="username"
                     value={values.username}
                     onChange={handleChange}
                     sx={commonTextFieldStyles}
                     InputProps={{
                       startAdornment: (
-                        <InputAdornment position="start">
-                          <Person />
-                        </InputAdornment>
+                        <InputAdornment position="start"><Person /></InputAdornment>
                       ),
                     }}
-                    error={touched.username && Boolean( errors.username )}
+                    error={touched.username && Boolean(errors.username)}
                     helperText={touched.username && errors.username}
                   />
+
+                  {/* Email */}
                   <Field
                     as={TextField}
                     fullWidth
@@ -520,15 +402,52 @@ const UserForm: React.FC<FormComponentProps> = ( {
                     sx={commonTextFieldStyles}
                     InputProps={{
                       startAdornment: (
-                        <InputAdornment position="start">
-                          <Email />
-                        </InputAdornment>
+                        <InputAdornment position="start"><Email /></InputAdornment>
                       ),
                     }}
-                    error={touched.email && Boolean( errors.email )}
+                    error={touched.email && Boolean(errors.email)}
                     helperText={touched.email && errors.email}
                   />
-                  {( title === "Create" || updatePassword ) && (
+
+                  {/* Designation — required */}
+                  <Field
+                    as={TextField}
+                    fullWidth
+                    label="*Designation"
+                    name="designation"
+                    value={values.designation}
+                    onChange={handleChange}
+                    sx={commonTextFieldStyles}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start"><Badge /></InputAdornment>
+                      ),
+                    }}
+                    error={touched.designation && Boolean(errors.designation)}
+                    helperText={touched.designation && errors.designation}
+                  />
+
+                  {/* Contact Number */}
+                  <Field
+                    as={TextField}
+                    fullWidth
+                    label="*Contact Number"
+                    name="number"
+                    value={values.number}
+                    onChange={handleChange}
+                    sx={commonTextFieldStyles}
+                    inputProps={{ maxLength: 10 }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start"><Phone /></InputAdornment>
+                      ),
+                    }}
+                    error={touched.number && Boolean(errors.number)}
+                    helperText={touched.number && errors.number}
+                  />
+
+                  {/* Password — shown on Create OR when Update Password is toggled in Edit */}
+                  {(title === "Create" || updatePassword) && (
                     <Field
                       as={TextField}
                       fullWidth
@@ -541,26 +460,50 @@ const UserForm: React.FC<FormComponentProps> = ( {
                       sx={commonTextFieldStyles}
                       InputProps={{
                         startAdornment: (
-                          <InputAdornment position="start">
-                            <Lock />
-                          </InputAdornment>
+                          <InputAdornment position="start"><Lock /></InputAdornment>
                         ),
                         endAdornment: (
                           <InputAdornment position="end">
-                            <IconButton
-                              aria-label="toggle password visibility"
-                              onClick={handleTogglePassword}
-                              sx={{ color: "#64748b" }}
-                            >
+                            <IconButton onClick={handleTogglePassword} sx={{ color: "#64748b" }}>
                               {showPassword ? <VisibilityOff /> : <Visibility />}
                             </IconButton>
                           </InputAdornment>
                         ),
                       }}
-                      error={touched.password && Boolean( errors.password )}
+                      error={touched.password && Boolean(errors.password)}
                       helperText={touched.password && errors.password}
                     />
                   )}
+
+                  {/* Confirm Password — shown alongside Password */}
+                  {(title === "Create" || updatePassword) && (
+                    <Field
+                      as={TextField}
+                      fullWidth
+                      name="confirmPassword"
+                      label="*Confirm Password"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={values.confirmPassword}
+                      onChange={handleChange}
+                      sx={commonTextFieldStyles}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start"><Lock /></InputAdornment>
+                        ),
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton onClick={handleToggleConfirmPassword} sx={{ color: "#64748b" }}>
+                              {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                      error={touched.confirmPassword && Boolean(errors.confirmPassword)}
+                      helperText={touched.confirmPassword && errors.confirmPassword}
+                    />
+                  )}
+
+                  {/* Gender */}
                   <Field
                     as={TextField}
                     select
@@ -572,52 +515,47 @@ const UserForm: React.FC<FormComponentProps> = ( {
                     sx={commonTextFieldStyles}
                     InputProps={{
                       startAdornment: (
-                        <InputAdornment position="start">
-                          <Wc />
-                        </InputAdornment>
+                        <InputAdornment position="start"><Wc /></InputAdornment>
                       ),
                     }}
-                    error={touched.gender && Boolean( errors.gender )}
+                    error={touched.gender && Boolean(errors.gender)}
                     helperText={touched.gender && errors.gender}
                   >
-                    <MenuItem value="">
-                      <em>None</em>
-                    </MenuItem>
+                    <MenuItem value=""><em>None</em></MenuItem>
                     <MenuItem value="male">Male</MenuItem>
                     <MenuItem value="female">Female</MenuItem>
                     <MenuItem value="other">Other</MenuItem>
                   </Field>
+
+                  {/* Role */}
                   <Field
                     as={TextField}
                     select
                     fullWidth
-                    label="Role"
+                    label="*Role"
                     name="role"
                     value={values.role}
                     onChange={handleChange}
                     sx={commonTextFieldStyles}
                     InputProps={{
                       startAdornment: (
-                        <InputAdornment position="start">
-                          <SupervisorAccount />
-                        </InputAdornment>
+                        <InputAdornment position="start"><SupervisorAccount /></InputAdornment>
                       ),
                     }}
-                    error={touched.role && Boolean( errors.role )}
+                    error={touched.role && Boolean(errors.role)}
                     helperText={touched.role && errors.role}
                   >
-                    <MenuItem value="">
-                      <em>None</em>
-                    </MenuItem>
-                    {currentUserRole === "super admin" && ( <MenuItem value="admin">Admin</MenuItem> )}
-                    {currentUserRole === "admin" && ( <MenuItem value="sub admin">Sub Admin</MenuItem> )}
-                    {currentUserRole === "admin" && ( <MenuItem value="sales">Sales</MenuItem> )}
-                    {currentUserRole === "admin" && ( <MenuItem value="operations">Operations</MenuItem> )}
-                    {currentUserRole === "admin" && ( <MenuItem value="credit">Credit</MenuItem> )}
+                    <MenuItem value=""><em>None</em></MenuItem>
+                    {currentUserRole === "super admin" && <MenuItem value="admin">Admin</MenuItem>}
+                    {currentUserRole === "admin" && <MenuItem value="admin">Admin</MenuItem>}
+                    {currentUserRole === "admin" && <MenuItem value="sub admin">Sub Admin</MenuItem>}
+                    {currentUserRole === "admin" && <MenuItem value="sales">Sales</MenuItem>}
+                    {currentUserRole === "admin" && <MenuItem value="operations">Operations</MenuItem>}
+                    {currentUserRole === "admin" && <MenuItem value="credit">Credit</MenuItem>}
                   </Field>
                 </Box>
-                
-                {/* Action Footer matches ApplicationCard */}
+
+                {/* Action Footer */}
                 <Box
                   sx={{
                     display: "flex",
@@ -642,11 +580,7 @@ const UserForm: React.FC<FormComponentProps> = ( {
                       color: "#f44336",
                       bgcolor: "rgba(244, 67, 54, 0.08)",
                       border: "none",
-                      "&:hover": {
-                        bgcolor: "rgba(244, 67, 54, 0.15)",
-                        color: "#d32f2f",
-                        border: "none",
-                      }
+                      "&:hover": { bgcolor: "rgba(244, 67, 54, 0.15)", color: "#d32f2f", border: "none" },
                     }}
                   >
                     Cancel
@@ -670,11 +604,7 @@ const UserForm: React.FC<FormComponentProps> = ( {
                         color: (!dirty || isSubmitting || loading) ? "#94a3b8" : "#004d40",
                         border: "none",
                       },
-                      "&:disabled": {
-                        color: "#94a3b8",
-                        bgcolor: "#f1f5f9",
-                        border: "none",
-                      }
+                      "&:disabled": { color: "#94a3b8", bgcolor: "#f1f5f9", border: "none" },
                     }}
                   >
                     {loading ? "Processing..." : "Submit"}

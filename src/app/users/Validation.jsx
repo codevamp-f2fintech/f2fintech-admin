@@ -1,37 +1,65 @@
 
 import * as Yup from "yup";
 
-// Regular expression for validating email addresses
 const emailRegExp = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+const phoneRegExp = /^[6-9]\d{9}$/;
 
 const UserSchema = Yup.object().shape({
     username: Yup
         .string()
+        .trim()
         .min(2, "Name is too short!")
         .max(30, "Name is too long!")
-        .required("This Field is required"),
+        .lowercase()
+        .required("Username is required"),
+
     email: Yup
         .string()
+        .trim()
         .matches(emailRegExp, "Email address is not valid")
-        .required("This field is required"),
+        .lowercase()
+        .required("Email is required"),
+
     password: Yup.string()
-        .min(8, 'Password Must Be 8 Characters Long')
-        .matches(/[A-Z]/, 'Password Must Contain At Least 1 Uppercase Letter')
-        .matches(/[a-z]/, 'Password Must Contain At Least 1 Lowercase Letter')
-        .matches(/[0-9]/, 'Password Must Contain At Least 1 Number')
-        .matches(/[^\w]/, 'Password Must Contain At Least 1 Special Character')
-        .required("This Field is Required"),
-    role: Yup
+        .trim()
+        .min(8, "Password must be at least 8 characters")
+        .matches(/[A-Z]/, "Must contain at least 1 uppercase letter")
+        .matches(/[a-z]/, "Must contain at least 1 lowercase letter")
+        .matches(/[0-9]/, "Must contain at least 1 number")
+        .matches(/[^\w]/, "Must contain at least 1 special character")
+        .required("Password is required"),
+
+    confirmPassword: Yup.string()
+        .oneOf([Yup.ref("password")], "Passwords do not match")
+        .required("Please confirm your password"),
+
+    designation: Yup
         .string()
-        .required("This field is required"),
+        .trim()
+        .min(2, "Designation is too short")
+        .lowercase()
+        .required("Designation is required"),
+
+    number: Yup
+        .string()
+        .trim()
+        .matches(phoneRegExp, "Enter a valid 10-digit mobile number")
+        .required("Contact number is required"),
+
     gender: Yup.string(),
 
-    companyId: Yup.string()
-        .when( '$isSuperAdminCreate', {
-            is: true,
-            then: ( schema ) => schema.required( 'Company is required' ),
-            otherwise: ( schema ) => schema.notRequired()
-        } )
+    role: Yup
+        .string()
+        .required("Role is required"),
+});
+
+export const EditUserSchema = Yup.object().shape({
+    username: UserSchema.fields.username,
+    email: UserSchema.fields.email,
+    designation: UserSchema.fields.designation,
+    number: UserSchema.fields.number,
+    gender: UserSchema.fields.gender,
+    role: UserSchema.fields.role,
 });
 
 export default UserSchema;

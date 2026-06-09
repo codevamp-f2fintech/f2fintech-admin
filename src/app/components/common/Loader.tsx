@@ -27,7 +27,7 @@ const LoaderContainer = styled( Box )( {
     animation: `${ translateAnimation } 1s infinite alternate`,
   },
   "&::after": {
-    background: "#FF3D7F",
+    background: "#3f50b5",
     "--s": "-1",
   },
 } );

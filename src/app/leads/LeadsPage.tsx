@@ -42,6 +42,7 @@ import { Utility } from "@/utils";
 import { useGetLeads } from "@/hooks/leads";
 import { setLeads, resetLeads } from "@/redux/features/leadsSlice";
 import type { RootState, AppDispatch } from "@/redux/store";
+import Loader from "../components/common/Loader";
 
 const LeadsPage: React.FC = () => {
   const [view, setView] = useState<"table" | "card">("table");
@@ -200,7 +201,7 @@ const LeadsPage: React.FC = () => {
       {/* Content Section */}
       {isLoading && filteredLeads.length === 0 ? (
         <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}>
-          <CircularProgress size={60} thickness={4} />
+          <Loader />
         </Box>
       ) : filteredLeads.length === 0 ? (
         <Paper
@@ -275,7 +276,7 @@ const LeadsPage: React.FC = () => {
                       <Typography variant="caption" sx={{ color: "#64748b" }}>{lead.phone || "N/A"}</Typography>
                     </Box>
                   </TableCell>
-                  <TableCell sx={{ color: "#64748b" }}>{lead.loan_category || "N/A"}</TableCell>
+                  <TableCell sx={{ color: "#64748b" }}>{lead.product || "N/A"}</TableCell>
                   <TableCell>
                     <Typography sx={{ color: "#7e22ce", fontWeight: 700, fontSize: "14px" }}>
                       {lead.provider || "N/A"}
@@ -287,8 +288,8 @@ const LeadsPage: React.FC = () => {
                     </Typography>
                   </TableCell>
                   <TableCell sx={{ color: "#64748b" }}>{lead.tenure_months ? `${lead.tenure_months} months` : "N/A"}</TableCell>
-                  <TableCell sx={{ color: "#64748b" }}>₹{lead.income || "N/A"}</TableCell>
-                  <TableCell sx={{ color: "#64748b" }}>{lead.cibil || "N/A"}</TableCell>
+                  <TableCell sx={{ color: "#64748b" }}>₹{lead.declared_income || "N/A"}</TableCell>
+                  <TableCell sx={{ color: "#64748b" }}>{lead.cibil_band || "N/A"}</TableCell>
                   <TableCell sx={{ color: "#64748b" }}>{lead.created_at ? new Date(lead.created_at).toLocaleDateString() : "N/A"}</TableCell>
                 </TableRow>
               ))}
@@ -332,23 +333,9 @@ const LeadsPage: React.FC = () => {
                         <Typography variant="h6" sx={{ fontWeight: 700 }}>
                           {capitalizeFirstLetter(lead.name || "Unknown Lead")}
                         </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography variant="caption" color="text.secondary">
-                            ID: {lead.id}
-                          </Typography>
-                          <Chip
-                            label={lead.status || "Pending"}
-                            size="small"
-                            sx={{
-                              height: 20,
-                              fontSize: '0.65rem',
-                              fontWeight: 700,
-                              bgcolor: lead.status === "completed" ? "success.50" : "primary.50",
-                              color: lead.status === "completed" ? "success.main" : "primary.main",
-                              borderRadius: 1,
-                            }}
-                          />
-                        </Box>
+                        <Typography variant="caption" color="text.secondary">
+                          ID: {lead.id}
+                        </Typography>
                       </Box>
                     </Box>
 
@@ -359,12 +346,12 @@ const LeadsPage: React.FC = () => {
                       </Box>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <PhoneIcon size={18} color="#64748b" weight="bold" />
-                        <Typography variant="body2">{lead.contact || "N/A"}</Typography>
+                        <Typography variant="body2">{lead.phone || "N/A"}</Typography>
                       </Box>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <LoanIcon size={18} color="#64748b" weight="bold" />
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {lead.loan_category || "N/A"} -
+                          {lead.product || "N/A"} -
                           <Box component="span" sx={{ color: 'primary.main', ml: 0.5 }}>₹{lead.amount || 0}</Box>
                         </Typography>
                       </Box>

@@ -62,25 +62,12 @@ export const UserAPI = {
     } );
   },
 
-  /** Get inactive users with company filtering */
-  getInactiveUsers: async ( page = 1, limit = 10, company_id = null, cancel = false ) => {
-    const params = {
-      page,
-      limit,
-      company_id,
-    };
-
-    // Add company_id as query parameter if provided
-    if ( company_id ) {
-      params.company_id = company_id;
-    }
-
-    console.log( "company", company_id )
-
+  /** Get inactive users */
+  getInactiveUsers: async ( page = 1, limit = 10, cancel = false ) => {
     return await axiosInstance.request( {
       url: `/get-inactive-users`,
       method: "GET",
-      params: params,
+      params: { page, limit },
       signal: cancel
         ? cancelApiObject[ UserAPI.getInactiveUsers.name ].handleRequestCancellation().signal
         : undefined,

@@ -40,6 +40,7 @@ import { useGetQueries } from "@/hooks/queries";
 import { setQueries, resetQueries } from "@/redux/features/queriesSlice";
 import type { RootState, AppDispatch } from "@/redux/store";
 import { Utility } from "@/utils";
+import Loader from "../components/common/Loader";
 
 const INITIAL_VISIBLE_COUNT = 10;
 const LOAD_MORE_COUNT = 10;
@@ -202,7 +203,7 @@ const QueriesPage: React.FC = () => {
       {/* Content Section */}
       {isLoading && filteredQueries.length === 0 ? (
         <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}>
-          <CircularProgress size={60} thickness={4} />
+          <Loader />
         </Box>
       ) : filteredQueries.length === 0 ? (
         <Paper
@@ -366,7 +367,7 @@ const QueriesPage: React.FC = () => {
             mt: 2,
           }}
         >
-          <CircularProgress size={32} thickness={4} color="primary" />
+          <Loader />
         </Box>
       )}
     </Box>
