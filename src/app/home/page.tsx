@@ -151,8 +151,8 @@ const HomeContent: React.FC = () => {
   const [companies, setCompanies] = useState<any[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<string>(
     typeof window !== "undefined"
-      ? localStorage.getItem("selectedCompanyId") || ""
-      : ""
+      ? (localStorage.getItem("selectedCompanyId") !== null ? localStorage.getItem("selectedCompanyId")! : "101")
+      : "101"
   );
 
   // Sync with global company selection
@@ -340,7 +340,14 @@ const HomeContent: React.FC = () => {
   const validateCompanySelection = (): boolean => {
     // Check if we're in browser environment
     if (typeof window === "undefined") return false;
-    const selectedCompanyId = localStorage.getItem("selectedCompanyId");
+    let selectedCompanyId = localStorage.getItem("selectedCompanyId");
+
+    // If no company is selected in local storage but they haven't explicitly set "All Aggregators" ("")
+    // then we default to 101 (Financial Freedom).
+    if (selectedCompanyId === null) {
+      selectedCompanyId = "101";
+      localStorage.setItem("selectedCompanyId", "101");
+    }
 
     // Only show validation error for non-admin and non-sub-admin users
     if (userRole !== "admin" && userRole !== "sub admin") {

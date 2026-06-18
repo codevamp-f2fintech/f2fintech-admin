@@ -5,61 +5,73 @@ import RouterLink from "next/link";
 import { usePathname } from "next/navigation";
 
 import Box from "@mui/material/Box";
+import Collapse from "@mui/material/Collapse";
 import Divider from "@mui/material/Divider";
 import Drawer from "@mui/material/Drawer";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import ExpandMoreRounded from "@mui/icons-material/ExpandMoreRounded";
+import ChevronRightRounded from "@mui/icons-material/ChevronRightRounded";
+import ArticleRounded from "@mui/icons-material/ArticleRounded";
+import { useMediaQuery } from "@mui/material";
+
 import type { NavItemConfig } from "@/types/nav";
 import { isNavItemActive } from "@/utils/is-nav-item-active";
 import { Logo } from "@/app/components/core/logo";
-
 import { navItems } from "./config";
-
 import { navIcons } from "./nav-icons";
-import { useMediaQuery } from "@mui/material";
 import { Utility } from "@/utils";
+
+// Single unified colour for all icons — matches desktop sidebar
+const ICON_ACCENT  = "#3949ab";
+const ACTIVE_ACCENT = "#303f9f";
+
+const iconColor = (_icon?: string, active = false) =>
+  active ? ACTIVE_ACCENT : ICON_ACCENT;
+
+// ─── Role filtering (same rules as side-nav) ──────────────────────────────────
+function filterForRole(items: NavItemConfig[], userRole: string): NavItemConfig[] {
+  return items
+    .filter((item) => {
+      if (userRole === "super admin") return ["Company", "Users", "Teams"].includes(item.title ?? "");
+      if (userRole === "admin") return !["Company"].includes(item.title ?? "");
+      if (userRole === "sales") return ["Dashboard", "Applications"].includes(item.title ?? "");
+      if (userRole === "operations") return item.title === "Applications";
+      if (userRole === "credit") return item.title === "Applications";
+      if (["Users", "Loan Provider", "Archived", "Company", "Teams"].includes(item.title ?? "")) return false;
+      return true;
+    })
+    .map((item) => {
+      if (item.title === "Applications" && userRole === "credit" && item.items) {
+        return { ...item, items: item.items.filter((c) => c.title === "Tickets") };
+      }
+      return item;
+    });
+}
 
 export interface MobileNavProps {
   onClose?: () => void;
   open?: boolean;
-  items?: NavItemConfig[];
 }
 
-export function MobileNav ( {
-  open,
-  onClose,
-}: MobileNavProps ): React.JSX.Element {
+export function MobileNav({ open, onClose }: MobileNavProps): React.JSX.Element {
   const pathname = usePathname();
-  const isMobile = useMediaQuery( "(max-width:600px)" );
-  const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
   const { decodedToken } = Utility();
-  const userRole = decodedToken()?.role;
+  const userRole = decodedToken()?.role ?? "";
+  const visibleItems = filterForRole(navItems, userRole);
 
   return (
     <Drawer
       PaperProps={{
         sx: {
-          "--MobileNav-background": "var(--mui-palette-neutral-950)",
-          "--MobileNav-color": "var(--mui-palette-common-white)",
-          "--NavItem-color": "var(--mui-palette-neutral-300)",
-          "--NavItem-hover-background": "rgba(255, 255, 255, 0.04)",
-          "--NavItem-active-background": "var(--mui-palette-primary-main)",
-          "--NavItem-active-color": "var(--mui-palette-primary-contrastText)",
-          "--NavItem-disabled-color": "var(--mui-palette-neutral-500)",
-          "--NavItem-icon-color": "var(--mui-palette-neutral-400)",
-          "--NavItem-icon-active-color":
-            "var(--mui-palette-primary-contrastText)",
-          "--NavItem-icon-disabled-color": "var(--mui-palette-neutral-600)",
-          bgcolor: "var(--MobileNav-background)",
-          color: "var(--MobileNav-color)",
+          bgcolor: "#fff",
           display: "flex",
-          backgroundImage: "linear-gradient(135deg, #fff 0%, #fff 100%)",
-          backgroundBlendMode: "multiply, screen, normal",
           flexDirection: "column",
           maxWidth: "100%",
           scrollbarWidth: "none",
-          width: isMobile ? "45vw" : isTab ? "30vw" : "",
-          zIndex: "var(--MobileNav-zIndex)",
+          width: isMobile ? "55vw" : isTab ? "35vw" : "260px",
           "&::-webkit-scrollbar": { display: "none" },
         },
       }}
@@ -67,183 +79,137 @@ export function MobileNav ( {
       open={open}
     >
       <Stack spacing={2} sx={{ p: 3 }}>
-        <Box
-          component={RouterLink}
-          href="/"
-          sx={{
-            display: isMobile ? "flex" : isTab ? "flex" : "",
-            alignItems: isMobile ? "center" : "",
-            justifyContent: isMobile ? "center" : "",
-            width: isMobile ? "auto" : isTab ? "15vw" : "",
-          }}
-        >
+        <Box component={RouterLink} href="/" sx={{ display: "flex", alignItems: "center" }}>
           <Logo color="light" height={32} width={122} />
         </Box>
       </Stack>
-      <Divider sx={{ borderColor: "var(--mui-palette-neutral-700)" }} />
+
+      <Divider />
+
       <Box component="nav" sx={{ flex: "1 1 auto", p: "12px" }}>
-        {renderNavItems( { pathname, items: navItems, userRole } )}
+        <Stack component="ul" spacing={0.5} sx={{ listStyle: "none", m: 0, p: 0 }}>
+          {visibleItems.map((item) =>
+            item.items?.length ? (
+              <MobileNavGroup key={item.key} item={item} pathname={pathname} onClose={onClose} />
+            ) : (
+              <MobileNavItem key={item.key} item={item} pathname={pathname} onClose={onClose} />
+            )
+          )}
+        </Stack>
       </Box>
-      <Divider sx={{ borderColor: "var(--mui-palette-neutral-700)" }} />
+
+      <Divider />
     </Drawer>
   );
 }
 
-function renderNavItems ( {
-  items = [],
-  pathname,
-  userRole,
-}: {
-  items?: NavItemConfig[];
-  pathname: string;
-  userRole: string;
-} ): React.JSX.Element {
-  // Filter nav items based on user role
-  const filteredItems = items.filter( ( item ) => {
-    // SUPERADMIN can only see Company and User
-    if ( userRole === "super admin" )
-    {
-      return item.title === "Company" || item.title === "Users" || item.title === "SuperAdminDashboard";
-    }
+// ─── Group item ───────────────────────────────────────────────────────────────
+function MobileNavGroup({ item, pathname, onClose }: { item: NavItemConfig; pathname: string; onClose?: () => void }) {
+  const isAnyChildActive = (item.items ?? []).some((c) =>
+    isNavItemActive({ href: c.href, matcher: c.matcher, pathname, disabled: c.disabled })
+  );
+  const [open, setOpen] = React.useState(isAnyChildActive);
+  React.useEffect(() => { if (isAnyChildActive) setOpen(true); }, [isAnyChildActive]);
 
-    // ADMIN should NOT see Company and Admin User, but SHOULD see Users
-    if ( userRole === "admin" )
-    {
-      if ( item.title === "Company" || item.title === "Admin User" )
-      {
-        return false;
-      }
-      // Admin SHOULD see Users, Loan Provider, Archived
-      return true;
-    }
-
-    // For non-admin roles (operations, credit, etc.)
-    if ( item.title === "Users" && userRole !== "admin" )
-    {
-      return false;
-    }
-    if ( item.title === "Company" && userRole !== "admin" )
-    {
-      return false;
-    }
-
-    if ( item.title === "Loan Provider" && userRole !== "admin" )
-    {
-      return false;
-    }
-
-    if ( item.title === "Archived" && userRole !== "admin" )
-    {
-      return false;
-    }
-
-    return true;
-  } );
-
-  const children = filteredItems.map( ( item ) => {
-    const { key, ...itemProps } = item;
-    return <NavItem key={key} pathname={pathname} {...itemProps} />;
-  } );
+  const Icon = item.icon ? navIcons[item.icon] : null;
+  const accent = iconColor(item.icon, isAnyChildActive);
 
   return (
-    <Stack component="ul" spacing={1} sx={{ listStyle: "none", m: 0, p: 0 }}>
-      {children}
-    </Stack>
+    <li style={{ listStyle: "none" }}>
+      <Box
+        onClick={() => setOpen((p) => !p)}
+        sx={{
+          display: "flex", alignItems: "center", gap: 1.5,
+          p: "8px 12px", borderRadius: "10px", cursor: "pointer",
+          bgcolor: isAnyChildActive ? "rgba(12,102,228,0.12)" : "transparent",
+          color: isAnyChildActive ? "#0c3d8a" : "#1e3a5f",
+          "&:hover": { bgcolor: "rgba(12,102,228,0.07)" },
+          transition: "all 0.2s ease",
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: "7px", bgcolor: `${accent}18`, boxShadow: `0 0 7px 1px ${accent}44` }}>
+          {Icon && <Icon sx={{ fontSize: "1.1rem", color: accent }} />}
+        </Box>
+        <Typography sx={{ flex: 1, fontFamily: "'Inter',sans-serif", fontSize: "0.95rem", fontWeight: isAnyChildActive ? 700 : 500 }}>
+          {item.title}
+        </Typography>
+        {open ? <ExpandMoreRounded sx={{ fontSize: "1rem" }} /> : <ChevronRightRounded sx={{ fontSize: "1rem" }} />}
+      </Box>
+
+      <Collapse in={open}>
+        <Stack spacing={0.25} sx={{ pl: "2.75rem", pr: 1, pb: 0.5 }}>
+          {(item.items ?? []).map((child) => {
+            const childActive = isNavItemActive({ href: child.href, matcher: child.matcher, pathname, disabled: child.disabled });
+            const ChildIcon = child.icon ? navIcons[child.icon] : null;
+            const childAccent = iconColor(child.icon, childActive);
+            const isTicketDetail = child.title === "Tickets" && pathname.startsWith("/ticket/");
+
+            return (
+              <Box
+                key={child.key}
+                component={RouterLink}
+                href={child.href ?? "#"}
+                onClick={onClose}
+                sx={{
+                  display: "flex", alignItems: "center", gap: 1,
+                  px: 1.5, py: "7px", borderRadius: "8px", textDecoration: "none",
+                  bgcolor: childActive ? "rgba(12,102,228,0.12)" : "transparent",
+                  color: childActive ? "#0c3d8a" : "#1e3a5f",
+                  "&:hover": { bgcolor: "rgba(12,102,228,0.07)" },
+                  transition: "all 0.2s ease",
+                }}
+              >
+                {ChildIcon && (
+                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, borderRadius: "6px", bgcolor: `${childAccent}18`, boxShadow: `0 0 5px 1px ${childAccent}33` }}>
+                    <ChildIcon sx={{ fontSize: "0.9rem", color: childAccent }} />
+                  </Box>
+                )}
+                <Typography sx={{ fontFamily: "'Inter',sans-serif", fontSize: "0.875rem", fontWeight: childActive ? 700 : 500 }}>
+                  {child.title}
+                </Typography>
+                {isTicketDetail && (
+                  <Box sx={{ ml: "auto", display: "flex", alignItems: "center", gap: 0.3 }}>
+                    <ChevronRightRounded sx={{ fontSize: "0.85rem", color: childAccent }} />
+                    <ArticleRounded sx={{ fontSize: "0.8rem", color: childAccent, opacity: 0.8 }} />
+                  </Box>
+                )}
+              </Box>
+            );
+          })}
+        </Stack>
+      </Collapse>
+    </li>
   );
 }
 
-interface NavItemProps extends Omit<NavItemConfig, "items"> {
-  pathname: string;
-}
-
-function NavItem ( {
-  disabled,
-  external,
-  href,
-  icon,
-  matcher,
-  pathname,
-  title,
-}: NavItemProps ): React.JSX.Element {
-  const active = isNavItemActive( {
-    disabled,
-    external,
-    href,
-    matcher,
-    pathname,
-  } );
-  const Icon = icon ? navIcons[ icon ] : null;
+// ─── Simple nav item ──────────────────────────────────────────────────────────
+function MobileNavItem({ item, pathname, onClose }: { item: NavItemConfig; pathname: string; onClose?: () => void }) {
+  const active = isNavItemActive({ href: item.href, matcher: item.matcher, pathname, disabled: item.disabled });
+  const Icon = item.icon ? navIcons[item.icon] : null;
+  const accent = iconColor(item.icon, active);
 
   return (
-    <li>
+    <li style={{ listStyle: "none" }}>
       <Box
-        {...( href
-          ? {
-            component: external ? "a" : RouterLink,
-            href,
-            target: external ? "_blank" : undefined,
-            rel: external ? "noreferrer" : undefined,
-          }
-          : { role: "button" } )}
+        component={item.href ? RouterLink : "div"}
+        href={item.href}
+        onClick={onClose}
         sx={{
-          alignItems: "center",
-          borderRadius: 1,
-          color: "black",
-          cursor: "pointer",
-          display: "flex",
-          flex: "0 0 auto",
-          gap: 1,
-          p: "6px 16px",
-          position: "relative",
+          display: "flex", alignItems: "center", gap: 1.5,
+          p: "8px 12px", borderRadius: "10px", cursor: "pointer",
           textDecoration: "none",
-          whiteSpace: "nowrap",
-          backgroundImage: `
-          linear-gradient(#deebff, #deebff)
-           `,
-          backgroundBlendMode: "multiply, screen, normal",
-          transition: "all 0.3s ease",
-          "&:hover": {
-            backgroundImage: `
-             linear-gradient #c4d5eb, #c4d5eb)
-           `,
-            transform: "scale(1)", // Slightly scale up the element on hover
-            boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)", // Add shadow on hover
-          },
+          bgcolor: active ? "rgba(12,102,228,0.12)" : "transparent",
+          color: active ? "#0c3d8a" : "#1e3a5f",
+          "&:hover": { bgcolor: "rgba(12,102,228,0.07)" },
+          transition: "all 0.2s ease",
         }}
       >
-        <Box
-          sx={{
-            alignItems: "center",
-            display: "flex",
-            justifyContent: "center",
-            flex: "0 0 auto",
-          }}
-        >
-          {Icon ? (
-            <Icon
-              fill={
-                active
-                  ? "var(--NavItem-icon-active-color)"
-                  : "var(--NavItem-icon-color)"
-              }
-              fontSize="var(--icon-fontSize-md)"
-              weight={active ? "fill" : undefined}
-            />
-          ) : null}
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: "7px", bgcolor: active ? "rgba(255,255,255,0.7)" : `${accent}18`, boxShadow: active ? `0 0 9px 2px ${accent}77` : `0 0 6px 1px ${accent}44` }}>
+          {Icon && <Icon sx={{ fontSize: "1.1rem", color: accent }} />}
         </Box>
-        <Box sx={{ flex: "1 1 auto" }}>
-          <Typography
-            component="span"
-            sx={{
-              color: "black",
-              fontSize: "1rem",
-              fontWeight: 500,
-              lineHeight: "1.2rem",
-            }}
-          >
-            {title}
-          </Typography>
-        </Box>
+        <Typography sx={{ fontFamily: "'Inter',sans-serif", fontSize: "0.95rem", fontWeight: active ? 700 : 500 }}>
+          {item.title}
+        </Typography>
       </Box>
     </li>
   );

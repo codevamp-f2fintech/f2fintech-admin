@@ -26,10 +26,10 @@ export async function middleware(request: NextRequest) {
         const { payload } = await jwtVerify(token, jwtSecret);
         const role = payload.role;
 
-        // SUPERADMIN can only access company and users pages
         if (role === "super admin") {
           if (!request.nextUrl.pathname.startsWith("/company") &&
             !request.nextUrl.pathname.startsWith("/user") &&
+            !request.nextUrl.pathname.startsWith("/teams") &&
             request.nextUrl.pathname !== "/") {
             return NextResponse.redirect(new URL("/company", request.url));
           }
@@ -62,8 +62,8 @@ export async function middleware(request: NextRequest) {
         if (role !== "admin" && role !== "operations" && role !== "credit" && role !== "sales" && role !== "sub admin" && role !== "super admin") {
           return NextResponse.redirect(new URL("/unauthorised", request.url));
         }
-        if (role === "sales" && !request.nextUrl.pathname.startsWith("/home") && !request.nextUrl.pathname.startsWith("/ticket")) {
-          return NextResponse.redirect(new URL("/home", request.url));
+        if (role === "sales" && !request.nextUrl.pathname.startsWith("/home") && !request.nextUrl.pathname.startsWith("/ticket") && !request.nextUrl.pathname.startsWith("/teams") && !request.nextUrl.pathname.startsWith("/dashboard")) {
+          return NextResponse.redirect(new URL("/dashboard", request.url));
         }
       } catch (error) {
         return NextResponse.redirect(new URL("/login", request.url));

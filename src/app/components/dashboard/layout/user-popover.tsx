@@ -1,5 +1,3 @@
-// user-popover.tsx — view-only profile modal, styled after reference design
-
 "use client";
 
 import * as React from "react";
@@ -69,7 +67,7 @@ export function UserPopover({ onClose, open }: UserPopoverProps): React.JSX.Elem
       {/* ── Banner ── */}
       <Box
         sx={{
-          bgcolor: "#3f50b5",
+          bgcolor: "#3949ab",
           position: "relative",
           flexShrink: 0,
           height: 110,
@@ -131,7 +129,7 @@ export function UserPopover({ onClose, open }: UserPopoverProps): React.JSX.Elem
               width: AVATAR_SIZE,
               height: AVATAR_SIZE,
               border: "4px solid white",
-              background: "#3f50b5",
+              background: "#3949ab",
               fontSize: "1.6rem",
               fontWeight: 800,
               fontFamily: "'Inter', sans-serif",

@@ -59,7 +59,7 @@ export function AppBarNav(): React.JSX.Element {
   const [openNav, setOpenNav] = React.useState<boolean>(false);
   const [searchQuery, setSearchQuery] = React.useState<string>("");
   const [companies, setCompanies] = useState([]);
-  const [selectedCompany, setSelectedCompany] = useState<string>("");
+  const [selectedCompany, setSelectedCompany] = useState<string>("101");
   const [isMounted, setIsMounted] = useState(false);
 
   // Notification state
@@ -75,7 +75,15 @@ export function AppBarNav(): React.JSX.Element {
     setIsMounted(true);
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("selectedCompanyId");
-      if (saved) setSelectedCompany(saved);
+      if (saved !== null) {
+        setSelectedCompany(saved);
+      } else {
+        setSelectedCompany("101");
+        localStorage.setItem("selectedCompanyId", "101");
+        window.setTimeout(() => {
+          window.dispatchEvent(new CustomEvent("companyChanged", { detail: "101" }));
+        }, 0);
+      }
       setSeenIds(getSeenIds());
     }
   }, []);
@@ -103,8 +111,10 @@ export function AppBarNav(): React.JSX.Element {
   }, []);
 
   useEffect(() => {
-    fetchCompanies();
-  }, [fetchCompanies]);
+    if (pathname !== "/login") {
+      fetchCompanies();
+    }
+  }, [fetchCompanies, pathname]);
 
   // Fetch unified notifications
   const fetchNotifications = useCallback(async () => {
@@ -146,7 +156,7 @@ export function AppBarNav(): React.JSX.Element {
   }, []);
 
   useEffect(() => {
-    if (isSales) return;
+    if (pathname === "/login" || isSales) return;
 
     fetchNotifications();
 
@@ -206,7 +216,7 @@ export function AppBarNav(): React.JSX.Element {
     return () => {
       socket.disconnect();
     };
-  }, [fetchNotifications, isSales]);
+  }, [fetchNotifications, isSales, pathname]);
 
 
   const unreadCount = notifications.filter((n) => !seenIds.has(n.id)).length;
@@ -235,11 +245,7 @@ export function AppBarNav(): React.JSX.Element {
   const handleCompanyChange = (e: SelectChangeEvent) => {
     const value = e.target.value as string;
     setSelectedCompany(value);
-    if (!value) {
-      localStorage.removeItem("selectedCompanyId");
-    } else {
-      localStorage.setItem("selectedCompanyId", value);
-    }
+    localStorage.setItem("selectedCompanyId", value);
     window.dispatchEvent(new CustomEvent("companyChanged", { detail: value }));
   };
 
@@ -333,6 +339,18 @@ export function AppBarNav(): React.JSX.Element {
                     sx={{
                       height: "40px",
                       backgroundColor: "white",
+                      borderRadius: "8px",
+                      "& .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "rgba(57, 73, 171, 0.2)",
+                        transition: "all 0.2s ease",
+                      },
+                      "&:hover .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "rgba(57, 73, 171, 0.5)",
+                      },
+                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#3949ab",
+                        borderWidth: "2px",
+                      },
                       "& .MuiSelect-select": {
                         height: "40px",
                         display: "flex",
@@ -709,6 +727,16 @@ export function AppBarNav(): React.JSX.Element {
                     cursor: "pointer",
                     height: 40,
                     width: 40,
+                    bgcolor: "#3949ab",
+                    color: "white",
+                    fontWeight: 600,
+                    border: "2px solid rgba(255,255,255,0.8)",
+                    boxShadow: "0 2px 8px rgba(57,73,171,0.25)",
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                      boxShadow: "0 4px 12px rgba(57,73,171,0.35)",
+                      transform: "translateY(-1px)",
+                    }
                   }}
                 >
                   {decodedToken()?.username?.charAt(0).toUpperCase()}

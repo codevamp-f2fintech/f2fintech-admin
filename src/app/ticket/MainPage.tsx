@@ -936,7 +936,7 @@ const Ticket = () => {
                 color: "text.secondary",
               }}
             >
-              {userRole === "admin" ? (
+              {userRole === "admin" || userRole === "credit" || userRole === "sales" ? (
                 "No Tickets Found"
               ) : (
                 <Link href="/home">

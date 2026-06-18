@@ -102,9 +102,9 @@ const Login = (): JSX.Element => {
         // Redirect based on role
         if (role === "super admin") {
           router.push("/super-admin-dashboard");
-        } else if (role === "admin" || role === "sub admin") {
+        } else if (role === "admin" || role === "sub admin" || role === "sales") {
           router.push("/dashboard");
-        } else if (role === "operations" || role === "credit" || role === "sales") {
+        } else if (role === "operations" || role === "credit") {
           router.push("/home");
         }
       }

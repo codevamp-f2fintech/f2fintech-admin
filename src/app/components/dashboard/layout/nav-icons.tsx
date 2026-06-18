@@ -1,25 +1,29 @@
-import type { Icon } from "@phosphor-icons/react/dist/lib/types";
-import { Bank as BankIcon } from "@phosphor-icons/react/dist/ssr/Bank";
-import { FileArchive as FileArchiveIcon } from "@phosphor-icons/react/dist/ssr/FileArchive";
-import { ChartPie as ChartPieIcon } from "@phosphor-icons/react/dist/ssr/ChartPie";
-import { GearSix as GearSixIcon } from "@phosphor-icons/react/dist/ssr/GearSix";
-import { PlugsConnected as PlugsConnectedIcon } from "@phosphor-icons/react/dist/ssr/PlugsConnected";
-import { User as UserIcon } from "@phosphor-icons/react/dist/ssr/User";
-import { Users as UsersIcon } from "@phosphor-icons/react/dist/ssr/Users";
-import { XSquare } from "@phosphor-icons/react/dist/ssr/XSquare";
-import { Buildings as BuildingsIcon } from "@phosphor-icons/react/dist/ssr/Buildings";
-import { ListMagnifyingGlass as ListMagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr/ListMagnifyingGlass";
+import SpeedRounded from "@mui/icons-material/SpeedRounded";
+import FolderSpecialRounded from "@mui/icons-material/FolderSpecialRounded";
+import FiberNewRounded from "@mui/icons-material/FiberNewRounded";
+import AssignmentRounded from "@mui/icons-material/AssignmentRounded";   // operational task/ticket
+import GroupsRounded from "@mui/icons-material/GroupsRounded";
+import AccountBalanceRounded from "@mui/icons-material/AccountBalanceRounded";
+import Inventory2Rounded from "@mui/icons-material/Inventory2Rounded";
+import BusinessRounded from "@mui/icons-material/BusinessRounded";
+import LeaderboardRounded from "@mui/icons-material/LeaderboardRounded";
+import ManageSearchRounded from "@mui/icons-material/ManageSearchRounded";
+import AdminPanelSettingsRounded from "@mui/icons-material/AdminPanelSettingsRounded";
+import PersonRounded from "@mui/icons-material/PersonRounded";
+import SupervisedUserCircleRounded from "@mui/icons-material/SupervisedUserCircleRounded";
 
-export const navIcons = {
-  "bank": BankIcon,
-  "file-archive": FileArchiveIcon,
-  "chart-pie": ChartPieIcon,
-  "gear-six": GearSixIcon,
-  "plugs-connected": PlugsConnectedIcon,
-  "x-square": XSquare,
-  "business": BuildingsIcon,
-  "people": UsersIcon,
-  "list-magnifying-glass": ListMagnifyingGlassIcon,
-  user: UserIcon,
-  users: UsersIcon,
-} as Record<string, Icon>;
+export const navIcons: Record<string, React.ElementType> = {
+  "chart-pie": SpeedRounded,
+  "folder-open": FolderSpecialRounded,
+  "fiber-new": FiberNewRounded,
+  "ticket": AssignmentRounded,       // operational task icon
+  "people": GroupsRounded,
+  "bank": AccountBalanceRounded,
+  "file-archive": Inventory2Rounded,
+  "business": BusinessRounded,
+  "plugs-connected": LeaderboardRounded,
+  "list-magnifying-glass": ManageSearchRounded,
+  "gear-six": AdminPanelSettingsRounded,
+  "user": PersonRounded,
+  "users": SupervisedUserCircleRounded,
+};

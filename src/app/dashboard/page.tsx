@@ -197,12 +197,14 @@ async function fetchAggregateTicketCounts(
   date?: string,
   month?: string,
   year?: string,
+  userId?: number,
 ): Promise<any> {
   try {
     const params: any = {};
     if (date) params.date = date;
     if (month) params.month = month;
     if (year) params.year = year;
+    if (userId) params.userId = userId;
 
     const response = await axiosInstance.get("/dashboard/tickets/aggregate-counts", { params });
     return response.data.data;
@@ -246,6 +248,7 @@ const SummaryCard = ({ title, value, icon: Icon, tooltip, color }: any) => (
 
 const StatCard = ({ title, value, amount, icon: Icon, tooltip, link }: any) => {
   const mainColor = 'rgb(44, 60, 227)';
+  const isStatic = !link || link === '#';
   return (
     <Tooltip title={tooltip} arrow placement="top">
       <Paper
@@ -259,15 +262,17 @@ const StatCard = ({ title, value, amount, icon: Icon, tooltip, link }: any) => {
           borderLeft: '4px solid #e2e8f0',
           backgroundColor: '#ffffff',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          cursor: 'pointer',
+          cursor: isStatic ? 'default' : 'pointer',
           textDecoration: 'none',
           display: 'block',
-          '&:hover': {
-            borderColor: '#cbd5e1',
-            borderLeftColor: mainColor,
-            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01)',
-            transform: 'translateY(-3px)',
-          }
+          '&:hover': isStatic
+            ? { boxShadow: 'none' }
+            : {
+                borderColor: '#cbd5e1',
+                borderLeftColor: mainColor,
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01)',
+                transform: 'translateY(-3px)',
+              }
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
@@ -405,7 +410,7 @@ function SubAdminDashboard() {
 
     if (selectedMonth) {
       // Compute first and last day of the selected month
-      const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
       const monthIndex = monthNames.indexOf(selectedMonth);
       const year = new Date().getFullYear();
       const pad = (n: number) => String(n).padStart(2, "0");
@@ -555,11 +560,373 @@ function SubAdminDashboard() {
   );
 }
 
+function SalesDashboard() {
+  const { decodedToken, getCookies } = Utility();
+  const cookies = getCookies();
+  const userToken = (cookies as any).token;
+  const { id, role, companyId, username, name } = decodedToken(userToken?.value) || {};
+
+  const todayDate = new Date().toLocaleDateString("en-CA");
+  const [date, setDate] = useState<string | null>(todayDate);
+  const [selectedMonth, setSelectedMonth] = useState<string>("");
+
+  const [counts, setCounts] = useState<{ [key: string]: number }>({});
+  const [totalApps, setTotalApps] = useState<number>(0);
+  const [newApps, setNewApps] = useState<any>({});
+  const [approvedData, setApprovedData] = useState<any>({});
+  const [disbursedData, setDisbursedData] = useState<any>({});
+
+  const currentYear = new Date().getFullYear();
+  const [currentDateTime, setCurrentDateTime] = useState(new Date());
+
+  const [selectedCompany, setSelectedCompany] = useState<string>(
+    typeof window !== "undefined" ? localStorage.getItem("selectedCompanyId") || "" : ""
+  );
+
+  // Recent applications for this sales user
+  const [recentApps, setRecentApps] = useState<any[]>([]);
+  const [appsLoading, setAppsLoading] = useState(false);
+
+  useEffect(() => {
+    const handleGlobalCompanyChange = (event: any) => setSelectedCompany(event.detail);
+    window.addEventListener("companyChanged", handleGlobalCompanyChange);
+    return () => window.removeEventListener("companyChanged", handleGlobalCompanyChange);
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentDateTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatDateTime = (date: Date) =>
+    date.toLocaleString("en-US", {
+      weekday: "long", year: "numeric", month: "long", day: "numeric",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+    });
+
+  const getGreeting = () => {
+    const hour = currentDateTime.getHours();
+    if (hour < 12) return "Good Morning!";
+    if (hour < 16) return "Good Afternoon!";
+    return "Good Evening!";
+  };
+  const rawName = name || username || "User";
+  const displayName = rawName ? rawName.charAt(0).toUpperCase() + rawName.slice(1) : "";
+
+  const handleMonthChange = (e: any) => {
+    let newMonth = e.target.value;
+    if (newMonth && newMonth !== "") setDate("");
+    if (newMonth === "All") newMonth = "";
+    setSelectedMonth(newMonth);
+  };
+
+  const handleDateChange = (e: any) => {
+    const newDate = e.target.value;
+    setDate(newDate);
+    if (newDate && newDate !== "") setSelectedMonth("");
+  };
+
+  // Fetch recent fresh (unpicked) applications for this sales user
+  const fetchRecentApps = async (activeDate?: string | null, activeMonth?: string) => {
+    try {
+      setAppsLoading(true);
+      const params: any = { appliedBy: id, page: 1, limit: 6 };
+      if (selectedCompany) params.companyId = selectedCompany;
+      // Apply date/month filter so table reflects the active filter
+      if (activeDate) {
+        params.startDate = activeDate;
+        params.endDate = activeDate;
+      } else if (activeMonth) {
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        const monthIndex = monthNames.indexOf(activeMonth);
+        const year = new Date().getFullYear();
+        const pad = (n: number) => String(n).padStart(2, "0");
+        params.startDate = `${year}-${pad(monthIndex + 1)}-01`;
+        const lastDate = new Date(year, monthIndex + 1, 0);
+        params.endDate = `${year}-${pad(monthIndex + 1)}-${pad(lastDate.getDate())}`;
+      }
+      const response = await axiosInstance.get("/get-customer-loan-applications", { params });
+      setRecentApps(response.data?.data?.results || []);
+    } catch (err) {
+      console.error("Failed to fetch sales recent applications", err);
+    } finally {
+      setAppsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [aggCounts, freshApps, approved, disbursed] = await Promise.all([
+          fetchAggregateTicketCounts(
+            date || undefined,
+            selectedMonth || undefined,
+            selectedMonth ? currentYear.toString() : undefined,
+            id,
+          ),
+          // Fresh applications count — respects date/month filter AND scoped to this user
+          axiosInstance.get("/application/new-count", {
+            params: {
+              appliedBy: id,
+              ...(selectedMonth && { month: selectedMonth, year: currentYear.toString() }),
+              ...(date && !selectedMonth && { date }),
+            },
+          }),
+          fetchTotalTickets("approved", id, role, date || undefined, selectedMonth || undefined, selectedMonth ? currentYear.toString() : undefined),
+          fetchTotalTickets("disbursed", id, role, date || undefined, selectedMonth || undefined, selectedMonth ? currentYear.toString() : undefined),
+        ]);
+        setCounts(aggCounts || {});
+        const freshCount = freshApps?.data?.data ?? 0;
+        setNewApps({ count: typeof freshCount === 'object' ? freshCount.count : freshCount });
+        setApprovedData(typeof approved === 'object' && approved !== null ? approved : { count: approved, amount: null });
+        setDisbursedData(typeof disbursed === 'object' && disbursed !== null ? disbursed : { count: disbursed, amount: null });
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    loadData();
+    fetchRecentApps(date, selectedMonth);
+  }, [date, selectedMonth, selectedCompany]);
+
+  // Total applications — always all-time, scoped to this sales user, never changes with date/month
+  useEffect(() => {
+    const loadTotalApps = async () => {
+      try {
+        const response = await axiosInstance.get("/application/count", {
+          params: { appliedBy: id },
+        });
+        setTotalApps(response.data?.data || 0);
+      } catch (err) {
+        console.error("Failed to fetch sales total applications", err);
+      }
+    };
+    loadTotalApps();
+  }, [id]); // Only re-runs if user ID changes — intentionally NOT in the date/company dep array
+
+  useEffect(() => {
+    fetchRecentApps(date, selectedMonth);
+  }, [selectedCompany]);
+
+  // Link builder — takes current date/month filter into account
+  const getLink = (status: string) => {
+    const base = `/ticket?status=${encodeURIComponent(status)}`;
+    if (selectedMonth) {
+      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      const monthIndex = monthNames.indexOf(selectedMonth);
+      const year = new Date().getFullYear();
+      const pad = (n: number) => String(n).padStart(2, "0");
+      const firstDay = `${year}-${pad(monthIndex + 1)}-01`;
+      const lastDate = new Date(year, monthIndex + 1, 0);
+      const lastDay = `${year}-${pad(monthIndex + 1)}-${pad(lastDate.getDate())}`;
+      return `${base}&month=${encodeURIComponent(selectedMonth)}&startDate=${firstDay}&endDate=${lastDay}`;
+    }
+    if (date) return `${base}&startDate=${date}&endDate=${date}`;
+    return base;
+  };
+
+  return (
+    <Box sx={{ p: 3, maxWidth: 1600, margin: '0 auto' }}>
+      {/* Top Filter Bar */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, flexWrap: 'wrap', gap: 2 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 800, color: '#0d1b54', letterSpacing: '-0.5px' }}>
+            {getGreeting()} {displayName}
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#64748b', mt: 0.5 }}>
+            {formatDateTime(currentDateTime)}
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>Month</InputLabel>
+            <Select value={selectedMonth} onChange={handleMonthChange} label="Month" sx={{ bgcolor: '#fff' }}>
+              <MenuItem value="All">All Months</MenuItem>
+              {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map(m => (
+                <MenuItem key={m} value={m}>{m}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <TextField
+            label="Date"
+            type="date"
+            value={date || ""}
+            onChange={handleDateChange}
+            size="small"
+            sx={{ bgcolor: '#fff', minWidth: 150 }}
+            InputLabelProps={{ shrink: true }}
+          />
+        </Box>
+      </Box>
+
+      {/* Section 1: Application Overview */}
+      <Typography variant="h6" sx={{ fontWeight: 600, color: '#334155', mb: 2 }}>Application Overview</Typography>
+      <Grid container spacing={2} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={4}>
+          <StatCard
+            title="My All-Time Applications"
+            value={totalApps}
+            icon={ArchiveIcon}
+            color="#1de9b6"
+            link="#"
+            tooltip="All-time count of applications you have filed (not affected by date filters)"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4} lg={4}>
+          <StatCard title="My Fresh Applications" value={newApps.count || 0} icon={FiberNewIcon} color="#00e5ff"
+            link={getLink('fresh-applications')
+              .replace('/ticket?status=fresh-applications&', '/home?')
+              .replace('/ticket?status=fresh-applications', '/home')}
+            tooltip="My fresh applications filed" />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <StatCard
+            title="My Picked Applications"
+            value={counts['total'] || 0}
+            icon={FilterListRounded}
+            color="#cddc39"
+            link={getLink('all')}
+            tooltip="Total tickets created from your applications"
+          />
+        </Grid>
+
+      </Grid>
+
+      {/* Section 2: Active Pipeline */}
+      <Typography variant="h6" sx={{ fontWeight: 600, color: '#334155', mb: 2 }}>Active Pipeline</Typography>
+      <Grid container spacing={2} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={4}>
+          <StatCard
+            title="Under Credit Review"
+            value={counts['under credit review'] || 0}
+            icon={WorkHistoryIcon}
+            color="#8bc34a"
+            link={getLink('under credit review')}
+            tooltip=""
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <StatCard title="Operations" value={counts['operations'] || 0} icon={LoginRounded} color="#ffa726" link={getLink('operations')} tooltip="" />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <StatCard title="Pendency in File" value={counts['pendency in file'] || 0} icon={PendingActionsIcon} color="#ff7043" link={getLink('pendency in file')} tooltip="" />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <StatCard title="File Send to Banker" value={counts['file send to banker'] || 0} icon={SendRounded} color="#827717" link={getLink('file send to banker')} tooltip="" />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <StatCard title="Awaiting Banker Response" value={counts['file sent to banker - awaiting response'] || 0} icon={SendTimeExtensionIcon} color="#9e9d24" link={getLink('file sent to banker - awaiting response')} tooltip="" />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <StatCard title="Hold" value={counts['hold'] || 0} icon={PauseCircleOutlineRounded} color="#1a237e" link={getLink('hold')} tooltip="" />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <StatCard title="To be Approved" value={counts['to be approved'] || 0} icon={ThumbUpRounded} color="#26c6da" link={getLink('to be approved')} tooltip="" />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <StatCard title="To be Disbursed" value={counts['to be disbursed'] || 0} icon={ForwardRounded} color="#a5d6a7" link={getLink('to be disbursed')} tooltip="" />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <StatCard title="Carry Forward" value={counts['carry forward'] || 0} icon={SendTimeExtensionIcon} color="#795548" link={getLink('carry forward')} tooltip="" />
+        </Grid>
+      </Grid>
+
+      {/* Section 3: Final Outcomes */}
+      <Typography variant="h6" sx={{ fontWeight: 600, color: '#334155', mb: 2 }}>Final Outcomes</Typography>
+      <Grid container spacing={2} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard title="Approved" value={approvedData.count || 0} amount={approvedData.amount} icon={AccountBalanceRounded} color="#69f0ae" link={getLink('approved')} tooltip="Funds Approved" />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard title="Disbursed" value={disbursedData.count || 0} amount={disbursedData.amount} icon={ReportRounded} color="#ff9800" link={getLink('disbursed')} tooltip="Funds Disbursed" />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard title="Rejected" value={counts['rejected'] || 0} icon={CancelRounded} color="#dd2c00" link={getLink('rejected')} tooltip="Rejected Tickets" />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard title="Drop" value={counts['drop'] || 0} icon={DeleteForeverRounded} color="#ff6e40" link={getLink('drop')} tooltip="Dropped Tickets" />
+        </Grid>
+      </Grid>
+
+      {/* Section 4: My Recent Applications */}
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Paper elevation={0} sx={{ p: 2, border: '1px solid #e2e8f0', borderRadius: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#1e293b' }}>
+                My Recent Applications
+              </Typography>
+              <Button
+                size="small"
+                variant="contained"
+                href={getLink('fresh-applications')
+                  .replace('/ticket?status=fresh-applications&', '/home?')
+                  .replace('/ticket?status=fresh-applications', '/home')}
+                sx={{ borderRadius: 2, textTransform: 'none', bgcolor: '#3f50b5', '&:hover': { bgcolor: '#303f9f' } }}
+              >
+                View All
+              </Button>
+            </Box>
+            {appsLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <Typography variant="body2" color="text.secondary">Loading...</Typography>
+              </Box>
+            ) : recentApps.length === 0 ? (
+              <Box sx={{ py: 4, textAlign: 'center' }}>
+                <Typography variant="body2" color="text.secondary">No recent applications found.</Typography>
+              </Box>
+            ) : (
+              <Box sx={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: '#f8fafc' }}>
+                      {['#', 'Customer', 'Amount', 'Provider', 'Loan Type', 'Status', 'Date'].map(h => (
+                        <th key={h} style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentApps.map((app: any, i: number) => (
+                      <tr key={app.applicationId || i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <td style={{ padding: '10px 12px', color: '#94a3b8', fontWeight: 500 }}>{i + 1}</td>
+                        <td style={{ padding: '10px 12px', fontWeight: 500, color: '#1e293b' }}>{app.customerName || '-'}</td>
+                        <td style={{ padding: '10px 12px', color: '#059669', fontWeight: 600 }}>₹{Number(app.applicationAmount || 0).toLocaleString('en-IN')}</td>
+                        <td style={{ padding: '10px 12px', color: '#334155' }}>{app.applicationProvider || '-'}</td>
+                        <td style={{ padding: '10px 12px', color: '#334155' }}>{app.loanType || '-'}</td>
+                        <td style={{ padding: '10px 12px' }}>
+                          <span style={{
+                            display: 'inline-block', padding: '2px 10px', borderRadius: 20,
+                            fontSize: '0.75rem', fontWeight: 600,
+                            backgroundColor: app.loanStatus === 'disbursed' ? '#dcfce7' : '#f1f5f9',
+                            color: app.loanStatus === 'disbursed' ? '#15803d' : '#475569',
+                          }}>
+                            {app.loanStatus || 'N/A'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '10px 12px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
+                          {app.applicationDate ? new Date(app.applicationDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </Box>
+            )}
+          </Paper>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+}
+
 export default function Page(): React.JSX.Element {
   const { decodedToken, getCookies } = Utility();
   const cookies = getCookies();
   const userToken = (cookies as any).token;
   const { id, role, companyId, username, name } = decodedToken(userToken?.value) || {};
+
+  if (role === 'sales') {
+    return <SalesDashboard />;
+  }
 
   if (role === 'sub admin') {
     return <SubAdminDashboard />;
