@@ -39,13 +39,31 @@ export const Utility = () => {
     }
   };
 
+  /**
+   * Function to capitalize the first letter of each word in a string
+   * @param str - The string to be capitalized
+   * @returns
+   */
+  const capitalizeEachWord = (str: string | undefined) => {
+    if (!str) return '';
+    return str
+      .split(' ')
+      .map(word => word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : '')
+      .join(' ');
+  };
+
   // Function to calculate the number of days ago
   const calculateDaysAgo = (date: string) => {
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const addedDate = new Date(date);
-    const diffTime = Math.abs(today.getTime() - addedDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+    addedDate.setHours(0, 0, 0, 0);
+    const diffTime = today.getTime() - addedDate.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays <= 0) return "Today";
+    if (diffDays === 1) return "Yesterday";
+    return `${diffDays} days ago`;
   };
 
   /**
@@ -302,6 +320,7 @@ export const Utility = () => {
 
   return {
     capitalizeFirstLetter,
+    capitalizeEachWord,
     calculateDaysAgo,
     convertHoursToDaysAndHours,
     decodedToken,

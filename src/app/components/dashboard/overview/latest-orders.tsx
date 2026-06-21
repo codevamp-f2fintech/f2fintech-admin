@@ -40,7 +40,6 @@ export interface LatestUsersProps {
 
 export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
   const { value: users, swrLoading: usersLoading } = useGetUsers(
-    {} as User,
     "get-users",
     1,
     6
@@ -53,7 +52,7 @@ export function LatestOrders({ sx }: LatestUsersProps): React.JSX.Element {
   const { value: tickets, swrLoading: ticketsLoading } = useGetTickets(
     `get-all-tickets`,
     1,
-    1000,
+    100,
     "",
     currentMonthStart,
     currentMonthEnd

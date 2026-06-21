@@ -104,7 +104,7 @@ const HomeContent: React.FC = () => {
   );
   const { toast } = useSelector((state: RootState) => state.toast);
   const dispatch: AppDispatch = useDispatch();
-  const { debounceScroll, decodedToken, remLocalStorage, toastAndNavigate } = Utility();
+  const { capitalizeEachWord, debounceScroll, decodedToken, remLocalStorage, toastAndNavigate } = Utility();
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
 
@@ -113,6 +113,8 @@ const HomeContent: React.FC = () => {
   const salesUserId = userInfo?.role === "sales" ? userInfo?.id : null;
   const userRole = userInfo?.role;
   const userCompanyId = userInfo?.company_id || userInfo?.companyId; // Support both naming conventions
+  const userDesignation = userInfo?.designation?.toLowerCase() || '';
+  const isL1OrL2 = ["team leader", "tl", "sales manager", "sm", "l1", "l2"].includes(userDesignation);
   const isAdmin = userRole === "admin";
   const isSuperAdmin = userRole === "super admin";
   const [refreshKey, setRefreshKey] = useState<number>(0);
@@ -121,7 +123,46 @@ const HomeContent: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [userAnchorEl, setUserAnchorEl] = useState<null | HTMLElement>(null);
 
-  const effectiveSalesUserId = selectedUser ? selectedUser.id : salesUserId;
+  const [selectedTeamMember, setSelectedTeamMember] = useState<string>(
+    typeof window !== "undefined" ? localStorage.getItem("selectedTeamMemberId") || (!isL1OrL2 && userRole === "sales" ? salesUserId?.toString() || "all" : "all") : "all"
+  );
+  const [selectedTeamMemberName, setSelectedTeamMemberName] = useState<string>(
+    typeof window !== "undefined" ? localStorage.getItem("selectedTeamMemberName") || (!isL1OrL2 && userRole === "sales" ? userInfo?.username || userInfo?.name || "My Details" : "All My Team") : "All My Team"
+  );
+  const [computedSalesUserId, setComputedSalesUserId] = useState<string | number | null>(salesUserId);
+
+  useEffect(() => {
+    const computeId = async () => {
+      if (userRole !== "sales") {
+        setComputedSalesUserId(salesUserId);
+        return;
+      }
+      if (selectedTeamMember === "all" || selectedTeamMember === "") {
+        // "All Team Members" — fetch all IDs this user can see based on their designation
+        try {
+          const userInfoDecoded = decodedToken();
+          const designation = userInfoDecoded?.designation || '';
+          const res = await axiosInstance.get(`/teams/my-team-member-ids/${salesUserId}`, {
+            params: { designation, role: 'sales' }
+          });
+          if (res.data?.data && Array.isArray(res.data.data) && res.data.data.length > 0) {
+            setComputedSalesUserId(res.data.data.join(','));
+          } else {
+            setComputedSalesUserId(salesUserId);
+          }
+        } catch (e) {
+          setComputedSalesUserId(salesUserId);
+        }
+      } else {
+        // Specific team member selected
+        setComputedSalesUserId(Number(selectedTeamMember));
+      }
+    };
+    if (salesUserId) computeId();
+  }, [selectedTeamMember, salesUserId, userRole]);
+
+  const effectiveSalesUserId = selectedUser ? selectedUser.id : computedSalesUserId;
+
 
   useEffect(() => {
     // Fetch user data only if user is admin
@@ -179,8 +220,27 @@ const HomeContent: React.FC = () => {
       setRefreshKey(prev => prev + 1);
     };
 
+    const handleTeamMemberChange = (event: any) => {
+      setSelectedTeamMember(event.detail);
+      dispatch(resetCustomerApplications());
+      setCurrentPage(1);
+      setHasMoreData(true);
+      setRefreshKey(prev => prev + 1);
+    };
+
+    const handleTeamMemberNameChange = (event: any) => {
+      setSelectedTeamMemberName(event.detail);
+    };
+
     window.addEventListener("companyChanged", handleGlobalCompanyChange);
-    return () => window.removeEventListener("companyChanged", handleGlobalCompanyChange);
+    window.addEventListener("teamMemberChanged", handleTeamMemberChange);
+    window.addEventListener("teamMemberNameChanged", handleTeamMemberNameChange);
+
+    return () => {
+      window.removeEventListener("companyChanged", handleGlobalCompanyChange);
+      window.removeEventListener("teamMemberChanged", handleTeamMemberChange);
+      window.removeEventListener("teamMemberNameChanged", handleTeamMemberNameChange);
+    };
   }, [dispatch, searchTerm]);
 
   const fetchCompanies = useCallback(async () => {
@@ -420,7 +480,14 @@ const HomeContent: React.FC = () => {
         }}
       >
         {/* Left side: Title and Filters */}
-        <Box sx={{ flexGrow: 1, display: "flex", minWidth: 0 }}>
+        <Box sx={{ flexGrow: 1, display: "flex", minWidth: 0, flexDirection: "column", gap: 1 }}>
+          {userRole === "sales" && String(selectedTeamMember) !== String(salesUserId) && (
+            <Box sx={{ ml: 1 }}>
+              <Typography variant="subtitle2" sx={{ color: "#3949ab", fontWeight: 700 }}>
+                Viewing Data For: {capitalizeEachWord(selectedTeamMemberName)}
+              </Typography>
+            </Box>
+          )}
           <Paper
             elevation={0}
             sx={{
@@ -437,18 +504,20 @@ const HomeContent: React.FC = () => {
               boxSizing: "border-box"
             }}
           >
-            <Typography
-              variant="h6"
-              component="div"
-              sx={{
-                fontWeight: 700,
-                fontSize: { xs: "1.3rem", md: "1.5rem" },
-                whiteSpace: "nowrap",
-                color: "#1a2340",
-              }}
-            >
-              Fresh Applications: {displayCount}
-            </Typography>
+            <Box>
+              <Typography
+                variant="h6"
+                component="div"
+                sx={{
+                  fontWeight: 700,
+                  fontSize: { xs: "1.3rem", md: "1.5rem" },
+                  whiteSpace: "nowrap",
+                  color: "#1a2340",
+                }}
+              >
+                Fresh Applications: {displayCount}
+              </Typography>
+            </Box>
 
             <Box sx={{ display: { xs: 'none', md: 'block' }, width: "1px", height: "32px", bgcolor: "#e2e8f0" }} />
 
@@ -735,7 +804,7 @@ const HomeContent: React.FC = () => {
             </Button>
           </Link>
 
-          {userRole === "sales" && (
+          {userRole === "sales" && String(selectedTeamMember) === String(salesUserId) && (
             <Link href="/home/create" passHref>
               <Button
                 variant="outlined"

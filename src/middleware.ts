@@ -47,7 +47,7 @@ export async function middleware(request: NextRequest) {
 
         // Restrict credit users to only /ticket page
         if (role === "credit") {
-          if (!request.nextUrl.pathname.startsWith("/ticket")) {
+          if (!request.nextUrl.pathname.startsWith("/ticket") || request.nextUrl.pathname.startsWith("/ticket/")) {
             return NextResponse.redirect(new URL("/ticket", request.url));
           }
         }
@@ -62,8 +62,15 @@ export async function middleware(request: NextRequest) {
         if (role !== "admin" && role !== "operations" && role !== "credit" && role !== "sales" && role !== "sub admin" && role !== "super admin") {
           return NextResponse.redirect(new URL("/unauthorised", request.url));
         }
-        if (role === "sales" && !request.nextUrl.pathname.startsWith("/home") && !request.nextUrl.pathname.startsWith("/ticket") && !request.nextUrl.pathname.startsWith("/teams") && !request.nextUrl.pathname.startsWith("/dashboard")) {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
+        if (role === "sales") {
+          // Block sales users from accessing ticket details or subpaths
+          if (request.nextUrl.pathname.startsWith("/ticket/")) {
+            return NextResponse.redirect(new URL("/ticket", request.url));
+          }
+          // Default sales access check
+          if (!request.nextUrl.pathname.startsWith("/home") && !request.nextUrl.pathname.startsWith("/ticket") && !request.nextUrl.pathname.startsWith("/teams") && !request.nextUrl.pathname.startsWith("/dashboard")) {
+            return NextResponse.redirect(new URL("/dashboard", request.url));
+          }
         }
       } catch (error) {
         return NextResponse.redirect(new URL("/login", request.url));

@@ -613,7 +613,7 @@ const MainPage = () => {
         }
       }
       // 2. Update ticket status
-      const updatePayload: Record<string, unknown> = { 
+      const updatePayload: Record<string, unknown> = {
         status: newStatus,
         actorName: decodedToken()?.username || 'A user'
       };

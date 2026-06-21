@@ -44,6 +44,7 @@ import { useDeleteCustomerApplication } from "@/hooks/customerApplication";
 import GridViewIcon from "@mui/icons-material/GridView";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import { resetCustomerApplications } from "@/redux/features/customerApplicationSlice";
+import { axiosInstance } from "@/apis/config/axiosConfig";
 
 const Ticket = () => {
   const [filter, setFilter] = useState<string>("");
@@ -56,23 +57,26 @@ const Ticket = () => {
   const [toggleListView, setToggleListView] = useState("table");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [hasMoreData, setHasMoreData] = useState<boolean>(true);
+
   const { ticket } = useSelector((state: RootState) => state.tickets);
   const { toast } = useSelector((state: RootState) => state.toast);
   const { deleteTicket, error, loading } = useDeleteTicket();
   const { deleteCustomerApplication } = useDeleteCustomerApplication();
+
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
   const ITEMS_PER_PAGE = 12;
   const dispatch: AppDispatch = useDispatch();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { debounceScroll, decodedToken, getCookies } = Utility();
+  const { capitalizeEachWord, debounceScroll, decodedToken, getCookies } = Utility();
+
   const userRole = decodedToken()?.role;
   const [exportLoading, setExportLoading] = useState(false);
   const cookies = getCookies();
   const userToken = (cookies as any).token;
-  const { id, role, companyId } = decodedToken(userToken?.value);
-  const [refreshKey, setRefreshKey] = useState<number>(0);
+  const { id } = decodedToken(userToken?.value);
+
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
   const [selectedCompany, setSelectedCompany] = useState<string>(
@@ -80,6 +84,46 @@ const Ticket = () => {
       ? localStorage.getItem("selectedCompanyId") || ""
       : ""
   );
+
+  const userDesignation = decodedToken(userToken?.value)?.designation?.toLowerCase() || '';
+  const isL1OrL2 = ["team leader", "tl", "sales manager", "sm", "l1", "l2"].includes(userDesignation);
+
+  const [selectedTeamMember, setSelectedTeamMember] = useState<string>(
+    typeof window !== "undefined" ? localStorage.getItem("selectedTeamMemberId") || (!isL1OrL2 && userRole === "sales" ? id?.toString() || "all" : "all") : "all"
+  );
+  const [selectedTeamMemberName, setSelectedTeamMemberName] = useState<string>(
+    typeof window !== "undefined" ? localStorage.getItem("selectedTeamMemberName") || (!isL1OrL2 && userRole === "sales" ? decodedToken(userToken?.value)?.username || decodedToken(userToken?.value)?.name || "My Details" : "All My Team") : "All My Team"
+  );
+  const [computedSalesUserId, setComputedSalesUserId] = useState<string | number | null>(id);
+
+  useEffect(() => {
+    const computeId = async () => {
+      if (userRole !== "sales") {
+        setComputedSalesUserId(id);
+        return;
+      }
+      if (selectedTeamMember === "all" || selectedTeamMember === "") {
+        // "All Team Members" — fetch all IDs this user can see based on their designation
+        try {
+          const { designation } = decodedToken(userToken?.value) || {};
+          const res = await axiosInstance.get(`/teams/my-team-member-ids/${id}`, {
+            params: { designation: designation || '', role: 'sales' }
+          });
+          if (res.data?.data && Array.isArray(res.data.data) && res.data.data.length > 0) {
+            setComputedSalesUserId(res.data.data.join(','));
+          } else {
+            setComputedSalesUserId(id);
+          }
+        } catch (e) {
+          setComputedSalesUserId(id);
+        }
+      } else {
+        // Specific team member selected
+        setComputedSalesUserId(Number(selectedTeamMember));
+      }
+    };
+    if (id) computeId();
+  }, [selectedTeamMember, id, userRole]);
 
   const apiEndpoint = selectedUser
     ? `get-all-tickets/${selectedUser.id}${sortBy === "disbursed" ? "?onlyDisbursed=true" : ""}${selectedCompany ? `&companyId=${selectedCompany}` : ''}`
@@ -99,8 +143,8 @@ const Ticket = () => {
           }&provider=${loanProvider}${sortBy === "disbursed" ? "&onlyDisbursed=true" : ""}${selectedCompany ? `&companyId=${selectedCompany}` : ''}`
         : userRole === "sales"
           ? sortBy === "all" && loanProvider === "all"
-            ? `get-all-tickets/${decodedToken()?.id}?appliedBy=sales${selectedCompany ? `&companyId=${selectedCompany}` : ''}`
-            : `get-all-tickets/${decodedToken()?.id}?appliedBy=sales&status=${sortBy == "forwarded to me" || sortBy == "forwarded by me"
+            ? `get-all-tickets/${computedSalesUserId}?appliedBy=sales${selectedCompany ? `&companyId=${selectedCompany}` : ''}`
+            : `get-all-tickets/${computedSalesUserId}?appliedBy=sales&status=${sortBy == "forwarded to me" || sortBy == "forwarded by me"
               ? sortBy.replace(/\s+/g, "")
               : sortBy
             }&provider=${loanProvider}${sortBy === "disbursed" ? "&onlyDisbursed=true" : ""}${selectedCompany ? `&companyId=${selectedCompany}` : ''}`
@@ -108,9 +152,7 @@ const Ticket = () => {
 
   const {
     value: ticketData,
-    error: swrError,
     swrLoading,
-    refetcher,
   } = useGetTickets(
     apiEndpoint,
     currentPage,
@@ -153,8 +195,8 @@ const Ticket = () => {
               }&provider=${loanProvider}`
             : currentUserRole === "sales"
               ? sortBy === "all" && loanProvider === "all"
-                ? `get-all-tickets/${currentUser?.id}?appliedBy=sales`
-                : `get-all-tickets/${currentUser?.id}?appliedBy=sales&status=${sortBy === "forwarded to me" || sortBy === "forwarded by me"
+                ? `get-all-tickets/${computedSalesUserId}?appliedBy=sales`
+                : `get-all-tickets/${computedSalesUserId}?appliedBy=sales&status=${sortBy === "forwarded to me" || sortBy === "forwarded by me"
                   ? sortBy.replace(/\s+/g, "")
                   : sortBy
                 }&provider=${loanProvider}`
@@ -326,11 +368,6 @@ const Ticket = () => {
       }
     }
   }, []);
-  useEffect(() => {
-    if (ticket?.results?.length) {
-      console.log("Ticket sample:", ticket.results[0]);
-    }
-  }, [ticket]);
 
   // Company change handler - improved version
   useEffect(() => {
@@ -363,12 +400,23 @@ const Ticket = () => {
       // Clear URL params
       const params = new URLSearchParams();
       router.push(`${pathname}?${params.toString()}`, { shallow: true });
+    };
 
-      // Force SWR to refetch by changing key
-      setRefreshKey(prev => prev + 1);
+    const handleTeamMemberChange = (event: any) => {
+      // Immediately clear stale data before the async computedSalesUserId resolves
+      dispatch(resetTickets());
+      setCurrentPage(1);
+      setHasMoreData(true);
+      setSelectedTeamMember(event.detail);
+    };
+
+    const handleTeamMemberNameChange = (event: any) => {
+      setSelectedTeamMemberName(event.detail);
     };
 
     window.addEventListener("companyChanged", handleGlobalCompanyChange);
+    window.addEventListener("teamMemberChanged", handleTeamMemberChange);
+    window.addEventListener("teamMemberNameChanged", handleTeamMemberNameChange);
 
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "selectedCompanyId" && e.newValue) {
@@ -380,6 +428,8 @@ const Ticket = () => {
 
     return () => {
       window.removeEventListener("companyChanged", handleGlobalCompanyChange);
+      window.removeEventListener("teamMemberChanged", handleTeamMemberChange);
+      window.removeEventListener("teamMemberNameChanged", handleTeamMemberNameChange);
       window.removeEventListener("storage", handleStorageChange);
     };
   }, [dispatch, router, pathname]);
@@ -437,7 +487,7 @@ const Ticket = () => {
       setStartDate(queryStartDate || null);
       setEndDate(queryEndDate || null);
     } else if (queryMonth) {
-      const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
       const monthIndex = monthNames.indexOf(queryMonth);
       if (monthIndex !== -1) {
         const year = new Date().getFullYear();
@@ -475,6 +525,7 @@ const Ticket = () => {
     endDate,
     dispatch,
   ]);
+
 
   // Fetch and update state with new data
   useEffect(() => {
@@ -700,7 +751,14 @@ const Ticket = () => {
         }}
       >
         {/* Filter Panel Container */}
-        <Box sx={{ flexGrow: 1, display: "flex", minWidth: 0 }}>
+        <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column", minWidth: 0, gap: 1 }}>
+          {userRole === "sales" && String(selectedTeamMember) !== String(id) && (
+            <Box sx={{ ml: 1 }}>
+              <Typography variant="subtitle2" sx={{ color: "#3949ab", fontWeight: 700 }}>
+                Viewing Data For: {capitalizeEachWord(selectedTeamMemberName)}
+              </Typography>
+            </Box>
+          )}
           <Box
             sx={{
               display: "flex",
@@ -798,109 +856,109 @@ const Ticket = () => {
               boxSizing: "border-box",
             }}
           >
-          <Tooltip title="Grid View">
-            <IconButton
-              onClick={() => {
-                setToggleListView("grid");
-                if (typeof window !== "undefined") {
-                  sessionStorage.setItem(
-                    "ticketViewPreference",
-                    JSON.stringify("grid")
-                  );
-                }
-              }}
-              sx={{
-                color:
-                  toggleListView === "grid"
-                    ? "primary.main"
-                    : "action.disabled",
-                backgroundColor:
-                  toggleListView === "grid" ? "action.selected" : "transparent",
-                borderRadius: "8px",
-                p: 1,
-                transition: "all 0.2s ease",
-                "&:hover": {
-                  backgroundColor:
+            <Tooltip title="Grid View">
+              <IconButton
+                onClick={() => {
+                  setToggleListView("grid");
+                  if (typeof window !== "undefined") {
+                    sessionStorage.setItem(
+                      "ticketViewPreference",
+                      JSON.stringify("grid")
+                    );
+                  }
+                }}
+                sx={{
+                  color:
                     toggleListView === "grid"
-                      ? "primary.light"
-                      : "action.hover",
-                },
-              }}
-            >
-              <GridViewIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-
-          <Tooltip title="List View">
-            <IconButton
-              onClick={() => {
-                setToggleListView("list");
-                if (typeof window !== "undefined") {
-                  sessionStorage.setItem(
-                    "ticketViewPreference",
-                    JSON.stringify("list")
-                  );
-                }
-              }}
-              sx={{
-                color:
-                  toggleListView === "list"
-                    ? "primary.main"
-                    : "action.disabled",
-                backgroundColor:
-                  toggleListView === "list" ? "action.selected" : "transparent",
-                borderRadius: "8px",
-                p: 1,
-                transition: "all 0.2s ease",
-                "&:hover": {
+                      ? "primary.main"
+                      : "action.disabled",
                   backgroundColor:
-                    toggleListView === "list"
-                      ? "primary.light"
-                      : "action.hover",
-                },
-              }}
-            >
-              <ViewListIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
+                    toggleListView === "grid" ? "action.selected" : "transparent",
+                  borderRadius: "8px",
+                  p: 1,
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    backgroundColor:
+                      toggleListView === "grid"
+                        ? "primary.light"
+                        : "action.hover",
+                  },
+                }}
+              >
+                <GridViewIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
 
-          <Tooltip title="Table View">
-            <IconButton
-              onClick={() => {
-                setToggleListView("table");
-                if (typeof window !== "undefined") {
-                  sessionStorage.setItem(
-                    "ticketViewPreference",
-                    JSON.stringify("table")
-                  );
-                }
-              }}
-              sx={{
-                color:
-                  toggleListView === "table"
-                    ? "primary.main"
-                    : "action.disabled",
-                backgroundColor:
-                  toggleListView === "table"
-                    ? "action.selected"
-                    : "transparent",
-                borderRadius: "8px",
-                p: 1,
-                transition: "all 0.2s ease",
-                "&:hover": {
+            <Tooltip title="List View">
+              <IconButton
+                onClick={() => {
+                  setToggleListView("list");
+                  if (typeof window !== "undefined") {
+                    sessionStorage.setItem(
+                      "ticketViewPreference",
+                      JSON.stringify("list")
+                    );
+                  }
+                }}
+                sx={{
+                  color:
+                    toggleListView === "list"
+                      ? "primary.main"
+                      : "action.disabled",
+                  backgroundColor:
+                    toggleListView === "list" ? "action.selected" : "transparent",
+                  borderRadius: "8px",
+                  p: 1,
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    backgroundColor:
+                      toggleListView === "list"
+                        ? "primary.light"
+                        : "action.hover",
+                  },
+                }}
+              >
+                <ViewListIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Table View">
+              <IconButton
+                onClick={() => {
+                  setToggleListView("table");
+                  if (typeof window !== "undefined") {
+                    sessionStorage.setItem(
+                      "ticketViewPreference",
+                      JSON.stringify("table")
+                    );
+                  }
+                }}
+                sx={{
+                  color:
+                    toggleListView === "table"
+                      ? "primary.main"
+                      : "action.disabled",
                   backgroundColor:
                     toggleListView === "table"
-                      ? "primary.light"
-                      : "action.hover",
-                },
-              }}
-            >
-              <TableViewIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
+                      ? "action.selected"
+                      : "transparent",
+                  borderRadius: "8px",
+                  p: 1,
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    backgroundColor:
+                      toggleListView === "table"
+                        ? "primary.light"
+                        : "action.hover",
+                  },
+                }}
+              >
+                <TableViewIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
         </Box>
       </Box>
-    </Box>
 
       {/* Updated View Toggle Box with Session Storage */}
 

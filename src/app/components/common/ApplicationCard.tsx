@@ -770,98 +770,116 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
             {/* Action Buttons — vertical stack with dividers, pinned right */}
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexShrink: 0, ml: "auto" }}>
 
-              {(showDeleteButton || (userRole === "admin" && handleDeleteTicket) || (handleStartClick && customerApplication.ticketId) || handleStartClick) && (
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "stretch",
-                    border: "1px solid #e8edf5",
-                    borderRadius: "8px",
-                    overflow: "hidden",
-                    minWidth: "64px",
-                  }}
-                >
-                  {/* Top Row: Delete & History */}
-                  <Box sx={{ display: "flex", flexDirection: "row", alignItems: "stretch", justifyContent: "center" }}>
-                    {/* Delete */}
-                    {!isApplication && (showDeleteButton || (userRole === "admin" && handleDeleteTicket)) && (
-                      <Tooltip title="Delete" placement="top" arrow>
-                        <IconButton
-                          onClick={openConfirmDialog}
-                          size="small"
-                          sx={{
-                            color: "#e53935",
-                            borderRadius: 0,
-                            py: 0.5,
-                            flex: 1,
-                            "&:hover": { bgcolor: "rgba(229, 57, 53, 0.07)", color: "#c62828" },
-                            transition: "all 0.15s ease",
-                          }}
-                        >
-                          <DeleteOutline sx={{ fontSize: 15 }} />
-                        </IconButton>
-                      </Tooltip>
-                    )}
+              {/* Delete Button */}
+              {!isApplication && (showDeleteButton || (userRole === "admin" && handleDeleteTicket)) && (
+                <Tooltip title="Delete Ticket" arrow>
+                  <Button
+                    size="small"
+                    onClick={openConfirmDialog}
+                    startIcon={<DeleteOutline fontSize="small" />}
+                    sx={{
+                      textTransform: 'none',
+                      borderRadius: "20px",
+                      px: 1.5,
+                      py: 0.5,
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      color: "#f44336",
+                      bgcolor: "rgba(244, 67, 54, 0.08)",
+                      "&:hover": {
+                        backgroundColor: "rgba(244, 67, 54, 0.15)",
+                        color: "#d32f2f",
+                      },
+                      boxShadow: "none",
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </Tooltip>
+              )}
 
-                    {/* Vertical Divider between Delete and History */}
-                    {!isApplication && (showDeleteButton || (userRole === "admin" && handleDeleteTicket)) && handleStartClick && customerApplication.ticketId && (
-                      <Box sx={{ width: "1px", bgcolor: "#e8edf5", flexShrink: 0 }} />
-                    )}
+              {/* History Button */}
+              {handleStartClick && customerApplication.ticketId && (
+                <Tooltip title={showHistory ? "Close History" : "View History"} arrow>
+                  <Button
+                    size="small"
+                    onClick={toggleHistory}
+                    startIcon={userRole === "admin" ? undefined : <History fontSize="small" />}
+                    sx={{
+                      textTransform: 'none',
+                      borderRadius: "20px",
+                      px: 1.5,
+                      py: 0.5,
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      color: "#667eea",
+                      bgcolor: "rgba(102, 126, 234, 0.08)",
+                      "&:hover": {
+                        backgroundColor: "rgba(102, 126, 234, 0.15)",
+                        color: "#5a6fd8",
+                      },
+                      boxShadow: "none",
+                    }}
+                  >
+                    {showHistory ? "Close" : "History"}
+                  </Button>
+                </Tooltip>
+              )}
 
-                    {/* History */}
-                    {handleStartClick && customerApplication.ticketId && (
-                      <Tooltip title={showHistory ? "Close History" : "History"} placement="top" arrow>
-                        <IconButton
-                          size="small"
-                          onClick={toggleHistory}
-                          sx={{
-                            color: "#667eea",
-                            borderRadius: 0,
-                            py: 0.5,
-                            flex: 1,
-                            "&:hover": { bgcolor: "rgba(102, 126, 234, 0.07)", color: "#5a6fd8" },
-                            transition: "all 0.15s ease",
-                          }}
-                        >
-                          <History sx={{ fontSize: 15 }} />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                  </Box>
+              {/* Comments Button */}
+              {handleStartClick && customerApplication.ticketId && (
+                <Tooltip title={showComment ? "Close Comments" : "View Comments"} arrow>
+                  <Button
+                    size="small"
+                    onClick={toggleComment}
+                    startIcon={userRole === "admin" ? undefined : <CommentOutlined fontSize="small" />}
+                    sx={{
+                      textTransform: 'none',
+                      borderRadius: "20px",
+                      px: 1.5,
+                      py: 0.5,
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      color: "#667eea",
+                      bgcolor: "rgba(102, 126, 234, 0.08)",
+                      "&:hover": {
+                        backgroundColor: "rgba(102, 126, 234, 0.15)",
+                        color: "#5a6fd8",
+                      },
+                      boxShadow: "none",
+                    }}
+                  >
+                    {showComment ? "Close" : "Comments"}
+                  </Button>
+                </Tooltip>
+              )}
 
-                  {/* Horizontal Divider between Top Row and Visit */}
-                  {((!isApplication && (showDeleteButton || (userRole === "admin" && handleDeleteTicket))) || (handleStartClick && customerApplication.ticketId)) && handleStartClick && (
-                    <Box sx={{ height: "1px", bgcolor: "#e8edf5", flexShrink: 0 }} />
-                  )}
-
-                  {/* Visit */}
-                  {handleStartClick && (
-                    <Tooltip title="Visit Ticket" placement="bottom" arrow>
-                      <Button
-                        size="small"
-                        onClick={(e) => { e.stopPropagation(); handleStartClick(customerApplication.ticketId); }}
-                        endIcon={<OpenInNew sx={{ fontSize: 11 }} />}
-                        sx={{
-                          textTransform: "none",
-                          fontSize: "0.65rem",
-                          fontWeight: 600,
-                          color: "#1976D2",
-                          px: 1,
-                          py: 0.5,
-                          minWidth: 0,
-                          lineHeight: 1,
-                          borderRadius: 0,
-                          bgcolor: "transparent",
-                          "&:hover": { bgcolor: "rgba(25, 118, 210, 0.07)" },
-                          transition: "all 0.15s ease",
-                        }}
-                      >
-                        Visit
-                      </Button>
-                    </Tooltip>
-                  )}
-                </Box>
+              {/* Visit Button */}
+              {handleStartClick && decodedToken()?.role !== "sales" && (
+                <Tooltip title="Visit Ticket" arrow>
+                  <Button
+                    size="small"
+                    onClick={(e) => { e.stopPropagation(); handleStartClick(customerApplication.ticketId); }}
+                    startIcon={userRole === "admin" ? undefined : <OpenInNew fontSize="small" />}
+                    sx={{
+                      textTransform: 'none',
+                      borderRadius: "20px",
+                      px: 1.5,
+                      py: 0.5,
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      color: "#1976D2",
+                      bgcolor: "rgba(25, 118, 210, 0.08)",
+                      "&:hover": {
+                        backgroundColor: "rgba(25, 118, 210, 0.15)",
+                        color: "#1565C0",
+                      },
+                      boxShadow: "none",
+                    }}
+                  >
+                    Visit
+                  </Button>
+                </Tooltip>
               )}
 
               {/* Pick Pill (application only) */}
@@ -903,8 +921,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
 
 
           {/* Expanded Details */}
-          <Collapse in={expanded} timeout="auto" unmountOnExit>
-            <Box sx={{ p: 1, bgcolor: "#c4d5eb" }}>
+          <Collapse in={showHistory || showComment} timeout="auto" unmountOnExit>
+            <Box sx={{ p: 1, bgcolor: "#ffffff" }}>
               {!showHistory && !showComment ? (
                 <Box
                   sx={{
@@ -913,266 +931,222 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                     gap: 1,
                   }}
                 ></Box>
-              ) : showHistory ? (
-                <Box>
-                  <Typography
-                    variant="subtitle1"
-                    sx={{ color: "#333", mb: 1 }}
-                  >
-                    History
-                  </Typography>
-                  <Box
-                    sx={{
-                      maxHeight: "120px",
-                      overflowY: "auto",
-                      "&::-webkit-scrollbar": {
-                        width: "6px",
-                      },
-                      "&::-webkit-scrollbar-track": {
-                        background: "#f1f1f1",
-                        borderRadius: "3px",
-                      },
-                      "&::-webkit-scrollbar-thumb": {
-                        background: "#888",
-                        borderRadius: "3px",
-                      },
-                    }}
-                  >
-                    {historyData.length > 0 ? (
-                      historyData.map((history, index) => (
+              ) : (
+                <Grid container spacing={2}>
+                  {showHistory && (
+                    <Grid item xs={12} md={showComment ? 6 : 12}>
+                      <Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: "1px solid #e2e8f0", bgcolor: "white" }}>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ color: "#334155", mb: 1, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}
+                        >
+                          Ticket History
+                        </Typography>
                         <Box
-                          key={index}
                           sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            mb: 1,
-                            p: 1,
-                            bgcolor: "#f5f5f5",
-                            borderRadius: 1,
+                            maxHeight: "80px",
+                            overflowY: "auto",
+                            width: "100%",
+                            pr: 1,
+                            "&::-webkit-scrollbar": {
+                              width: "4px",
+                            },
+                            "&::-webkit-scrollbar-track": {
+                              background: "#f1f5f9",
+                              borderRadius: "4px",
+                            },
+                            "&::-webkit-scrollbar-thumb": {
+                              background: "#cbd5e1",
+                              borderRadius: "4px",
+                            },
                           }}
                         >
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              color: "black",
-                              fontWeight: "medium",
-                              mb: 0.25,
-                            }}
-                          >
-                            <strong>
-                              {capitalizeFirstLetter(
-                                history.action.split(" ")[0]
-                              )}
-                            </strong>
-                            {` ${history.action.substring(
-                              history.action.indexOf(" ") + 1
-                            )}`}
-                          </Typography>
-                          <Typography
-                            variant="caption"
-                            sx={{ color: "#1976d2" }}
-                          >
-                            {new Date(history.created_at).toLocaleDateString(
-                              "en-IN",
-                              {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                              }
-                            )}{" "}
-                            ({calculateDaysAgo(history.created_at)} days ago)
-                          </Typography>
-                        </Box>
-                      ))
-                    ) : (
-                      <Typography variant="body2" sx={{ color: "#666" }}>
-                        No history data available.
-                      </Typography>
-                    )}
-                  </Box>
-                </Box>
-              ) : showComment ? (
-                // Enhanced Comment Data Section with Image Preview
-                <Box>
-                  <Typography
-                    variant="subtitle1"
-                    sx={{ color: "#333", mb: 1 }}
-                  >
-                    Comments
-                  </Typography>
-                  <Box
-                    sx={{
-                      maxHeight: "200px",
-                      overflowY: "auto",
-                      "&::-webkit-scrollbar": {
-                        width: "6px",
-                      },
-                      "&::-webkit-scrollbar-track": {
-                        background: "#f1f1f1",
-                        borderRadius: "3px",
-                      },
-                      "&::-webkit-scrollbar-thumb": {
-                        background: "#888",
-                        borderRadius: "3px",
-                      },
-                    }}
-                  >
-                    {commentData?.length > 0 ? (
-                      commentData.map((comment, idx) => (
-                        <Box
-                          key={idx}
-                          sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            mb: 1,
-                            p: 1,
-                            bgcolor: "#f5f5f5",
-                            borderRadius: 1,
-                          }}
-                        >
-                          {/* User Name */}
-                          <Typography
-                            variant="subtitle2"
-                            sx={{
-                              fontWeight: "bold",
-                              color: "black",
-                              mb: 0.25,
-                            }}
-                          >
-                            {capitalizeFirstLetter(
-                              comment?.user?.username || "Anonymous"
-                            )}
-                          </Typography>
-
-                          {/* Comment Text */}
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              color: "black",
-                              fontStyle: "normal",
-                              mb: 0.5,
-                            }}
-                          >
-                            {capitalizeFirstLetter(comment.comment)}
-                          </Typography>
-
-                          {/* Attachment Section */}
-                          {comment.attachment && (
-                            <Box sx={{ mb: 0.5 }}>
-                              <Button
-                                onClick={() =>
-                                  toggleAttachment(
-                                    comment.id,
-                                    comment.attachment
-                                  )
-                                }
-                                variant="contained"
-                                size="small"
+                          {historyData.length > 0 ? (
+                            historyData.map((history, index) => (
+                              <Box
+                                key={index}
                                 sx={{
-                                  textTransform: "none",
-                                  bgcolor: "#0c66e4",
-                                  color: "white",
-                                  fontSize: "0.7rem",
-                                  padding: "3px 6px",
-                                  minHeight: "auto",
-                                  "&:hover": {
-                                    bgcolor: "#085cb8",
-                                  },
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  mb: 1.5,
+                                  p: 1.2,
+                                  bgcolor: "#f8fafc",
+                                  borderRadius: 1.5,
+                                  border: "1px solid #e2e8f0",
                                 }}
                               >
-                                {isExcelAttachment(comment.attachment)
-                                  ? "Open Excel File"
-                                  : isPdfAttachment(comment.attachment)
-                                    ? "Open PDF"
-                                    : showAttachment[comment.id]
-                                      ? "Hide Attachment"
-                                      : "View Attachment"}
-                              </Button>
-                            </Box>
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    color: "#1e293b",
+                                    fontSize: "0.8rem",
+                                    mb: 0.5,
+                                  }}
+                                >
+                                  <strong>
+                                    {capitalizeFirstLetter(history.action.split(" ")[0])}
+                                  </strong>
+                                  {` ${history.action.substring(
+                                    history.action.indexOf(" ") + 1
+                                  )}`}
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 500 }}>
+                                  {new Date(history.created_at).toLocaleDateString(
+                                    "en-IN",
+                                    {
+                                      day: "2-digit",
+                                      month: "short",
+                                      year: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    }
+                                  )}{" "}
+                                  • {calculateDaysAgo(history.created_at)}
+                                </Typography>
+                              </Box>
+                            ))
+                          ) : (
+                            <Typography
+                              variant="body2"
+                              sx={{ color: "#94a3b8", textAlign: "center", py: 2 }}
+                            >
+                              No history data available.
+                            </Typography>
                           )}
-
-                          {/* Meta Info */}
-                          <Typography
-                            variant="caption"
-                            sx={{ color: "#1976d2" }}
-                          >
-                            {new Date(comment.created_at).toLocaleDateString(
-                              "en-IN",
-                              {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                              }
-                            )}{" "}
-                            ({calculateDaysAgo(comment.created_at)} days ago)
-                          </Typography>
                         </Box>
-                      ))
-                    ) : (
-                      <Typography variant="body2" sx={{ color: "#666" }}>
-                        No comments available.
-                      </Typography>
-                    )}
-                  </Box>
-                </Box>
-              ) : null}
+                      </Paper>
+                    </Grid>
+                  )}
 
-              {/* Action Buttons */}
-              {handleStartClick && customerApplication.ticketId && (
-                <Box
-                  sx={{
-                    display: "flex",
-                    gap: 1,
-                    mt: 1,
-                    flexDirection: isMobile ? "column" : "row",
-                  }}
-                >
-                  {userRole !== "sales" && (
-                    <Button
-                      variant="contained"
-                      onClick={handleStartClick}
-                      sx={{
-                        bgcolor: "#0c66e4",
-                        "&:hover": {
-                          bgcolor: "#0c66e4",
-                        },
-                      }}
-                    >
-                      Visit Ticket
-                    </Button>
+                  {showComment && (
+                    <Grid item xs={12} md={showHistory ? 6 : 12}>
+                      <Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: "1px solid #e2e8f0", bgcolor: "white" }}>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ color: "#334155", mb: 1, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}
+                        >
+                          Comments
+                        </Typography>
+                        <Box
+                          sx={{
+                            maxHeight: "80px",
+                            overflowY: "auto",
+                            width: "100%",
+                            pr: 1,
+                            "&::-webkit-scrollbar": {
+                              width: "4px",
+                            },
+                            "&::-webkit-scrollbar-track": {
+                              background: "#f1f5f9",
+                              borderRadius: "4px",
+                            },
+                            "&::-webkit-scrollbar-thumb": {
+                              background: "#cbd5e1",
+                              borderRadius: "4px",
+                            },
+                          }}
+                        >
+                          {commentData?.length > 0 ? (
+                            commentData.map((comment, idx) => (
+                              <Box
+                                key={idx}
+                                sx={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  mb: 1.5,
+                                  p: 1.2,
+                                  bgcolor: "#f8fafc",
+                                  borderRadius: 1.5,
+                                  border: "1px solid #e2e8f0",
+                                }}
+                              >
+                                {/* User Name */}
+                                <Typography
+                                  variant="subtitle2"
+                                  sx={{ fontWeight: 700, color: "#1e293b", mb: 0.2, fontSize: "0.8rem" }}
+                                >
+                                  {capitalizeFirstLetter(
+                                    comment?.user?.username || "Anonymous"
+                                  )}
+                                </Typography>
+
+                                {/* Comment Text */}
+                                <Typography
+                                  variant="body2"
+                                  sx={{ color: "#334155", fontStyle: "normal", mb: 0.8, fontSize: "0.8rem" }}
+                                >
+                                  {capitalizeFirstLetter(comment.comment)}
+                                </Typography>
+
+                                {/* Attachment Section */}
+                                {comment.attachment && (
+                                  <Box sx={{ mb: 0.8 }}>
+                                    <Button
+                                      onClick={() =>
+                                        toggleAttachment(
+                                          comment.id,
+                                          comment.attachment
+                                        )
+                                      }
+                                      variant="outlined"
+                                      size="small"
+                                      sx={{
+                                        textTransform: "none",
+                                        borderColor: "#cbd5e1",
+                                        color: "#3b82f6",
+                                        fontSize: "0.7rem",
+                                        padding: "2px 8px",
+                                        minHeight: "auto",
+                                        fontWeight: 600,
+                                        "&:hover": {
+                                          bgcolor: "#eff6ff",
+                                          borderColor: "#bfdbfe",
+                                        },
+                                      }}
+                                    >
+                                      {isExcelAttachment(comment.attachment)
+                                        ? "Open Excel"
+                                        : isPdfAttachment(comment.attachment)
+                                          ? "Open PDF"
+                                          : showAttachment[comment.id]
+                                            ? "Hide Attachment"
+                                            : "View Attachment"}
+                                    </Button>
+                                  </Box>
+                                )}
+
+                                {/* Meta Info */}
+                                <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 500 }}>
+                                  {new Date(comment.created_at).toLocaleDateString(
+                                    "en-IN",
+                                    {
+                                      day: "2-digit",
+                                      month: "short",
+                                      year: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    }
+                                  )}{" "}
+                                  • {calculateDaysAgo(comment.created_at)}
+                                </Typography>
+                              </Box>
+                            ))
+                          ) : (
+                            <Typography
+                              variant="body2"
+                              sx={{ color: "#94a3b8", textAlign: "center", py: 2 }}
+                            >
+                              No comments available.
+                            </Typography>
+                          )}
+                        </Box>
+                      </Paper>
+                    </Grid>
                   )}
-                  <Button
-                    variant="outlined"
-                    onClick={toggleHistory}
-                    sx={{
-                      borderColor: "#667eea",
-                      color: "#667eea",
-                      "&:hover": {
-                        borderColor: "#5a6fd8",
-                        bgcolor: "rgba(102, 126, 234, 0.04)",
-                      },
-                    }}
-                  >
-                    {showHistory ? "Close History" : "Show History"}
-                  </Button>
-                  {userRole === "sales" && (
-                    <Button
-                      variant="outlined"
-                      onClick={toggleComment}
-                      sx={{
-                        borderColor: "#667eea",
-                        color: "#667eea",
-                        "&:hover": {
-                          borderColor: "#5a6fd8",
-                          bgcolor: "rgba(102, 126, 234, 0.04)",
-                        },
-                      }}
-                    >
-                      {showComment ? "Close Comments" : "Comments"}
-                    </Button>
-                  )}
-                </Box>
+                </Grid>
               )}
+
+
             </Box>
           </Collapse>
         </Grid>
@@ -1503,228 +1477,216 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               )}
             </Box>
 
-            {/* Smooth Transition Panels (Overlap via CSS Grid) */}
-            <Box sx={{ display: "grid", mb: 2 }}>
+            {/* Smooth Transition Panels (using Collapse for dynamic height) */}
+            <Box sx={{ mb: 2, display: "flex", flexDirection: "column" }}>
 
               {/* DETAILS PANEL */}
-              <Box
-                sx={{
-                  gridArea: "1 / 1",
-                  opacity: !showHistory && !showComment ? 1 : 0,
-                  transform: !showHistory && !showComment ? "rotateY(0deg) scale(1)" : "rotateY(10deg) scale(0.95)",
-                  pointerEvents: !showHistory && !showComment ? "auto" : "none",
-                  transition: "all 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
-                  visibility: !showHistory && !showComment ? "visible" : "hidden",
-                  bgcolor: "#f8fafc", borderRadius: 2, p: 2, border: "1px solid #f1f5f9"
-                }}
-              >
-                <Grid container spacing={2}>
-                  {/* Financials Row */}
-                  <Grid item xs={6}>
-                    <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.3, letterSpacing: "0.03em" }}>AMOUNT</Typography>
-                    <Typography sx={{ fontSize: "0.9rem", fontWeight: 800, color: "#00796B" }}>
-                      {formatRupees(customerApplication.applicationAmount)}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.3, letterSpacing: "0.03em" }}>PROVIDER</Typography>
-                    <Typography sx={{ fontSize: "0.85rem", fontWeight: 700, color: "#6A0DAD" }}>
-                      {customerApplication.applicationProvider || "N/A"}
-                    </Typography>
-                  </Grid>
+              <Collapse in={!showHistory && !showComment} unmountOnExit>
+                <Box
+                  sx={{
+                    bgcolor: "#f8fafc", borderRadius: 2, p: 2, border: "1px solid #f1f5f9"
+                  }}
+                >
+                  <Grid container spacing={2}>
+                    {/* Financials Row */}
+                    <Grid item xs={6}>
+                      <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.3, letterSpacing: "0.03em" }}>AMOUNT</Typography>
+                      <Typography sx={{ fontSize: "0.9rem", fontWeight: 800, color: "#00796B" }}>
+                        {formatRupees(customerApplication.applicationAmount)}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.3, letterSpacing: "0.03em" }}>PROVIDER</Typography>
+                      <Typography sx={{ fontSize: "0.85rem", fontWeight: 700, color: "#6A0DAD" }}>
+                        {customerApplication.applicationProvider || "N/A"}
+                      </Typography>
+                    </Grid>
 
-                  {/* Specs Row */}
-                  <Grid item xs={6}>
-                    <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.3, letterSpacing: "0.03em", mt: 1 }}>LOAN TYPE</Typography>
-                    <Typography sx={{ fontSize: "0.85rem", color: "#334155", fontWeight: 600 }}>
-                      {capitalizeFirstLetter(customerApplication.loanType || "N/A")}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.3, letterSpacing: "0.03em", mt: 1 }}>LEAD TYPE</Typography>
-                    <Typography sx={{ fontSize: "0.85rem", color: "#334155", fontWeight: 600 }}>
-                      {capitalizeFirstLetter(customerApplication.leadType || "N/A")}
-                    </Typography>
-                  </Grid>
+                    {/* Specs Row */}
+                    <Grid item xs={6}>
+                      <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.3, letterSpacing: "0.03em", mt: 1 }}>LOAN TYPE</Typography>
+                      <Typography sx={{ fontSize: "0.85rem", color: "#334155", fontWeight: 600 }}>
+                        {capitalizeFirstLetter(customerApplication.loanType || "N/A")}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.3, letterSpacing: "0.03em", mt: 1 }}>LEAD TYPE</Typography>
+                      <Typography sx={{ fontSize: "0.85rem", color: "#334155", fontWeight: 600 }}>
+                        {capitalizeFirstLetter(customerApplication.leadType || "N/A")}
+                      </Typography>
+                    </Grid>
 
-                  {/* Location Row */}
-                  <Grid item xs={6}>
-                    <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.3, letterSpacing: "0.03em", mt: 1 }}>TENURE</Typography>
-                    <Typography sx={{ fontSize: "0.85rem", color: "#334155", fontWeight: 600 }}>
-                      {formatTenure(customerApplication.applicationTenure)}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.3, letterSpacing: "0.03em", mt: 1 }}>LOCATION</Typography>
-                    <Typography sx={{ fontSize: "0.85rem", color: "#334155", fontWeight: 600, lineHeight: 1.2 }}>
-                      {customerApplication.customerLocation || customerApplication.customerState
-                        ? `${capitalizeFirstLetter(customerApplication.customerLocation || "")}${customerApplication.customerLocation && customerApplication.customerState ? ", " : ""}${capitalizeFirstLetter(customerApplication.customerState || "")}`
-                        : "N/A"}
-                    </Typography>
-                  </Grid>
-                </Grid>
-
-                {/* Timeline / Dates */}
-                <Box sx={{ mt: 2.5, pt: 1.5, borderTop: "1px solid #e2e8f0", display: "flex", flexWrap: "wrap", gap: 3, justifyContent: "space-between", alignItems: "flex-end" }}>
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
-                    <Box>
-                      <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.2 }}>CREATED AT</Typography>
-                      <Typography sx={{ fontSize: "0.8rem", color: "#334155", fontWeight: 600 }}>
-                        {customerApplication?.createdAt || customerApplication?.applicationDate
-                          ? new Date(customerApplication.createdAt || customerApplication.applicationDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                    {/* Location Row */}
+                    <Grid item xs={6}>
+                      <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.3, letterSpacing: "0.03em", mt: 1 }}>TENURE</Typography>
+                      <Typography sx={{ fontSize: "0.85rem", color: "#334155", fontWeight: 600 }}>
+                        {formatTenure(customerApplication.applicationTenure)}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.3, letterSpacing: "0.03em", mt: 1 }}>LOCATION</Typography>
+                      <Typography sx={{ fontSize: "0.85rem", color: "#334155", fontWeight: 600, lineHeight: 1.2 }}>
+                        {customerApplication.customerLocation || customerApplication.customerState
+                          ? `${capitalizeFirstLetter(customerApplication.customerLocation || "")}${customerApplication.customerLocation && customerApplication.customerState ? ", " : ""}${capitalizeFirstLetter(customerApplication.customerState || "")}`
                           : "N/A"}
                       </Typography>
-                    </Box>
-                    {customerApplication?.ticketStatus === 'approved' && ((customerApplication as any)?.approvedAt || customerApplication?.approved_At) && (
+                    </Grid>
+                  </Grid>
+
+                  {/* Timeline / Dates */}
+                  <Box sx={{ mt: 2.5, pt: 1.5, borderTop: "1px solid #e2e8f0", display: "flex", flexWrap: "wrap", gap: 3, justifyContent: "space-between", alignItems: "flex-end" }}>
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
                       <Box>
-                        <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.2 }}>APPROVED</Typography>
+                        <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.2 }}>CREATED AT</Typography>
                         <Typography sx={{ fontSize: "0.8rem", color: "#334155", fontWeight: 600 }}>
-                          {new Date(((customerApplication as any).approvedAt || customerApplication.approved_At)!).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                          {((customerApplication as any)?.approvedAmount || customerApplication?.approved_Amount) && ` • ${formatRupees(((customerApplication as any).approvedAmount || customerApplication.approved_Amount) as number)}`}
+                          {customerApplication?.createdAt || customerApplication?.applicationDate
+                            ? new Date(customerApplication.createdAt || customerApplication.applicationDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                            : "N/A"}
                         </Typography>
                       </Box>
-                    )}
-                    {customerApplication?.ticketStatus === 'disbursed' && ((customerApplication as any)?.disbursedAt || customerApplication?.disbursed_At) && (
-                      <Box>
-                        <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.2 }}>DISBURSED</Typography>
-                        <Typography sx={{ fontSize: "0.8rem", color: "#334155", fontWeight: 600 }}>
-                          {new Date(((customerApplication as any).disbursedAt || customerApplication.disbursed_At)!).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                          {((customerApplication as any)?.disbursedAmount || customerApplication?.disbursed_Amount) && ` • ${formatRupees(((customerApplication as any).disbursedAmount || customerApplication.disbursed_Amount) as number)}`}
-                        </Typography>
-                      </Box>
-                    )}
-                  </Box>
-
-                  {/* Pick Application Button in Timeline Row */}
-                  {isApplication && decodedToken()?.role !== "sales" && (
-                    <Tooltip
-                      title="Assign to yourself" arrow placement="top"
-                      slotProps={{
-                        tooltip: { sx: { bgcolor: "#3f50b5", fontSize: "0.72rem", fontWeight: 600, px: 1.5, py: 0.5, borderRadius: "8px", boxShadow: "0 4px 12px rgba(63,80,181,0.35)" } },
-                        arrow: { sx: { color: "#3f50b5" } },
-                      }}
-                    >
-                      <Box
-                        onClick={(e) => { e.stopPropagation(); handleCheckboxClick(e); }}
-                        sx={{
-                          display: "inline-flex", alignItems: "center", gap: 0.5, px: 1.5, py: 0.5, borderRadius: "20px",
-                          border: "1.5px solid #3f50b5", backgroundColor: "rgba(63, 80, 181, 0.06)",
-                          cursor: "pointer", transition: "all 0.2s ease", userSelect: "none",
-                          "&:hover": { backgroundColor: "rgba(63, 80, 181, 0.14)", boxShadow: "0 0 0 3px rgba(63,80,181,0.18)" },
-                          "&:active": { transform: "scale(0.96)" },
-                        }}
-                      >
-                        <Checkbox
-                          onClick={(e) => e.stopPropagation()}
-                          onChange={(e) => { e.stopPropagation(); handleCheckboxClick(e as any); }}
-                          size="small"
-                          sx={{ p: 0, color: "#3f50b5", "&.Mui-checked": { color: "#3f50b5" } }}
-                        />
-                        <Typography sx={{ fontWeight: 700, fontSize: "0.75rem", color: "#3f50b5", letterSpacing: "0.03em" }}>
-                          Pick
-                        </Typography>
-                      </Box>
-                    </Tooltip>
-                  )}
-                </Box>
-              </Box>
-
-              {/* HISTORY PANEL */}
-              <Box
-                sx={{
-                  gridArea: "1 / 1",
-                  opacity: showHistory ? 1 : 0,
-                  transform: showHistory ? "rotateY(0deg) scale(1)" : "rotateY(-10deg) scale(0.95)",
-                  pointerEvents: showHistory ? "auto" : "none",
-                  transition: "all 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
-                  visibility: showHistory ? "visible" : "hidden",
-                  bgcolor: "#f8fafc", borderRadius: 2, p: 2, border: "1px solid #e8edf5", maxHeight: "300px", overflowY: "auto"
-                }}
-              >
-                <Typography sx={{ fontSize: "0.75rem", fontWeight: 800, color: "#667eea", mb: 2, letterSpacing: "0.05em" }}>TICKET HISTORY</Typography>
-                {historyData.length > 0 ? (
-                  historyData.map((history, index) => (
-                    <Box key={index} sx={{ display: "flex", flexDirection: "column", mb: 2, pb: 2, borderBottom: index < historyData.length - 1 ? "1px solid #f1f5f9" : "none" }}>
-                      <Typography variant="body2" sx={{ color: "#1a2340", fontWeight: 500, mb: 0.5, lineHeight: 1.3 }}>
-                        <strong>{capitalizeFirstLetter(history.action.split(" ")[0])}</strong>
-                        {` ${history.action.substring(history.action.indexOf(" ") + 1)}`}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 500 }}>
-                        {new Date(history.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: '2-digit', minute: '2-digit' })}
-                        {" • "}{calculateDaysAgo(history.created_at)} days ago
-                      </Typography>
-                    </Box>
-                  ))
-                ) : (
-                  <Typography variant="body2" sx={{ color: "#64748b" }}>No history data available.</Typography>
-                )}
-              </Box>
-
-              {/* COMMENTS PANEL */}
-              <Box
-                sx={{
-                  gridArea: "1 / 1",
-                  opacity: showComment ? 1 : 0,
-                  transform: showComment ? "rotateY(0deg) scale(1)" : "rotateY(-10deg) scale(0.95)",
-                  pointerEvents: showComment ? "auto" : "none",
-                  transition: "all 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
-                  visibility: showComment ? "visible" : "hidden",
-                  bgcolor: "#f8fafc", borderRadius: 2, p: 2, border: "1px solid #e8edf5", maxHeight: "300px", overflowY: "auto"
-                }}
-              >
-                <Typography sx={{ fontSize: "0.75rem", fontWeight: 800, color: "#00796B", mb: 2, letterSpacing: "0.05em" }}>COMMENTS</Typography>
-                {commentData?.length > 0 ? (
-                  commentData.map((comment, idx) => (
-                    <Box key={idx} sx={{ display: "flex", flexDirection: "column", mb: 2, pb: 2, borderBottom: idx < commentData.length - 1 ? "1px solid #f1f5f9" : "none" }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#1a2340", mb: 0.5 }}>
-                        {capitalizeFirstLetter(comment?.user?.username || "Anonymous")}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: "#334155", mb: 1, lineHeight: 1.4 }}>
-                        {capitalizeFirstLetter(comment.comment)}
-                      </Typography>
-
-                      {/* Condensed Meta/Attachment view */}
-                      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 500 }}>
-                          {new Date(comment.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-                        </Typography>
-
-                        {comment.attachment && (
-                          <Button
-                            onClick={() => toggleAttachment(comment.id, comment.attachment)}
-                            size="small"
-                            sx={{ textTransform: "none", fontSize: "0.7rem", fontWeight: 600, bgcolor: "rgba(12, 102, 228, 0.1)", color: "#0c66e4", py: 0.2, px: 1, borderRadius: 1 }}
-                          >
-                            {isExcelAttachment(comment.attachment) ? "View Excel" : isPdfAttachment(comment.attachment) ? "View PDF" : "View File"}
-                          </Button>
-                        )}
-                      </Box>
-
-                      {/* Image/PDF Preview Modal (Kept unchanged) */}
-                      {!isExcelAttachment(comment.attachment) && !isPdfAttachment(comment.attachment) && showAttachment[comment.id] && (
-                        <>
-                          <Box sx={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", backgroundColor: "rgba(0, 0, 0, 0.8)", zIndex: 999 }} onClick={() => toggleAttachment(comment.id, comment.attachment)} />
-                          <Box sx={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 1000, backgroundColor: "white", borderRadius: "8px", boxShadow: "0px 4px 20px rgba(0,0,0,0.3)", padding: 2, textAlign: "center", height: isMobile ? "80vh" : "85vh", width: isMobile ? "95vw" : "80vw", maxHeight: "90vh", maxWidth: "90vw", display: "flex", flexDirection: "column" }}>
-                            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2, borderBottom: "1px solid #eee", pb: 1 }}>
-                              <Typography variant="h6" sx={{ color: "black" }}>Attachment Preview</Typography>
-                              <Button onClick={() => toggleAttachment(comment.id, comment.attachment)} variant="contained" size="small" sx={{ minWidth: "auto", padding: "4px 8px", bgcolor: "#f06292", color: "white", "&:hover": { bgcolor: "red" } }}>✕</Button>
-                            </Box>
-                            <Box sx={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center", overflow: "hidden", borderRadius: "4px" }}>
-                              <img src={comment.attachment} alt="Attachment Preview" style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain", borderRadius: "4px" }} onError={(e) => { e.target.style.display = "none"; e.target.nextSibling.style.display = "block"; }} />
-                              <Box sx={{ display: "none", alignItems: "center", justifyContent: "center", height: "200px", color: "#666", flexDirection: "column" }}>
-                                <Typography>Unable to preview this file</Typography>
-                                <Button href={comment.attachment} target="_blank" rel="noopener noreferrer" sx={{ mt: 1 }}>Download File</Button>
-                              </Box>
-                            </Box>
-                          </Box>
-                        </>
+                      {customerApplication?.ticketStatus === 'approved' && ((customerApplication as any)?.approvedAt || customerApplication?.approved_At) && (
+                        <Box>
+                          <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.2 }}>APPROVED</Typography>
+                          <Typography sx={{ fontSize: "0.8rem", color: "#334155", fontWeight: 600 }}>
+                            {new Date(((customerApplication as any).approvedAt || customerApplication.approved_At)!).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                            {((customerApplication as any)?.approvedAmount || customerApplication?.approved_Amount) && ` • ${formatRupees(((customerApplication as any).approvedAmount || customerApplication.approved_Amount) as number)}`}
+                          </Typography>
+                        </Box>
+                      )}
+                      {customerApplication?.ticketStatus === 'disbursed' && ((customerApplication as any)?.disbursedAt || customerApplication?.disbursed_At) && (
+                        <Box>
+                          <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.2 }}>DISBURSED</Typography>
+                          <Typography sx={{ fontSize: "0.8rem", color: "#334155", fontWeight: 600 }}>
+                            {new Date(((customerApplication as any).disbursedAt || customerApplication.disbursed_At)!).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                            {((customerApplication as any)?.disbursedAmount || customerApplication?.disbursed_Amount) && ` • ${formatRupees(((customerApplication as any).disbursedAmount || customerApplication.disbursed_Amount) as number)}`}
+                          </Typography>
+                        </Box>
                       )}
                     </Box>
-                  ))
-                ) : (
-                  <Typography variant="body2" sx={{ color: "#64748b" }}>No comments available.</Typography>
-                )}
-              </Box>
+
+                    {/* Pick Application Button in Timeline Row */}
+                    {isApplication && decodedToken()?.role !== "sales" && (
+                      <Tooltip
+                        title="Assign to yourself" arrow placement="top"
+                        slotProps={{
+                          tooltip: { sx: { bgcolor: "#3f50b5", fontSize: "0.72rem", fontWeight: 600, px: 1.5, py: 0.5, borderRadius: "8px", boxShadow: "0 4px 12px rgba(63,80,181,0.35)" } },
+                          arrow: { sx: { color: "#3f50b5" } },
+                        }}
+                      >
+                        <Box
+                          onClick={(e) => { e.stopPropagation(); handleCheckboxClick(e); }}
+                          sx={{
+                            display: "inline-flex", alignItems: "center", gap: 0.5, px: 1.5, py: 0.5, borderRadius: "20px",
+                            border: "1.5px solid #3f50b5", backgroundColor: "rgba(63, 80, 181, 0.06)",
+                            cursor: "pointer", transition: "all 0.2s ease", userSelect: "none",
+                            "&:hover": { backgroundColor: "rgba(63, 80, 181, 0.14)", boxShadow: "0 0 0 3px rgba(63,80,181,0.18)" },
+                            "&:active": { transform: "scale(0.96)" },
+                          }}
+                        >
+                          <Checkbox
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => { e.stopPropagation(); handleCheckboxClick(e as any); }}
+                            size="small"
+                            sx={{ p: 0, color: "#3f50b5", "&.Mui-checked": { color: "#3f50b5" } }}
+                          />
+                          <Typography sx={{ fontWeight: 700, fontSize: "0.75rem", color: "#3f50b5", letterSpacing: "0.03em" }}>
+                            Pick
+                          </Typography>
+                        </Box>
+                      </Tooltip>
+                    )}
+                  </Box>
+                </Box>
+              </Collapse>
+
+              {/* HISTORY PANEL */}
+              <Collapse in={showHistory} unmountOnExit>
+                <Box
+                  sx={{
+                    bgcolor: "#f8fafc", borderRadius: 2, p: 2, border: "1px solid #e8edf5", maxHeight: "300px", overflowY: "auto", mt: showHistory ? 1 : 0
+                  }}
+                >
+                  <Typography sx={{ fontSize: "0.75rem", fontWeight: 800, color: "#667eea", mb: 2, letterSpacing: "0.05em" }}>TICKET HISTORY</Typography>
+                  {historyData.length > 0 ? (
+                    historyData.map((history, index) => (
+                      <Box key={index} sx={{ display: "flex", flexDirection: "column", mb: 1, pb: 1, borderBottom: index < historyData.length - 1 ? "1px solid #f1f5f9" : "none" }}>
+                        <Typography variant="body2" sx={{ color: "#1a2340", fontWeight: 500, mb: 0.5, lineHeight: 1.3 }}>
+                          <strong>{capitalizeFirstLetter(history.action.split(" ")[0])}</strong>
+                          {` ${history.action.substring(history.action.indexOf(" ") + 1)}`}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 500 }}>
+                          {new Date(history.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: '2-digit', minute: '2-digit' })}
+                          {" • "}{calculateDaysAgo(history.created_at)}
+                        </Typography>
+                      </Box>
+                    ))
+                  ) : (
+                    <Typography variant="body2" sx={{ color: "#64748b" }}>No history data available.</Typography>
+                  )}
+                </Box>
+              </Collapse>
+
+              {/* COMMENTS PANEL */}
+              <Collapse in={showComment} unmountOnExit>
+                <Box
+                  sx={{
+                    bgcolor: "#f8fafc", borderRadius: 2, p: 2, border: "1px solid #e8edf5", maxHeight: "300px", overflowY: "auto", mt: showComment ? 1 : 0
+                  }}
+                >
+                  <Typography sx={{ fontSize: "0.75rem", fontWeight: 800, color: "#00796B", mb: 2, letterSpacing: "0.05em" }}>COMMENTS</Typography>
+                  {commentData?.length > 0 ? (
+                    commentData.map((comment, idx) => (
+                      <Box key={idx} sx={{ display: "flex", flexDirection: "column", mb: 1, pb: 1, borderBottom: idx < commentData.length - 1 ? "1px solid #f1f5f9" : "none" }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#1a2340", mb: 0.5 }}>
+                          {capitalizeFirstLetter(comment?.user?.username || "Anonymous")}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: "#334155", mb: 1, lineHeight: 1.4 }}>
+                          {capitalizeFirstLetter(comment.comment)}
+                        </Typography>
+
+                        {/* Condensed Meta/Attachment view */}
+                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 500 }}>
+                            {new Date(comment.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                          </Typography>
+
+                          {comment.attachment && (
+                            <Button
+                              onClick={() => toggleAttachment(comment.id, comment.attachment)}
+                              size="small"
+                              sx={{ textTransform: "none", fontSize: "0.7rem", fontWeight: 600, bgcolor: "rgba(12, 102, 228, 0.1)", color: "#0c66e4", py: 0.2, px: 1, borderRadius: 1 }}
+                            >
+                              {isExcelAttachment(comment.attachment) ? "View Excel" : isPdfAttachment(comment.attachment) ? "View PDF" : "View File"}
+                            </Button>
+                          )}
+                        </Box>
+
+                        {/* Image/PDF Preview Modal (Kept unchanged) */}
+                        {!isExcelAttachment(comment.attachment) && !isPdfAttachment(comment.attachment) && showAttachment[comment.id] && (
+                          <>
+                            <Box sx={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", backgroundColor: "rgba(0, 0, 0, 0.8)", zIndex: 999 }} onClick={() => toggleAttachment(comment.id, comment.attachment)} />
+                            <Box sx={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 1000, backgroundColor: "white", borderRadius: "8px", boxShadow: "0px 4px 20px rgba(0,0,0,0.3)", padding: 2, textAlign: "center", height: isMobile ? "80vh" : "85vh", width: isMobile ? "95vw" : "80vw", maxHeight: "90vh", maxWidth: "90vw", display: "flex", flexDirection: "column" }}>
+                              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2, borderBottom: "1px solid #eee", pb: 1 }}>
+                                <Typography variant="h6" sx={{ color: "black" }}>Attachment Preview</Typography>
+                                <Button onClick={() => toggleAttachment(comment.id, comment.attachment)} variant="contained" size="small" sx={{ minWidth: "auto", padding: "4px 8px", bgcolor: "#f06292", color: "white", "&:hover": { bgcolor: "red" } }}>✕</Button>
+                              </Box>
+                              <Box sx={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center", overflow: "hidden", borderRadius: "4px" }}>
+                                <img src={comment.attachment} alt="Attachment Preview" style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain", borderRadius: "4px" }} onError={(e) => { e.target.style.display = "none"; e.target.nextSibling.style.display = "block"; }} />
+                                <Box sx={{ display: "none", alignItems: "center", justifyContent: "center", height: "200px", color: "#666", flexDirection: "column" }}>
+                                  <Typography>Unable to preview this file</Typography>
+                                  <Button href={comment.attachment} target="_blank" rel="noopener noreferrer" sx={{ mt: 1 }}>Download File</Button>
+                                </Box>
+                              </Box>
+                            </Box>
+                          </>
+                        )}
+                      </Box>
+                    ))
+                  ) : (
+                    <Typography variant="body2" sx={{ color: "#64748b" }}>No comments available.</Typography>
+                  )}
+                </Box>
+              </Collapse>
             </Box>
           </Box>
 
@@ -2139,7 +2101,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                       },
                     }}
                   >
-                    {showHistory ? "Close History" : "History"}
+                    {showHistory ? "Close" : "History"}
                   </Button>
                 </Tooltip>
               )}
@@ -2167,7 +2129,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                       },
                     }}
                   >
-                    {showComment ? "Close Comments" : "Comments"}
+                    {showComment ? "Close" : "Comments"}
                   </Button>
                 )}
 
@@ -2287,209 +2249,224 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
           </TableCell>
         </TableRow >
 
-        {/* History Row - appears when showHistory is true */}
+        {/* History & Comments Row - combined to save space */}
         {
-          showHistory && customerApplication.ticketId && (
+          (showHistory || showComment) && customerApplication.ticketId && (
             <TableRow>
-              <TableCell colSpan={20} sx={{ bgcolor: "#f5f5f5", p: 2 }}>
-                <Typography
-                  variant="h6"
-                  sx={{ color: "#333", mb: 2, fontWeight: "bold" }}
-                >
-                  History
-                </Typography>
-                <Box
-                  sx={{
-                    maxHeight: "250px",
-                    overflowY: "scroll",
-                    width: "100%",
-                    scrollbarWidth: "thin",
-                    "&::-webkit-scrollbar": {
-                      width: "6px",
-                    },
-                    "&::-webkit-scrollbar-track": {
-                      background: "#f1f1f1",
-                      borderRadius: "3px",
-                    },
-                    "&::-webkit-scrollbar-thumb": {
-                      background: "#888",
-                      borderRadius: "3px",
-                    },
-                  }}
-                >
-                  {historyData.length > 0 ? (
-                    historyData.map((history, index) => (
-                      <Box
-                        key={index}
-                        sx={{
-                          display: "flex",
-                          flexDirection: "column",
-                          mb: 2,
-                          p: 1.5,
-                          bgcolor: "white",
-                          borderRadius: 1,
-                          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                        }}
-                      >
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: "black",
-                            fontWeight: "medium",
-                            mb: 0.5,
-                          }}
-                        >
-                          <strong>
-                            {capitalizeFirstLetter(history.action.split(" ")[0])}
-                          </strong>
-                          {` ${history.action.substring(
-                            history.action.indexOf(" ") + 1
-                          )}`}
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: "#1976d2" }}>
-                          {new Date(history.created_at).toLocaleDateString(
-                            "en-IN",
-                            {
-                              day: "2-digit",
-                              month: "short",
-                              year: "numeric",
-                            }
-                          )}{" "}
-                          ({calculateDaysAgo(history.created_at)} days ago)
-                        </Typography>
-                      </Box>
-                    ))
-                  ) : (
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "#666", textAlign: "center" }}
-                    >
-                      No history data available.
-                    </Typography>
-                  )}
-                </Box>
-              </TableCell>
-            </TableRow>
-          )
-        }
-
-        {/* Comments Row - appears when showComment is true */}
-        {
-          showComment && customerApplication.ticketId && (
-            <TableRow>
-              <TableCell colSpan={20} sx={{ bgcolor: "#f5f5f5", p: 2 }}>
-                <Typography
-                  variant="h6"
-                  sx={{ color: "#333", mb: 2, fontWeight: "bold" }}
-                >
-                  Comments
-                </Typography>
-                <Box
-                  sx={{
-                    maxHeight: "250px",
-                    overflowY: "scroll",
-                    width: "100%",
-                    scrollbarWidth: "thin",
-                    "&::-webkit-scrollbar": {
-                      width: "6px",
-                    },
-                    "&::-webkit-scrollbar-track": {
-                      background: "#f1f1f1",
-                      borderRadius: "3px",
-                    },
-                    "&::-webkit-scrollbar-thumb": {
-                      background: "#888",
-                      borderRadius: "3px",
-                    },
-                  }}
-                >
-                  {commentData?.length > 0 ? (
-                    commentData.map((comment, idx) => (
-                      <Box
-                        key={idx}
-                        sx={{
-                          display: "flex",
-                          flexDirection: "column",
-                          mb: 2,
-                          p: 1.5,
-                          bgcolor: "white",
-                          borderRadius: 1,
-                          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                        }}
-                      >
-                        {/* User Name */}
-                        <Typography
-                          variant="subtitle2"
-                          sx={{ fontWeight: "bold", color: "black", mb: 0.5 }}
-                        >
-                          {capitalizeFirstLetter(
-                            comment?.user.username || "Anonymous"
-                          )}
-                        </Typography>
-
-                        {/* Comment Text */}
-                        <Typography
-                          variant="body2"
-                          sx={{ color: "black", fontStyle: "normal", mb: 0.5 }}
-                        >
-                          {capitalizeFirstLetter(comment.comment)}
-                        </Typography>
-
-                        {/* Attachment Section */}
-                        {comment.attachment && (
-                          <Box sx={{ mb: 0.5 }}>
-                            <Button
-                              onClick={() =>
-                                handleOpenAttachment(
-                                  comment.id,
-                                  comment.attachment
-                                )
-                              }
-                              variant="contained"
-                              size="small"
-                              sx={{
-                                textTransform: "none",
-                                bgcolor: "#0c66e4",
-                                color: "white",
-                                fontSize: "0.7rem",
-                                padding: "3px 6px",
-                                minHeight: "auto",
-                                "&:hover": {
-                                  bgcolor: "#085cb8",
-                                },
-                              }}
-                            >
-                              {isExcelAttachment(comment.attachment)
-                                ? "Open Excel"
-                                : isPdfAttachment(comment.attachment)
-                                  ? "Open PDF"
-                                  : "View Attachment"}
-                            </Button>
+              <TableCell colSpan={20} sx={{ bgcolor: "#f8fafc", p: { xs: 2, md: 3 }, borderBottom: "none" }}>
+                <Box sx={{ mx: 0 }}>
+                  <Grid container spacing={3}>
+                    {showHistory && (
+                      <Grid item xs={12} md={showComment ? 6 : 12}>
+                        <Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: "1px solid #e2e8f0", bgcolor: "white" }}>
+                          <Typography
+                            variant="subtitle2"
+                            sx={{ color: "#334155", mb: 1, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}
+                          >
+                            Ticket History
+                          </Typography>
+                          <Box
+                            sx={{
+                              maxHeight: "80px",
+                              overflowY: "auto",
+                              width: "100%",
+                              pr: 1,
+                              "&::-webkit-scrollbar": {
+                                width: "4px",
+                              },
+                              "&::-webkit-scrollbar-track": {
+                                background: "#f1f5f9",
+                                borderRadius: "4px",
+                              },
+                              "&::-webkit-scrollbar-thumb": {
+                                background: "#cbd5e1",
+                                borderRadius: "4px",
+                              },
+                            }}
+                          >
+                            {historyData.length > 0 ? (
+                              historyData.map((history, index) => (
+                                <Box
+                                  key={index}
+                                  sx={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    mb: 0.8,
+                                    py: 0.6,
+                                    px: 1,
+                                    bgcolor: "#f8fafc",
+                                    borderRadius: 1.5,
+                                    border: "1px solid #e2e8f0",
+                                  }}
+                                >
+                                  <Typography
+                                    variant="body2"
+                                    sx={{
+                                      color: "#1e293b",
+                                      fontSize: "0.8rem",
+                                      mb: 0.5,
+                                    }}
+                                  >
+                                    <strong>
+                                      {capitalizeFirstLetter(history.action.split(" ")[0])}
+                                    </strong>
+                                    {` ${history.action.substring(
+                                      history.action.indexOf(" ") + 1
+                                    )}`}
+                                  </Typography>
+                                  <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 500 }}>
+                                    {new Date(history.created_at).toLocaleDateString(
+                                      "en-IN",
+                                      {
+                                        day: "2-digit",
+                                        month: "short",
+                                        year: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      }
+                                    )}{" "}
+                                    • {calculateDaysAgo(history.created_at)}
+                                  </Typography>
+                                </Box>
+                              ))
+                            ) : (
+                              <Typography
+                                variant="body2"
+                                sx={{ color: "#94a3b8", textAlign: "center", py: 2 }}
+                              >
+                                No history data available.
+                              </Typography>
+                            )}
                           </Box>
-                        )}
+                        </Paper>
+                      </Grid>
+                    )}
 
-                        {/* Meta Info */}
-                        <Typography variant="caption" sx={{ color: "#1976d2" }}>
-                          {new Date(comment.created_at).toLocaleDateString(
-                            "en-IN",
-                            {
-                              day: "2-digit",
-                              month: "short",
-                              year: "numeric",
-                            }
-                          )}{" "}
-                          ({calculateDaysAgo(comment.created_at)} days ago)
-                        </Typography>
-                      </Box>
-                    ))
-                  ) : (
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "#666", textAlign: "center" }}
-                    >
-                      No comments available.
-                    </Typography>
-                  )}
+                    {showComment && (
+                      <Grid item xs={12} md={showHistory ? 6 : 12}>
+                        <Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: "1px solid #e2e8f0", bgcolor: "white" }}>
+                          <Typography
+                            variant="subtitle2"
+                            sx={{ color: "#334155", mb: 1, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}
+                          >
+                            Comments
+                          </Typography>
+                          <Box
+                            sx={{
+                              maxHeight: "80px",
+                              overflowY: "auto",
+                              width: "100%",
+                              pr: 1,
+                              "&::-webkit-scrollbar": {
+                                width: "4px",
+                              },
+                              "&::-webkit-scrollbar-track": {
+                                background: "#f1f5f9",
+                                borderRadius: "4px",
+                              },
+                              "&::-webkit-scrollbar-thumb": {
+                                background: "#cbd5e1",
+                                borderRadius: "4px",
+                              },
+                            }}
+                          >
+                            {commentData?.length > 0 ? (
+                              commentData.map((comment, idx) => (
+                                <Box
+                                  key={idx}
+                                  sx={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    mb: 0.8,
+                                    py: 0.6,
+                                    px: 1,
+                                    bgcolor: "#f8fafc",
+                                    borderRadius: 1.5,
+                                    border: "1px solid #e2e8f0",
+                                  }}
+                                >
+                                  {/* User Name */}
+                                  <Typography
+                                    variant="subtitle2"
+                                    sx={{ fontWeight: 700, color: "#1e293b", mb: 0.2, fontSize: "0.8rem" }}
+                                  >
+                                    {capitalizeFirstLetter(
+                                      comment?.user.username || "Anonymous"
+                                    )}
+                                  </Typography>
+
+                                  {/* Comment Text */}
+                                  <Typography
+                                    variant="body2"
+                                    sx={{ color: "#334155", fontStyle: "normal", mb: 0.8, fontSize: "0.8rem" }}
+                                  >
+                                    {capitalizeFirstLetter(comment.comment)}
+                                  </Typography>
+
+                                  {/* Attachment Section */}
+                                  {comment.attachment && (
+                                    <Box sx={{ mb: 0.8 }}>
+                                      <Button
+                                        onClick={() =>
+                                          handleOpenAttachment(
+                                            comment.id,
+                                            comment.attachment
+                                          )
+                                        }
+                                        variant="outlined"
+                                        size="small"
+                                        sx={{
+                                          textTransform: "none",
+                                          borderColor: "#cbd5e1",
+                                          color: "#3b82f6",
+                                          fontSize: "0.7rem",
+                                          padding: "2px 8px",
+                                          minHeight: "auto",
+                                          fontWeight: 600,
+                                          "&:hover": {
+                                            bgcolor: "#eff6ff",
+                                            borderColor: "#bfdbfe",
+                                          },
+                                        }}
+                                      >
+                                        {isExcelAttachment(comment.attachment)
+                                          ? "Open Excel"
+                                          : isPdfAttachment(comment.attachment)
+                                            ? "Open PDF"
+                                            : "View Attachment"}
+                                      </Button>
+                                    </Box>
+                                  )}
+
+                                  {/* Meta Info */}
+                                  <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 500 }}>
+                                    {new Date(comment.created_at).toLocaleDateString(
+                                      "en-IN",
+                                      {
+                                        day: "2-digit",
+                                        month: "short",
+                                        year: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      }
+                                    )}{" "}
+                                    • {calculateDaysAgo(comment.created_at)}
+                                  </Typography>
+                                </Box>
+                              ))
+                            ) : (
+                              <Typography
+                                variant="body2"
+                                sx={{ color: "#94a3b8", textAlign: "center", py: 2 }}
+                              >
+                                No comments available.
+                              </Typography>
+                            )}
+                          </Box>
+                        </Paper>
+                      </Grid>
+                    )}
+                  </Grid>
                 </Box>
               </TableCell>
             </TableRow>

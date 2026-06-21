@@ -55,8 +55,6 @@ const Login = (): JSX.Element => {
       const { data: response } = await UserAPI.login(values);
       if (response.statusCode === 200) {
         const { userId, companyId, companyName, role, access_token } = response.data;
-        console.log("this is console", userId, companyId, companyName, role, access_token);
-
         // Store token in cookie
         document.cookie = `oms_cookie=${access_token}; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
 
@@ -82,15 +80,6 @@ const Login = (): JSX.Element => {
         if (companyName) {
           document.cookie = `companyName=${companyName}; path=/; max-age=${1 * 24 * 60 * 60}; secure; samesite=strict`;
         }
-
-        // Also decode token to verify
-        const decoded = decodedToken(access_token);
-        console.log('Stored data:', {
-          userId: localStorage.getItem('userId'),
-          companyId: localStorage.getItem('companyId'),
-          companyName: localStorage.getItem('companyName'),
-          userRole: localStorage.getItem('userRole')
-        });
 
         toastAndNavigate(
           dispatch,

@@ -54,6 +54,26 @@ export const TeamsAPI = {
       signal: cancel ? cancelApiObject[TeamsAPI.getAllAssignments.name].handleRequestCancellation().signal : undefined,
     });
   },
+
+  /** Get all subordinate members of a user */
+  getMySubordinates: async (userId: number, designation: string, role: string = 'sales', cancel = false) => {
+    return await axiosInstance.request({
+      url: `/teams/my-subordinates/${userId}`,
+      method: "GET",
+      params: { designation, role },
+      signal: cancel ? cancelApiObject[TeamsAPI.getMySubordinates.name].handleRequestCancellation().signal : undefined,
+    });
+  },
+
+  /** Get all member IDs under a user (including their own) */
+  getMyTeamMemberIds: async (userId: number, designation: string, role: string = 'sales', cancel = false) => {
+    return await axiosInstance.request({
+      url: `/teams/my-team-member-ids/${userId}`,
+      method: "GET",
+      params: { designation, role },
+      signal: cancel ? cancelApiObject[TeamsAPI.getMyTeamMemberIds.name].handleRequestCancellation().signal : undefined,
+    });
+  },
 };
 
 const cancelApiObject = defineCancelApiObject(TeamsAPI);

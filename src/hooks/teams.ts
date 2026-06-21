@@ -84,3 +84,31 @@ export const useGetMemberSupervisors = (memberId: number | null, role: string = 
     refetch,
   };
 };
+
+/**
+ * Hook for fetching subordinate members of a user.
+ */
+export const useGetMySubordinates = (userId: number | null, designation: string | null, role: string = 'sales') => {
+  const fullPath = userId && designation
+    ? `teams/my-subordinates/${userId}?designation=${encodeURIComponent(designation)}&role=${encodeURIComponent(role)}`
+    : null;
+
+  const { data: swrData, error, isValidating, isLoading } = useSWR<any>(
+    fullPath,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    }
+  );
+
+  const refetch = async () => {
+    if (fullPath) return await mutate(fullPath);
+  };
+
+  return {
+    value: swrData || { data: [] },
+    swrLoading: isLoading || isValidating || (fullPath && !swrData && !error),
+    error,
+    refetch,
+  };
+};

@@ -27,7 +27,8 @@ import {
   Group as GroupIcon,
   Person as PersonIcon,
 } from "@mui/icons-material";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 import { useGetAllAssignments } from "@/hooks/teams";
 import { useGetUsers } from "@/hooks/user";
 import MemberAssignModal from "./MemberAssignModal";
@@ -36,8 +37,8 @@ import Toast from "@/app/components/common/Toast";
 import { TeamsAPI } from "@/apis/TeamsAPI";
 import { Utility } from "@/utils";
 
-const L2_DESIGNATIONS = ['sales manager', 'relationship manager', 'growth manager', 'branch manager'];
-const L1_DESIGNATIONS = ['team leader', 'sr team leader', 'ast team leader', 'atl'];
+const L2_DESIGNATIONS = ['sales manager'];
+const L1_DESIGNATIONS = ['team leader'];
 
 const TeamManagementPage = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -51,6 +52,7 @@ const TeamManagementPage = () => {
   });
 
   const dispatch = useDispatch();
+  const { toast } = useSelector((state: RootState) => state.toast);
   const { toastAndNavigate, capitalizeFirstLetter } = Utility();
 
   // Fetch all assignments for the selected role
@@ -287,7 +289,7 @@ const TeamManagementPage = () => {
 
       {/* Unassigned Members Section */}
       <Box sx={{ mt: 6 }}>
-        <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>Other Members (L0)</Typography>
+        <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>Other Members</Typography>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
           {members.map((member: any) => {
             const hasL1 = assignments.some((a: any) => a.member_id === member.id && a.level === 'l1');
@@ -344,7 +346,7 @@ const TeamManagementPage = () => {
         </DialogActions>
       </Dialog>
 
-      {/* <Toast alerting={toast.toastAlert} message={toast.toastMessage} severity={toast.toastSeverity} /> */}
+      <Toast alerting={toast.toastAlert} message={toast.toastMessage} severity={toast.toastSeverity} />
     </Box>
   );
 };

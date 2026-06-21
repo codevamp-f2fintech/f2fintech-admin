@@ -107,11 +107,12 @@ async function fetchTotalNewApplication(
 // Updated function to fetch total tickets using axios
 async function fetchTotalTickets(
   status: string | null = null,
-  id: number | null = null,
+  id: number | string | null = null,
   role: string,
   date?: string | null,
   month?: string,
   year?: string,
+  companyId?: string,
 ): Promise<number | { count: number; amount: number }> {
   try {
     const params: any = {};
@@ -135,6 +136,9 @@ async function fetchTotalTickets(
     }
     if (year) {
       params.year = year;
+    }
+    if (companyId) {
+      params.companyId = companyId;
     }
 
     const response = await axiosInstance.get("/dashboard/tickets/count", { params });
@@ -197,14 +201,16 @@ async function fetchAggregateTicketCounts(
   date?: string,
   month?: string,
   year?: string,
-  userId?: number,
+  userId?: number | string,
+  companyId?: string,
 ): Promise<any> {
   try {
     const params: any = {};
     if (date) params.date = date;
     if (month) params.month = month;
     if (year) params.year = year;
-    if (userId) params.userId = userId;
+    if (userId) params.userId = userId.toString();
+    if (companyId) params.companyId = companyId;
 
     const response = await axiosInstance.get("/dashboard/tickets/aggregate-counts", { params });
     return response.data.data;
@@ -268,11 +274,11 @@ const StatCard = ({ title, value, amount, icon: Icon, tooltip, link }: any) => {
           '&:hover': isStatic
             ? { boxShadow: 'none' }
             : {
-                borderColor: '#cbd5e1',
-                borderLeftColor: mainColor,
-                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01)',
-                transform: 'translateY(-3px)',
-              }
+              borderColor: '#cbd5e1',
+              borderLeftColor: mainColor,
+              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01)',
+              transform: 'translateY(-3px)',
+            }
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
@@ -319,7 +325,7 @@ const StatCard = ({ title, value, amount, icon: Icon, tooltip, link }: any) => {
 };
 
 function SubAdminDashboard() {
-  const { decodedToken, getCookies } = Utility();
+  const { decodedToken, getCookies, capitalizeEachWord } = Utility();
   const cookies = getCookies();
   const userToken = (cookies as any).token;
   const { id, role, companyId, username, name } = decodedToken(userToken?.value) || {};
@@ -341,10 +347,21 @@ function SubAdminDashboard() {
     typeof window !== "undefined" ? localStorage.getItem("selectedCompanyId") || "" : ""
   );
 
+  const [selectedTeamMember, setSelectedTeamMember] = useState<string>(
+    typeof window !== "undefined" ? localStorage.getItem("selectedTeamMemberId") || "all" : "all"
+  );
+
   useEffect(() => {
     const handleGlobalCompanyChange = (event: any) => setSelectedCompany(event.detail);
+    const handleTeamMemberChange = (event: any) => setSelectedTeamMember(event.detail);
+
     window.addEventListener("companyChanged", handleGlobalCompanyChange);
-    return () => window.removeEventListener("companyChanged", handleGlobalCompanyChange);
+    window.addEventListener("teamMemberChanged", handleTeamMemberChange);
+
+    return () => {
+      window.removeEventListener("companyChanged", handleGlobalCompanyChange);
+      window.removeEventListener("teamMemberChanged", handleTeamMemberChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -368,7 +385,7 @@ function SubAdminDashboard() {
     return "Good Evening!";
   };
   const rawName = name || username || "User";
-  const displayName = rawName ? rawName.charAt(0).toUpperCase() + rawName.slice(1) : "";
+  const displayName = rawName ? capitalizeEachWord(rawName) : "";
 
   const handleMonthChange = (e: any) => {
     let newMonth = e.target.value;
@@ -386,12 +403,31 @@ function SubAdminDashboard() {
   useEffect(() => {
     const loadData = async () => {
       try {
+        let activeUserId: string | number | undefined = id;
+
+        if (role === 'sales') {
+          if (selectedTeamMember === "all" && id) {
+            try {
+              const res = await axiosInstance.get(`/teams/my-team-member-ids/${id}`, {
+                params: { designation: decodedToken(userToken?.value)?.designation || '', role }
+              });
+              if (res.data.data && Array.isArray(res.data.data)) {
+                activeUserId = res.data.data.join(',');
+              }
+            } catch (err) {
+              console.error("Failed to fetch team member ids", err);
+            }
+          } else if (selectedTeamMember !== "all" && selectedTeamMember !== "") {
+            activeUserId = Number(selectedTeamMember);
+          }
+        }
+
         const [aggCounts, apps, freshApps, approved, disbursed] = await Promise.all([
-          fetchAggregateTicketCounts(date || undefined, selectedMonth || undefined, selectedMonth ? currentYear.toString() : undefined),
+          fetchAggregateTicketCounts(date || undefined, selectedMonth || undefined, selectedMonth ? currentYear.toString() : undefined, activeUserId),
           fetchTotalApplications(), // ALWAYS show all time
           fetchTotalNewApplication(selectedMonth || undefined, selectedMonth ? currentYear : undefined, date || undefined),
-          fetchTotalTickets("approved", id, role, date || undefined, selectedMonth || undefined, selectedMonth ? currentYear.toString() : undefined),
-          fetchTotalTickets("disbursed", id, role, date || undefined, selectedMonth || undefined, selectedMonth ? currentYear.toString() : undefined)
+          fetchTotalTickets("approved", activeUserId, role, date || undefined, selectedMonth || undefined, selectedMonth ? currentYear.toString() : undefined),
+          fetchTotalTickets("disbursed", activeUserId, role, date || undefined, selectedMonth || undefined, selectedMonth ? currentYear.toString() : undefined)
         ]);
         setCounts(aggCounts || {});
         setTotalApps(apps || 0);
@@ -403,7 +439,7 @@ function SubAdminDashboard() {
       }
     };
     loadData();
-  }, [date, selectedMonth, selectedCompany]);
+  }, [date, selectedMonth, selectedCompany, selectedTeamMember, id, role, userToken?.value]);
 
   const getLink = (status: string) => {
     const base = `/ticket?status=${encodeURIComponent(status)}`;
@@ -561,10 +597,10 @@ function SubAdminDashboard() {
 }
 
 function SalesDashboard() {
-  const { decodedToken, getCookies } = Utility();
-  const cookies = getCookies();
-  const userToken = (cookies as any).token;
-  const { id, role, companyId, username, name } = decodedToken(userToken?.value) || {};
+  const { decodedToken, getCookies, capitalizeEachWord } = Utility();
+  const cookies = getCookies() as Record<string, string>;
+  const userToken = cookies.oms_cookie || cookies.token;
+  const { id, role, companyId, username, name } = decodedToken(userToken) || {};
 
   const todayDate = new Date().toLocaleDateString("en-CA");
   const [date, setDate] = useState<string | null>(todayDate);
@@ -583,14 +619,34 @@ function SalesDashboard() {
     typeof window !== "undefined" ? localStorage.getItem("selectedCompanyId") || "" : ""
   );
 
+  const userDesignation = decodedToken(userToken)?.designation?.toLowerCase() || '';
+  const isL1OrL2 = ["team leader", "tl", "sales manager", "sm", "l1", "l2"].includes(userDesignation);
+
+  const [selectedTeamMember, setSelectedTeamMember] = useState<string>(
+    typeof window !== "undefined" ? localStorage.getItem("selectedTeamMemberId") || (!isL1OrL2 && role === "sales" ? id?.toString() || "all" : "all") : "all"
+  );
+
+  const [selectedTeamMemberName, setSelectedTeamMemberName] = useState<string>(
+    typeof window !== "undefined" ? localStorage.getItem("selectedTeamMemberName") || (!isL1OrL2 && role === "sales" ? decodedToken(userToken)?.username || decodedToken(userToken)?.name || "My Details" : "All My Team") : "All My Team"
+  );
+
   // Recent applications for this sales user
   const [recentApps, setRecentApps] = useState<any[]>([]);
   const [appsLoading, setAppsLoading] = useState(false);
 
   useEffect(() => {
     const handleGlobalCompanyChange = (event: any) => setSelectedCompany(event.detail);
+    const handleTeamMemberChange = (event: any) => setSelectedTeamMember(event.detail);
+    const handleTeamMemberNameChange = (event: any) => setSelectedTeamMemberName(event.detail);
+
     window.addEventListener("companyChanged", handleGlobalCompanyChange);
-    return () => window.removeEventListener("companyChanged", handleGlobalCompanyChange);
+    window.addEventListener("teamMemberChanged", handleTeamMemberChange);
+    window.addEventListener("teamMemberNameChanged", handleTeamMemberNameChange);
+    return () => {
+      window.removeEventListener("companyChanged", handleGlobalCompanyChange);
+      window.removeEventListener("teamMemberChanged", handleTeamMemberChange);
+      window.removeEventListener("teamMemberNameChanged", handleTeamMemberNameChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -611,7 +667,11 @@ function SalesDashboard() {
     return "Good Evening!";
   };
   const rawName = name || username || "User";
-  const displayName = rawName ? rawName.charAt(0).toUpperCase() + rawName.slice(1) : "";
+  const displayName = rawName ? capitalizeEachWord(rawName) : "";
+
+  const viewingLabel = String(selectedTeamMember) === String(id)
+    ? capitalizeEachWord(displayName)
+    : capitalizeEachWord(selectedTeamMemberName);
 
   const handleMonthChange = (e: any) => {
     let newMonth = e.target.value;
@@ -627,10 +687,11 @@ function SalesDashboard() {
   };
 
   // Fetch recent fresh (unpicked) applications for this sales user
-  const fetchRecentApps = async (activeDate?: string | null, activeMonth?: string) => {
+  const fetchRecentApps = async (activeDate?: string | null, activeMonth?: string, activeUserId?: string | number) => {
     try {
       setAppsLoading(true);
-      const params: any = { appliedBy: id, page: 1, limit: 6 };
+      const params: any = { page: 1, limit: 6 };
+      if (activeUserId) params.appliedBy = activeUserId;
       if (selectedCompany) params.companyId = selectedCompany;
       // Apply date/month filter so table reflects the active filter
       if (activeDate) {
@@ -657,43 +718,87 @@ function SalesDashboard() {
   useEffect(() => {
     const loadData = async () => {
       try {
+        let activeUserId: string | number | undefined = id;
+
+        if (role === 'sales') {
+          if (selectedTeamMember === "all" && id) {
+            try {
+              const res = await axiosInstance.get(`/teams/my-team-member-ids/${id}`, {
+                params: { designation: decodedToken(userToken)?.designation || '', role }
+              });
+              if (res.data.data && Array.isArray(res.data.data)) {
+                activeUserId = res.data.data.join(',');
+              }
+            } catch (err) {
+              console.error("Failed to fetch team member ids", err);
+            }
+          } else if (selectedTeamMember !== "all" && selectedTeamMember !== "") {
+            activeUserId = Number(selectedTeamMember);
+          }
+        }
+
         const [aggCounts, freshApps, approved, disbursed] = await Promise.all([
           fetchAggregateTicketCounts(
             date || undefined,
             selectedMonth || undefined,
             selectedMonth ? currentYear.toString() : undefined,
-            id,
+            activeUserId,
+            selectedCompany || undefined
           ),
           // Fresh applications count — respects date/month filter AND scoped to this user
           axiosInstance.get("/application/new-count", {
             params: {
-              appliedBy: id,
+              appliedBy: activeUserId,
+              ...(selectedCompany && { companyId: selectedCompany }),
               ...(selectedMonth && { month: selectedMonth, year: currentYear.toString() }),
               ...(date && !selectedMonth && { date }),
             },
           }),
-          fetchTotalTickets("approved", id, role, date || undefined, selectedMonth || undefined, selectedMonth ? currentYear.toString() : undefined),
-          fetchTotalTickets("disbursed", id, role, date || undefined, selectedMonth || undefined, selectedMonth ? currentYear.toString() : undefined),
+          fetchTotalTickets("approved", activeUserId, role, date || undefined, selectedMonth || undefined, selectedMonth ? currentYear.toString() : undefined, selectedCompany || undefined),
+          fetchTotalTickets("disbursed", activeUserId, role, date || undefined, selectedMonth || undefined, selectedMonth ? currentYear.toString() : undefined, selectedCompany || undefined),
         ]);
         setCounts(aggCounts || {});
         const freshCount = freshApps?.data?.data ?? 0;
         setNewApps({ count: typeof freshCount === 'object' ? freshCount.count : freshCount });
         setApprovedData(typeof approved === 'object' && approved !== null ? approved : { count: approved, amount: null });
         setDisbursedData(typeof disbursed === 'object' && disbursed !== null ? disbursed : { count: disbursed, amount: null });
+
+        fetchRecentApps(date, selectedMonth, activeUserId);
       } catch (err) {
         console.error(err);
       }
     };
     loadData();
-    fetchRecentApps(date, selectedMonth);
-  }, [date, selectedMonth, selectedCompany]);
+  }, [date, selectedMonth, selectedCompany, selectedTeamMember, id, role, userToken]);
 
   // Total applications — always all-time, scoped to this sales user, never changes with date/month
   useEffect(() => {
     const loadTotalApps = async () => {
       try {
+        let activeUserId: string | number | undefined = id;
+
+        if (role === 'sales') {
+          if (selectedTeamMember === "all" && id) {
+            try {
+              const res = await axiosInstance.get(`/teams/my-team-member-ids/${id}`, {
+                params: { designation: decodedToken(userToken)?.designation || '', role }
+              });
+              if (res.data.data && Array.isArray(res.data.data)) {
+                activeUserId = res.data.data.join(',');
+              }
+            } catch (err) {
+              console.error("Failed to fetch team member ids", err);
+            }
+          } else if (selectedTeamMember !== "all" && selectedTeamMember !== "") {
+            activeUserId = Number(selectedTeamMember);
+          }
+        }
+
         const response = await axiosInstance.get("/application/count", {
-          params: { appliedBy: id },
+          params: {
+            appliedBy: activeUserId,
+            ...(selectedCompany && { companyId: selectedCompany })
+          },
         });
         setTotalApps(response.data?.data || 0);
       } catch (err) {
@@ -701,11 +806,7 @@ function SalesDashboard() {
       }
     };
     loadTotalApps();
-  }, [id]); // Only re-runs if user ID changes — intentionally NOT in the date/company dep array
-
-  useEffect(() => {
-    fetchRecentApps(date, selectedMonth);
-  }, [selectedCompany]);
+  }, [id, selectedTeamMember, selectedCompany, role, userToken]);
 
   // Link builder — takes current date/month filter into account
   const getLink = (status: string) => {
@@ -732,6 +833,11 @@ function SalesDashboard() {
           <Typography variant="h4" sx={{ fontWeight: 800, color: '#0d1b54', letterSpacing: '-0.5px' }}>
             {getGreeting()} {displayName}
           </Typography>
+          {String(selectedTeamMember) !== String(id) && (
+            <Typography variant="subtitle1" sx={{ color: "#3949ab", fontWeight: 700, mt: 0.5 }}>
+              Viewing Data For: {viewingLabel}
+            </Typography>
+          )}
           <Typography variant="body2" sx={{ color: '#64748b', mt: 0.5 }}>
             {formatDateTime(currentDateTime)}
           </Typography>
@@ -919,7 +1025,7 @@ function SalesDashboard() {
 }
 
 export default function Page(): React.JSX.Element {
-  const { decodedToken, getCookies } = Utility();
+  const { decodedToken, getCookies, capitalizeEachWord } = Utility();
   const cookies = getCookies();
   const userToken = (cookies as any).token;
   const { id, role, companyId, username, name } = decodedToken(userToken?.value) || {};
@@ -989,7 +1095,7 @@ export default function Page(): React.JSX.Element {
     return "Good Evening!";
   };
   const rawName = name || username || "User";
-  const displayName = rawName ? rawName.charAt(0).toUpperCase() + rawName.slice(1) : "";
+  const displayName = rawName ? capitalizeEachWord(rawName) : "";
 
   const handleMonthChange = (e) => {
     let newMonth = e.target.value;
@@ -1681,7 +1787,7 @@ export default function Page(): React.JSX.Element {
           </Grid>
 
           <Grid container spacing={3} lg={12} xs={12}>
-            <Grid item lg={4} md={6} xs={12} x>
+            <Grid item lg={4} md={6} xs={12}>
               <Paper
                 elevation={3}
                 sx={{

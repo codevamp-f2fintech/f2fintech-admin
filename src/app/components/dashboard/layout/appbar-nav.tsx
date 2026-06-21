@@ -23,7 +23,12 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
+import ListSubheader from "@mui/material/ListSubheader";
 import { SelectChangeEvent } from "@mui/material/Select";
+import SupervisorAccountRounded from "@mui/icons-material/SupervisorAccountRounded";
+import PersonRounded from "@mui/icons-material/PersonRounded";
+import { ArrowDropDownRounded } from "@mui/icons-material";
+import BusinessRounded from "@mui/icons-material/BusinessRounded";
 
 import { MobileNav } from "./mobile-nav";
 import { UserPopover } from "./user-popover";
@@ -34,6 +39,7 @@ import { ApplicationsAPI, NewApplication } from "@/apis/ApplicationsAPI";
 import { NotificationsAPI, AdminNotification } from "@/apis/NotificationsAPI";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
+import { useGetMySubordinates } from "@/hooks/teams";
 
 const SEEN_APPLICATIONS_KEY = "seenApplicationIds";
 
@@ -60,7 +66,16 @@ export function AppBarNav(): React.JSX.Element {
   const [searchQuery, setSearchQuery] = React.useState<string>("");
   const [companies, setCompanies] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState<string>("101");
+  const [selectedTeamMember, setSelectedTeamMember] = useState<string>("all");
   const [isMounted, setIsMounted] = useState(false);
+
+  const { decodedToken, capitalizeEachWord } = Utility();
+  const userInfo = decodedToken();
+  const role = userInfo?.role || (typeof window !== 'undefined' ? localStorage.getItem('userRole') || '' : '');
+  const isSales = role === "sales";
+
+  const userDesignation = userInfo?.designation?.toLowerCase() || '';
+  const isL1OrL2 = ["team leader", "tl", "sales manager", "sm", "l1", "l2"].includes(userDesignation);
 
   // Notification state
   const [notifications, setNotifications] = useState<UnifiedNotification[]>([]);
@@ -84,6 +99,25 @@ export function AppBarNav(): React.JSX.Element {
           window.dispatchEvent(new CustomEvent("companyChanged", { detail: "101" }));
         }, 0);
       }
+
+      const savedTeamMember = localStorage.getItem("selectedTeamMemberId");
+
+      if (role) {
+        if (isSales && !isL1OrL2) {
+          // Sales executive shouldn't have this in localStorage
+          if (savedTeamMember !== null) {
+            localStorage.removeItem("selectedTeamMemberId");
+          }
+        } else {
+          if (savedTeamMember !== null) {
+            setSelectedTeamMember(savedTeamMember);
+          } else {
+            setSelectedTeamMember("all");
+            localStorage.setItem("selectedTeamMemberId", "all");
+          }
+        }
+      }
+
       setSeenIds(getSeenIds());
     }
   }, []);
@@ -91,15 +125,46 @@ export function AppBarNav(): React.JSX.Element {
   const pathname = usePathname();
   const userPopover = usePopover<HTMLDivElement>();
 
-  const { decodedToken } = Utility();
-  const userInfo = decodedToken();
-  const role = userInfo?.role;
-  const isSales = role === "sales";
-
   // Disable the Aggregator selector on ticket detail pages or create page
   const isTicketPage = /^\/ticket\/[^/]+/.test(pathname ?? "");
   const isCreatePage = pathname === "/home/create";
   const disableAggregator = isTicketPage || isCreatePage;
+
+  // Fetch subordinates if sales manager / team leader
+  const { value: subordinatesData } = useGetMySubordinates(
+    isSales ? userInfo?.userId || userInfo?.id : null,
+    isSales ? userInfo?.designation : null,
+    role
+  );
+  const subordinates = subordinatesData?.data || [];
+
+  const filteredSubordinates = subordinates.filter((m: any) => m.id !== Number(userInfo?.id));
+  const l1Leaders = filteredSubordinates.filter((m: any) => {
+    const d = m.designation?.toLowerCase() || '';
+    return d === "team leader" || d === "tl";
+  });
+  const l0Executives = filteredSubordinates.filter((m: any) => {
+    const d = m.designation?.toLowerCase() || '';
+    return d !== "team leader" && d !== "tl";
+  });
+
+  const handleTeamMemberChange = (e: SelectChangeEvent) => {
+    const value = e.target.value as string;
+    setSelectedTeamMember(value);
+    localStorage.setItem("selectedTeamMemberId", value);
+    window.dispatchEvent(new CustomEvent("teamMemberChanged", { detail: value }));
+
+    // Store and dispatch the name of the selected member
+    let nameToStore = "All Team Members";
+    if (String(value) === String(userInfo?.id)) {
+      nameToStore = userInfo?.username || userInfo?.name || "My Details";
+    } else {
+      const member = subordinates.find((m: any) => String(m.id) === String(value));
+      if (member) nameToStore = member.username;
+    }
+    localStorage.setItem("selectedTeamMemberName", nameToStore);
+    window.dispatchEvent(new CustomEvent("teamMemberNameChanged", { detail: nameToStore }));
+  };
 
   const fetchCompanies = useCallback(async () => {
     try {
@@ -220,7 +285,7 @@ export function AppBarNav(): React.JSX.Element {
 
 
   const unreadCount = notifications.filter((n) => !seenIds.has(n.id)).length;
-  
+
   const ITEMS_PER_PAGE = 10;
   const totalPages = Math.max(1, Math.ceil(notifications.length / ITEMS_PER_PAGE));
   const paginatedNotifications = notifications.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
@@ -259,7 +324,7 @@ export function AppBarNav(): React.JSX.Element {
 
   const formatDateTime = (dateStr: string) => {
     const d = new Date(dateStr);
-    return d.toLocaleString("en-IN", { 
+    return d.toLocaleString("en-IN", {
       day: "numeric", month: "short", year: "numeric",
       hour: "2-digit", minute: "2-digit", hour12: true
     });
@@ -308,6 +373,214 @@ export function AppBarNav(): React.JSX.Element {
             </Stack>
 
             <Stack sx={{ alignItems: "center" }} direction="row" spacing={2}>
+              {/* Team Member Selector for Sales Managers and Team Leaders */}
+              {isSales && isL1OrL2 && subordinates.length > 0 && (
+                <Tooltip
+                  title={disableAggregator ? "Team Member cannot be changed here" : ""}
+                  placement="bottom"
+                  arrow
+                >
+                  <FormControl
+                    sx={{
+                      minWidth: 180,
+                      display: { xs: "none", sm: "block" },
+                      opacity: disableAggregator ? 0.55 : 1,
+                      transition: "opacity 0.2s",
+                      mr: 2
+                    }}
+                    size="small"
+                    variant="outlined"
+                  >
+                    <InputLabel id="team-select-label" shrink>
+                      Team Member
+                    </InputLabel>
+                    <Select
+                      labelId="team-select-label"
+                      id="team-select"
+                      value={selectedTeamMember}
+                      label="Team Member"
+                      onChange={handleTeamMemberChange}
+                      disabled={disableAggregator}
+                      displayEmpty
+                      notched
+                      fullWidth
+                      IconComponent={ArrowDropDownRounded}
+                      renderValue={(selected: any) => {
+                        if (selected === "all" || !selected) {
+                          return (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <SupervisorAccountRounded fontSize="small" sx={{ color: '#3949ab' }} />
+                              <Typography sx={{ fontWeight: 600, color: '#3949ab', fontSize: '0.9rem' }}>All Team Members</Typography>
+                            </Box>
+                          );
+                        }
+                        if (String(selected) === String(userInfo?.id)) {
+                          return (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <SupervisorAccountRounded fontSize="small" sx={{ color: '#3949ab' }} />
+                              <Typography sx={{ fontWeight: 600, color: '#3949ab', fontSize: '0.9rem' }}>
+                                {capitalizeEachWord(userInfo?.username || userInfo?.name || 'My Details')}
+                              </Typography>
+                            </Box>
+                          );
+                        }
+                        const member = subordinates.find((m: any) => String(m.id) === String(selected));
+                        if (member) {
+                          return (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <PersonRounded fontSize="small" sx={{ color: '#1976d2' }} />
+                              <Typography sx={{ fontWeight: 500, color: '#172B4D', fontSize: '0.9rem' }}>
+                                {capitalizeEachWord(member.username)}
+                              </Typography>
+                            </Box>
+                          );
+                        }
+                        return selected;
+                      }}
+                      sx={{
+                        borderRadius: "8px",
+                        backgroundColor: "white",
+                        "& .MuiOutlinedInput-notchedOutline": {
+                          borderColor: "rgba(57, 73, 171, 0.2)",
+                          transition: "all 0.2s ease",
+                        },
+                        "&:hover .MuiOutlinedInput-notchedOutline": {
+                          borderColor: "rgba(57, 73, 171, 0.5)",
+                        },
+                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                          borderColor: "#3949ab",
+                          borderWidth: "2px",
+                        },
+                        "& .MuiSelect-select": {
+                          height: "40px",
+                          display: "flex",
+                          alignItems: "center",
+                          paddingTop: 0,
+                          paddingBottom: 0,
+                          boxSizing: "border-box",
+                        },
+                      }}
+                    >
+                      <MenuItem
+                        value="all"
+                        sx={{
+                          fontWeight: 600,
+                          color: '#3949ab',
+                          py: 1.5,
+                          borderBottom: selectedTeamMember === "all" ? 'none' : '1px solid #e2e8f0',
+                          border: selectedTeamMember === "all" ? '2px solid #3949ab' : 'none',
+                          borderRadius: selectedTeamMember === "all" ? '8px' : 0,
+                          margin: selectedTeamMember === "all" ? '4px 8px' : 0
+                        }}
+                      >
+                        All Team Members
+                      </MenuItem>
+
+                      {/* Logged in User's own details */}
+                      <MenuItem
+                        value={userInfo?.id?.toString() || ""}
+                        sx={{
+                          mb: 1,
+                          mt: 1,
+                          mx: 1,
+                          borderRadius: '8px',
+                          backgroundColor: '#3949ab !important', // deep blue background
+                          border: selectedTeamMember === (userInfo?.id?.toString() || "") ? '2px solid #1a237e' : '1px solid #3949ab',
+                          boxShadow: selectedTeamMember === (userInfo?.id?.toString() || "") ? '0 0 0 2px #ffffff, 0 0 0 4px #1a237e' : 'none',
+                          py: 1
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: '100%' }}>
+                          <Box sx={{ color: '#3949ab', display: 'flex', bgcolor: 'white', borderRadius: '50%', p: 0.5, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                            <SupervisorAccountRounded fontSize="small" />
+                          </Box>
+                          <Typography sx={{ fontWeight: 600, fontSize: '0.9rem', color: '#ffffff' }}>
+                            {capitalizeEachWord(userInfo?.username || userInfo?.name || 'My Details')}
+                          </Typography>
+                          <Typography variant="caption" sx={{ ml: 'auto', color: '#3949ab', fontWeight: 700, bgcolor: 'white', px: 1, py: 0.5, borderRadius: 1 }}>
+                            {capitalizeEachWord(userInfo?.designation || "Sales Manager")}
+                          </Typography>
+                        </Box>
+                      </MenuItem>
+
+                      {/* L1 Team Leaders Group */}
+                      {l1Leaders.length > 0 && (
+                        <ListSubheader sx={{ bgcolor: '#f8fafc', lineHeight: '36px', fontWeight: 700, color: '#475569', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 1, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          <PersonRounded fontSize="small" /> L1: Team Leader
+                        </ListSubheader>
+                      )}
+                      {l1Leaders.map((member: any) => {
+                        const isSelected = selectedTeamMember === member.id.toString();
+                        return (
+                          <MenuItem
+                            key={`member-${member.id}`}
+                            value={member.id.toString()}
+                            sx={{
+                              margin: '4px 8px',
+                              borderRadius: '8px',
+                              py: 1,
+                              backgroundColor: '#e3f2fd !important', // light blue background
+                              border: isSelected ? '2px solid #1976d2' : '1px solid #1976d220',
+                              boxShadow: isSelected ? '0 2px 8px rgba(25, 118, 210, 0.2)' : 'none',
+                              '&:hover': { opacity: 0.9, borderColor: '#1976d2' }
+                            }}
+                          >
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: '100%' }}>
+                              <Box sx={{ color: '#1976d2', display: 'flex', bgcolor: 'white', borderRadius: '50%', p: 0.5, boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                                <PersonRounded fontSize="small" />
+                              </Box>
+                              <Typography sx={{ fontWeight: 500, fontSize: '0.9rem', color: '#172B4D' }}>
+                                {capitalizeEachWord(member.username)}
+                              </Typography>
+                              <Typography variant="caption" sx={{ ml: 'auto', color: '#1976d2', fontWeight: 600, bgcolor: 'white', px: 1, py: 0.5, borderRadius: 1 }}>
+                                {capitalizeEachWord(member.designation)}
+                              </Typography>
+                            </Box>
+                          </MenuItem>
+                        );
+                      })}
+
+                      {/* L0 Executives Group */}
+                      {l0Executives.length > 0 && (
+                        <ListSubheader sx={{ bgcolor: '#f8fafc', lineHeight: '36px', fontWeight: 700, color: '#475569', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 1, textTransform: 'uppercase', letterSpacing: '0.5px', borderTop: l1Leaders.length > 0 ? '1px solid #e2e8f0' : 'none', mt: l1Leaders.length > 0 ? 1 : 0 }}>
+                          <PersonRounded fontSize="small" /> Executives
+                        </ListSubheader>
+                      )}
+                      {l0Executives.map((member: any) => {
+                        const isSelected = selectedTeamMember === member.id.toString();
+                        return (
+                          <MenuItem
+                            key={`member-${member.id}`}
+                            value={member.id.toString()}
+                            sx={{
+                              margin: '4px 8px',
+                              borderRadius: '8px',
+                              py: 1,
+                              backgroundColor: '#f5f5f5 !important',
+                              border: isSelected ? '2px solid #757575' : '1px solid #9e9e9e20',
+                              boxShadow: isSelected ? '0 2px 8px rgba(158, 158, 158, 0.2)' : 'none',
+                              '&:hover': { opacity: 0.9, borderColor: '#9e9e9e' }
+                            }}
+                          >
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: '100%' }}>
+                              <Box sx={{ color: '#757575', display: 'flex', bgcolor: 'white', borderRadius: '50%', p: 0.5, boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                                <PersonRounded fontSize="small" />
+                              </Box>
+                              <Typography sx={{ fontWeight: 500, fontSize: '0.9rem', color: '#172B4D' }}>
+                                {capitalizeEachWord(member.username)}
+                              </Typography>
+                              <Typography variant="caption" sx={{ ml: 'auto', color: '#757575', fontWeight: 600, bgcolor: 'white', px: 1, py: 0.5, borderRadius: 1 }}>
+                                {capitalizeEachWord(member.designation)}
+                              </Typography>
+                            </Box>
+                          </MenuItem>
+                        );
+                      })}
+                    </Select>
+                  </FormControl>
+                </Tooltip>
+              )}
+
               {/* Company Selector */}
               <Tooltip
                 title={disableAggregator ? "Aggregator cannot be changed here" : "Change Aggregator"}
@@ -336,6 +609,29 @@ export function AppBarNav(): React.JSX.Element {
                     displayEmpty
                     notched
                     fullWidth
+                    IconComponent={ArrowDropDownRounded}
+                    renderValue={(selected: any) => {
+                      if (!selected) {
+                        return (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <BusinessRounded fontSize="small" sx={{ color: '#3949ab' }} />
+                            <Typography sx={{ fontWeight: 600, color: '#3949ab', fontSize: '0.9rem' }}>All Aggregators</Typography>
+                          </Box>
+                        );
+                      }
+                      const company = companies.find((c: any) => String(c.companyId) === String(selected));
+                      if (company) {
+                        return (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <BusinessRounded fontSize="small" sx={{ color: '#1976d2' }} />
+                            <Typography sx={{ fontWeight: 500, color: '#172B4D', fontSize: '0.9rem' }}>
+                              {capitalizeEachWord(company.name)}
+                            </Typography>
+                          </Box>
+                        );
+                      }
+                      return selected;
+                    }}
                     sx={{
                       height: "40px",
                       backgroundColor: "white",
@@ -361,15 +657,47 @@ export function AppBarNav(): React.JSX.Element {
                       },
                     }}
                   >
-                    <MenuItem value="">All Aggregators</MenuItem>
-                    {companies?.map((company: any, index: number) => (
-                      <MenuItem
-                        key={company.id || `company-${index}`}
-                        value={company.companyId ? company.companyId.toString() : ""}
-                      >
-                        {company.name}
-                      </MenuItem>
-                    ))}
+                    <MenuItem
+                      value=""
+                      sx={{
+                        fontWeight: 600,
+                        color: '#3949ab',
+                        py: 1.5,
+                        borderBottom: !selectedCompany ? 'none' : '1px solid #e2e8f0',
+                        border: !selectedCompany ? '2px solid #3949ab' : 'none',
+                        borderRadius: !selectedCompany ? '8px' : 0,
+                        margin: !selectedCompany ? '4px 8px' : 0
+                      }}
+                    >
+                      All Aggregators
+                    </MenuItem>
+                    {companies?.map((company: any, index: number) => {
+                      const isSelected = selectedCompany === company.companyId?.toString();
+                      return (
+                        <MenuItem
+                          key={company.id || `company-${index}`}
+                          value={company.companyId ? company.companyId.toString() : ""}
+                          sx={{
+                            margin: '4px 8px',
+                            borderRadius: '8px',
+                            py: 1,
+                            backgroundColor: '#f8fafc !important',
+                            border: isSelected ? '2px solid #3949ab' : '1px solid #e2e8f0',
+                            boxShadow: isSelected ? '0 2px 8px rgba(57, 73, 171, 0.15)' : 'none',
+                            '&:hover': { opacity: 0.9, borderColor: '#3949ab' }
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: '100%' }}>
+                            <Box sx={{ color: isSelected ? '#3949ab' : '#64748b', display: 'flex', bgcolor: 'white', borderRadius: '50%', p: 0.5, boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                              <BusinessRounded fontSize="small" />
+                            </Box>
+                            <Typography sx={{ fontWeight: isSelected ? 600 : 500, fontSize: '0.9rem', color: isSelected ? '#1e293b' : '#334155' }}>
+                              {capitalizeEachWord(company.name)}
+                            </Typography>
+                          </Box>
+                        </MenuItem>
+                      );
+                    })}
                   </Select>
                 </FormControl>
               </Tooltip>
@@ -524,72 +852,72 @@ export function AppBarNav(): React.JSX.Element {
                     ) : (
                       paginatedNotifications.map((notif, index) => {
                         const isUnread = !seenIds.has(notif.id);
-                        
+
                         if (notif.type === 'application') {
                           const app = notif.data;
                           return (
                             <React.Fragment key={notif.id}>
-                            <Box
-                              onClick={() => {
-                                // mark this one as seen
-                                const updated = new Set(seenIds);
-                                updated.add(notif.id);
-                                setSeenIds(updated);
-                                saveSeenIds(updated);
-                                handleNotifClose();
-                                router.push(`/?search=${app.applicationNo}`);
-                              }}
-                              sx={{
-                                px: 3,
-                                py: 2,
-                                cursor: "pointer",
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: 0.8,
-                                backgroundColor: isUnread ? "#f4f8fb" : "white",
-                                borderLeft: isUnread ? "4px solid #3b82f6" : "4px solid transparent",
-                                transition: "background 0.15s",
-                                "&:hover": {
-                                  backgroundColor: "#f1f5f9",
-                                },
-                              }}
-                            >
-                              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", width: "100%" }}>
-                                <Typography
-                                  fontWeight={isUnread ? 600 : 500}
-                                  fontSize="0.9rem"
-                                  sx={{ color: "#1e293b" }}
-                                >
-                                  New Application Received
-                                </Typography>
-                                {isUnread && (
-                                  <Box
-                                    sx={{
-                                      mt: "4px",
-                                      width: 8,
-                                      height: 8,
-                                      borderRadius: "50%",
-                                      backgroundColor: "#3b82f6", // Blue dot on right
-                                      flexShrink: 0,
-                                    }}
-                                  />
-                                )}
-                              </Box>
+                              <Box
+                                onClick={() => {
+                                  // mark this one as seen
+                                  const updated = new Set(seenIds);
+                                  updated.add(notif.id);
+                                  setSeenIds(updated);
+                                  saveSeenIds(updated);
+                                  handleNotifClose();
+                                  router.push(`/?search=${app.applicationNo}`);
+                                }}
+                                sx={{
+                                  px: 3,
+                                  py: 2,
+                                  cursor: "pointer",
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: 0.8,
+                                  backgroundColor: isUnread ? "#f4f8fb" : "white",
+                                  borderLeft: isUnread ? "4px solid #3b82f6" : "4px solid transparent",
+                                  transition: "background 0.15s",
+                                  "&:hover": {
+                                    backgroundColor: "#f1f5f9",
+                                  },
+                                }}
+                              >
+                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", width: "100%" }}>
+                                  <Typography
+                                    fontWeight={isUnread ? 600 : 500}
+                                    fontSize="0.9rem"
+                                    sx={{ color: "#1e293b" }}
+                                  >
+                                    New Application Received
+                                  </Typography>
+                                  {isUnread && (
+                                    <Box
+                                      sx={{
+                                        mt: "4px",
+                                        width: 8,
+                                        height: 8,
+                                        borderRadius: "50%",
+                                        backgroundColor: "#3b82f6", // Blue dot on right
+                                        flexShrink: 0,
+                                      }}
+                                    />
+                                  )}
+                                </Box>
 
-                              <Typography fontSize="0.85rem" sx={{ color: "#64748b", lineHeight: 1.4 }}>
-                                Application <strong>#{app.applicationNo}</strong> for <strong>{app.customerName}</strong> has been submitted for a <strong>{formatAmount(app.amount)}</strong> <strong>{app.loanType}</strong> via <strong>{app.provider || "Unknown"}</strong>.
-                              </Typography>
-                              
-                              <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.5 }}>
-                                <ClockIcon size={14} color="#94a3b8" />
-                                <Typography fontSize="0.75rem" sx={{ color: "#94a3b8" }}>
-                                  {formatDate(app.applicationDate)}
+                                <Typography fontSize="0.85rem" sx={{ color: "#64748b", lineHeight: 1.4 }}>
+                                  Application <strong>#{app.applicationNo}</strong> for <strong>{app.customerName}</strong> has been submitted for a <strong>{formatAmount(app.amount)}</strong> <strong>{app.loanType}</strong> via <strong>{app.provider || "Unknown"}</strong>.
                                 </Typography>
-                              </Stack>
-                            </Box>
-                            {index < paginatedNotifications.length - 1 && <Divider />}
-                          </React.Fragment>
-                        );
+
+                                <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.5 }}>
+                                  <ClockIcon size={14} color="#94a3b8" />
+                                  <Typography fontSize="0.75rem" sx={{ color: "#94a3b8" }}>
+                                    {formatDate(app.applicationDate)}
+                                  </Typography>
+                                </Stack>
+                              </Box>
+                              {index < paginatedNotifications.length - 1 && <Divider />}
+                            </React.Fragment>
+                          );
                         } else {
                           // Ticket
                           const ticket = notif.data;
@@ -640,7 +968,7 @@ export function AppBarNav(): React.JSX.Element {
                                     />
                                   )}
                                 </Box>
-  
+
                                 <Typography fontSize="0.85rem" sx={{ color: "#64748b", lineHeight: 1.4 }}>
                                   {(() => {
                                     const match = ticket.message.match(/Ticket #(\d+) for (.+?) has been updated to (.+?)(?: by (.+))?$/);
@@ -657,7 +985,7 @@ export function AppBarNav(): React.JSX.Element {
                                     return ticket.message;
                                   })()}
                                 </Typography>
-                                
+
                                 <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.5 }}>
                                   <ClockIcon size={14} color="#94a3b8" />
                                   <Typography fontSize="0.75rem" sx={{ color: "#94a3b8" }}>
