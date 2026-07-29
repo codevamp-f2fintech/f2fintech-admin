@@ -233,7 +233,7 @@ const TicketDocuments = ({
                     variant="body1"
                     sx={{ color: "#172B4D", fontWeight: 500, flexGrow: 1, fontSize: "0.95rem" }}
                   >
-                    {capitalizeFirstLetter(doc.type)}
+                    {capitalizeFirstLetter(doc.type) || "Unknown Document"}
                   </Typography>
                   <Tooltip title={isPDF(doc.document_url) ? "Open PDF in new tab" : "View Document Image"}>
                     <span>

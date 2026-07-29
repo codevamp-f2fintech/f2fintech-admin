@@ -295,6 +295,24 @@ const TicketDetail = ({ ticketDetailData, isTab }) => {
               />
             </Grid>
           </Grid>
+          {editedTicketData?.co_applicant_name && (
+            <>
+              <Divider sx={{ my: 3, borderColor: "rgba(0,0,0,0.05)" }} />
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: "text.primary" }}>
+                🎓 Student / Co-Applicant Details
+              </Typography>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6}>
+                  <DetailItem label="Name" value={capitalizeFirstLetter(editedTicketData?.co_applicant_name)} />
+                  <DetailItem label="Contact" value={`+91 ${editedTicketData?.co_applicant_contact || ""}`} />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <DetailItem label="Email" value={editedTicketData?.co_applicant_email} />
+                  <DetailItem label="Mother's Name" value={capitalizeFirstLetter(editedTicketData?.co_applicant_mother_name)} />
+                </Grid>
+              </Grid>
+            </>
+          )}
         </Box>
       </Box>
 
