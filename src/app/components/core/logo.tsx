@@ -9,6 +9,7 @@ const DEFAULT_HEIGHT = 60;
 const DEFAULT_WIDTH = 40;
 
 export interface LogoProps {
+  color?: "dark" | "light";
   height?: number;
   width?: number;
   collapsed?: boolean;
@@ -16,8 +17,10 @@ export interface LogoProps {
 
 export function Logo({
   collapsed,
-}: // width = DEFAULT_WIDTH,
-  LogoProps): React.JSX.Element {
+  color,
+  height,
+  width,
+}: LogoProps): React.JSX.Element {
   const url = "/img/f2Fintechlogo.png"; // Path to your image
 
   return (
@@ -26,8 +29,8 @@ export function Logo({
       component="img"
       src={url}
       sx={{
-        height: collapsed ? "7vh" : "16vh",
-        width: collapsed ? "7vw" : "50vw",
+        height: height ?? (collapsed ? "7vh" : "16vh"),
+        width: width ?? (collapsed ? "7vw" : "50vw"),
         objectFit: "contain",
         borderRadius: "10px",
         backgroundColor: "#deebff",

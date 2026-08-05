@@ -22,15 +22,33 @@ export interface TrafficProps {
 }
 
 export function Traffic ( {
-  chartSeries,
-  labels,
+  chartSeries = [],
+  labels = [],
   date,
   setDate,
 }: TrafficProps ): React.JSX.Element {
+  const [ mounted, setMounted ] = React.useState( false );
+  React.useEffect( () => {
+    setMounted( true );
+  }, [] );
+
+  const safeChartSeries = ( chartSeries || [] ).map( ( val ) =>
+    typeof val === "number" && !isNaN( val ) ? val : 0
+  );
   const chartOptions = useChartOptions( labels );
   const { capitalizeFirstLetter } = Utility();
   const isMobile = useMediaQuery( "(max-width:600px)" );
   const isTab = useMediaQuery( "(min-width:601px) and (max-width:1200px)" );
+
+  if ( !mounted ) {
+    return (
+      <Card sx={{ width: "100%", height: "90vh" }}>
+        <Box sx={{ p: 3, display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+          <Typography color="text.secondary">Loading chart...</Typography>
+        </Box>
+      </Card>
+    );
+  }
 
   return (
     <Card
@@ -67,7 +85,7 @@ export function Traffic ( {
           <Chart
             height={200}
             options={chartOptions}
-            series={chartSeries}
+            series={safeChartSeries}
             type="donut"
             width="100%"
             sx={{
@@ -95,7 +113,7 @@ export function Traffic ( {
               },
             }}
           >
-            {chartSeries.map( ( item, index ) => {
+            {safeChartSeries.map( ( item, index ) => {
               const colors = [
                 "#009688",
                 "#827717",

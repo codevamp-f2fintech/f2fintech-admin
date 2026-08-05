@@ -3,7 +3,7 @@ import { fetcher } from "@/apis/apiClient";
 
 export const useGetQueries = (page: number = 1, limit: number = 10, key: string = "get-all-queries") => {
   const fullPath = `${key}?page=${page}&limit=${limit}`;
-  const { data: swrData, error, isValidating } = useSWR(fullPath, fetcher, {
+  const { data: swrData, error, isValidating } = useSWR<any>(fullPath, fetcher, {
     revalidateOnFocus: false,
     dedupingInterval: 1000
   });

@@ -22,23 +22,31 @@ export const useGetCustomerApplications = (
   formattedEndDate?: string | null,
   refreshKey?: number,
   source?: string | null,
+  companyId?: string | number | null,
 ) => {
-  let url = `${pathKey}?page=${page}&limit=${limit}`;
+  const hasQuery = pathKey.includes("?");
+  let url = `${pathKey}${hasQuery ? "&" : "?"}page=${page}&limit=${limit}`;
 
-  if (salesUserId) {
+  if (companyId && companyId !== 'all' && !url.includes('companyId=')) {
+    url += `&companyId=${companyId}`;
+  }
+  if (salesUserId && !url.includes('appliedBy=')) {
     url += `&appliedBy=${salesUserId}`;
   }
-  if (searchTerm && searchTerm.trim() !== '') {
+  if (searchTerm && searchTerm.trim() !== '' && !url.includes('search=')) {
     url += `&search=${encodeURIComponent(searchTerm)}`;
   }
-  if (formattedStartDate) {
+  if (formattedStartDate && !url.includes('startDate=')) {
     url += `&startDate=${formattedStartDate}`;
   }
-  if (formattedEndDate) {
+  if (formattedEndDate && !url.includes('endDate=')) {
     url += `&endDate=${formattedEndDate}`;
   }
-  if (source && source !== 'all') {
+  if (source && source !== 'all' && !url.includes('source=')) {
     url += `&source=${source}`;
+  }
+  if (refreshKey) {
+    url += `&_r=${refreshKey}`;
   }
 
   const {

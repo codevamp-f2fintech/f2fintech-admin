@@ -64,14 +64,14 @@ export type UnifiedNotification =
 export function AppBarNav(): React.JSX.Element {
   const [openNav, setOpenNav] = React.useState<boolean>(false);
   const [searchQuery, setSearchQuery] = React.useState<string>("");
-  const [companies, setCompanies] = useState([]);
+  const [companies, setCompanies] = useState<any[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<string>("101");
   const [selectedTeamMember, setSelectedTeamMember] = useState<string>("all");
   const [isMounted, setIsMounted] = useState(false);
 
   const { decodedToken, capitalizeEachWord } = Utility();
-  const userInfo = decodedToken();
-  const role = userInfo?.role || (typeof window !== 'undefined' ? localStorage.getItem('userRole') || '' : '');
+  const userInfo = isMounted ? decodedToken() : null;
+  const role = userInfo?.role || (isMounted && typeof window !== 'undefined' ? localStorage.getItem('userRole') || '' : '');
   const isSales = role === "sales";
 
   const userDesignation = userInfo?.designation?.toLowerCase() || '';
@@ -1067,7 +1067,7 @@ export function AppBarNav(): React.JSX.Element {
                     }
                   }}
                 >
-                  {decodedToken()?.username?.charAt(0).toUpperCase()}
+                  {userInfo?.username?.charAt(0).toUpperCase() || ""}
                 </Avatar>
               </Tooltip>
             </Stack>

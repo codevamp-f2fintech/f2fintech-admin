@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Grid,
   Button,
@@ -90,6 +90,7 @@ interface ApplicationCardProps {
     applicationSource?: string;
     existing_loans?: string;
     existingLoans?: string;
+    is_picked?: number;
     onDelete: (applicationId: string, customerName: string) => void;
   };
   handleStartClick?: (ticketId: number) => void;
@@ -303,6 +304,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
   const [expanded, setExpanded] = useState<boolean>(false);
 
   const [isPickingUp, setIsPickingUp] = useState<boolean>(false);
+  const isPickingUpRef = useRef<boolean>(false);
 
   const dispatch: AppDispatch = useDispatch();
   const { toastAndNavigate } = Utility();
@@ -448,6 +450,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
   }, [showComment, customerApplication?.ticketId]);
 
   const confirmPickup = async () => {
+    isPickingUpRef.current = true;
     setIsPickingUp(true);
     try {
       const ticketResponse = await createTicket({
@@ -461,7 +464,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
           dispatch,
           true,
           "error",
-          "This Application Is Already Picked By Another User. Please Pick Another Application.",
+          ticketResponse?.message || "This Application Is Already Picked By Another User. Please Pick Another Application.",
           null,
           null,
           false,
@@ -469,27 +472,47 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
         );
 
         dispatch(resetCustomerApplications(customerApplication.applicationId));
-      } else {
+      } else if (ticketResponse?.statusCode === 201 || ticketResponse?.data) {
         dispatch(resetTickets());
         await modifyiedCustomerApplication(customerApplication.applicationId, {
           is_picked: 1,
         });
         dispatch(resetCustomerApplications(customerApplication.applicationId));
+      } else {
+        toastAndNavigate(
+          dispatch,
+          true,
+          "error",
+          ticketResponse?.message || "Failed to pick application",
+          null,
+          null,
+          false,
+          true
+        );
       }
     } catch (error) {
       console.log("Error in checkbox change:", error);
     } finally {
+      isPickingUpRef.current = false;
       setIsPickingUp(false);
     }
   };
 
   const handleCheckboxClick = (e?: React.MouseEvent) => {
+    // Prevent multiple clicks while picking or if already picked (synchronous check via ref)
+    if (isPickingUpRef.current || isPickingUp || customerApplication.is_picked === 1) {
+      e?.preventDefault();
+      e?.stopPropagation();
+      return;
+    }
     // Validate company selection
     if (validateCompanyForCheckbox && !validateCompanyForCheckbox()) {
       e?.preventDefault();
       e?.stopPropagation();
       return;
     }
+    isPickingUpRef.current = true;
+    setIsPickingUp(true);
     confirmPickup();
   };
 
@@ -662,7 +685,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               <Box>
                 <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 600, lineHeight: 1, mb: 0.3 }}>Amount</Typography>
                 <Typography sx={{ fontSize: "0.8rem", fontWeight: 700, color: "#00796B", lineHeight: 1 }}>
-                  {formatRupees(customerApplication.applicationAmount)}
+                  {formatRupees(parseFloat(customerApplication.applicationAmount))}
                 </Typography>
               </Box>
 
@@ -885,10 +908,10 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               {/* Pick Pill (application only) */}
               {decodedToken()?.role !== "sales" && !handleStartClick && (
                 <Tooltip
-                  title="Assign to yourself" arrow placement="top"
+                  title={isPickingUp || customerApplication.is_picked === 1 ? "Already picked" : "Assign to yourself"} arrow placement="top"
                   slotProps={{
-                    tooltip: { sx: { bgcolor: "#3f50b5", fontSize: "0.72rem", fontWeight: 600, px: 1.5, py: 0.5, borderRadius: "8px", boxShadow: "0 4px 12px rgba(63,80,181,0.35)" } },
-                    arrow: { sx: { color: "#3f50b5" } },
+                    tooltip: { sx: { bgcolor: isPickingUp || customerApplication.is_picked === 1 ? "#9e9e9e" : "#3f50b5", fontSize: "0.72rem", fontWeight: 600, px: 1.5, py: 0.5, borderRadius: "8px", boxShadow: "0 4px 12px rgba(63,80,181,0.35)" } },
+                    arrow: { sx: { color: isPickingUp || customerApplication.is_picked === 1 ? "#9e9e9e" : "#3f50b5" } },
                   }}
                 >
                   <Box
@@ -896,21 +919,26 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                     sx={{
                       display: "inline-flex", alignItems: "center", gap: 0.5,
                       px: 1.4, py: 0.5, borderRadius: "20px",
-                      border: "1.5px solid #3f50b5",
-                      backgroundColor: "rgba(63, 80, 181, 0.06)",
-                      cursor: "pointer", transition: "all 0.2s ease", userSelect: "none",
-                      "&:hover": { backgroundColor: "rgba(63, 80, 181, 0.14)", boxShadow: "0 0 0 3px rgba(63,80,181,0.18)" },
-                      "&:active": { transform: "scale(0.96)" },
+                      border: `1.5px solid ${isPickingUp || customerApplication.is_picked === 1 ? "#bdbdbd" : "#3f50b5"}`,
+                      backgroundColor: isPickingUp || customerApplication.is_picked === 1 ? "rgba(0,0,0,0.04)" : "rgba(63, 80, 181, 0.06)",
+                      cursor: isPickingUp || customerApplication.is_picked === 1 ? "not-allowed" : "pointer",
+                      transition: "all 0.2s ease", userSelect: "none",
+                      pointerEvents: isPickingUp || customerApplication.is_picked === 1 ? "none" : "auto",
+                      opacity: isPickingUp || customerApplication.is_picked === 1 ? 0.5 : 1,
+                      "&:hover": !isPickingUp && customerApplication.is_picked !== 1 ? { backgroundColor: "rgba(63, 80, 181, 0.14)", boxShadow: "0 0 0 3px rgba(63,80,181,0.18)" } : {},
+                      "&:active": !isPickingUp && customerApplication.is_picked !== 1 ? { transform: "scale(0.96)" } : {},
                     }}
                   >
                     <Checkbox
                       onClick={(e) => e.stopPropagation()}
                       onChange={(e) => { e.stopPropagation(); handleCheckboxClick(e as any); }}
                       size="small"
-                      sx={{ p: 0, color: "#3f50b5", "&.Mui-checked": { color: "#3f50b5" } }}
+                      disabled={isPickingUp || customerApplication.is_picked === 1}
+                      checked={customerApplication.is_picked === 1}
+                      sx={{ p: 0, color: isPickingUp || customerApplication.is_picked === 1 ? "#bdbdbd" : "#3f50b5", "&.Mui-checked": { color: "#bdbdbd" } }}
                     />
-                    <Typography sx={{ fontWeight: 700, fontSize: "0.75rem", color: "#3f50b5", letterSpacing: "0.03em" }}>
-                      Pick
+                    <Typography sx={{ fontWeight: 700, fontSize: "0.75rem", color: isPickingUp || customerApplication.is_picked === 1 ? "#9e9e9e" : "#3f50b5", letterSpacing: "0.03em" }}>
+                      {isPickingUp ? "Picking..." : customerApplication.is_picked === 1 ? "Picked" : "Pick"}
                     </Typography>
                   </Box>
                 </Tooltip>
@@ -1567,30 +1595,36 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                     {/* Pick Application Button in Timeline Row */}
                     {isApplication && decodedToken()?.role !== "sales" && (
                       <Tooltip
-                        title="Assign to yourself" arrow placement="top"
+                        title={isPickingUp || customerApplication.is_picked === 1 ? "Already picked" : "Assign to yourself"} arrow placement="top"
                         slotProps={{
-                          tooltip: { sx: { bgcolor: "#3f50b5", fontSize: "0.72rem", fontWeight: 600, px: 1.5, py: 0.5, borderRadius: "8px", boxShadow: "0 4px 12px rgba(63,80,181,0.35)" } },
-                          arrow: { sx: { color: "#3f50b5" } },
+                          tooltip: { sx: { bgcolor: isPickingUp || customerApplication.is_picked === 1 ? "#9e9e9e" : "#3f50b5", fontSize: "0.72rem", fontWeight: 600, px: 1.5, py: 0.5, borderRadius: "8px", boxShadow: "0 4px 12px rgba(63,80,181,0.35)" } },
+                          arrow: { sx: { color: isPickingUp || customerApplication.is_picked === 1 ? "#9e9e9e" : "#3f50b5" } },
                         }}
                       >
                         <Box
                           onClick={(e) => { e.stopPropagation(); handleCheckboxClick(e); }}
                           sx={{
                             display: "inline-flex", alignItems: "center", gap: 0.5, px: 1.5, py: 0.5, borderRadius: "20px",
-                            border: "1.5px solid #3f50b5", backgroundColor: "rgba(63, 80, 181, 0.06)",
-                            cursor: "pointer", transition: "all 0.2s ease", userSelect: "none",
-                            "&:hover": { backgroundColor: "rgba(63, 80, 181, 0.14)", boxShadow: "0 0 0 3px rgba(63,80,181,0.18)" },
-                            "&:active": { transform: "scale(0.96)" },
+                            border: `1.5px solid ${isPickingUp || customerApplication.is_picked === 1 ? "#bdbdbd" : "#3f50b5"}`,
+                            backgroundColor: isPickingUp || customerApplication.is_picked === 1 ? "rgba(0,0,0,0.04)" : "rgba(63, 80, 181, 0.06)",
+                            cursor: isPickingUp || customerApplication.is_picked === 1 ? "not-allowed" : "pointer",
+                            transition: "all 0.2s ease", userSelect: "none",
+                            pointerEvents: isPickingUp || customerApplication.is_picked === 1 ? "none" : "auto",
+                            opacity: isPickingUp || customerApplication.is_picked === 1 ? 0.5 : 1,
+                            "&:hover": !isPickingUp && customerApplication.is_picked !== 1 ? { backgroundColor: "rgba(63, 80, 181, 0.14)", boxShadow: "0 0 0 3px rgba(63,80,181,0.18)" } : {},
+                            "&:active": !isPickingUp && customerApplication.is_picked !== 1 ? { transform: "scale(0.96)" } : {},
                           }}
                         >
                           <Checkbox
                             onClick={(e) => e.stopPropagation()}
                             onChange={(e) => { e.stopPropagation(); handleCheckboxClick(e as any); }}
                             size="small"
-                            sx={{ p: 0, color: "#3f50b5", "&.Mui-checked": { color: "#3f50b5" } }}
+                            disabled={isPickingUp || customerApplication.is_picked === 1}
+                            checked={customerApplication.is_picked === 1}
+                            sx={{ p: 0, color: isPickingUp || customerApplication.is_picked === 1 ? "#bdbdbd" : "#3f50b5", "&.Mui-checked": { color: "#bdbdbd" } }}
                           />
-                          <Typography sx={{ fontWeight: 700, fontSize: "0.75rem", color: "#3f50b5", letterSpacing: "0.03em" }}>
-                            Pick
+                          <Typography sx={{ fontWeight: 700, fontSize: "0.75rem", color: isPickingUp || customerApplication.is_picked === 1 ? "#9e9e9e" : "#3f50b5", letterSpacing: "0.03em" }}>
+                            {isPickingUp ? "Picking..." : customerApplication.is_picked === 1 ? "Picked" : "Pick"}
                           </Typography>
                         </Box>
                       </Tooltip>
@@ -2136,13 +2170,13 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               {/* Pick Checkbox — elegant pill button */}
               {decodedToken()?.role !== "sales" && !handleStartClick && (
                 <Tooltip
-                  title="Assign to yourself"
+                  title={isPickingUp || customerApplication.is_picked === 1 ? "Already picked" : "Assign to yourself"}
                   arrow
                   placement="top"
                   slotProps={{
                     tooltip: {
                       sx: {
-                        bgcolor: "#3f50b5",
+                        bgcolor: isPickingUp || customerApplication.is_picked === 1 ? "#9e9e9e" : "#3f50b5",
                         fontSize: "0.75rem",
                         fontWeight: 600,
                         letterSpacing: "0.02em",
@@ -2153,7 +2187,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                       },
                     },
                     arrow: {
-                      sx: { color: "#3f50b5" },
+                      sx: { color: isPickingUp || customerApplication.is_picked === 1 ? "#9e9e9e" : "#3f50b5" },
                     },
                   }}
                 >
@@ -2169,19 +2203,21 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                       px: 1.5,
                       py: 0.6,
                       borderRadius: "20px",
-                      border: "1.5px solid #3f50b5",
-                      backgroundColor: "rgba(63, 80, 181, 0.06)",
-                      cursor: "pointer",
+                      border: `1.5px solid ${isPickingUp || customerApplication.is_picked === 1 ? "#bdbdbd" : "#3f50b5"}`,
+                      backgroundColor: isPickingUp || customerApplication.is_picked === 1 ? "rgba(0,0,0,0.04)" : "rgba(63, 80, 181, 0.06)",
+                      cursor: isPickingUp || customerApplication.is_picked === 1 ? "not-allowed" : "pointer",
                       transition: "all 0.2s ease",
                       userSelect: "none",
-                      "&:hover": {
+                      pointerEvents: isPickingUp || customerApplication.is_picked === 1 ? "none" : "auto",
+                      opacity: isPickingUp || customerApplication.is_picked === 1 ? 0.5 : 1,
+                      "&:hover": !isPickingUp && customerApplication.is_picked !== 1 ? {
                         backgroundColor: "rgba(63, 80, 181, 0.15)",
                         boxShadow: "0 0 0 3px rgba(63, 80, 181, 0.2)",
                         borderColor: "#3f50b5",
-                      },
-                      "&:active": {
+                      } : {},
+                      "&:active": !isPickingUp && customerApplication.is_picked !== 1 ? {
                         transform: "scale(0.96)",
-                      },
+                      } : {},
                     }}
                   >
                     <Checkbox
@@ -2191,11 +2227,13 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                         handleCheckboxClick(e as any);
                       }}
                       size="small"
+                      disabled={isPickingUp || customerApplication.is_picked === 1}
+                      checked={customerApplication.is_picked === 1}
                       sx={{
                         p: 0,
-                        color: "#3f50b5",
+                        color: isPickingUp || customerApplication.is_picked === 1 ? "#bdbdbd" : "#3f50b5",
                         "&.Mui-checked": {
-                          color: "#3f50b5",
+                          color: "#bdbdbd",
                         },
                       }}
                     />
@@ -2204,11 +2242,11 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                       sx={{
                         fontWeight: 700,
                         fontSize: "0.78rem",
-                        color: "#3f50b5",
+                        color: isPickingUp || customerApplication.is_picked === 1 ? "#9e9e9e" : "#3f50b5",
                         letterSpacing: "0.03em",
                       }}
                     >
-                      Pick
+                      {isPickingUp ? "Picking..." : customerApplication.is_picked === 1 ? "Picked" : "Pick"}
                     </Typography>
                   </Box>
                 </Tooltip>

@@ -61,8 +61,14 @@ function filterForRole(items: NavItemConfig[], userRole: string): NavItemConfig[
 export function SideNav(): React.JSX.Element {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = React.useState(true);
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const { decodedToken } = Utility();
-  const userRole = decodedToken()?.role ?? "";
+  const userRole = isMounted ? (decodedToken()?.role ?? "") : "";
 
   const handleSignOut = React.useCallback(() => {
     document.cookie = "oms_cookie=; path=/; max-age=0; secure; samesite=strict";

@@ -295,11 +295,12 @@ const HomeContent: React.FC = () => {
     endDate,       // formattedEndDate
     refreshKey,
     undefined,     // source
+    selectedCompany
   );
 
   // A fingerprint that changes whenever SWR actually returns a *different* dataset,
   // even if the number of items happens to be the same (e.g. date-filtered vs unfiltered).
-  const dataFingerprint = `${data?.count ?? ''}|${data?.results?.[0]?.applicationId ?? ''}|${data?.results?.length ?? ''}`;
+  const dataFingerprint = `${selectedCompany}|${refreshKey}|${data?.count ?? ''}|${data?.results?.[0]?.applicationId ?? ''}|${data?.results?.length ?? ''}`;
 
   // Fetch and update state with new data
   useEffect(() => {
