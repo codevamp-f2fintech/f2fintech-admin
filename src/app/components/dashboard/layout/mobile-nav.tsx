@@ -58,8 +58,14 @@ export function MobileNav({ open, onClose }: MobileNavProps): React.JSX.Element 
   const pathname = usePathname();
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const { decodedToken } = Utility();
-  const userRole = decodedToken()?.role ?? "";
+  const userRole = isMounted ? (decodedToken()?.role ?? "") : "";
   const visibleItems = filterForRole(navItems, userRole);
 
   return (

@@ -8,6 +8,15 @@ import { AppBarNav } from "./components/dashboard/layout/appbar-nav";
 
 export const RootLayoutContent = ({ children }: { children: React.ReactNode }) => {
   const [theme, colorMode] = useMode();
+  const [isMounted, React_setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    React_setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return null;
+  }
 
   return (
     <ColorModeContext.Provider value={colorMode as any}>

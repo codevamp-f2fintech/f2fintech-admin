@@ -17,7 +17,7 @@ const getAuthHeaders = () => {
 /**
  * Fetches data using GET request
  */
-export const fetcher = async <T> ( url: string ): Promise<T> => {
+export const fetcher = async <T = any> ( url: string ): Promise<T> => {
   const res = await axiosInstance.get<T>( url, {
     headers: getAuthHeaders(),
   } );
@@ -32,7 +32,7 @@ export const fetcher = async <T> ( url: string ): Promise<T> => {
 /**
  * Creates data using POST request
  */
-export const creator = async <T, D> ( url: string, data: D ): Promise<T> => {
+export const creator = async <T = any, D = any> ( url: string, data: D ): Promise<T> => {
   const res = await axiosInstance.post<T>( url, data, {
     headers: getAuthHeaders(),
   } );
@@ -47,7 +47,7 @@ export const creator = async <T, D> ( url: string, data: D ): Promise<T> => {
 /**
  * Updates data using PATCH request
  */
-export const modifier = async <T, D> ( url: string, data: D ): Promise<T> => {
+export const modifier = async <T = any, D = any> ( url: string, data: D ): Promise<T> => {
   const res = await axiosInstance.patch<T>( url, data, {
     headers: getAuthHeaders(),
   } );
@@ -62,7 +62,7 @@ export const modifier = async <T, D> ( url: string, data: D ): Promise<T> => {
 /**
  * Deletes data using DELETE request
  */
-export const deleter = async <T> ( url: string ): Promise<T> => {
+export const deleter = async <T = any> ( url: string ): Promise<T> => {
   const res = await axiosInstance.delete<T>( url, {
     headers: getAuthHeaders(),
   } );

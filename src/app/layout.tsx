@@ -12,8 +12,8 @@ export const metadata: Metadata = {
 
 const RootLayout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className} suppressHydrationWarning>
         <ReduxProvider>
           <RootLayoutContent>{children}</RootLayoutContent>
         </ReduxProvider>

@@ -1726,14 +1726,14 @@ export default function Page(): React.JSX.Element {
                   chartSeries={[
                     {
                       name: "Total Tickets",
-                      data: allCounts?.totalTicketsByMonth?.map((value) =>
-                        Math.round(value)
+                      data: (allCounts?.totalTicketsByMonth || Array(12).fill(0)).map((value) =>
+                        Math.round(value || 0)
                       ),
                     },
                     {
                       name: "Disbursed Tickets",
-                      data: allCounts?.doneTicketsByMonth?.map((value) =>
-                        Math.round(value)
+                      data: (allCounts?.doneTicketsByMonth || Array(12).fill(0)).map((value) =>
+                        Math.round(value || 0)
                       ),
                     },
                   ]}
@@ -1757,16 +1757,16 @@ export default function Page(): React.JSX.Element {
                   date={date}
                   setDate={setDate}
                   chartSeries={[
-                    allCounts?.totalTickets,
-                    allCounts?.totalUnderCreditReview,
-                    allCounts?.totalOperations,
-                    allCounts?.totalPendencyInFile,
-                    allCounts?.totalToBeDisbursed,
-                    allCounts?.totalDisbursed?.count,
-                    allCounts?.totalFileSendToBanker,
-                    allCounts?.totalToBeApproved,
-                    allCounts?.totalApproved?.count,
-                    allCounts?.totalCarryForward,
+                    allCounts?.totalTickets || 0,
+                    allCounts?.totalUnderCreditReview || 0,
+                    allCounts?.totalOperations || 0,
+                    allCounts?.totalPendencyInFile || 0,
+                    allCounts?.totalToBeDisbursed || 0,
+                    allCounts?.totalDisbursed?.count || 0,
+                    allCounts?.totalFileSendToBanker || 0,
+                    allCounts?.totalToBeApproved || 0,
+                    allCounts?.totalApproved?.count || 0,
+                    allCounts?.totalCarryForward || 0,
                   ]}
                   labels={[
                     "Total Tickets",
