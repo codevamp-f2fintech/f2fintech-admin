@@ -298,7 +298,7 @@ const MainPage = () => {
   );
   const { modifyTicket } = useModifyTicket("update-ticket");
   const { createTicketActivity } = useCreateTicketActivity("create-ticket-activity");
-  const { value: userData } = useGetUsers({} as User, "get-users", 1, 200);
+  const { value: userData } = useGetUsers("get-users", 1, 200, "active");
   const { value: workLog, refetch } = useGetTicketLogs(
     {} as TicketLogs,
     hasFetched ? `get-ticket-logs/${ticketId}` : ""
