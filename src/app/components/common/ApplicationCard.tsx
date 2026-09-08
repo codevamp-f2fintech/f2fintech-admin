@@ -258,29 +258,71 @@ function CardGroup({
   );
 }
 
-const DirectBadge: React.FC = () => (
-  <Box
-    component="span"
-    sx={{
-      display: "inline-flex",
-      alignItems: "center",
-      backgroundColor: "#3f50b5",
-      color: "white",
-      fontSize: "0.65rem",
-      fontWeight: "bold",
-      px: 0.8,
-      py: 0.2,
-      borderRadius: "4px",
-      textTransform: "uppercase",
-      letterSpacing: "0.05em",
-      boxShadow: "0 2px 4px rgba(63, 80, 181, 0.3)",
-      verticalAlign: "middle",
-      lineHeight: 1,
-    }}
-  >
-    Direct
-  </Box>
-);
+const getSourcePill = (source?: string) => {
+  const s = source?.toLowerCase()?.trim() || "";
+  let config = {
+    gradient: "linear-gradient(135deg, #475569 0%, #64748b 100%)",
+    bg: "rgba(100, 116, 139, 0.08)",
+    border: "rgba(100, 116, 139, 0.25)",
+    label: source ? source.toUpperCase() : "N/A",
+  };
+
+  if (s === "website") {
+    config = {
+      gradient: "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)",
+      bg: "rgba(59, 130, 246, 0.09)",
+      border: "rgba(59, 130, 246, 0.3)",
+      label: "WEBSITE",
+    };
+  } else if (s === "oms") {
+    config = {
+      gradient: "linear-gradient(135deg, #047857 0%, #10b981 100%)",
+      bg: "rgba(16, 185, 129, 0.1)",
+      border: "rgba(16, 185, 129, 0.3)",
+      label: "OMS",
+    };
+  } else if (s === "lendgrid") {
+    config = {
+      gradient: "linear-gradient(135deg, #6b21a8 0%, #a855f7 100%)",
+      bg: "rgba(168, 85, 247, 0.09)",
+      border: "rgba(168, 85, 247, 0.3)",
+      label: "LENDGRID",
+    };
+  }
+
+  return (
+    <Box
+      component="span"
+      sx={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: config.bg,
+        border: `1px solid ${config.border}`,
+        borderRadius: "4px",
+        px: 0.6,
+        py: 0.15,
+        lineHeight: 1,
+        whiteSpace: "nowrap",
+      }}
+    >
+      <Box
+        component="span"
+        sx={{
+          background: config.gradient,
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          fontSize: "0.62rem",
+          fontWeight: 800,
+          letterSpacing: "0.04em",
+          textTransform: "uppercase",
+        }}
+      >
+        {config.label}
+      </Box>
+    </Box>
+  );
+};
 
 const ApplicationCard: React.FC<ApplicationCardProps> = ({
   customerApplication,
@@ -659,7 +701,6 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 }}
               >
                 {customerApplication.customerName?.toUpperCase()}
-                {(customerApplication.source === "website" || customerApplication.applicationSource === "website") && <DirectBadge />}
               </Typography>
 
               {userRole !== "sales" && (
@@ -718,6 +759,17 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   {capitalizeFirstLetter(customerApplication.leadType || "N/A")}
                 </Typography>
               </Box>
+
+              {/* Source */}
+              {(customerApplication.source || customerApplication.applicationSource) && (
+                <>
+                  <Box sx={{ width: "1px", height: "28px", bgcolor: "#e8edf5", flexShrink: 0 }} />
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: 0.4 }}>
+                    <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 600, lineHeight: 1 }}>Source</Typography>
+                    {getSourcePill(customerApplication.source || customerApplication.applicationSource)}
+                  </Box>
+                </>
+              )}
 
               <Box sx={{ width: "1px", height: "28px", bgcolor: "#e8edf5", flexShrink: 0 }} />
 
@@ -1470,7 +1522,6 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 }}
               >
                 {customerApplication.customerName?.toUpperCase()}
-                {(customerApplication.source === "website" || customerApplication.applicationSource === "website") && <DirectBadge />}
               </Typography>
 
               {userRole !== "sales" && (
@@ -1543,6 +1594,13 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                         {capitalizeFirstLetter(customerApplication.leadType || "N/A")}
                       </Typography>
                     </Grid>
+
+                    {(customerApplication.source || customerApplication.applicationSource) && (
+                      <Grid item xs={6}>
+                        <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.5, letterSpacing: "0.03em", mt: 1 }}>SOURCE</Typography>
+                        {getSourcePill(customerApplication.source || customerApplication.applicationSource)}
+                      </Grid>
+                    )}
 
                     {/* Location Row */}
                     <Grid item xs={6}>
@@ -1902,12 +1960,15 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
             </Typography>
           </TableCell>
 
+          {/* Source */}
+          <TableCell align="center" sx={{ width: "70px", whiteSpace: "nowrap", px: 1 }}>
+            {getSourcePill(customerApplication.source || customerApplication.applicationSource)}
+          </TableCell>
+
           {/* Name */}
           <TableCell>
             <Typography variant="body2" sx={{ fontWeight: "bold", whiteSpace: isTab ? "normal" : "normal", minWidth: isTab ? "15vw" : "", display: "flex", alignItems: "center", flexWrap: "wrap", gap: 1 }}>
-
               {customerApplication.customerName?.toUpperCase()}
-              {(customerApplication.source === "website" || customerApplication.applicationSource === "website") && <DirectBadge />}
             </Typography>
           </TableCell>
 

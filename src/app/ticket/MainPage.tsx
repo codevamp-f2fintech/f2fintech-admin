@@ -1067,6 +1067,19 @@ const Ticket = () => {
                             T.ID
                           </TableCell>
                           <TableCell
+                            align="center"
+                            sx={{
+                              fontWeight: 600,
+                              color: "white",
+                              fontSize: { xs: "0.75rem", sm: "0.875rem", md: "0.95rem" },
+                              whiteSpace: "nowrap",
+                              width: "70px",
+                              px: 1,
+                            }}
+                          >
+                            Source
+                          </TableCell>
+                          <TableCell
                             sx={{
                               fontWeight: 600,
                               color: "white",

@@ -612,7 +612,7 @@ const Step1Form: React.FC<Step1FormProps> = ({
             running_emi: l.running_emi ? Number(l.running_emi) : null
           }))),
           case_type: caseType,
-          source: "admin_portal",
+          source: "oms",
           company_id: companyId,
         })
     return applicationResponse.data.applicationId;
