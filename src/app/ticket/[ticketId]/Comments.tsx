@@ -15,6 +15,11 @@ import {
   Pagination,
   useTheme,
   Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -44,7 +49,11 @@ interface CommentsProps {
 
 const Comments = ({ storedTicketId, userData, isExpectedDateSaved = true, onRequireExpectedDate }: CommentsProps) => {
   const [newComment, setNewComment] = useState<string>("");
+  const [isCommenting, setIsCommenting] = useState<boolean>(false);
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [isSavingComment, setIsSavingComment] = useState<boolean>(false);
+  const [deleteCommentId, setDeleteCommentId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [editedComment, setEditedComment] = useState<string | undefined>("");
   const [attachment, setAttachment] = useState<string | null>(null);
   const [attachmentPreview, setAttachmentPreview] = useState<string | null>(
@@ -116,6 +125,7 @@ const Comments = ({ storedTicketId, userData, isExpectedDateSaved = true, onRequ
     if (onRequireExpectedDate && !onRequireExpectedDate()) return;
     if (!newComment.trim()) return;
 
+    setIsCommenting(true);
     try {
       let attachmentUrl = null;
 
@@ -163,8 +173,10 @@ const Comments = ({ storedTicketId, userData, isExpectedDateSaved = true, onRequ
     } catch (error) {
       toastAndNavigate(dispatch, true, "error", "Error Creating Comment");
       console.log("Error creating the comment:", error);
+    } finally {
+      setIsCommenting(false);
     }
-  }, [attachment, newComment, storedTicketId, refetch]);
+  }, [attachment, newComment, storedTicketId, refetch, onRequireExpectedDate, dispatch, createTicketActivity, decodedToken, toastAndNavigate]);
 
   const handleDeleteComment = useCallback(
     async (commentId: number) => {
@@ -190,7 +202,8 @@ const Comments = ({ storedTicketId, userData, isExpectedDateSaved = true, onRequ
 
   const handleSaveEditComment = useCallback(
     async (commentId: number, ticketId: number) => {
-      if (!editedComment.trim()) return;
+      if (!editedComment || !editedComment.trim()) return;
+      setIsSavingComment(true);
       try {
         const updatedCommentData = {
           comment: editedComment,
@@ -211,6 +224,8 @@ const Comments = ({ storedTicketId, userData, isExpectedDateSaved = true, onRequ
       } catch (error) {
         toastAndNavigate(dispatch, true, "error", "Error Updating Comment");
         console.log("Error Updating the comment:", error);
+      } finally {
+        setIsSavingComment(false);
       }
     },
     [editedComment, modifyTicketActivity, refetch, dispatch, toastAndNavigate]
@@ -525,11 +540,12 @@ const Comments = ({ storedTicketId, userData, isExpectedDateSaved = true, onRequ
           variant="contained"
           color="primary"
           onClick={handleCreateComment}
+          disabled={isCommenting}
           sx={{
             px: 4,
           }}
         >
-          Comment
+          {isCommenting ? "Commenting..." : "Comment"}
         </Button>
       </Box>
 
@@ -602,29 +618,41 @@ const Comments = ({ storedTicketId, userData, isExpectedDateSaved = true, onRequ
                         },
                         flexShrink: 0,
                         fontWeight: 500,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.6,
                       }}
                     >
                       {format(
                         new Date(comment.created_at),
                         "MMM dd, yyyy 'at' hh:mm a"
                       )}
+                      {comment.updated_at &&
+                        Math.abs(new Date(comment.updated_at).getTime() - new Date(comment.created_at).getTime()) > 1000 && (
+                          <Typography
+                            component="span"
+                            sx={{
+                              fontSize: { xs: "0.65rem", sm: "0.75rem" },
+                              color: "text.secondary",
+                              fontStyle: "italic",
+                            }}
+                          >
+                            (edited)
+                          </Typography>
+                        )}
                     </Typography>
                   </Box>
 
                   {editingCommentId === comment.id ? (
-                    <Box>
+                    <Box sx={{ mt: 1 }}>
                       <TextField
-                        sx={{
-                          bgcolor: "white",
-                          borderRadius: "10px",
-                          "& .MuiFilledInput-root": {
-                            "&:before, &:after": {
-                              display: "none",
-                            },
-                          },
-                        }}
                         fullWidth
                         multiline
+                        autoFocus
+                        onFocus={(e) => {
+                          const val = e.target.value;
+                          e.target.setSelectionRange(val.length, val.length);
+                        }}
                         value={editedComment}
                         onChange={(e) =>
                           setEditedComment(
@@ -632,7 +660,12 @@ const Comments = ({ storedTicketId, userData, isExpectedDateSaved = true, onRequ
                           )
                         }
                         rows={3}
-                        variant="filled"
+                        sx={{
+                          bgcolor: "#fff",
+                          "& .MuiOutlinedInput-root": {
+                            backgroundColor: "#fff",
+                          },
+                        }}
                       />
                       <Box
                         mt={1}
@@ -645,6 +678,7 @@ const Comments = ({ storedTicketId, userData, isExpectedDateSaved = true, onRequ
                         <Button
                           variant="contained"
                           color="primary"
+                          disabled={isSavingComment || !editedComment?.trim()}
                           sx={{
                             color: "white",
                             bgcolor: "green",
@@ -654,15 +688,19 @@ const Comments = ({ storedTicketId, userData, isExpectedDateSaved = true, onRequ
                               md: "0.9rem",
                             },
                             py: { xs: 0.5, sm: 1 },
+                            "&:hover": {
+                              bgcolor: "#1b5e20",
+                            },
                           }}
                           onClick={() =>
                             handleSaveEditComment(comment.id, comment.ticket_id)
                           }
                         >
-                          Save
+                          {isSavingComment ? "Saving..." : "Save"}
                         </Button>
                         <Button
                           variant="contained"
+                          disabled={isSavingComment}
                           sx={{
                             color: "white",
                             bgcolor: "#f06292",
@@ -672,6 +710,9 @@ const Comments = ({ storedTicketId, userData, isExpectedDateSaved = true, onRequ
                               md: "0.9rem",
                             },
                             py: { xs: 0.5, sm: 1 },
+                            "&:hover": {
+                              bgcolor: "#e91e63",
+                            },
                           }}
                           onClick={handleCancelEdit}
                         >
@@ -838,7 +879,7 @@ const Comments = ({ storedTicketId, userData, isExpectedDateSaved = true, onRequ
                                         },
                                       }}
                                       onClick={() =>
-                                        handleDeleteComment(comment.id)
+                                        setDeleteCommentId(comment.id)
                                       }
                                     >
                                       Delete
@@ -905,7 +946,7 @@ const Comments = ({ storedTicketId, userData, isExpectedDateSaved = true, onRequ
                               color: "white",
                             },
                           }}
-                          onClick={() => handleDeleteComment(comment.id)}
+                          onClick={() => setDeleteCommentId(comment.id)}
                         >
                           Delete
                         </Button>
@@ -936,6 +977,54 @@ const Comments = ({ storedTicketId, userData, isExpectedDateSaved = true, onRequ
           sx={{ mt: 2 }}
         />
       </Box>
+
+      {/* Delete Confirmation Modal */}
+      <Dialog
+        open={deleteCommentId !== null}
+        onClose={() => {
+          if (!isDeleting) setDeleteCommentId(null);
+        }}
+        PaperProps={{
+          sx: { borderRadius: "12px", p: 1, minWidth: { xs: "280px", sm: "360px" } },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Delete Comment</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ color: "text.secondary", fontSize: "0.95rem" }}>
+            Are you sure you want to delete this comment? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
+          <Button
+            onClick={() => setDeleteCommentId(null)}
+            variant="outlined"
+            disabled={isDeleting}
+            sx={{ textTransform: "none", borderRadius: "8px" }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={async () => {
+              if (deleteCommentId !== null) {
+                setIsDeleting(true);
+                try {
+                  await handleDeleteComment(deleteCommentId);
+                } finally {
+                  setIsDeleting(false);
+                  setDeleteCommentId(null);
+                }
+              }
+            }}
+            variant="contained"
+            color="error"
+            disabled={isDeleting}
+            sx={{ textTransform: "none", borderRadius: "8px" }}
+          >
+            {isDeleting ? "Deleting..." : "OK"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Toast
         alerting={toast.toastAlert}
         severity={toast.toastSeverity}

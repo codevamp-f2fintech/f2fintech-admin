@@ -50,6 +50,7 @@ import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import BusinessIcon from '@mui/icons-material/Business';
 import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
 import { useCreateTicket } from "@/hooks/ticket";
+import { useCreateTicketHistory } from "@/hooks/tickethistory";
 import { Utility } from "@/utils";
 import { useModifyCustomerApplication } from "@/hooks/customerApplication";
 import { fetcher } from "@/apis/apiClient";
@@ -91,6 +92,7 @@ interface ApplicationCardProps {
     existing_loans?: string;
     existingLoans?: string;
     is_picked?: number;
+    appliedBy?: number | null;
     onDelete: (applicationId: string, customerName: string) => void;
   };
   handleStartClick?: (ticketId: number) => void;
@@ -324,6 +326,14 @@ const getSourcePill = (source?: string) => {
   );
 };
 
+const getSourceColor = (source?: string): string => {
+  const s = source?.toLowerCase()?.trim() || "";
+  if (s === "website") return "#1e40af";
+  if (s === "oms") return "#047857";
+  if (s === "lendgrid") return "#7e22ce";
+  return "#475569";
+};
+
 const ApplicationCard: React.FC<ApplicationCardProps> = ({
   customerApplication,
   handleStartClick = null,
@@ -347,17 +357,28 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
 
   const [isPickingUp, setIsPickingUp] = useState<boolean>(false);
   const isPickingUpRef = useRef<boolean>(false);
+  const [appliedByName, setAppliedByName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!customerApplication.appliedBy) return;
+    axiosInstance
+      .get(`get-user-name/${customerApplication.appliedBy}`)
+      .then((res) => {
+        const username = res.data?.data?.username;
+        if (username) setAppliedByName(username);
+      })
+      .catch(() => { });
+  }, [customerApplication.appliedBy]);
 
   const dispatch: AppDispatch = useDispatch();
   const { toastAndNavigate } = Utility();
   const {
     calculateDaysAgo,
-    capitalizeFirstLetter,
+    capitalizeEachWord,
     decodedToken,
     formatTenure,
   } = Utility();
 
-  const [showOtpComponent, setShowOtpComponent] = useState<boolean>(false);
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTab = useMediaQuery("(min-width:601px) and (max-width:1200px)");
   const isIpad = useMediaQuery("(min-width:1000px) and (max-width:1300px)");
@@ -380,6 +401,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
   const { createTicket } = useCreateTicket("create-ticket");
   const { modifyCustomerApplication: modifyiedCustomerApplication } =
     useModifyCustomerApplication("update-loan-application");
+  const { createTicketHistory } = useCreateTicketHistory("create-ticket-history");
 
   const toggleHistory = () => setShowHistory((prev) => !prev);
   const toggleExpanded = () => setExpanded((prev) => !prev);
@@ -518,6 +540,12 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
         dispatch(resetTickets());
         await modifyiedCustomerApplication(customerApplication.applicationId, {
           is_picked: 1,
+        });
+        const newTicketId = ticketResponse?.data?.id;
+        const loggedInUser = decodedToken()?.username;
+        await createTicketHistory({
+          ticket_id: newTicketId,
+          action: `${loggedInUser} picked the loan application`,
         });
         dispatch(resetCustomerApplications(customerApplication.applicationId));
       } else {
@@ -670,7 +698,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
           >
             {/* Avatar */}
             <Avatar
-              alt={capitalizeFirstLetter(
+              alt={capitalizeEachWord(
                 customerApplication.customerName.split(".")[1]?.trim() ||
                 customerApplication.customerName.split(" ").slice(1).join(" ")
               )}
@@ -746,7 +774,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               <Box>
                 <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 600, lineHeight: 1, mb: 0.3 }}>Loan Type</Typography>
                 <Typography sx={{ fontSize: "0.8rem", color: "#1a2340", lineHeight: 1 }}>
-                  {capitalizeFirstLetter(customerApplication.loanType || "N/A")}
+                  {capitalizeEachWord(customerApplication.loanType || "N/A")}
                 </Typography>
               </Box>
 
@@ -756,7 +784,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               <Box>
                 <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 600, lineHeight: 1, mb: 0.3 }}>Lead Type</Typography>
                 <Typography sx={{ fontSize: "0.8rem", color: "#1a2340", lineHeight: 1 }}>
-                  {capitalizeFirstLetter(customerApplication.leadType || "N/A")}
+                  {capitalizeEachWord(customerApplication.leadType || "N/A")}
                 </Typography>
               </Box>
 
@@ -767,6 +795,11 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   <Box sx={{ display: "flex", flexDirection: "column", gap: 0.4 }}>
                     <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 600, lineHeight: 1 }}>Source</Typography>
                     {getSourcePill(customerApplication.source || customerApplication.applicationSource)}
+                    {appliedByName && (
+                      <Typography sx={{ fontSize: "0.6rem", color: getSourceColor(customerApplication.source || customerApplication.applicationSource), fontWeight: 600, lineHeight: 1 }}>
+                        {capitalizeEachWord(appliedByName)}
+                      </Typography>
+                    )}
                   </Box>
                 </>
               )}
@@ -788,9 +821,9 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 <Box>
                   <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 600, lineHeight: 1, mb: 0.3 }}>Location</Typography>
                   <Typography sx={{ fontSize: "0.8rem", color: "#1a2340", lineHeight: 1 }}>
-                    {capitalizeFirstLetter(customerApplication.customerLocation || "")}
+                    {capitalizeEachWord(customerApplication.customerLocation || "")}
                     {customerApplication.customerLocation && customerApplication.customerState ? ", " : ""}
-                    {capitalizeFirstLetter(customerApplication.customerState || "")}
+                    {capitalizeEachWord(customerApplication.customerState || "")}
                   </Typography>
                 </Box>
               )}
@@ -814,7 +847,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                   <Box>
                     <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 600, lineHeight: 1, mb: 0.3 }}>Status</Typography>
                     <Chip
-                      label={customerApplication?.ticketStatus ? capitalizeFirstLetter(customerApplication.ticketStatus) : "N/A"}
+                      label={customerApplication?.ticketStatus ? capitalizeEachWord(customerApplication.ticketStatus) : "N/A"}
                       size="small"
                       sx={{ bgcolor: "rgba(12, 102, 228, 0.08)", color: "#0c66e4", fontWeight: 700, height: "20px", fontSize: "0.68rem" }}
                     />
@@ -1064,7 +1097,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                                   }}
                                 >
                                   <strong>
-                                    {capitalizeFirstLetter(history.action.split(" ")[0])}
+                                    {capitalizeEachWord(history.action.split(" ")[0])}
                                   </strong>
                                   {` ${history.action.substring(
                                     history.action.indexOf(" ") + 1
@@ -1145,7 +1178,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                                   variant="subtitle2"
                                   sx={{ fontWeight: 700, color: "#1e293b", mb: 0.2, fontSize: "0.8rem" }}
                                 >
-                                  {capitalizeFirstLetter(
+                                  {capitalizeEachWord(
                                     comment?.user?.username || "Anonymous"
                                   )}
                                 </Typography>
@@ -1155,7 +1188,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                                   variant="body2"
                                   sx={{ color: "#334155", fontStyle: "normal", mb: 0.8, fontSize: "0.8rem" }}
                                 >
-                                  {capitalizeFirstLetter(comment.comment)}
+                                  {capitalizeEachWord(comment.comment)}
                                 </Typography>
 
                                 {/* Attachment Section */}
@@ -1487,7 +1520,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
             {/* Avatar */}
             <Box sx={{ display: "flex", justifyContent: "center", mt: "-40px", mb: 1.5, zIndex: 2 }}>
               <Avatar
-                alt={capitalizeFirstLetter(
+                alt={capitalizeEachWord(
                   customerApplication.customerName.split(".")[1]?.trim() ||
                   customerApplication.customerName.split(" ").slice(1).join(" ")
                 )}
@@ -1542,7 +1575,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                     T.ID: {customerApplication.ticketId || mainIndex}
                   </Typography>
                   <Chip
-                    label={customerApplication?.ticketStatus ? capitalizeFirstLetter(customerApplication.ticketStatus) : 'N/A'}
+                    label={customerApplication?.ticketStatus ? capitalizeEachWord(customerApplication.ticketStatus) : 'N/A'}
                     size="small"
                     sx={{
                       bgcolor: "rgba(12, 102, 228, 0.08)",
@@ -1585,13 +1618,13 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                     <Grid item xs={6}>
                       <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.3, letterSpacing: "0.03em", mt: 1 }}>LOAN TYPE</Typography>
                       <Typography sx={{ fontSize: "0.85rem", color: "#334155", fontWeight: 600 }}>
-                        {capitalizeFirstLetter(customerApplication.loanType || "N/A")}
+                        {capitalizeEachWord(customerApplication.loanType || "N/A")}
                       </Typography>
                     </Grid>
                     <Grid item xs={6}>
                       <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.3, letterSpacing: "0.03em", mt: 1 }}>LEAD TYPE</Typography>
                       <Typography sx={{ fontSize: "0.85rem", color: "#334155", fontWeight: 600 }}>
-                        {capitalizeFirstLetter(customerApplication.leadType || "N/A")}
+                        {capitalizeEachWord(customerApplication.leadType || "N/A")}
                       </Typography>
                     </Grid>
 
@@ -1599,6 +1632,11 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                       <Grid item xs={6}>
                         <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.5, letterSpacing: "0.03em", mt: 1 }}>SOURCE</Typography>
                         {getSourcePill(customerApplication.source || customerApplication.applicationSource)}
+                        {appliedByName && (
+                          <Typography sx={{ fontSize: "0.6rem", color: getSourceColor(customerApplication.source || customerApplication.applicationSource), fontWeight: 600, mt: 0.4, lineHeight: 1 }}>
+                            {capitalizeEachWord(appliedByName)}
+                          </Typography>
+                        )}
                       </Grid>
                     )}
 
@@ -1613,7 +1651,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                       <Typography sx={{ fontSize: "0.68rem", color: "#8892a4", fontWeight: 700, mb: 0.3, letterSpacing: "0.03em", mt: 1 }}>LOCATION</Typography>
                       <Typography sx={{ fontSize: "0.85rem", color: "#334155", fontWeight: 600, lineHeight: 1.2 }}>
                         {customerApplication.customerLocation || customerApplication.customerState
-                          ? `${capitalizeFirstLetter(customerApplication.customerLocation || "")}${customerApplication.customerLocation && customerApplication.customerState ? ", " : ""}${capitalizeFirstLetter(customerApplication.customerState || "")}`
+                          ? `${capitalizeEachWord(customerApplication.customerLocation || "")}${customerApplication.customerLocation && customerApplication.customerState ? ", " : ""}${capitalizeEachWord(customerApplication.customerState || "")}`
                           : "N/A"}
                       </Typography>
                     </Grid>
@@ -1703,7 +1741,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                     historyData.map((history, index) => (
                       <Box key={index} sx={{ display: "flex", flexDirection: "column", mb: 1, pb: 1, borderBottom: index < historyData.length - 1 ? "1px solid #f1f5f9" : "none" }}>
                         <Typography variant="body2" sx={{ color: "#1a2340", fontWeight: 500, mb: 0.5, lineHeight: 1.3 }}>
-                          <strong>{capitalizeFirstLetter(history.action.split(" ")[0])}</strong>
+                          <strong>{capitalizeEachWord(history.action.split(" ")[0])}</strong>
                           {` ${history.action.substring(history.action.indexOf(" ") + 1)}`}
                         </Typography>
                         <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 500 }}>
@@ -1730,10 +1768,10 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                     commentData.map((comment, idx) => (
                       <Box key={idx} sx={{ display: "flex", flexDirection: "column", mb: 1, pb: 1, borderBottom: idx < commentData.length - 1 ? "1px solid #f1f5f9" : "none" }}>
                         <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#1a2340", mb: 0.5 }}>
-                          {capitalizeFirstLetter(comment?.user?.username || "Anonymous")}
+                          {capitalizeEachWord(comment?.user?.username || "Anonymous")}
                         </Typography>
                         <Typography variant="body2" sx={{ color: "#334155", mb: 1, lineHeight: 1.4 }}>
-                          {capitalizeFirstLetter(comment.comment)}
+                          {capitalizeEachWord(comment.comment)}
                         </Typography>
 
                         {/* Condensed Meta/Attachment view */}
@@ -1963,6 +2001,11 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
           {/* Source */}
           <TableCell align="center" sx={{ width: "70px", whiteSpace: "nowrap", px: 1 }}>
             {getSourcePill(customerApplication.source || customerApplication.applicationSource)}
+            {appliedByName && (
+              <Typography sx={{ fontSize: "0.6rem", color: getSourceColor(customerApplication.source || customerApplication.applicationSource), fontWeight: 600, mt: 0.3, lineHeight: 1 }}>
+                {capitalizeEachWord(appliedByName)}
+              </Typography>
+            )}
           </TableCell>
 
           {/* Name */}
@@ -2038,7 +2081,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
             <TableCell sx={{ minWidth: "130px", maxWidth: "160px" }}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                 <Chip
-                  label={customerApplication?.ticketStatus ? capitalizeFirstLetter(customerApplication.ticketStatus) : 'N/A'}
+                  label={customerApplication?.ticketStatus ? capitalizeEachWord(customerApplication.ticketStatus) : 'N/A'}
                   size="small"
                   sx={{
                     bgcolor: "rgba(12, 102, 228, 0.1)",
@@ -2083,7 +2126,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
           {/* Loan Category */}
           <TableCell>
             <Typography variant="body2">
-              {capitalizeFirstLetter(customerApplication.loanType)}
+              {capitalizeEachWord(customerApplication.loanType)}
             </Typography>
           </TableCell>
 
@@ -2097,7 +2140,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 maxWidth: '10vw',
               }}
             >
-              {capitalizeFirstLetter(customerApplication.leadType || "Null")}
+              {capitalizeEachWord(customerApplication.leadType || "Null")}
             </Typography>
           </TableCell>
 
@@ -2112,11 +2155,11 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
           <TableCell>
             <Typography variant="body2">
               {customerApplication.customerLocation
-                ? capitalizeFirstLetter(customerApplication.customerLocation)
+                ? capitalizeEachWord(customerApplication.customerLocation)
                 : "N/A"}
               ,<br></br>
               {customerApplication.customerState
-                ? capitalizeFirstLetter(customerApplication.customerState)
+                ? capitalizeEachWord(customerApplication.customerState)
                 : "N/A"}
             </Typography>
           </TableCell>
@@ -2407,7 +2450,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                                     }}
                                   >
                                     <strong>
-                                      {capitalizeFirstLetter(history.action.split(" ")[0])}
+                                      {capitalizeEachWord(history.action.split(" ")[0])}
                                     </strong>
                                     {` ${history.action.substring(
                                       history.action.indexOf(" ") + 1
@@ -2489,7 +2532,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                                     variant="subtitle2"
                                     sx={{ fontWeight: 700, color: "#1e293b", mb: 0.2, fontSize: "0.8rem" }}
                                   >
-                                    {capitalizeFirstLetter(
+                                    {capitalizeEachWord(
                                       comment?.user.username || "Anonymous"
                                     )}
                                   </Typography>
@@ -2499,7 +2542,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                                     variant="body2"
                                     sx={{ color: "#334155", fontStyle: "normal", mb: 0.8, fontSize: "0.8rem" }}
                                   >
-                                    {capitalizeFirstLetter(comment.comment)}
+                                    {capitalizeEachWord(comment.comment)}
                                   </Typography>
 
                                   {/* Attachment Section */}

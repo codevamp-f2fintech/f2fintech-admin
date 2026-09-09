@@ -128,6 +128,12 @@ export interface TicketDetail {
   fixed_commission_percentage?: number | string;
   due_date?: string | Date;
   companyId?: number | string;
+  applicationSource?: string;
+  source?: string;
+  appliedByName?: string | null;
+  appliedBy?: number | string | null;
+  applied_by?: number | string | null;
+  managerName?: string | null;
 }
 
 interface TicketDetailResponse {

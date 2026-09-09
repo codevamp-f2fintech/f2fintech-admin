@@ -577,57 +577,6 @@ const Step1Form: React.FC<Step1FormProps> = ({
       })
   }
 
-  // Function to create the customer application
-  async function createCustomerApplication(
-    customerId: number,
-    applicationNumber: number,
-    amount: number,
-    tenure: number,
-    provider: string,
-    loanType: string,
-    loanCategory: string,
-    leadType: string,
-    existingLoans: any[],
-    caseType: string,
-  ) {
-    const companyId = getCompanyId() || getLocalStorage("selectedCompanyId");
-    // const headers = companyId ? { companyid: companyId } : {};
-    const { data: applicationResponse } =
-      await axiosInstance.post(
-        `${process.env.NEXT_PUBLIC_WEB_URL}/create-application`,
-        {
-          customer_id: customerId,
-          applied_by: decodedToken()?.id,
-          application_no: applicationNumber,
-          amount,
-          tenure,
-          provider,
-          loan_type: loanType,
-          loan_category: loanCategory,
-          lead_type: leadType,
-          existing_loans: JSON.stringify(existingLoans.map((l: any) => ({
-            has_running_loans: l.has_running_loans === "yes" ? 1 : 0,
-            which_loan: l.which_loan,
-            loan_amount: l.loan_amount ? Number(l.loan_amount) : null,
-            running_emi: l.running_emi ? Number(l.running_emi) : null
-          }))),
-          case_type: caseType,
-          source: "oms",
-          company_id: companyId,
-        })
-    return applicationResponse.data.applicationId;
-  }
-
-  // Function to create loan tracking
-  async function createLoanTracking(applicationId: number) {
-    await axiosInstance.post(
-      `${process.env.NEXT_PUBLIC_WEB_URL}/create-loan-tracking`,
-      {
-        customer_application_id: applicationId,
-        status: "submitted",
-        // company_id: companyId,
-      })
-  }
 
   const setCustomerData = async (customerInfo: any) => {
     setGetStarted?.(false);

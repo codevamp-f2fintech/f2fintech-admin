@@ -212,7 +212,7 @@ const Step7Form: React.FC<Step7FormProps> = ({
             running_emi: l.running_emi ? Number(l.running_emi) : null
           }))),
           case_type: caseType,
-          source: "admin_portal",
+          source: "oms",
           company_id: getCompanyId() || getLocalStorage("selectedCompanyId"),
         })
     return applicationResponse.data.applicationId;
@@ -313,7 +313,7 @@ const Step7Form: React.FC<Step7FormProps> = ({
         const providersString = activeProviders.join(", ");
         // Use the primary loan amount from Step 1 (loanAmount) as the base
         const finalAmount = Number(loanAmount || amount || 100000);
-        
+
         const appNo = randomNumberGenerator();
         const applicationId = await createCustomerApplication(
           activeCustomerId,

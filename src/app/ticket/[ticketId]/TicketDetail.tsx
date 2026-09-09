@@ -31,12 +31,86 @@ import { useGetLoanProviders } from "@/hooks/loanProvider";
 import dayjs from "dayjs";
 import React from "react";
 
+const getSourcePill = (source?: string) => {
+  const s = source?.toLowerCase()?.trim() || "";
+  let config = {
+    gradient: "linear-gradient(135deg, #475569 0%, #64748b 100%)",
+    bg: "rgba(100, 116, 139, 0.08)",
+    border: "rgba(100, 116, 139, 0.25)",
+    label: source ? source.toUpperCase() : "N/A",
+  };
+
+  if (s === "website") {
+    config = {
+      gradient: "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)",
+      bg: "rgba(59, 130, 246, 0.09)",
+      border: "rgba(59, 130, 246, 0.3)",
+      label: "WEBSITE",
+    };
+  } else if (s === "oms") {
+    config = {
+      gradient: "linear-gradient(135deg, #047857 0%, #10b981 100%)",
+      bg: "rgba(16, 185, 129, 0.1)",
+      border: "rgba(16, 185, 129, 0.3)",
+      label: "OMS",
+    };
+  } else if (s === "lendgrid") {
+    config = {
+      gradient: "linear-gradient(135deg, #6b21a8 0%, #a855f7 100%)",
+      bg: "rgba(168, 85, 247, 0.09)",
+      border: "rgba(168, 85, 247, 0.3)",
+      label: "LENDGRID",
+    };
+  }
+
+  return (
+    <Box
+      component="span"
+      sx={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: config.bg,
+        border: `1px solid ${config.border}`,
+        borderRadius: "4px",
+        px: 0.8,
+        py: 0.2,
+        lineHeight: 1,
+        whiteSpace: "nowrap",
+      }}
+    >
+      <Box
+        component="span"
+        sx={{
+          background: config.gradient,
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          fontSize: "0.68rem",
+          fontWeight: 800,
+          letterSpacing: "0.04em",
+          textTransform: "uppercase",
+        }}
+      >
+        {config.label}
+      </Box>
+    </Box>
+  );
+};
+
+const getSourceColor = (source?: string): string => {
+  const s = source?.toLowerCase()?.trim() || "";
+  if (s === "website") return "#1e40af";
+  if (s === "oms") return "#047857";
+  if (s === "lendgrid") return "#7e22ce";
+  return "#475569";
+};
+
 const TicketDetail = ({ ticketDetailData, isTab }) => {
   const router = useRouter();
   const dispatch: AppDispatch = useDispatch();
   const { toast } = useSelector((state: RootState) => state.toast);
   const {
-    capitalizeFirstLetter,
+    capitalizeEachWord,
     formatTenure,
     formatDate,
     formatAmount,
@@ -46,6 +120,24 @@ const TicketDetail = ({ ticketDetailData, isTab }) => {
 
   const [openEditModal, setOpenEditModal] = useState(false);
   const [editedTicketData, setEditedTicketData] = useState(ticketDetailData);
+  const [fetchedAppliedByName, setFetchedAppliedByName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (editedTicketData?.appliedByName && editedTicketData.appliedByName !== "N/A") {
+      setFetchedAppliedByName(editedTicketData.appliedByName);
+      return;
+    }
+    const appliedById = editedTicketData?.appliedBy || editedTicketData?.applied_by;
+    if (!appliedById) return;
+    axiosInstance
+      .get(`get-user-name/${appliedById}`)
+      .then((res) => {
+        const username = res.data?.data?.username;
+        if (username) setFetchedAppliedByName(username);
+      })
+      .catch(() => {});
+  }, [editedTicketData?.appliedByName, editedTicketData?.appliedBy, editedTicketData?.applied_by]);
+
   const { createTicketHistory } = useCreateTicketHistory(
     "create-ticket-history"
   );
@@ -265,21 +357,23 @@ const TicketDetail = ({ ticketDetailData, isTab }) => {
           <Grid container spacing={3}>
             {/* Ticket Details */}
             <Grid item xs={12} sm={6}>
-              <DetailItem label="Name" value={capitalizeFirstLetter(editedTicketData?.customerName)} />
+              <DetailItem label="Name" value={capitalizeEachWord(editedTicketData?.customerName)} />
               <DetailItem label="Email" value={editedTicketData?.customerEmail} />
-              <DetailItem label="Location" value={capitalizeFirstLetter(editedTicketData?.customerLocation)} />
+              <DetailItem label="Location" value={capitalizeEachWord(editedTicketData?.customerLocation)} />
               <DetailItem label="Tenure" value={formatTenure(editedTicketData?.applicationTenure)} />
-              <DetailItem label="Loan Provider" value={capitalizeFirstLetter(editedTicketData?.provider) || "No provider available"} />
+              <DetailItem label="Loan Provider" value={capitalizeEachWord(editedTicketData?.provider) || "No provider available"} />
             </Grid>
             <Grid item xs={12} sm={6}>
               <DetailItem label="Contact" value={`+91 ${editedTicketData?.customerContact || ""}`} />
-              <DetailItem label="Designation" value={capitalizeFirstLetter(editedTicketData?.customerDesignation)} />
+              <DetailItem label="Designation" value={capitalizeEachWord(editedTicketData?.customerDesignation)} />
               <DetailItem label="Amount" value={formatAmount(editedTicketData?.applicationAmount)} />
               <DetailItem label="Application Date" value={formatDate(editedTicketData?.applicationDate)} />
-              <DetailItem label="Loan Category" value={capitalizeFirstLetter(editedTicketData?.loanCategory) || "No category available"} />
+              <DetailItem label="Loan Category" value={capitalizeEachWord(editedTicketData?.loanCategory) || "No category available"} />
             </Grid>
             <Grid item xs={12} sm={12}>
               <Divider sx={{ my: 1, borderColor: "rgba(0,0,0,0.05)" }} />
+            </Grid>
+            <Grid item xs={12} sm={6}>
               <DetailItem
                 label="Expected Decision"
                 value={
@@ -294,6 +388,31 @@ const TicketDetail = ({ ticketDetailData, isTab }) => {
                 isOverdue={isOverdue}
               />
             </Grid>
+            {(editedTicketData?.source || editedTicketData?.applicationSource) && (
+              <Grid item xs={12} sm={6}>
+                <DetailItem
+                  label="Source"
+                  value={
+                    <Box sx={{ display: "inline-flex", alignItems: "center", gap: 1, flexWrap: "wrap", mt: 0.3 }}>
+                      {getSourcePill(editedTicketData?.source || editedTicketData?.applicationSource)}
+                      {fetchedAppliedByName && (
+                        <Typography
+                          component="span"
+                          sx={{
+                            fontSize: "0.95rem",
+                            color: getSourceColor(editedTicketData?.source || editedTicketData?.applicationSource),
+                            fontWeight: 600,
+                            lineHeight: 1,
+                          }}
+                        >
+                          {capitalizeEachWord(fetchedAppliedByName)}
+                        </Typography>
+                      )}
+                    </Box>
+                  }
+                />
+              </Grid>
+            )}
           </Grid>
           {editedTicketData?.co_applicant_name && (
             <>
@@ -303,12 +422,12 @@ const TicketDetail = ({ ticketDetailData, isTab }) => {
               </Typography>
               <Grid container spacing={3}>
                 <Grid item xs={12} sm={6}>
-                  <DetailItem label="Name" value={capitalizeFirstLetter(editedTicketData?.co_applicant_name)} />
+                  <DetailItem label="Name" value={capitalizeEachWord(editedTicketData?.co_applicant_name)} />
                   <DetailItem label="Contact" value={`+91 ${editedTicketData?.co_applicant_contact || ""}`} />
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <DetailItem label="Email" value={editedTicketData?.co_applicant_email} />
-                  <DetailItem label="Mother's Name" value={capitalizeFirstLetter(editedTicketData?.co_applicant_mother_name)} />
+                  <DetailItem label="Mother's Name" value={capitalizeEachWord(editedTicketData?.co_applicant_mother_name)} />
                 </Grid>
               </Grid>
             </>
